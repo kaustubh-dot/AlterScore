@@ -19,6 +19,7 @@ from backend.ml.training.classical.baselines import (
     DEFAULT_METRICS_PATH,
     DEFAULT_LOGISTIC_ARTIFACT_PATH,
     DEFAULT_POPULATION_PERCENTILES_PATH,
+    DEFAULT_PSI_REPORT_PATH,
 )
 from backend.ml.training.classical.train_classical import (
     DEFAULT_DATASET_PATH,
@@ -81,6 +82,11 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         default=DEFAULT_POPULATION_PERCENTILES_PATH,
     )
+    parser.add_argument(
+        "--psi-report-path",
+        type=Path,
+        default=DEFAULT_PSI_REPORT_PATH,
+    )
     parser.add_argument("--random-state", type=int, default=42)
     return parser
 
@@ -100,6 +106,7 @@ def main(argv: list[str] | None = None) -> int:
         baseline_metrics_path=args.baseline_metrics_path,
         metrics_path=args.metrics_path,
         population_percentiles_path=args.population_percentiles_path,
+        psi_report_path=args.psi_report_path,
         random_state=args.random_state,
     )
     print(
@@ -118,6 +125,9 @@ def main(argv: list[str] | None = None) -> int:
                 "population_percentiles_path": None
                 if artifacts.population_percentiles_path is None
                 else str(artifacts.population_percentiles_path),
+                "psi_report_path": None
+                if artifacts.psi_report_path is None
+                else str(artifacts.psi_report_path),
                 "artifacts": {
                     model_name: None if path is None else str(path)
                     for model_name, path in artifacts.model_artifact_paths.items()

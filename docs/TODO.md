@@ -2,7 +2,7 @@
 
 ## Current Phase
 
-Governance analytics artifact foundation. The canonical feature registry, project hygiene files, backend runtime helpers, API schemas, frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, the baseline training loop, the bounded classical training loop, the persisted text PCA artifact foundation, the runtime artifact-loading plus scoring-service stubs, the FastAPI startup with health/score/model-stats/baseline-comparison/score-distribution/roc-data/pr-curve/calibration-curve/confusion-matrix routes, append-only request logging, and the persisted evaluation-artifact foundation for curves, confusion, and population percentiles are implemented; the remaining governance analytics routes and full production-runtime artifacts are not started.
+Governance analytics artifact foundation with persisted drift reporting. The canonical feature registry, project hygiene files, backend runtime helpers, API schemas, frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, the baseline training loop, the bounded classical training loop, the persisted text PCA artifact foundation, the runtime artifact-loading plus scoring-service stubs, the FastAPI startup with health/score/model-stats/baseline-comparison/score-distribution/roc-data/pr-curve/calibration-curve/confusion-matrix routes, append-only request logging, and the persisted evaluation plus PSI drift-artifact foundations for curves, confusion, population percentiles, and train-vs-test feature stability are implemented; the remaining governance analytics routes and full production-runtime artifacts are not started.
 
 ## Immediate TODO
 
@@ -43,7 +43,7 @@ Governance analytics artifact foundation. The canonical feature registry, projec
 - [x] Implement health endpoint.
 - [x] Add report-backed analytics service foundation and the first `/api/model-stats` plus `/api/baseline-comparison` endpoints.
 - [ ] Harden the scoring endpoint with explainability, counterfactual, and production-bundle behavior.
-- [ ] Implement fairness, drift, and global-importance analytics endpoints after their backing reports exist.
+- [ ] Implement `/api/drift-report` together with the remaining fairness and global-importance analytics endpoints when that governance route slice is in scope.
 
 ## Data Pipeline TODO
 
@@ -94,6 +94,7 @@ Governance analytics artifact foundation. The canonical feature registry, projec
 - [x] Persist `models/preprocessors/text_pca.pkl` for runtime semantic projection.
 - [x] Persist `models/reports/population_percentiles.json` from scored offline population predictions.
 - [x] Save offline ROC, PR, calibration, and confusion payloads into `models/reports/metrics.json`.
+- [x] Persist `models/reports/psi_report.json` from train months `1-8` vs test months `11-12` using the canonical 35 model inputs only.
 - [ ] Train TabNet.
 - [ ] Train MLP.
 - [ ] Train stacking ensemble.
@@ -118,8 +119,8 @@ Governance analytics artifact foundation. The canonical feature registry, projec
 - [ ] Compute equalized odds.
 - [ ] Compute calibration parity data.
 - [ ] Compute individual fairness proxy.
-- [ ] Generate PSI report for train vs months 11-12 test.
-- [ ] Add dashboard-ready statuses.
+- [x] Generate PSI report for train vs months 11-12 test.
+- [ ] Add dashboard-ready statuses to the future fairness report.
 
 ## Frontend TODO
 

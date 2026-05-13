@@ -33,7 +33,7 @@ This file tracks expected model artifacts, promotion criteria, and the registry 
 | Global importance | `models/reports/global_importance.json` | SHAP job | Yes for dashboard | Top feature importances |
 | SHAP summary image | `models/reports/shap_summary.png` | SHAP job | No | Human inspection |
 | Fairness report | `models/reports/fairness_report.json` | Fairness job | Yes for dashboard | Group metrics and verdict |
-| PSI report | `models/reports/psi_report.json` | Drift job | Yes for dashboard | Train vs future cohort stability |
+| PSI report | `models/reports/psi_report.json` | Drift job | Yes for dashboard | Train months `1-8` vs test months `11-12` on the canonical 35 inputs only |
 | Population percentiles | `models/reports/population_percentiles.json` | Evaluation job | Yes | Score percentile lookup plus saved score histogram; current payload can hold model-specific tables and a default serving view |
 | Model manifest | `models/registry/production_manifest.json` | Promotion step | Yes | Single serving bundle declaration |
 
@@ -185,7 +185,9 @@ Current local runtime-artifact status:
 
 - `models/preprocessors/text_pca.pkl` now exists and is loaded opportunistically by the runtime bundle.
 - `models/reports/population_percentiles.json` now exists and the runtime loader resolves the active model's table when the artifact contains multiple model-specific payloads.
+- `models/reports/psi_report.json` now exists and is generated offline from the canonical 35 model inputs by comparing train months `1-8` to test months `11-12` only.
 - Zero-filled semantic fallback remains supported only for intentionally PCA-less test/runtime bundles.
+- The current local PSI artifact reports `max_psi = 0.2007`, overall verdict `watch`, and `avg_response_time_ms` as the most drifted feature.
 
 ### Baseline Run: `20260513_171150_baselines`
 
