@@ -210,6 +210,39 @@ Current foundation note:
 
 Uses the `BaselineComparisonItem` list shape documented below.
 
+## GET /api/fairness-report
+
+Current foundation note:
+- The fairness endpoint now serves the saved subgroup-audit payload from `models/reports/fairness_report.json`.
+- The response is read from the startup-loaded runtime bundle and does not recompute subgroup metrics inside the API process.
+- If `fairness_report.json` is missing at startup, the endpoint returns a structured `503` with `missing_artifacts`.
+
+### Response
+
+Uses the `FairnessReport` shape documented below.
+
+## GET /api/drift-report
+
+Current foundation note:
+- The drift endpoint now serves the saved PSI payload from `models/reports/psi_report.json`.
+- The response is read from the startup-loaded runtime bundle and does not recompute train/test comparisons inside the API process.
+- If `psi_report.json` is missing at startup, the endpoint returns a structured `503` with `missing_artifacts`.
+
+### Response
+
+Uses the `DriftReport` shape documented below.
+
+## GET /api/global-importance
+
+Current foundation note:
+- The global-importance endpoint now serves the saved dashboard ranking from `models/reports/global_importance.json`.
+- The response is read from the startup-loaded runtime bundle and does not recompute explainability values inside the API process.
+- If `global_importance.json` is missing at startup, the endpoint returns a structured `503` with `missing_artifacts`.
+
+### Response
+
+Uses the `GlobalImportanceItem` list shape documented below.
+
 ## GET /api/score-distribution
 
 Current foundation note:

@@ -52,7 +52,7 @@
 20. [x] Verify runtime request assembly consumes the persisted PCA artifact and only falls back to zero-filled semantics when the artifact is intentionally missing.
 21. [x] Add a report-reading analytics service layer so route handlers do not parse report files ad hoc.
 22. [x] Add `/api/model-stats` and `/api/baseline-comparison` route stubs backed by saved report files.
-23. [ ] Add `/api/fairness-report`, `/api/drift-report`, and `/api/global-importance` route stubs backed by the now-persisted report files.
+23. [x] Add `/api/fairness-report`, `/api/drift-report`, and `/api/global-importance` route stubs backed by the now-persisted report files.
 24. [x] Add `/api/score-distribution` backed by a persisted population-percentiles or histogram artifact rather than runtime recomputation.
 25. [x] Add `/api/roc-data`, `/api/pr-curve`, `/api/calibration-curve`, and `/api/confusion-matrix` route stubs from the evaluation report structure.
 26. [x] Expand analytics endpoint contract tests for both happy-path and missing-artifact responses.
@@ -94,9 +94,9 @@ This section expands the next roadmap stretch into smaller delivery checkpoints 
 
 - C19 and C20 are complete, and the offline evaluation bundle foundation for score distribution plus ROC/PR/calibration/confusion payloads now exists for the current logistic/classical artifact set.
 - C24 through C26 are now complete for the current saved evaluation bundle, and the offline fairness plus PSI artifact foundation is also complete for the current logistic/classical bundle.
-- The offline global-importance report foundation is now complete for the current logistic/classical bundle, so the next meaningful backend slice is C23: expose `/api/fairness-report`, `/api/drift-report`, and `/api/global-importance` from saved reports.
+- C23 is now complete for the current logistic/classical bundle, so the report-backed governance analytics route surface is in place for fairness, drift, and global importance.
 - C27 through C31 are the production-model track and should stay offline-only; none of those jobs should be pulled into FastAPI request handlers.
-- The remaining C32 scope is the persisted `shap_explainer.pkl`, summary-plot path, and per-user explanation flow; fairness, PSI, and the dashboard-ready global-importance report already exist for the current logistic/classical artifact bundle and should be reused for the later production candidate.
+- The next meaningful backend/product slice is the remaining C32/C33 explainability path for `/api/score`: persisted `shap_explainer.pkl`, per-user top factors, and DICE-backed actions. Fairness, PSI, and the dashboard-ready global-importance report already exist for the current logistic/classical artifact bundle and should be reused for the later production candidate.
 - C35 should happen only after the serving bundle can load without relying on the temporary direct-model fallback path.
 
 ## Files To Create First
@@ -224,6 +224,11 @@ Current progress toward M4:
 - Backend loads artifact bundle.
 - All 12 endpoints return schema-valid responses.
 - Score endpoint passes edge-case tests.
+
+Current progress toward M5:
+
+- The backend now serves all 12 documented route stubs, including the fairness, drift, and global-importance analytics routes backed by saved reports.
+- The remaining API gap is the richer `/api/score` explainability and counterfactual behavior once SHAP and DICE artifacts exist.
 
 ### M6 - Frontend Demo Green
 
