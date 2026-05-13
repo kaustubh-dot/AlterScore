@@ -2,7 +2,7 @@
 
 ## Current Phase
 
-Frontend package foundation. The canonical feature registry, project hygiene files, backend runtime helpers, API schemas, and frontend package skeleton are implemented; app runtime, data generation, training, and API routes are not started.
+Baseline training foundation. The canonical feature registry, project hygiene files, backend runtime helpers, API schemas, frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, and the first baseline training loop are implemented; app runtime and API routes are not started.
 
 ## Immediate TODO
 
@@ -16,6 +16,7 @@ Frontend package foundation. The canonical feature registry, project hygiene fil
 - [x] Add feature registry tests.
 - [x] Add schema tests.
 - [x] Add frontend package skeleton.
+- [x] Implement synthetic data generator and validation foundation.
 
 ## Documentation TODO
 
@@ -41,42 +42,47 @@ Frontend package foundation. The canonical feature registry, project hygiene fil
 
 ## Data Pipeline TODO
 
-- [ ] Implement correlated psychometric feature generation.
-- [ ] Implement behavioral feature generation.
-- [ ] Implement realistic demographic generation.
-- [ ] Implement cohort month assignment and temporal drift.
-- [ ] Implement latent label generation with target default rate.
-- [ ] Save raw synthetic dataset.
-- [ ] Implement validation report.
-- [ ] Add tests for default rate, split integrity, missing values, and protected separation.
+- [x] Implement correlated psychometric feature generation.
+- [x] Implement behavioral feature generation.
+- [x] Implement realistic demographic generation.
+- [x] Implement cohort month assignment and temporal drift.
+- [x] Implement latent label generation with target default rate.
+- [x] Save raw synthetic dataset.
+- [x] Implement validation report.
+- [x] Implement in-memory validation helpers for row count, nulls, default rate, cohort bounds, and feature-list separation.
+- [x] Add tests for default rate, documented temporal split intent, missing values, and protected separation.
+- [x] Add explicit train/validation/test split mask integrity tests once split helpers exist.
 
 ## NLP TODO
 
-- [ ] Pin sentence-transformer model name.
-- [ ] Pin spaCy model name.
-- [ ] Implement neutral fallback for empty/short text.
-- [ ] Implement VADER sentiment feature.
-- [ ] Implement agency score feature.
-- [ ] Implement problem-solving flag.
-- [ ] Implement embedding extraction.
-- [ ] Fit PCA only on train embeddings.
-- [ ] Add high-agency and low-agency tests from PRD.
+- [x] Pin sentence-transformer model name.
+- [x] Pin spaCy model name.
+- [x] Implement neutral fallback for empty/short text.
+- [x] Implement VADER sentiment feature.
+- [x] Implement agency score feature.
+- [x] Implement problem-solving flag.
+- [x] Implement embedding extraction.
+- [x] Fit PCA only on train embeddings.
+- [x] Add high-agency and low-agency tests from PRD.
 
 ## Feature Engineering TODO
 
-- [ ] Implement answer parser.
-- [ ] Implement behavioral parser.
-- [ ] Implement derived feature calculations.
+- [x] Implement answer parser.
+- [x] Implement behavioral parser.
+- [x] Implement raw-request feature assembly helper.
+- [x] Implement derived feature calculations.
 - [x] Define actionable feature list for counterfactuals.
 - [x] Define immutable feature list.
-- [ ] Add known-payload tests for parsed features.
+- [x] Add known-payload tests for parsed features.
 
 ## ML Training TODO
 
-- [ ] Implement preprocessing pipeline.
-- [ ] Implement majority baseline.
-- [ ] Implement logistic baseline.
-- [ ] Implement simulated loan officer comparator.
+- [x] Implement preprocessing pipeline.
+- [x] Implement explicit temporal split integrity checks.
+- [x] Fit text PCA on train months 1-8 only.
+- [x] Implement majority baseline.
+- [x] Implement logistic baseline.
+- [x] Implement simulated loan officer comparator.
 - [ ] Train random forest.
 - [ ] Train XGBoost.
 - [ ] Train LightGBM.
@@ -125,10 +131,15 @@ Frontend package foundation. The canonical feature registry, project hygiene fil
 
 - [x] Add unit tests for schemas.
 - [x] Add unit tests for feature registry.
-- [ ] Add unit tests for answer parser.
-- [ ] Add unit tests for derived features.
-- [ ] Add unit tests for NLP.
-- [ ] Add integration tests for data pipeline.
+- [x] Add integration coverage for synthetic data generation validation and determinism.
+- [x] Add unit tests for NLP extraction, neutral fallback, PRD high/low agency examples, and raw embedding determinism.
+- [x] Add integration tests for preprocessing split integrity, train-only PCA fitting, and sklearn transform shape/imputation behavior.
+- [x] Add unit tests for answer parser.
+- [x] Add unit tests for behavioral parser.
+- [x] Add unit tests for derived features.
+- [x] Add integration coverage for raw-request feature assembly through NLP PCA and preprocessing compatibility.
+- [x] Add integration coverage for dataset materialization and baseline training artifacts.
+- [ ] Add integration tests for broader data pipeline steps beyond generator validation and preprocessing split integrity.
 - [ ] Add integration tests for API endpoints.
 - [ ] Add E2E tests for assessment and dashboard.
 - [ ] Add smoke test for artifact loading.

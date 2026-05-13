@@ -28,7 +28,7 @@
 | 11 | React dashboard | Complete evaluator analytics | Dashboard loads all reports |
 | 12 | Polish and deployment | Demo-ready production packaging | Release checklist passes |
 
-## Exact First 10 Implementation Steps
+## Exact Near-Term Implementation Steps
 
 1. [x] Create `.gitignore`, environment examples, and backend dependency file.
 2. [x] Implement backend package skeleton with settings, path helpers, and artifact path constants.
@@ -36,10 +36,16 @@
 4. [x] Implement Pydantic schemas for `ScoreRequest`, `ScoreResponse`, analytics responses, and common errors.
 5. [x] Add unit tests that validate feature-list exclusions, schema constraints, and PRD route contract names.
 6. [x] Add the frontend package skeleton and root README placeholder.
-7. [ ] Implement synthetic data generator with correlated psychometric bases, demographics, cohort month, mild drift, and latent label generation.
-8. [ ] Implement data validation job and tests for default rate, missing values, temporal split, feature ranges, and protected attribute separation.
-9. [ ] Implement local NLP extractor with neutral fallback, VADER sentiment, spaCy agency/problem-solving features, and raw sentence embedding support.
-10. [ ] Implement derived feature engineering, preprocessing fit/transform, and split-integrity tests.
+7. [x] Implement synthetic data generator with correlated psychometric bases, demographics, cohort month, mild drift, and latent label generation.
+8. [x] Implement in-memory data validation helpers and integration tests for default rate, missing values, documented temporal split intent, and protected attribute separation.
+9. [x] Persist the raw synthetic dataset and validation summary/report once preprocessing interfaces are ready.
+10. [x] Implement local NLP extractor with neutral fallback, pinned local model names, interpretable feature extraction, and raw sentence embedding support.
+11. [x] Implement preprocessing fit/transform, train-only text PCA, and explicit split-integrity tests for already-assembled feature datasets.
+12. [x] Implement answer parsing and derived feature engineering, and confirm parsed psychometric + behavioral/NLP rows can flow into preprocessing.
+13. [x] Implement the behavioral parser and the full raw-request feature assembly path.
+14. [x] Implement baseline comparators and the first offline training loop on temporal splits.
+15. [ ] Implement random forest, XGBoost, and LightGBM training on the same temporal split foundation.
+16. [ ] Build artifact loading and backend scoring stubs against the fixed inference assembly path.
 
 ## Files To Create First
 

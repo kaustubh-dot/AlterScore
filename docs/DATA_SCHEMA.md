@@ -235,6 +235,20 @@ IMMUTABLE_FEATURES = [
 | Demographics | Indian microfinance-like distributions from PRD |
 | Drift | Mild later-cohort drift in response speed and typing speed |
 
+## Current Implementation Note
+
+- `backend/ml/data_generation/generator.py` now generates the in-memory synthetic dataset with a deterministic default seed and a default row count of 10,000.
+- `backend/ml/data_generation/validators.py` now enforces the current foundation checks for row count, missing values, default rate bounds, cohort month bounds, months 11-12 minimum volume, and exclusion of protected attributes, temporal metadata, and the target from model feature lists.
+- `backend/ml/data_generation/artifacts.py` now materializes the synthetic dataset to `data/raw/synthetic_dataset.csv` and writes a JSON validation summary to `data/validation/validation_summary.json`, including split counts, dtypes, missing counts, numeric feature stats, and label-correlation diagnostics.
+- `backend/ml/nlp/extractor.py` now pins `all-MiniLM-L6-v2` and `en_core_web_sm`, returns the three interpretable NLP features, and exposes deterministic 384-dim raw embedding extraction for later PCA fitting.
+- Empty or short text currently receives neutral NLP defaults, and environments without the optional local NLP packages fall back to deterministic local heuristics instead of calling any external API.
+- `backend/ml/preprocessing/pipeline.py` now performs the documented temporal split, fits text PCA on train months 1-8 only when raw embeddings are provided, applies the resulting semantic dimensions to all splits, and builds the sklearn preprocessing pipeline for the canonical 35 model inputs.
+- `backend/ml/features/answer_parser.py` now maps the raw assessment answer payload into the 14 psychometric feature columns using the documented scoring tolerances, MCQ mappings, consistency checks, and trap-question penalties.
+- `backend/ml/features/behavioral_parser.py` now coerces the score-request telemetry payload into the 9 canonical behavioral features, clips numeric fields to documented bounds, and rejects unknown categorical values.
+- `backend/ml/features/derived_features.py` now computes the 7 derived features from assembled layer 1-3 inputs and provides helpers to merge already-assembled psychometric, behavioral, and NLP feature rows into canonical model-feature order.
+- `backend/ml/inference/feature_assembly.py` now assembles a score request end to end by parsing answers, parsing behavioral telemetry, extracting local NLP features, projecting the raw embedding through a train-fitted text PCA artifact, and returning canonical feature rows/dataframes for runtime scoring.
+- `backend/ml/training/classical/baselines.py` now fits the first temporal-split baseline suite: majority class, logistic regression, and a deterministic simulated loan officer comparator, saving `preprocessor.pkl`, `logistic_best.pkl`, `baseline_metrics.json`, and `metrics.json`.
+
 ## Required Correlations
 
 | Pair | Target Direction |

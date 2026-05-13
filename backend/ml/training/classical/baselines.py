@@ -1,0 +1,303 @@
+"""Baseline training loop for AlterScore temporal splits."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from datetime import datetime, timezone
+import json
+from pathlib import Path
+from typing import Any, Final
+
+import joblib
+import numpy as np
+import pandas as pd
+from sklearn.linear_model import LogisticRegression
+
+from backend.app.core.paths import MODEL_ARTIFACTS_DIR, MODEL_REPORTS_DIR, RAW_DATA_DIR
+from backend.ml.data_generation.validators import MINIMUM_TEST_ROWS, validate_synthetic_dataset
+from backend.ml.evaluation.metrics import compute_binary_classification_metrics
+from backend.ml.preprocessing.pipeline import (
+    DEFAULT_PREPROCESSOR_ARTIFACT_PATH,
+    fit_preprocessor,
+    prepare_temporal_data,
+    transform_features,
+)
+
+DEFAULT_DATASET_PATH: Final[Path] = RAW_DATA_DIR / "synthetic_dataset.csv"
+DEFAULT_LOGISTIC_ARTIFACT_PATH: Final[Path] = MODEL_ARTIFACTS_DIR / "logistic_best.pkl"
+DEFAULT_BASELINE_METRICS_PATH: Final[Path] = MODEL_REPORTS_DIR / "baseline_metrics.json"
+DEFAULT_METRICS_PATH: Final[Path] = MODEL_REPORTS_DIR / "metrics.json"
+BASELINE_MODEL_ORDER: Final[tuple[str, ...]] = (
+    "majority_class",
+    "logistic_regression",
+    "simulated_loan_officer",
+)
+DEFAULT_RANDOM_STATE: Final[int] = 42
+
+
+@dataclass(frozen=True)
+class BaselineTrainingArtifacts:
+    run_id: str
+    dataset_path: Path | None
+    preprocessor_path: Path | None
+    logistic_model_path: Path | None
+    baseline_metrics_path: Path | None
+    metrics_path: Path | None
+    model_stats: list[dict[str, Any]]
+    baseline_metrics: list[dict[str, Any]]
+
+
+class MajorityClassBaseline:
+    """Predict the majority training class with full confidence."""
+
+    def __init__(self) -> None:
+        self._repay_probability = 1.0
+
+    def fit(self, y_train: pd.Series | np.ndarray | list[int]) -> "MajorityClassBaseline":
+        values = np.asarray(y_train, dtype=int)
+        repay_rate = float(values.mean()) if values.size else 1.0
+        self._repay_probability = 1.0 if repay_rate >= 0.5 else 0.0
+        return self
+
+    def predict_proba(self, X: pd.DataFrame | np.ndarray) -> np.ndarray:
+        row_count = len(X)
+        probabilities = np.full(row_count, self._repay_probability, dtype=float)
+        return np.column_stack([1.0 - probabilities, probabilities])
+
+
+class SimulatedLoanOfficer:
+    """A deterministic noisy heuristic used only as a benchmark."""
+
+    REQUIRED_COLUMNS: Final[tuple[str, ...]] = (
+        "numeracy_score",
+        "financial_literacy_score",
+        "conscientiousness_score",
+        "social_capital_score",
+        "honesty_score",
+        "impulsivity_index",
+    )
+
+    def __init__(self, *, random_state: int = DEFAULT_RANDOM_STATE) -> None:
+        self.random_state = random_state
+
+    def fit(
+        self,
+        X_train: pd.DataFrame,
+        y_train: pd.Series | np.ndarray | list[int] | None = None,
+    ) -> "SimulatedLoanOfficer":
+        self._assert_required_columns(X_train)
+        return self
+
+    def predict_proba(self, X: pd.DataFrame) -> np.ndarray:
+        self._assert_required_columns(X)
+        heuristic = (
+            0.25 * X["numeracy_score"].to_numpy(dtype=float)
+            + 0.20 * X["financial_literacy_score"].to_numpy(dtype=float)
+            + 0.20 * X["conscientiousness_score"].to_numpy(dtype=float)
+            + 0.15 * X["social_capital_score"].to_numpy(dtype=float)
+            + 0.10 * X["honesty_score"].to_numpy(dtype=float)
+            + 0.10 * (1.0 - X["impulsivity_index"].to_numpy(dtype=float))
+        )
+        noise = np.random.default_rng(self.random_state).normal(0.0, 0.08, len(X))
+        repay_probability = np.clip(heuristic + noise, 0.0, 1.0)
+        return np.column_stack([1.0 - repay_probability, repay_probability])
+
+    def _assert_required_columns(self, X: pd.DataFrame) -> None:
+        missing_columns = [
+            column_name
+            for column_name in self.REQUIRED_COLUMNS
+            if column_name not in X.columns
+        ]
+        if missing_columns:
+            raise ValueError(
+                f"SimulatedLoanOfficer is missing required columns: {missing_columns}"
+            )
+
+
+def train_baselines(
+    dataset: pd.DataFrame | None = None,
+    *,
+    dataset_path: str | Path | None = None,
+    expected_row_count: int | None = None,
+    minimum_test_rows: int = MINIMUM_TEST_ROWS,
+    preprocessor_artifact_path: str | Path | None = DEFAULT_PREPROCESSOR_ARTIFACT_PATH,
+    logistic_artifact_path: str | Path | None = DEFAULT_LOGISTIC_ARTIFACT_PATH,
+    baseline_metrics_path: str | Path | None = DEFAULT_BASELINE_METRICS_PATH,
+    metrics_path: str | Path | None = DEFAULT_METRICS_PATH,
+    random_state: int = DEFAULT_RANDOM_STATE,
+) -> BaselineTrainingArtifacts:
+    """Fit the first baseline suite on the documented temporal splits."""
+
+    resolved_dataset, resolved_dataset_path = _load_dataset(dataset, dataset_path)
+    validate_synthetic_dataset(
+        resolved_dataset,
+        expected_row_count=len(resolved_dataset) if expected_row_count is None else expected_row_count,
+        minimum_test_rows=minimum_test_rows,
+    )
+
+    prepared = prepare_temporal_data(resolved_dataset)
+    preprocessor = fit_preprocessor(
+        prepared.train.X,
+        artifact_path=preprocessor_artifact_path,
+    )
+    X_train_processed = transform_features(preprocessor, prepared.train.X)
+    X_validation_processed = transform_features(preprocessor, prepared.validation.X)
+    X_test_processed = transform_features(preprocessor, prepared.test.X)
+
+    majority_model = MajorityClassBaseline().fit(prepared.train.y)
+    logistic_model = LogisticRegression(
+        class_weight="balanced",
+        max_iter=1_000,
+        random_state=random_state,
+        solver="liblinear",
+    )
+    logistic_model.fit(X_train_processed, prepared.train.y.to_numpy(dtype=int))
+    simulated_model = SimulatedLoanOfficer(random_state=random_state).fit(prepared.train.X)
+
+    if logistic_artifact_path is not None:
+        _save_joblib(logistic_model, logistic_artifact_path)
+
+    logistic_train_metrics = compute_binary_classification_metrics(
+        prepared.train.y.to_numpy(dtype=int),
+        logistic_model.predict_proba(X_train_processed)[:, 1],
+        model_name="logistic_regression",
+        model_type="classical",
+        split="train_months_1_8",
+    )
+    logistic_validation_metrics = compute_binary_classification_metrics(
+        prepared.validation.y.to_numpy(dtype=int),
+        logistic_model.predict_proba(X_validation_processed)[:, 1],
+        model_name="logistic_regression",
+        model_type="classical",
+        split="validation_months_9_10",
+    )
+    logistic_test_metrics = compute_binary_classification_metrics(
+        prepared.test.y.to_numpy(dtype=int),
+        logistic_model.predict_proba(X_test_processed)[:, 1],
+        model_name="logistic_regression",
+        model_type="classical",
+        split="test_months_11_12",
+    )
+
+    comparison_metrics = {
+        "majority_class": compute_binary_classification_metrics(
+            prepared.test.y.to_numpy(dtype=int),
+            majority_model.predict_proba(prepared.test.X)[:, 1],
+            model_name="majority_class",
+            model_type="baseline",
+            split="test_months_11_12",
+        ),
+        "logistic_regression": compute_binary_classification_metrics(
+            prepared.test.y.to_numpy(dtype=int),
+            logistic_model.predict_proba(X_test_processed)[:, 1],
+            model_name="logistic_regression",
+            model_type="baseline",
+            split="test_months_11_12",
+        ),
+        "simulated_loan_officer": compute_binary_classification_metrics(
+            prepared.test.y.to_numpy(dtype=int),
+            simulated_model.predict_proba(prepared.test.X)[:, 1],
+            model_name="simulated_loan_officer",
+            model_type="baseline",
+            split="test_months_11_12",
+        ),
+    }
+    loan_officer_auc = comparison_metrics["simulated_loan_officer"]["auc_roc"]
+    baseline_metrics = [
+        _build_baseline_comparison_item(
+            comparison_metrics[model_name],
+            loan_officer_auc=loan_officer_auc,
+        )
+        for model_name in BASELINE_MODEL_ORDER
+    ]
+
+    run_id = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_baselines")
+    model_stats = [
+        logistic_train_metrics,
+        logistic_validation_metrics,
+        logistic_test_metrics,
+    ]
+    metrics_payload = {
+        "run_id": run_id,
+        "split_row_counts": {
+            "train": int(len(prepared.train.y)),
+            "validation": int(len(prepared.validation.y)),
+            "test": int(len(prepared.test.y)),
+        },
+        "model_stats": model_stats,
+        "baselines": baseline_metrics,
+    }
+
+    if baseline_metrics_path is not None:
+        _save_json(baseline_metrics, baseline_metrics_path)
+    if metrics_path is not None:
+        _save_json(metrics_payload, metrics_path)
+
+    return BaselineTrainingArtifacts(
+        run_id=run_id,
+        dataset_path=resolved_dataset_path,
+        preprocessor_path=None if preprocessor_artifact_path is None else Path(preprocessor_artifact_path),
+        logistic_model_path=None if logistic_artifact_path is None else Path(logistic_artifact_path),
+        baseline_metrics_path=None if baseline_metrics_path is None else Path(baseline_metrics_path),
+        metrics_path=None if metrics_path is None else Path(metrics_path),
+        model_stats=model_stats,
+        baseline_metrics=baseline_metrics,
+    )
+
+
+def _build_baseline_comparison_item(
+    metrics: dict[str, Any],
+    *,
+    loan_officer_auc: float,
+) -> dict[str, Any]:
+    return {
+        "model_name": metrics["model_name"],
+        "model_type": "baseline",
+        "auc_roc": metrics["auc_roc"],
+        "ks_statistic": metrics["ks_statistic"],
+        "brier_score": metrics["brier_score"],
+        "expected_calibration_error": metrics["expected_calibration_error"],
+        "lift_vs_loan_officer": round(metrics["auc_roc"] - loan_officer_auc, 4),
+    }
+
+
+def _load_dataset(
+    dataset: pd.DataFrame | None,
+    dataset_path: str | Path | None,
+) -> tuple[pd.DataFrame, Path | None]:
+    if dataset is not None:
+        return dataset.copy(), None
+
+    resolved_dataset_path = Path(dataset_path or DEFAULT_DATASET_PATH)
+    if not resolved_dataset_path.is_file():
+        raise FileNotFoundError(
+            f"Dataset not found at {resolved_dataset_path}. "
+            "Run the synthetic dataset materialization command first."
+        )
+    return pd.read_csv(resolved_dataset_path), resolved_dataset_path
+
+
+def _save_joblib(artifact: object, path: str | Path) -> None:
+    artifact_path = Path(path)
+    artifact_path.parent.mkdir(parents=True, exist_ok=True)
+    joblib.dump(artifact, artifact_path)
+
+
+def _save_json(payload: Any, path: str | Path) -> None:
+    output_path = Path(path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+
+__all__ = [
+    "BASELINE_MODEL_ORDER",
+    "BaselineTrainingArtifacts",
+    "DEFAULT_BASELINE_METRICS_PATH",
+    "DEFAULT_DATASET_PATH",
+    "DEFAULT_LOGISTIC_ARTIFACT_PATH",
+    "DEFAULT_METRICS_PATH",
+    "DEFAULT_RANDOM_STATE",
+    "MajorityClassBaseline",
+    "SimulatedLoanOfficer",
+    "train_baselines",
+]

@@ -179,5 +179,18 @@ This file tracks expected model artifacts, promotion criteria, and the registry 
 
 ## Current Registry
 
-No trained model has been created or promoted yet.
+No promoted production model exists yet.
 
+### Baseline Run: `20260513_135512_baselines`
+
+- Status: baseline-only candidate, not promotable
+- Dataset: `data/raw/synthetic_dataset.csv` with months `1-8 / 9-10 / 11-12`
+- Saved artifacts:
+  - `models/preprocessors/preprocessor.pkl`
+  - `models/artifacts/logistic_best.pkl`
+  - `models/reports/baseline_metrics.json`
+  - `models/reports/metrics.json`
+- Logistic regression test AUC: `0.8097`
+- Simulated loan officer test AUC: `0.7614`
+- Logistic lift vs simulated loan officer: `+0.0483`
+- Notes: no production ensemble, calibration artifact, text PCA artifact, explainers, fairness report, or PSI report exist yet, so this run is useful only as the first offline benchmark.
