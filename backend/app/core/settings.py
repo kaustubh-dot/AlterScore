@@ -6,7 +6,12 @@ from os import environ
 from pathlib import Path
 from typing import Mapping
 
-from backend.app.core.paths import PRODUCTION_MANIFEST_PATH, REPO_ROOT, resolve_repo_path
+from backend.app.core.paths import (
+    PRODUCTION_MANIFEST_PATH,
+    REPO_ROOT,
+    REQUEST_LOG_RELATIVE_PATH,
+    resolve_repo_path,
+)
 
 
 DEFAULT_CORS_ORIGINS = (
@@ -22,6 +27,7 @@ class Settings:
     repo_root: Path
     model_manifest_path: Path
     runtime_model_path: Path | None
+    request_log_path: Path
     log_level: str
     cors_origins: tuple[str, ...]
 
@@ -51,6 +57,12 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         if runtime_model_value
         else None
     )
+    request_log_value = source.get("ALTERSCORE_REQUEST_LOG_PATH")
+    request_log_path = (
+        resolve_repo_path(request_log_value, repo_root)
+        if request_log_value
+        else resolve_repo_path(REQUEST_LOG_RELATIVE_PATH, repo_root)
+    )
     cors_origins = _split_csv(source.get("ALTERSCORE_CORS_ORIGINS"))
 
     return Settings(
@@ -59,6 +71,7 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         repo_root=repo_root,
         model_manifest_path=model_manifest_path,
         runtime_model_path=runtime_model_path,
+        request_log_path=request_log_path,
         log_level=source.get("ALTERSCORE_LOG_LEVEL", "INFO").upper(),
         cors_origins=cors_origins or DEFAULT_CORS_ORIGINS,
     )

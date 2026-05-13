@@ -53,6 +53,8 @@ MODEL_REGISTRY_DIR: Final[Path] = MODELS_DIR / "registry"
 
 RUNTIME_DIR: Final[Path] = BACKEND_DIR / "runtime"
 RUNTIME_LOG_DIR: Final[Path] = RUNTIME_DIR / "logs"
+REQUEST_LOG_RELATIVE_PATH: Final[Path] = Path("backend/runtime/logs/requests.jsonl")
+REQUEST_LOG_PATH: Final[Path] = REPO_ROOT / REQUEST_LOG_RELATIVE_PATH
 
 PRODUCTION_MANIFEST_PATH: Final[Path] = (
     MODEL_REGISTRY_DIR / "production_manifest.json"
@@ -89,6 +91,8 @@ __all__ = [
     "MODEL_REPORTS_DIR",
     "PROCESSED_DATA_DIR",
     "PRODUCTION_MANIFEST_PATH",
+    "REQUEST_LOG_PATH",
+    "REQUEST_LOG_RELATIVE_PATH",
     "RAW_DATA_DIR",
     "REPO_ROOT",
     "REQUIRED_ARTIFACT_PATHS",

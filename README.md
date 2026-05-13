@@ -9,8 +9,9 @@ counterfactual improvement actions, and evaluator analytics.
 
 The repository is in foundation mode. Backend feature contracts, runtime
 helpers, API schemas, offline baseline/classical training, runtime artifact
-loading, and FastAPI health/score route stubs exist. Analytics routes,
-explainability artifacts, and broader application flows are still pending.
+loading, FastAPI health/score route stubs, and append-only score-request
+logging exist. Analytics routes, explainability artifacts, and broader
+application flows are still pending.
 
 ## Repository Guide
 
