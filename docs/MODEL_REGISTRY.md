@@ -30,7 +30,7 @@ This file tracks expected model artifacts, promotion criteria, and the registry 
 | DICE explainer | `models/explainers/dice_explainer.pkl` | Counterfactual job | Yes | Used by score endpoint |
 | Metrics report | `models/reports/metrics.json` | Evaluation job | Yes for dashboard | All model metrics and curves |
 | Baseline metrics | `models/reports/baseline_metrics.json` | Baselines job | Yes for dashboard | Majority, logistic, loan officer, ensemble |
-| Global importance | `models/reports/global_importance.json` | SHAP job | Yes for dashboard | Top feature importances |
+| Global importance | `models/reports/global_importance.json` | Explainability job | Yes for dashboard | Dashboard-ready feature ranking; current foundation prefers exact linear contribution magnitudes from the saved logistic explainability source and keeps the contract field name `mean_abs_shap` for backend compatibility until `shap_explainer.pkl` exists |
 | SHAP summary image | `models/reports/shap_summary.png` | SHAP job | No | Human inspection |
 | Fairness report | `models/reports/fairness_report.json` | Fairness job | Yes for dashboard | Group metrics and verdict across protected audit attributes; deeper calibration-parity and individual-fairness follow-ons can extend it later |
 | PSI report | `models/reports/psi_report.json` | Drift job | Yes for dashboard | Train months `1-8` vs test months `11-12` on the canonical 35 inputs only |
@@ -187,9 +187,11 @@ Current local runtime-artifact status:
 - `models/reports/population_percentiles.json` now exists and the runtime loader resolves the active model's table when the artifact contains multiple model-specific payloads.
 - `models/reports/fairness_report.json` now exists and is generated offline from held-out months `11-12` using protected attributes only for subgroup evaluation, never as model inputs.
 - `models/reports/psi_report.json` now exists and is generated offline from the canonical 35 model inputs by comparing train months `1-8` to test months `11-12` only.
+- `models/reports/global_importance.json` now exists and is generated offline from the canonical 35 model inputs using the current saved explainability source, with deterministic ranking and dashboard-compatible feature metadata.
 - Zero-filled semantic fallback remains supported only for intentionally PCA-less test/runtime bundles.
 - The current local fairness artifact reports `overall_auc = 0.8098`, `worst_auc_gap = 0.0379`, and no flagged groups in the saved subgroup summary.
 - The current local PSI artifact reports `max_psi = 0.2007`, overall verdict `watch`, and `avg_response_time_ms` as the most drifted feature.
+- The current local global-importance artifact ranks `cognitive_load_index` first at `mean_abs_shap = 0.4635`, followed by `impulsivity_index`, `scroll_hesitation_score`, and `repayment_intention_score`.
 
 ### Baseline Run: `20260513_171150_baselines`
 

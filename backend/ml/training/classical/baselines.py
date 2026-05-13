@@ -30,6 +30,11 @@ from backend.ml.evaluation.metrics import (
     build_split_evaluation_details,
     compute_binary_classification_metrics,
 )
+from backend.ml.explainability.global_importance import (
+    DEFAULT_GLOBAL_IMPORTANCE_PATH,
+    build_global_importance_report_for_candidate_models,
+    save_global_importance_report,
+)
 from backend.ml.preprocessing.pipeline import (
     DEFAULT_PREPROCESSOR_ARTIFACT_PATH,
     DEFAULT_TEXT_PCA_ARTIFACT_PATH,
@@ -66,6 +71,7 @@ class BaselineTrainingArtifacts:
     population_percentiles_path: Path | None
     psi_report_path: Path | None
     fairness_report_path: Path | None
+    global_importance_path: Path | None
     model_stats: list[dict[str, Any]]
     baseline_metrics: list[dict[str, Any]]
 
@@ -151,6 +157,7 @@ def train_baselines(
     population_percentiles_path: str | Path | None = DEFAULT_POPULATION_PERCENTILES_PATH,
     psi_report_path: str | Path | None = DEFAULT_PSI_REPORT_PATH,
     fairness_report_path: str | Path | None = DEFAULT_FAIRNESS_REPORT_PATH,
+    global_importance_path: str | Path | None = DEFAULT_GLOBAL_IMPORTANCE_PATH,
     random_state: int = DEFAULT_RANDOM_STATE,
 ) -> BaselineTrainingArtifacts:
     """Fit the first baseline suite on the documented temporal splits."""
@@ -258,6 +265,12 @@ def train_baselines(
         logistic_validation_metrics,
         logistic_test_metrics,
     ]
+    global_importance_report, _ = build_global_importance_report_for_candidate_models(
+        {"logistic_regression": logistic_model},
+        train_processed_features=X_train_processed,
+        test_processed_features=X_test_processed,
+        model_stats=model_stats,
+    )
     fairness_report, _ = build_fairness_report_for_candidate_probabilities(
         prepared.test.y.to_numpy(dtype=int),
         prepared.test.protected,
@@ -315,6 +328,8 @@ def train_baselines(
         _save_json(psi_report, psi_report_path)
     if fairness_report_path is not None:
         save_fairness_report(fairness_report, fairness_report_path)
+    if global_importance_path is not None:
+        save_global_importance_report(global_importance_report, global_importance_path)
 
     return BaselineTrainingArtifacts(
         run_id=run_id,
@@ -330,6 +345,9 @@ def train_baselines(
         psi_report_path=None if psi_report_path is None else Path(psi_report_path),
         fairness_report_path=(
             None if fairness_report_path is None else Path(fairness_report_path)
+        ),
+        global_importance_path=(
+            None if global_importance_path is None else Path(global_importance_path)
         ),
         model_stats=model_stats,
         baseline_metrics=baseline_metrics,
@@ -386,6 +404,7 @@ __all__ = [
     "DEFAULT_BASELINE_METRICS_PATH",
     "DEFAULT_DATASET_PATH",
     "DEFAULT_FAIRNESS_REPORT_PATH",
+    "DEFAULT_GLOBAL_IMPORTANCE_PATH",
     "DEFAULT_LOGISTIC_ARTIFACT_PATH",
     "DEFAULT_METRICS_PATH",
     "DEFAULT_POPULATION_PERCENTILES_PATH",
