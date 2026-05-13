@@ -37,7 +37,7 @@ AlterScore should be reproducible locally before it is deployed anywhere. Deploy
 
 ## Local Development Commands
 
-The backend dependency file and frontend package skeleton now exist. The backend app entrypoint is still pending, so the backend run command remains the intended local shape until that file is implemented.
+The backend app entrypoint now exists at `backend/app/main.py`, and the health plus score route stubs can run locally against saved artifacts.
 
 ```powershell
 # Backend
@@ -102,6 +102,8 @@ At startup the backend must:
   - production-manifest loading for the eventual serving bundle
   - `ALTERSCORE_RUNTIME_MODEL_PATH` fallback for the current local stub path
 - The current scoring stub can run with saved logistic or classical artifacts plus the shared preprocessor.
+- `backend/app/main.py` now loads the runtime artifact bundle at startup and exposes `/api/health` plus `/api/score`.
+- `/api/health` currently returns `degraded` when scoring-critical artifacts are present but optional runtime artifacts such as `text_pca`, SHAP, DICE, fairness, or PSI are still missing.
 - `models/preprocessors/text_pca.pkl` does not exist yet, so request-time semantic dimensions currently fall back to zero values in stub mode.
 - SHAP and DICE artifacts do not exist yet, so the current stub scoring response returns empty `explanation` and `counterfactual_actions` lists.
 

@@ -46,7 +46,8 @@
 14. [x] Implement baseline comparators and the first offline training loop on temporal splits.
 15. [x] Implement random forest, XGBoost, and LightGBM training on the same temporal split foundation.
 16. [x] Build artifact loading and backend scoring stubs against the fixed inference assembly path.
-17. [ ] Wire FastAPI startup caching plus `/api/health` and `/api/score` route stubs on top of the artifact loader and scoring service.
+17. [x] Wire FastAPI startup caching plus `/api/health` and `/api/score` route stubs on top of the artifact loader and scoring service.
+18. [ ] Persist `text_pca.pkl`, add request logging, and extend route coverage toward analytics stubs.
 
 ## Files To Create First
 
@@ -138,6 +139,12 @@ Docs and contracts
 - Artifact loader supports manifest and temporary direct-model fallback modes.
 - Score-mapper and scoring-service stubs can return schema-valid responses from saved artifacts.
 - Artifact-loading smoke coverage exists before FastAPI route work begins.
+
+### M2.6 - Backend Route-Stub Foundation Green
+
+- FastAPI app startup caches the runtime artifact bundle.
+- `/api/health` and `/api/score` route stubs pass integration coverage.
+- The backend can serve schema-valid score responses from saved artifacts before explainability and analytics artifacts are complete.
 
 ### M3 - Production Candidate Green
 
