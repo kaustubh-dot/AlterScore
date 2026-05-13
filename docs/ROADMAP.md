@@ -30,16 +30,16 @@
 
 ## Exact First 10 Implementation Steps
 
-1. Create `.gitignore`, environment examples, backend dependency file, frontend package skeleton, and root README placeholder.
-2. Implement backend package skeleton with settings, path helpers, and artifact path constants.
-3. Implement canonical 35-input feature registry in one backend module, including numeric, categorical, protected, temporal, actionable, and immutable feature lists.
-4. Implement Pydantic schemas for `ScoreRequest`, `ScoreResponse`, analytics responses, and common errors.
-5. Add unit tests that validate feature-list exclusions, schema constraints, and PRD route contract names.
-6. Implement synthetic data generator with correlated psychometric bases, demographics, cohort month, mild drift, and latent label generation.
-7. Implement data validation job and tests for default rate, missing values, temporal split, feature ranges, and protected attribute separation.
-8. Implement local NLP extractor with neutral fallback, VADER sentiment, spaCy agency/problem-solving features, and raw sentence embedding support.
-9. Implement derived feature engineering and answer parser with tests using known answer payloads.
-10. Implement preprocessing fit/transform pipeline, save `preprocessor.pkl` and `text_pca.pkl`, and add train/validation/test split integrity tests.
+1. [x] Create `.gitignore`, environment examples, and backend dependency file.
+2. [x] Implement backend package skeleton with settings, path helpers, and artifact path constants.
+3. [x] Implement canonical 35-input feature registry in one backend module, including numeric, categorical, protected, temporal, actionable, and immutable feature lists.
+4. [x] Implement Pydantic schemas for `ScoreRequest`, `ScoreResponse`, analytics responses, and common errors.
+5. [x] Add unit tests that validate feature-list exclusions, schema constraints, and PRD route contract names.
+6. [x] Add the frontend package skeleton and root README placeholder.
+7. [ ] Implement synthetic data generator with correlated psychometric bases, demographics, cohort month, mild drift, and latent label generation.
+8. [ ] Implement data validation job and tests for default rate, missing values, temporal split, feature ranges, and protected attribute separation.
+9. [ ] Implement local NLP extractor with neutral fallback, VADER sentiment, spaCy agency/problem-solving features, and raw sentence embedding support.
+10. [ ] Implement derived feature engineering, preprocessing fit/transform, and split-integrity tests.
 
 ## Files To Create First
 
@@ -112,6 +112,7 @@ Docs and contracts
 - Docs created.
 - Repo scaffold created.
 - 35-input feature registry decision recorded.
+- Runtime foundation files and settings/path helpers implemented.
 
 ### M1 - Data Contract Green
 

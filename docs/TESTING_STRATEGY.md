@@ -17,6 +17,8 @@ tests/
       test_score_schema.py
       test_analytics_schema.py
       test_settings.py
+    frontend/
+      test_frontend_skeleton.py
     ml/
       test_feature_registry.py
       test_answer_parser.py
@@ -214,4 +216,3 @@ Each analytics endpoint must:
 | M5 API | Health, score, analytics integration tests |
 | M6 Frontend | Assessment/results/dashboard E2E tests |
 | M7 Release | Full smoke suite and deployment health check |
-
