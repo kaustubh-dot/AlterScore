@@ -241,6 +241,113 @@ Current foundation note:
 }
 ```
 
+## GET /api/roc-data
+
+Current foundation note:
+- The ROC endpoint now serves the saved test-split `roc_curve` payloads from `models/reports/metrics.json`.
+- The response is a list of model series and does not run any model inference at request time.
+- If `metrics.json` is missing at startup, the endpoint returns a structured `503` with `missing_artifacts`.
+
+### Response
+
+```json
+[
+  {
+    "model_name": "logistic_regression",
+    "model_type": "classical",
+    "split": "test_months_11_12",
+    "points": [
+      {
+        "fpr": 0.0,
+        "tpr": 0.0
+      },
+      {
+        "fpr": 1.0,
+        "tpr": 1.0
+      }
+    ]
+  }
+]
+```
+
+## GET /api/pr-curve
+
+Current foundation note:
+- The PR endpoint now serves the saved test-split `pr_curve` payloads from `models/reports/metrics.json`.
+- The response is a list of model series and does not run any model inference at request time.
+- If `metrics.json` is missing at startup, the endpoint returns a structured `503` with `missing_artifacts`.
+
+### Response
+
+```json
+[
+  {
+    "model_name": "logistic_regression",
+    "model_type": "classical",
+    "split": "test_months_11_12",
+    "points": [
+      {
+        "recall": 1.0,
+        "precision": 0.72
+      }
+    ]
+  }
+]
+```
+
+## GET /api/calibration-curve
+
+Current foundation note:
+- The calibration endpoint now serves the saved test-split `calibration_curve` payloads from `models/reports/metrics.json`.
+- The response is a list of model series and does not run any model inference at request time.
+- If `metrics.json` is missing at startup, the endpoint returns a structured `503` with `missing_artifacts`.
+
+### Response
+
+```json
+[
+  {
+    "model_name": "logistic_regression",
+    "model_type": "classical",
+    "split": "test_months_11_12",
+    "points": [
+      {
+        "mean_predicted": 0.45,
+        "fraction_positive": 0.52,
+        "count": 168
+      }
+    ]
+  }
+]
+```
+
+## GET /api/confusion-matrix
+
+Current foundation note:
+- The confusion-matrix endpoint now serves the saved test-split `confusion_matrix` payloads from `models/reports/metrics.json`.
+- The response is a list of per-model matrices at the saved optimal threshold and does not run any model inference at request time.
+- If `metrics.json` is missing at startup, the endpoint returns a structured `503` with `missing_artifacts`.
+
+### Response
+
+```json
+[
+  {
+    "model_name": "logistic_regression",
+    "model_type": "classical",
+    "split": "test_months_11_12",
+    "threshold": 0.24,
+    "tp": 1245,
+    "fp": 331,
+    "fn": 54,
+    "tn": 170,
+    "tpr": 0.9584,
+    "fpr": 0.6607,
+    "fnr": 0.0416
+  }
+]
+```
+
 ## Analytics Schemas
 
 ### Model Stats Item
@@ -299,6 +406,81 @@ Current foundation note:
     }
   ]
 }
+```
+
+### ROC Curve Response
+
+```json
+[
+  {
+    "model_name": "logistic_regression",
+    "model_type": "classical",
+    "split": "test_months_11_12",
+    "points": [
+      {
+        "fpr": 0.0,
+        "tpr": 0.0
+      }
+    ]
+  }
+]
+```
+
+### Precision-Recall Response
+
+```json
+[
+  {
+    "model_name": "logistic_regression",
+    "model_type": "classical",
+    "split": "test_months_11_12",
+    "points": [
+      {
+        "recall": 1.0,
+        "precision": 0.72
+      }
+    ]
+  }
+]
+```
+
+### Calibration Curve Response
+
+```json
+[
+  {
+    "model_name": "logistic_regression",
+    "model_type": "classical",
+    "split": "test_months_11_12",
+    "points": [
+      {
+        "mean_predicted": 0.45,
+        "fraction_positive": 0.52,
+        "count": 168
+      }
+    ]
+  }
+]
+```
+
+### Confusion Matrix Response
+
+```json
+[
+  {
+    "model_name": "logistic_regression",
+    "model_type": "classical",
+    "split": "test_months_11_12",
+    "threshold": 0.24,
+    "tp": 1245,
+    "fp": 331,
+    "fn": 54,
+    "tn": 170,
+    "tpr": 0.9584,
+    "fpr": 0.6607,
+    "fnr": 0.0416
+  }
+]
 ```
 
 ### Global Importance Item

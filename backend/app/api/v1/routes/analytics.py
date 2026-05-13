@@ -12,7 +12,11 @@ from fastapi.responses import JSONResponse
 
 from backend.app.schemas.analytics import (
     BaselineComparisonResponse,
+    CalibrationCurveResponse,
+    ConfusionMatrixResponse,
     ModelStatsResponse,
+    PrecisionRecallResponse,
+    RocCurveResponse,
     ScoreDistributionResponse,
 )
 from backend.app.schemas.common import ErrorResponse
@@ -130,6 +134,80 @@ def get_score_distribution(request: Request) -> ScoreDistributionResponse | JSON
         )
 
 
+@router.get(
+    "/roc-data",
+    response_model=RocCurveResponse,
+    responses={
+        503: {"model": ErrorResponse},
+        500: {"model": ErrorResponse},
+    },
+)
+def get_roc_data(request: Request) -> RocCurveResponse | JSONResponse:
+    return _execute_analytics_request(
+        request,
+        endpoint_name="ROC data",
+        missing_message="ROC data is not ready yet. Generate and save metrics.json first.",
+        handler_name="get_roc_data",
+    )
+
+
+@router.get(
+    "/pr-curve",
+    response_model=PrecisionRecallResponse,
+    responses={
+        503: {"model": ErrorResponse},
+        500: {"model": ErrorResponse},
+    },
+)
+def get_pr_curve(request: Request) -> PrecisionRecallResponse | JSONResponse:
+    return _execute_analytics_request(
+        request,
+        endpoint_name="PR curve data",
+        missing_message="PR curve data is not ready yet. Generate and save metrics.json first.",
+        handler_name="get_pr_curve",
+    )
+
+
+@router.get(
+    "/calibration-curve",
+    response_model=CalibrationCurveResponse,
+    responses={
+        503: {"model": ErrorResponse},
+        500: {"model": ErrorResponse},
+    },
+)
+def get_calibration_curve(
+    request: Request,
+) -> CalibrationCurveResponse | JSONResponse:
+    return _execute_analytics_request(
+        request,
+        endpoint_name="Calibration curve data",
+        missing_message=(
+            "Calibration curve data is not ready yet. Generate and save metrics.json first."
+        ),
+        handler_name="get_calibration_curve",
+    )
+
+
+@router.get(
+    "/confusion-matrix",
+    response_model=ConfusionMatrixResponse,
+    responses={
+        503: {"model": ErrorResponse},
+        500: {"model": ErrorResponse},
+    },
+)
+def get_confusion_matrix(request: Request) -> ConfusionMatrixResponse | JSONResponse:
+    return _execute_analytics_request(
+        request,
+        endpoint_name="Confusion matrix data",
+        missing_message=(
+            "Confusion matrix data is not ready yet. Generate and save metrics.json first."
+        ),
+        handler_name="get_confusion_matrix",
+    )
+
+
 def _analytics_missing_response(
     *,
     code: str,
@@ -142,6 +220,37 @@ def _analytics_missing_response(
         message=message,
         details=details,
     )
+
+
+def _execute_analytics_request(
+    request: Request,
+    *,
+    endpoint_name: str,
+    missing_message: str,
+    handler_name: str,
+) -> Any:
+    analytics_service = request.app.state.analytics_service
+    handler = getattr(analytics_service, handler_name)
+
+    try:
+        return handler()
+    except AnalyticsArtifactMissingError as exc:
+        return _analytics_missing_response(
+            code="ARTIFACTS_NOT_READY",
+            message=missing_message,
+            details={
+                "missing_artifacts": [exc.artifact_key],
+                "artifact_path": None if exc.artifact_path is None else str(exc.artifact_path),
+            },
+        )
+    except AnalyticsPayloadError as exc:
+        logger.exception("Invalid %s payload.", endpoint_name)
+        return _analytics_error_response(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            code="ANALYTICS_PAYLOAD_INVALID",
+            message="Saved analytics payload is invalid for the requested endpoint.",
+            details={"artifact": exc.artifact_key},
+        )
 
 
 def _analytics_error_response(

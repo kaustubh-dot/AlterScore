@@ -79,6 +79,73 @@ class ScoreDistributionResponse(SchemaModel):
     score_histogram: list[ScoreDistributionBucket]
 
 
+class RocPoint(SchemaModel):
+    fpr: float = Field(..., ge=0, le=1)
+    tpr: float = Field(..., ge=0, le=1)
+
+
+class RocCurveSeries(SchemaModel):
+    model_name: str = Field(..., min_length=1)
+    model_type: str = Field(..., min_length=1)
+    split: str = Field(..., min_length=1)
+    points: list[RocPoint]
+
+
+class RocCurveResponse(RootModel[list[RocCurveSeries]]):
+    pass
+
+
+class PrecisionRecallPoint(SchemaModel):
+    recall: float = Field(..., ge=0, le=1)
+    precision: float = Field(..., ge=0, le=1)
+
+
+class PrecisionRecallSeries(SchemaModel):
+    model_name: str = Field(..., min_length=1)
+    model_type: str = Field(..., min_length=1)
+    split: str = Field(..., min_length=1)
+    points: list[PrecisionRecallPoint]
+
+
+class PrecisionRecallResponse(RootModel[list[PrecisionRecallSeries]]):
+    pass
+
+
+class CalibrationPoint(SchemaModel):
+    mean_predicted: float = Field(..., ge=0, le=1)
+    fraction_positive: float = Field(..., ge=0, le=1)
+    count: int = Field(..., ge=0)
+
+
+class CalibrationCurveSeries(SchemaModel):
+    model_name: str = Field(..., min_length=1)
+    model_type: str = Field(..., min_length=1)
+    split: str = Field(..., min_length=1)
+    points: list[CalibrationPoint]
+
+
+class CalibrationCurveResponse(RootModel[list[CalibrationCurveSeries]]):
+    pass
+
+
+class ConfusionMatrixItem(SchemaModel):
+    model_name: str = Field(..., min_length=1)
+    model_type: str = Field(..., min_length=1)
+    split: str = Field(..., min_length=1)
+    threshold: float = Field(..., ge=0, le=1)
+    tp: int = Field(..., ge=0)
+    fp: int = Field(..., ge=0)
+    fn: int = Field(..., ge=0)
+    tn: int = Field(..., ge=0)
+    tpr: float = Field(..., ge=0, le=1)
+    fpr: float = Field(..., ge=0, le=1)
+    fnr: float = Field(..., ge=0, le=1)
+
+
+class ConfusionMatrixResponse(RootModel[list[ConfusionMatrixItem]]):
+    pass
+
+
 class GlobalImportanceItem(SchemaModel):
     feature: str = Field(..., min_length=1)
     display_name: str = Field(..., min_length=1)
@@ -135,6 +202,11 @@ class FairnessReport(SchemaModel):
 __all__ = [
     "BaselineComparisonItem",
     "BaselineComparisonResponse",
+    "CalibrationCurveResponse",
+    "CalibrationCurveSeries",
+    "CalibrationPoint",
+    "ConfusionMatrixItem",
+    "ConfusionMatrixResponse",
     "DriftFeatureItem",
     "DriftReport",
     "DriftThresholds",
@@ -145,6 +217,12 @@ __all__ = [
     "HealthResponse",
     "ModelStatsItem",
     "ModelStatsResponse",
+    "PrecisionRecallPoint",
+    "PrecisionRecallResponse",
+    "PrecisionRecallSeries",
+    "RocCurveResponse",
+    "RocCurveSeries",
+    "RocPoint",
     "ScoreDistributionBucket",
     "ScoreDistributionResponse",
     "ScoreDistributionSummary",

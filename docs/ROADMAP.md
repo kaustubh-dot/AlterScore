@@ -54,8 +54,8 @@
 22. [x] Add `/api/model-stats` and `/api/baseline-comparison` route stubs backed by saved report files.
 23. [ ] Add `/api/fairness-report`, `/api/drift-report`, and `/api/global-importance` route stubs backed by report files once those artifacts exist.
 24. [x] Add `/api/score-distribution` backed by a persisted population-percentiles or histogram artifact rather than runtime recomputation.
-25. [ ] Add `/api/roc-data`, `/api/pr-curve`, `/api/calibration-curve`, and `/api/confusion-matrix` route stubs from the evaluation report structure.
-26. [ ] Expand analytics endpoint contract tests for both happy-path and missing-artifact responses.
+25. [x] Add `/api/roc-data`, `/api/pr-curve`, `/api/calibration-curve`, and `/api/confusion-matrix` route stubs from the evaluation report structure.
+26. [x] Expand analytics endpoint contract tests for both happy-path and missing-artifact responses.
 27. [ ] Train TabNet on the documented temporal split with deterministic seeds and smoke coverage.
 28. [ ] Train the residual MLP baseline on the documented temporal split with deterministic seeds and smoke coverage.
 29. [ ] Train the stacking ensemble from the approved base-model set without crossing train/validation/test boundaries.
@@ -93,7 +93,7 @@ This section expands the next roadmap stretch into smaller delivery checkpoints 
 ## Checkpoint Sequencing Notes
 
 - C19 and C20 are complete, and the offline evaluation bundle foundation for score distribution plus ROC/PR/calibration/confusion payloads now exists for the current logistic/classical artifact set.
-- C25 and C26 are now the preferred next backend slice because `/api/score-distribution` is already report-backed and the grouped curve/confusion routes can now follow the same pattern.
+- C24 through C26 are now complete for the current saved evaluation bundle, so the next meaningful backend slice is the governance-report track once fairness, drift, and global-importance artifacts exist.
 - C27 through C31 are the production-model track and should stay offline-only; none of those jobs should be pulled into FastAPI request handlers.
 - C32 through C34 depend on a stable production candidate or an explicitly documented surrogate explainability path.
 - C35 should happen only after the serving bundle can load without relying on the temporary direct-model fallback path.
