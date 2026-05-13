@@ -73,12 +73,12 @@ Generate data
 ## Artifact Bundle Checklist
 
 - [ ] `models/artifacts/calibrated_stacking.pkl`
-- [ ] `models/preprocessors/preprocessor.pkl`
-- [ ] `models/preprocessors/text_pca.pkl`
+- [x] `models/preprocessors/preprocessor.pkl`
+- [x] `models/preprocessors/text_pca.pkl`
 - [ ] `models/explainers/shap_explainer.pkl`
 - [ ] `models/explainers/dice_explainer.pkl`
-- [ ] `models/reports/metrics.json`
-- [ ] `models/reports/baseline_metrics.json`
+- [x] `models/reports/metrics.json`
+- [x] `models/reports/baseline_metrics.json`
 - [ ] `models/reports/fairness_report.json`
 - [ ] `models/reports/psi_report.json`
 - [ ] `models/reports/global_importance.json`
@@ -103,10 +103,11 @@ At startup the backend must:
   - production-manifest loading for the eventual serving bundle
   - `ALTERSCORE_RUNTIME_MODEL_PATH` fallback for the current local stub path
 - The current scoring stub can run with saved logistic or classical artifacts plus the shared preprocessor.
+- The current offline baseline and classical training commands now also persist `models/preprocessors/text_pca.pkl` from train months `1-8` only, using runtime-compatible raw embeddings derived from the saved synthetic dataset.
 - `backend/app/main.py` now loads the runtime artifact bundle at startup and exposes `/api/health` plus `/api/score`.
 - `backend/app/main.py` now also initializes the append-only request logging service for `/api/score`.
-- `/api/health` currently returns `degraded` when scoring-critical artifacts are present but optional runtime artifacts such as `text_pca`, SHAP, DICE, fairness, or PSI are still missing.
-- `models/preprocessors/text_pca.pkl` does not exist yet, so request-time semantic dimensions currently fall back to zero values in stub mode.
+- `/api/health` currently returns `degraded` when scoring-critical artifacts are present but optional runtime artifacts such as SHAP, DICE, fairness, or PSI are still missing.
+- When `models/preprocessors/text_pca.pkl` is present, request-time semantic dimensions now use the persisted PCA artifact; zero-filled semantic fallback remains only for intentionally PCA-less bundles and tests.
 - SHAP and DICE artifacts do not exist yet, so the current stub scoring response returns empty `explanation` and `counterfactual_actions` lists.
 
 ## Runtime Foundation Files
@@ -133,7 +134,7 @@ At startup the backend must:
 
 - Endpoint: `POST /api/score`
 - Payload: known valid fixture from `tests/fixtures/score_request_valid.json`.
-- Pass condition: status 200, score in 300-850, probability in 0-1, explanations returned.
+- Pass condition: status 200, score in 300-850, probability in 0-1, and the explanation/counterfactual fields are present even if the current stub returns empty lists before SHAP and DICE artifacts exist.
 
 ## Docker Plan
 

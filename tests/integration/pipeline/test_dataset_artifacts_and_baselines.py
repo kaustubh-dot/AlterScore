@@ -39,6 +39,7 @@ def test_train_baselines_saves_preprocessor_model_and_metrics_artifacts(tmp_path
         expected_row_count=2_400,
         minimum_test_rows=300,
         preprocessor_artifact_path=tmp_path / "preprocessor.pkl",
+        text_pca_artifact_path=tmp_path / "text_pca.pkl",
         logistic_artifact_path=tmp_path / "logistic_best.pkl",
         baseline_metrics_path=tmp_path / "baseline_metrics.json",
         metrics_path=tmp_path / "metrics.json",
@@ -48,6 +49,7 @@ def test_train_baselines_saves_preprocessor_model_and_metrics_artifacts(tmp_path
     metrics_payload = json.loads(artifacts.metrics_path.read_text(encoding="utf-8"))
 
     assert artifacts.preprocessor_path.is_file()
+    assert artifacts.text_pca_path.is_file()
     assert artifacts.logistic_model_path.is_file()
     assert artifacts.baseline_metrics_path.is_file()
     assert artifacts.metrics_path.is_file()

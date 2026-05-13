@@ -18,6 +18,8 @@ from backend.ml.data_generation.validators import MINIMUM_TEST_ROWS, validate_sy
 from backend.ml.evaluation.metrics import compute_binary_classification_metrics
 from backend.ml.preprocessing.pipeline import (
     DEFAULT_PREPROCESSOR_ARTIFACT_PATH,
+    DEFAULT_TEXT_PCA_ARTIFACT_PATH,
+    build_text_embedding_matrix,
     fit_preprocessor,
     prepare_temporal_data,
     transform_features,
@@ -57,6 +59,7 @@ class ClassicalTrainingArtifacts:
     run_id: str
     dataset_path: Path | None
     preprocessor_path: Path | None
+    text_pca_path: Path | None
     model_artifact_paths: dict[str, Path | None]
     metrics_path: Path | None
     model_stats: list[dict[str, Any]]
@@ -72,6 +75,7 @@ def train_classical_models(
     expected_row_count: int | None = None,
     minimum_test_rows: int = MINIMUM_TEST_ROWS,
     preprocessor_artifact_path: str | Path | None = DEFAULT_PREPROCESSOR_ARTIFACT_PATH,
+    text_pca_artifact_path: str | Path | None = DEFAULT_TEXT_PCA_ARTIFACT_PATH,
     random_forest_artifact_path: str | Path | None = DEFAULT_RF_ARTIFACT_PATH,
     xgboost_artifact_path: str | Path | None = DEFAULT_XGB_ARTIFACT_PATH,
     lightgbm_artifact_path: str | Path | None = DEFAULT_LGBM_ARTIFACT_PATH,
@@ -91,7 +95,13 @@ def train_classical_models(
         minimum_test_rows=minimum_test_rows,
     )
 
-    prepared = prepare_temporal_data(resolved_dataset)
+    raw_text_embeddings = build_text_embedding_matrix(resolved_dataset)
+    prepared = prepare_temporal_data(
+        resolved_dataset,
+        raw_text_embeddings=raw_text_embeddings,
+        text_pca_random_state=random_state,
+        text_pca_artifact_path=text_pca_artifact_path,
+    )
     preprocessor = fit_preprocessor(
         prepared.train.X,
         artifact_path=preprocessor_artifact_path,
@@ -183,6 +193,7 @@ def train_classical_models(
         run_id=run_id,
         dataset_path=resolved_dataset_path,
         preprocessor_path=_optional_path(preprocessor_artifact_path),
+        text_pca_path=_optional_path(text_pca_artifact_path),
         model_artifact_paths=model_artifact_paths,
         metrics_path=_optional_path(metrics_path),
         model_stats=model_stats,

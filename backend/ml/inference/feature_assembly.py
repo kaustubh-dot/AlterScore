@@ -135,6 +135,13 @@ def _project_text_embedding(
         text_pca.transform(raw_embedding.reshape(1, -1))[0],
         dtype=float,
     )
+    if projected_embedding.ndim != 1 or projected_embedding.shape[0] != len(TEXT_PCA_FEATURES):
+        raise ValueError(
+            "text_pca transform output must match the two canonical semantic dimensions."
+        )
+    if not np.isfinite(projected_embedding).all():
+        raise ValueError("text_pca transform produced non-finite semantic features.")
+
     return {
         TEXT_PCA_FEATURES[0]: float(projected_embedding[0]),
         TEXT_PCA_FEATURES[1]: float(projected_embedding[1]),

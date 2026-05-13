@@ -17,7 +17,7 @@ This file tracks expected model artifacts, promotion criteria, and the registry 
 | Artifact | Path | Producer | Required For Serving | Notes |
 |---|---|---|---|---|
 | Preprocessor | `models/preprocessors/preprocessor.pkl` | Preprocessing fit job | Yes | Includes scaling, imputation, categorical encoding |
-| Text PCA | `models/preprocessors/text_pca.pkl` | NLP/preprocessing job | Yes | Fit on training embeddings only |
+| Text PCA | `models/preprocessors/text_pca.pkl` | NLP/preprocessing job | Yes | Persisted by the current offline baseline/classical jobs and fit on training embeddings only |
 | Logistic model | `models/artifacts/logistic_best.pkl` | Classical training | No | Baseline and stack input |
 | Random forest model | `models/artifacts/rf_best.pkl` | Classical training | No | SHAP explainability source |
 | XGBoost model | `models/artifacts/xgb_best.pkl` | Classical training | No | Stack input |
@@ -181,36 +181,44 @@ This file tracks expected model artifacts, promotion criteria, and the registry 
 
 No promoted production model exists yet.
 
-### Baseline Run: `20260513_135512_baselines`
+Current local runtime-artifact status:
+
+- `models/preprocessors/text_pca.pkl` now exists and is loaded opportunistically by the runtime bundle.
+- Zero-filled semantic fallback remains supported only for intentionally PCA-less test/runtime bundles.
+
+### Baseline Run: `20260513_160334_baselines`
 
 - Status: baseline-only candidate, not promotable
 - Dataset: `data/raw/synthetic_dataset.csv` with months `1-8 / 9-10 / 11-12`
 - Saved artifacts:
   - `models/preprocessors/preprocessor.pkl`
+  - `models/preprocessors/text_pca.pkl`
   - `models/artifacts/logistic_best.pkl`
   - `models/reports/baseline_metrics.json`
   - `models/reports/metrics.json`
-- Logistic regression test AUC: `0.8097`
+- Logistic regression validation AUC: `0.8128`
+- Logistic regression test AUC: `0.8104`
 - Simulated loan officer test AUC: `0.7614`
-- Logistic lift vs simulated loan officer: `+0.0483`
-- Notes: no production ensemble, calibration artifact, text PCA artifact, explainers, fairness report, or PSI report exist yet, so this run is useful only as the first offline benchmark.
+- Logistic lift vs simulated loan officer: `+0.0490`
+- Notes: this refresh persists the first real `text_pca.pkl` from train months `1-8` by reconstructing deterministic runtime-compatible raw text embeddings from the saved synthetic dataset before PCA fitting. The run is still baseline-only because no production ensemble, calibration artifact, explainers, fairness report, or PSI report exist yet.
 
-### Classical Run: `20260513_142208_classical`
+### Classical Run: `20260513_160430_classical`
 
 - Status: classical-model candidate set, not promotable
 - Dataset: `data/raw/synthetic_dataset.csv` with months `1-8 / 9-10 / 11-12`
 - Saved artifacts:
   - `models/preprocessors/preprocessor.pkl`
+  - `models/preprocessors/text_pca.pkl`
   - `models/artifacts/rf_best.pkl`
   - `models/artifacts/xgb_best.pkl`
   - `models/artifacts/lgbm_best.pkl`
   - `models/reports/metrics.json`
 - Validation AUCs:
-  - Random forest: `0.7924`
-  - XGBoost: `0.8033`
-  - LightGBM: `0.7980`
+  - Random forest: `0.7950`
+  - XGBoost: `0.8022`
+  - LightGBM: `0.7932`
 - Test AUCs:
-  - Random forest: `0.8040`
-  - XGBoost: `0.8087`
-  - LightGBM: `0.7977`
-- Notes: the metrics payload now preserves the existing baseline section and appends classical validation/test rows, but the bounded classical suite still trails the logistic baseline test AUC of `0.8097`, so these artifacts are training infrastructure milestones rather than promotion candidates.
+  - Random forest: `0.8055`
+  - XGBoost: `0.8080`
+  - LightGBM: `0.7964`
+- Notes: the refreshed classical suite reuses the persisted train-only `text_pca.pkl`, preserves the baseline section in `metrics.json`, and keeps the runtime bundle compatible with both logistic and classical fallback artifacts. The bounded classical suite still trails the logistic baseline test AUC of `0.8104`, so these remain training-infrastructure milestones rather than promotion candidates.

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
+from typing import Any, Final
 
 import joblib
 import numpy as np
@@ -18,7 +18,7 @@ from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 from backend.app.core.paths import MODEL_PREPROCESSORS_DIR
 from backend.ml.data_generation.generator import TEMPORAL_SPLIT_MONTHS
 from backend.ml.features.derived_features import DERIVED_FEATURES, add_derived_features
-from backend.ml.nlp.extractor import RAW_EMBEDDING_DIM
+from backend.ml.nlp.extractor import RAW_EMBEDDING_DIM, extract_raw_text_embedding
 from backend.ml.preprocessing.feature_registry import (
     ALL_MODEL_FEATURES,
     CATEGORICAL_FEATURES,
@@ -33,6 +33,17 @@ TEXT_PCA_COMPONENTS: Final[int] = 2
 TEXT_PCA_RANDOM_STATE: Final[int] = 42
 DEFAULT_PREPROCESSOR_ARTIFACT_PATH: Final[Path] = MODEL_PREPROCESSORS_DIR / "preprocessor.pkl"
 DEFAULT_TEXT_PCA_ARTIFACT_PATH: Final[Path] = MODEL_PREPROCESSORS_DIR / "text_pca.pkl"
+TEXT_SOURCE_COLUMN: Final[str] = "q27_resilience_text"
+SYNTHETIC_TEXT_SOURCE_COLUMNS: Final[tuple[str, ...]] = (
+    "text_sentiment_compound",
+    "text_agency_score",
+    "text_problem_solving_flag",
+    "future_orientation",
+    "resilience_score",
+    "social_capital_score",
+    "conscientiousness_score",
+    "honesty_score",
+)
 NON_DERIVED_MODEL_FEATURES: Final[list[str]] = [
     feature_name for feature_name in ALL_MODEL_FEATURES if feature_name not in DERIVED_FEATURES
 ]
@@ -156,6 +167,21 @@ def fit_text_pca(
         _save_artifact(text_pca, artifact_path)
 
     return text_pca
+
+
+def build_text_embedding_matrix(
+    dataset: pd.DataFrame,
+    *,
+    text_column: str = TEXT_SOURCE_COLUMN,
+) -> np.ndarray:
+    """Build runtime-compatible raw text embeddings from dataset text or deterministic surrogates."""
+
+    if dataset.empty:
+        return np.zeros((0, RAW_EMBEDDING_DIM), dtype=float)
+
+    texts = _resolve_text_corpus(dataset, text_column=text_column)
+    embeddings = [extract_raw_text_embedding(text) for text in texts]
+    return np.vstack(embeddings).astype(float, copy=False)
 
 
 def apply_text_pca(
@@ -297,6 +323,92 @@ def _assert_embedding_shape(
         )
 
 
+def _resolve_text_corpus(
+    dataset: pd.DataFrame,
+    *,
+    text_column: str,
+) -> list[str]:
+    if text_column in dataset.columns:
+        return dataset[text_column].fillna("").astype(str).tolist()
+
+    missing_columns = [
+        column_name
+        for column_name in SYNTHETIC_TEXT_SOURCE_COLUMNS
+        if column_name not in dataset.columns
+    ]
+    if missing_columns:
+        raise ValueError(
+            "Dataset is missing the text source needed to build raw embeddings: "
+            f"{missing_columns}"
+        )
+
+    surrogate_rows = dataset.loc[:, list(SYNTHETIC_TEXT_SOURCE_COLUMNS)]
+    return [
+        _build_synthetic_resilience_text(row)
+        for row in surrogate_rows.itertuples(index=False, name="SyntheticTextRow")
+    ]
+
+
+def _build_synthetic_resilience_text(row: Any) -> str:
+    sentiment_clause = (
+        "I stayed optimistic and calm while dealing with the setback."
+        if float(row.text_sentiment_compound) >= 0.25
+        else "I stayed cautious but steady while dealing with the setback."
+        if float(row.text_sentiment_compound) >= -0.15
+        else "I felt stressed and uncertain while dealing with the setback."
+    )
+    agency_clause = (
+        "I took action early and handled the problem myself."
+        if float(row.text_agency_score) >= 0.65
+        else "I tried to respond and make decisions as the situation changed."
+        if float(row.text_agency_score) >= 0.40
+        else "I felt stuck for a while before reacting."
+    )
+    problem_solving_clause = (
+        "I reduced expenses, adjusted my budget, and looked for extra work."
+        if float(row.text_problem_solving_flag) >= 0.5
+        else "I struggled to find a clear solution at first."
+    )
+    planning_clause = (
+        "I kept a long-term repayment plan in mind."
+        if float(row.future_orientation) >= 0.60
+        else "I focused more on immediate needs than a long-term plan."
+    )
+    resilience_clause = (
+        "I kept going after setbacks and recovered step by step."
+        if float(row.resilience_score) >= 0.60
+        else "It took time for me to recover after setbacks."
+    )
+    support_clause = (
+        "I leaned on community support when needed."
+        if float(row.social_capital_score) >= 0.55
+        else "I handled most of the pressure on my own."
+    )
+    discipline_clause = (
+        "I followed a careful budget and tried to stay organized."
+        if float(row.conscientiousness_score) >= 0.60
+        else "I tried to stay organized even when the plan was hard to follow."
+    )
+    honesty_clause = (
+        "I wanted to repay what I owed and be transparent about the situation."
+        if float(row.honesty_score) >= 0.60
+        else "I knew repayment would be difficult and I was not fully confident."
+    )
+
+    return " ".join(
+        [
+            agency_clause,
+            sentiment_clause,
+            problem_solving_clause,
+            planning_clause,
+            resilience_clause,
+            support_clause,
+            discipline_clause,
+            honesty_clause,
+        ]
+    )
+
+
 def _save_artifact(artifact: object, artifact_path: str | Path) -> None:
     path = Path(artifact_path)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -310,9 +422,11 @@ __all__ = [
     "TEXT_PCA_COMPONENTS",
     "TEXT_PCA_FEATURES",
     "TEXT_PCA_RANDOM_STATE",
+    "TEXT_SOURCE_COLUMN",
     "TemporalDataSplit",
     "apply_text_pca",
     "build_preprocessor",
+    "build_text_embedding_matrix",
     "fit_preprocessor",
     "fit_text_pca",
     "prepare_model_feature_frame",

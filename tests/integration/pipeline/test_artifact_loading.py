@@ -86,6 +86,7 @@ def _prepare_runtime_bundle(tmp_path):
     model_root = tmp_path / "models"
     artifact_paths = {
         "preprocessor": model_root / "preprocessors" / "preprocessor.pkl",
+        "text_pca": model_root / "preprocessors" / "text_pca.pkl",
         "model": model_root / "artifacts" / "logistic_best.pkl",
         "baseline_metrics": model_root / "reports" / "baseline_metrics.json",
         "metrics": model_root / "reports" / "metrics.json",
@@ -97,6 +98,7 @@ def _prepare_runtime_bundle(tmp_path):
         expected_row_count=2_400,
         minimum_test_rows=300,
         preprocessor_artifact_path=artifact_paths["preprocessor"],
+        text_pca_artifact_path=None,
         logistic_artifact_path=artifact_paths["model"],
         baseline_metrics_path=artifact_paths["baseline_metrics"],
         metrics_path=artifact_paths["metrics"],

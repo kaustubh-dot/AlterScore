@@ -18,6 +18,7 @@ def test_train_classical_models_saves_artifacts_and_merges_metrics(tmp_path) -> 
         expected_row_count=2_400,
         minimum_test_rows=300,
         preprocessor_artifact_path=tmp_path / "baseline_preprocessor.pkl",
+        text_pca_artifact_path=tmp_path / "baseline_text_pca.pkl",
         logistic_artifact_path=tmp_path / "logistic_best.pkl",
         baseline_metrics_path=tmp_path / "baseline_metrics.json",
         metrics_path=tmp_path / "metrics.json",
@@ -28,6 +29,7 @@ def test_train_classical_models_saves_artifacts_and_merges_metrics(tmp_path) -> 
         expected_row_count=2_400,
         minimum_test_rows=300,
         preprocessor_artifact_path=tmp_path / "preprocessor.pkl",
+        text_pca_artifact_path=tmp_path / "text_pca.pkl",
         random_forest_artifact_path=tmp_path / "rf_best.pkl",
         xgboost_artifact_path=tmp_path / "xgb_best.pkl",
         lightgbm_artifact_path=tmp_path / "lgbm_best.pkl",
@@ -49,6 +51,7 @@ def test_train_classical_models_saves_artifacts_and_merges_metrics(tmp_path) -> 
         assert np.all(artifacts.test_probabilities[model_name] <= 1.0)
 
     assert artifacts.metrics_path.is_file()
+    assert artifacts.text_pca_path.is_file()
     assert metrics_payload["baselines"] == baseline_metrics
 
     expected_rows = {

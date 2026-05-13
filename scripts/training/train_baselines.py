@@ -17,7 +17,10 @@ from backend.ml.training.classical.baselines import (
     DEFAULT_METRICS_PATH,
     train_baselines,
 )
-from backend.ml.preprocessing.pipeline import DEFAULT_PREPROCESSOR_ARTIFACT_PATH
+from backend.ml.preprocessing.pipeline import (
+    DEFAULT_PREPROCESSOR_ARTIFACT_PATH,
+    DEFAULT_TEXT_PCA_ARTIFACT_PATH,
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -31,6 +34,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--preprocessor-path",
         type=Path,
         default=DEFAULT_PREPROCESSOR_ARTIFACT_PATH,
+    )
+    parser.add_argument(
+        "--text-pca-path",
+        type=Path,
+        default=DEFAULT_TEXT_PCA_ARTIFACT_PATH,
     )
     parser.add_argument(
         "--logistic-model-path",
@@ -58,6 +66,7 @@ def main(argv: list[str] | None = None) -> int:
         expected_row_count=args.expected_row_count,
         minimum_test_rows=args.minimum_test_rows,
         preprocessor_artifact_path=args.preprocessor_path,
+        text_pca_artifact_path=args.text_pca_path,
         logistic_artifact_path=args.logistic_model_path,
         baseline_metrics_path=args.baseline_metrics_path,
         metrics_path=args.metrics_path,
@@ -69,6 +78,7 @@ def main(argv: list[str] | None = None) -> int:
                 "run_id": artifacts.run_id,
                 "dataset_path": None if artifacts.dataset_path is None else str(artifacts.dataset_path),
                 "preprocessor_path": None if artifacts.preprocessor_path is None else str(artifacts.preprocessor_path),
+                "text_pca_path": None if artifacts.text_pca_path is None else str(artifacts.text_pca_path),
                 "logistic_model_path": None if artifacts.logistic_model_path is None else str(artifacts.logistic_model_path),
                 "baseline_metrics_path": None if artifacts.baseline_metrics_path is None else str(artifacts.baseline_metrics_path),
                 "logistic_test_auc": next(
