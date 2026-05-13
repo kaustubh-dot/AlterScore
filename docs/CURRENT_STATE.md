@@ -5,8 +5,8 @@
 - Date: 2026-05-13
 - Workspace: `C:\Kaustubh\Projects\AlterScore`
 - PRD source: `docs/AlterScore_PRD_v2.md`
-- Current phase: FastAPI request-logging foundation
-- Application implementation status: feature registry, runtime foundation helpers, API schemas, the frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, the baseline training loop, the bounded classical training loop for random forest, XGBoost, and LightGBM, the runtime artifact-loading plus scoring-service stubs, the first FastAPI app startup with `/api/health` and `/api/score` route stubs, and append-only request logging on the score path are implemented; analytics routes and full production-runtime artifacts are still pending
+- Current phase: analytics route foundation
+- Application implementation status: feature registry, runtime foundation helpers, API schemas, the frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, the baseline training loop, the bounded classical training loop for random forest, XGBoost, and LightGBM, the persisted text PCA artifact foundation, the runtime artifact-loading plus scoring-service stubs, the first FastAPI app startup with `/api/health` and `/api/score` route stubs, and append-only request logging on the score path are implemented; analytics routes and full production-runtime artifacts are still pending
 
 ## What Exists
 
@@ -55,14 +55,16 @@
 - Dataset-artifact and baseline-training integration coverage exists at `tests/integration/pipeline/test_dataset_artifacts_and_baselines.py`.
 - Classical training integration coverage exists at `tests/integration/pipeline/test_classical_training.py`.
 - Artifact-loading and scoring-stub integration coverage exists at `tests/integration/pipeline/test_artifact_loading.py`.
+- Persisted text PCA artifact integration coverage now exists at `tests/integration/pipeline/test_text_pca_artifact.py`.
 - API integration coverage now exists at `tests/integration/api/test_health_endpoint.py` and `tests/integration/api/test_score_endpoint.py`.
 - Score-mapper unit coverage exists at `tests/unit/ml/test_score_mapper.py`.
 - A reusable valid score-request smoke fixture now exists at `tests/fixtures/score_request_valid.json`.
 - Persisted synthetic dataset now exists at `data/raw/synthetic_dataset.csv`.
 - Persisted validation summary now exists at `data/validation/validation_summary.json`.
-- First saved baseline artifacts now exist at `models/preprocessors/preprocessor.pkl`, `models/artifacts/logistic_best.pkl`, `models/reports/baseline_metrics.json`, and `models/reports/metrics.json`.
+- Refreshed baseline artifacts now exist at `models/preprocessors/preprocessor.pkl`, `models/preprocessors/text_pca.pkl`, `models/artifacts/logistic_best.pkl`, `models/reports/baseline_metrics.json`, and `models/reports/metrics.json`.
 - Saved classical model artifacts now exist at `models/artifacts/rf_best.pkl`, `models/artifacts/xgb_best.pkl`, and `models/artifacts/lgbm_best.pkl`.
 - `models/reports/metrics.json` now preserves the baseline section and includes validation/test rows for `random_forest`, `xgboost`, and `lightgbm`.
+- Offline training now reconstructs deterministic runtime-compatible raw text embeddings from the persisted synthetic dataset when raw Q27 text is unavailable, then fits `text_pca.pkl` on train months `1-8` only.
 - Root project placeholder README exists at `README.md`.
 - Frontend scaffold verification exists at `tests/unit/frontend/test_frontend_skeleton.py`.
 
@@ -72,7 +74,7 @@
 - No neural, stacking, calibration, SHAP, DICE, fairness, or PSI jobs yet.
 - No analytics endpoints yet, no interactive frontend tests beyond the package skeleton smoke test, and no broader ML validation tests beyond feature, schema, data generation, NLP extraction, preprocessing split-integrity, behavioral parsing, request assembly, answer/derived feature coverage, baseline artifact coverage, classical training coverage, runtime artifact-loading/scoring-smoke coverage, and the first API route-stub integration coverage.
 - No Docker runtime files yet.
-- No persisted runtime `text_pca.pkl`, SHAP explainer, or DICE explainer exists yet, so the current scoring stub falls back to zero semantic projections when `text_pca` is unavailable and returns empty explanation/counterfactual lists until explainability artifacts exist.
+- No SHAP explainer or DICE explainer exists yet, so the current scoring stub still returns empty explanation/counterfactual lists; semantic features now use the persisted `text_pca.pkl` when available and only fall back to zero-filled projections when the PCA artifact is intentionally missing.
 
 ## PRD-Derived Product Summary
 
@@ -104,9 +106,9 @@ The earlier PRD narrative referenced 39 features, but the project will not inven
 
 Continue the implementation foundation in this order:
 
-1. Persist a real `text_pca.pkl` artifact so request-time semantic features stop falling back to zero-filled stub projections.
-2. Add the first analytics route stubs on top of the new FastAPI startup and request-logging path.
-3. Keep the saved logistic and classical artifacts as the offline foundation while neural and ensemble training are still pending.
+1. Add a report-reading analytics service layer so route handlers can serve saved metrics without parsing report files ad hoc.
+2. Add `/api/model-stats` and `/api/baseline-comparison` route stubs on top of the current FastAPI startup and artifact-loading path.
+3. Keep the refreshed logistic, classical, preprocessor, and `text_pca.pkl` artifacts as the local offline foundation while neural and ensemble training are still pending.
 
 ## Session Update Protocol
 

@@ -366,3 +366,153 @@ The bounded classical suite trains cleanly on the documented temporal split and 
 - Continue: yes
 - Stop: no
 - Follow-up: add artifact-loading and backend scoring stubs against the stable saved artifacts, then proceed to neural and ensemble work later without reopening the classical training contract.
+
+## EXP-20260513-003 - Persisted text PCA artifact foundation and runtime semantic parity refresh
+
+- Status: completed
+- Owner: Codex
+- Date started: 2026-05-13
+- Date completed: 2026-05-13
+- Branch / commit: workspace (uncommitted)
+- Related decision: existing temporal-split, 35-feature-registry, and offline-training-separation decisions
+- Related issue / task: persisted `text_pca.pkl` foundation for offline training and runtime request assembly
+
+### Hypothesis
+
+If the offline baseline and classical training jobs reconstruct deterministic runtime-compatible raw text embeddings from the saved synthetic dataset, then they can persist a real `models/preprocessors/text_pca.pkl` fit on months `1-8` only without changing the canonical 35 inputs, and the runtime scoring path can consume that artifact without losing the documented zero-fill fallback for intentionally PCA-less bundles.
+
+### Dataset
+
+- Data version: `synthetic_v0.1.0`
+- Row count: `10,000`
+- Train split: months `1-8` (`6,800` rows)
+- Validation split: months `9-10` (`1,400` rows)
+- Test split: months `11-12` (`1,800` rows)
+- Protected attributes available: gender, age group, region, education level
+- Known schema changes: none
+
+### Feature Set
+
+- Feature registry version: `0.1.0`
+- Numeric feature count: `33`
+- Categorical feature count: `2`
+- Excluded fields: protected attributes, `cohort_month`, `application_date`, `repayment_label`
+- NLP configuration: deterministic surrogate Q27 text reconstruction from saved NLP columns, runtime-compatible raw embeddings, and train-only PCA persistence
+- Derived features: included
+
+### Model / Pipeline Configuration
+
+```json
+{
+  "model_family": "text_pca_artifact_foundation",
+  "random_seed": 42,
+  "preprocessing": {
+    "numeric": "median imputer + standard scaler",
+    "categorical": "most-frequent imputer + ordinal encoder",
+    "text_pca": "2 components fit on months 1-8 only and saved to models/preprocessors/text_pca.pkl"
+  },
+  "hyperparameters": {
+    "logistic_regression": {
+      "class_weight": "balanced",
+      "max_iter": 1000,
+      "solver": "liblinear"
+    },
+    "random_forest": {
+      "class_weight": "balanced_subsample",
+      "min_samples_leaf": 4,
+      "n_estimators": 300
+    },
+    "xgboost": {
+      "learning_rate": 0.05,
+      "max_depth": 4,
+      "n_estimators": 200,
+      "subsample": 1.0,
+      "colsample_bytree": 1.0
+    },
+    "lightgbm": {
+      "learning_rate": 0.05,
+      "n_estimators": 200,
+      "subsample": 1.0,
+      "colsample_bytree": 1.0,
+      "deterministic": true
+    }
+  },
+  "calibration": {},
+  "class_imbalance_strategy": "logistic balanced class weights plus bounded classical defaults"
+}
+```
+
+### Commands
+
+```powershell
+C:\Users\Kaustubh\anaconda3\python.exe -m pytest --basetemp .tmp\pytest tests/integration/pipeline/test_preprocessing_split_integrity.py tests/integration/pipeline/test_feature_assembly.py tests/integration/pipeline/test_dataset_artifacts_and_baselines.py tests/integration/pipeline/test_classical_training.py tests/integration/pipeline/test_artifact_loading.py tests/integration/pipeline/test_text_pca_artifact.py tests/integration/api/test_health_endpoint.py tests/integration/api/test_score_endpoint.py
+C:\Users\Kaustubh\anaconda3\python.exe scripts/training/train_baselines.py
+C:\Users\Kaustubh\anaconda3\python.exe scripts/training/train_classical_models.py
+```
+
+### Results
+
+| Metric | Train | Validation | Test |
+|---|---:|---:|---:|
+| Logistic AUC ROC | 0.8189 | 0.8128 | 0.8104 |
+| Logistic AUC PR | 0.8998 | 0.9096 | 0.9111 |
+| Logistic KS | 0.4849 | 0.4851 | 0.4894 |
+| Logistic Brier | 0.1734 | 0.1637 | 0.1660 |
+| Logistic ECE | 0.1276 | 0.1271 | 0.1219 |
+| Logistic Accuracy | 0.7712 | 0.8107 | 0.7878 |
+| Logistic Precision | 0.7753 | 0.8474 | 0.7949 |
+| Logistic Recall | 0.9365 | 0.9016 | 0.9515 |
+| Logistic F1 | 0.8483 | 0.8736 | 0.8662 |
+
+### Baseline Comparison
+
+| Comparator | Metric | Delta |
+|---|---:|---:|
+| Majority | AUC ROC 0.5000 | -0.2614 vs simulated loan officer |
+| Logistic | AUC ROC 0.8104 | +0.0490 vs simulated loan officer |
+| Simulated loan officer | AUC ROC 0.7614 | 0.0000 |
+
+### Classical Snapshot
+
+| Model | Validation AUC ROC | Test AUC ROC |
+|---|---:|---:|
+| Random forest | 0.7950 | 0.8055 |
+| XGBoost | 0.8022 | 0.8080 |
+| LightGBM | 0.7932 | 0.7964 |
+
+### Fairness Summary
+
+- Worst AUC gap: not computed
+- Flagged groups: not computed
+- Approval-rate gaps: not computed
+- Notes: fairness is still intentionally deferred until later report infrastructure exists
+
+### Drift Summary
+
+- Max PSI: not computed
+- Top drifted features: not computed
+- Verdict: not computed
+
+### Artifacts
+
+| Artifact | Path |
+|---|---|
+| Text PCA | `models/preprocessors/text_pca.pkl` |
+| Preprocessor | `models/preprocessors/preprocessor.pkl` |
+| Logistic model | `models/artifacts/logistic_best.pkl` |
+| Random forest model | `models/artifacts/rf_best.pkl` |
+| XGBoost model | `models/artifacts/xgb_best.pkl` |
+| LightGBM model | `models/artifacts/lgbm_best.pkl` |
+| Baseline metrics | `models/reports/baseline_metrics.json` |
+| Metrics payload | `models/reports/metrics.json` |
+
+### Interpretation
+
+The offline pipeline now persists a real `text_pca.pkl` fit only on months `1-8` and the runtime request-assembly path consumes it whenever it is available. The focused pipeline and API integration suite confirmed that validation/test rows transform cleanly, semantic outputs stay finite, runtime projections become non-zero with the saved artifact, and the zero-fill behavior remains available only when the PCA artifact is intentionally omitted.
+
+### Decision
+
+- Promote: no
+- Continue: yes
+- Stop: no
+- Follow-up: build the analytics report-reading service plus `/api/model-stats` and `/api/baseline-comparison` route stubs on top of the refreshed local artifact bundle.

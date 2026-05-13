@@ -2,7 +2,7 @@
 
 ## Current Phase
 
-FastAPI request-logging foundation. The canonical feature registry, project hygiene files, backend runtime helpers, API schemas, frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, the baseline training loop, the bounded classical training loop, the runtime artifact-loading plus scoring-service stubs, the first FastAPI startup with health/score route stubs, and append-only request logging are implemented; analytics routes and full production-runtime artifacts are not started.
+Analytics route foundation. The canonical feature registry, project hygiene files, backend runtime helpers, API schemas, frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, the baseline training loop, the bounded classical training loop, the persisted text PCA artifact foundation, the runtime artifact-loading plus scoring-service stubs, the first FastAPI startup with health/score route stubs, and append-only request logging are implemented; analytics routes and full production-runtime artifacts are not started.
 
 ## Immediate TODO
 
@@ -90,12 +90,12 @@ FastAPI request-logging foundation. The canonical feature registry, project hygi
 - [x] Train random forest.
 - [x] Train XGBoost.
 - [x] Train LightGBM.
+- [x] Persist `models/preprocessors/text_pca.pkl` for runtime semantic projection.
 - [ ] Train TabNet.
 - [ ] Train MLP.
 - [ ] Train stacking ensemble.
 - [ ] Calibrate stacking ensemble with isotonic regression.
 - [ ] Generate metrics and curves.
-- [ ] Persist `models/preprocessors/text_pca.pkl` for runtime semantic projection.
 
 ## Explainability TODO
 
@@ -149,6 +149,7 @@ FastAPI request-logging foundation. The canonical feature registry, project hygi
 - [x] Add artifact-loading and scoring-smoke coverage against saved runtime artifacts.
 - [x] Add API integration tests for `/api/health` and `/api/score` stubs.
 - [x] Add API integration coverage for request logging on `/api/score`.
+- [x] Add integration coverage for persisted text PCA artifacts, runtime semantic projections, and intentional zero-fill fallback behavior.
 - [ ] Add integration tests for broader data pipeline steps beyond generator validation and preprocessing split integrity.
 - [ ] Add integration tests for analytics endpoints.
 - [ ] Add E2E tests for assessment and dashboard.

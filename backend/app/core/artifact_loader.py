@@ -147,6 +147,10 @@ def load_runtime_artifact_bundle(
         raise ArtifactLoadError(
             f"Preprocessor at {preprocessor_path} does not expose transform()."
         )
+    if text_pca is not None and not callable(getattr(text_pca, "transform", None)):
+        raise ArtifactLoadError(
+            f"Text PCA artifact at {text_pca_path} does not expose transform()."
+        )
 
     return LoadedArtifactBundle(
         report=report,

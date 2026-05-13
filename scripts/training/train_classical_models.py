@@ -10,7 +10,10 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from backend.ml.preprocessing.pipeline import DEFAULT_PREPROCESSOR_ARTIFACT_PATH
+from backend.ml.preprocessing.pipeline import (
+    DEFAULT_PREPROCESSOR_ARTIFACT_PATH,
+    DEFAULT_TEXT_PCA_ARTIFACT_PATH,
+)
 from backend.ml.training.classical.baselines import (
     DEFAULT_BASELINE_METRICS_PATH,
     DEFAULT_METRICS_PATH,
@@ -35,6 +38,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--preprocessor-path",
         type=Path,
         default=DEFAULT_PREPROCESSOR_ARTIFACT_PATH,
+    )
+    parser.add_argument(
+        "--text-pca-path",
+        type=Path,
+        default=DEFAULT_TEXT_PCA_ARTIFACT_PATH,
     )
     parser.add_argument(
         "--random-forest-model-path",
@@ -72,6 +80,7 @@ def main(argv: list[str] | None = None) -> int:
         expected_row_count=args.expected_row_count,
         minimum_test_rows=args.minimum_test_rows,
         preprocessor_artifact_path=args.preprocessor_path,
+        text_pca_artifact_path=args.text_pca_path,
         random_forest_artifact_path=args.random_forest_model_path,
         xgboost_artifact_path=args.xgboost_model_path,
         lightgbm_artifact_path=args.lightgbm_model_path,
@@ -86,6 +95,9 @@ def main(argv: list[str] | None = None) -> int:
                 "dataset_path": None
                 if artifacts.dataset_path is None
                 else str(artifacts.dataset_path),
+                "text_pca_path": None
+                if artifacts.text_pca_path is None
+                else str(artifacts.text_pca_path),
                 "metrics_path": None
                 if artifacts.metrics_path is None
                 else str(artifacts.metrics_path),

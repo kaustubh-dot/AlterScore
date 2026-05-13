@@ -48,8 +48,8 @@
 16. [x] Build artifact loading and backend scoring stubs against the fixed inference assembly path.
 17. [x] Wire FastAPI startup caching plus `/api/health` and `/api/score` route stubs on top of the artifact loader and scoring service.
 18. [x] Add append-only request logging to the `/api/score` stub path.
-19. [ ] Persist `models/preprocessors/text_pca.pkl` from the offline temporal-train pipeline.
-20. [ ] Verify runtime request assembly consumes the persisted PCA artifact and only falls back to zero-filled semantics when the artifact is intentionally missing.
+19. [x] Persist `models/preprocessors/text_pca.pkl` from the offline temporal-train pipeline.
+20. [x] Verify runtime request assembly consumes the persisted PCA artifact and only falls back to zero-filled semantics when the artifact is intentionally missing.
 21. [ ] Add a report-reading analytics service layer so route handlers do not parse report files ad hoc.
 22. [ ] Add `/api/model-stats` and `/api/baseline-comparison` route stubs backed by saved report files.
 23. [ ] Add `/api/fairness-report`, `/api/drift-report`, and `/api/global-importance` route stubs backed by report files once those artifacts exist.
@@ -92,7 +92,7 @@ This section expands the next roadmap stretch into smaller delivery checkpoints 
 
 ## Checkpoint Sequencing Notes
 
-- C19 and C20 should be completed before any analytics expansion because they remove the last major ambiguity in the current scoring stub.
+- C19 and C20 are complete, so C21 through C26 are now the preferred next backend slice because the scoring stub no longer depends on the temporary semantic zero-fill path when `text_pca.pkl` is present.
 - C21 through C26 are the preferred next backend slice because they build on already-saved baseline and classical reports without waiting for neural or ensemble training.
 - C27 through C31 are the production-model track and should stay offline-only; none of those jobs should be pulled into FastAPI request handlers.
 - C32 through C34 depend on a stable production candidate or an explicitly documented surrogate explainability path.
