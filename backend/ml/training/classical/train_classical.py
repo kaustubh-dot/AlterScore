@@ -15,6 +15,10 @@ from sklearn.ensemble import RandomForestClassifier
 
 from backend.app.core.paths import MODEL_ARTIFACTS_DIR, MODEL_REPORTS_DIR, RAW_DATA_DIR
 from backend.ml.data_generation.validators import MINIMUM_TEST_ROWS, validate_synthetic_dataset
+from backend.ml.evaluation.drift import (
+    DEFAULT_PSI_REPORT_PATH,
+    build_psi_report_from_prepared_data,
+)
 from backend.ml.evaluation.metrics import (
     build_population_percentiles_payload,
     build_split_evaluation_details,
@@ -72,6 +76,7 @@ class ClassicalTrainingArtifacts:
     model_artifact_paths: dict[str, Path | None]
     metrics_path: Path | None
     population_percentiles_path: Path | None
+    psi_report_path: Path | None
     model_stats: list[dict[str, Any]]
     baseline_metrics: list[dict[str, Any]]
     validation_probabilities: dict[str, np.ndarray]
@@ -93,6 +98,7 @@ def train_classical_models(
     baseline_metrics_path: str | Path | None = DEFAULT_BASELINE_METRICS_PATH,
     metrics_path: str | Path | None = DEFAULT_METRICS_PATH,
     population_percentiles_path: str | Path | None = DEFAULT_POPULATION_PERCENTILES_PATH,
+    psi_report_path: str | Path | None = DEFAULT_PSI_REPORT_PATH,
     random_state: int = DEFAULT_RANDOM_STATE,
 ) -> ClassicalTrainingArtifacts:
     """Train the bounded classical model suite on the documented temporal split."""
@@ -125,6 +131,7 @@ def train_classical_models(
     y_train = prepared.train.y.to_numpy(dtype=int)
     y_validation = prepared.validation.y.to_numpy(dtype=int)
     y_test = prepared.test.y.to_numpy(dtype=int)
+    psi_report = build_psi_report_from_prepared_data(prepared)
 
     model_artifact_paths = {
         "random_forest": _optional_path(random_forest_artifact_path),
@@ -296,6 +303,8 @@ def train_classical_models(
             default_model_name=default_model_name,
         )
         _save_json(merged_population_payload, population_percentiles_path)
+    if psi_report_path is not None:
+        _save_json(psi_report, psi_report_path)
 
     return ClassicalTrainingArtifacts(
         run_id=run_id,
@@ -305,6 +314,7 @@ def train_classical_models(
         model_artifact_paths=model_artifact_paths,
         metrics_path=_optional_path(metrics_path),
         population_percentiles_path=_optional_path(population_percentiles_path),
+        psi_report_path=_optional_path(psi_report_path),
         model_stats=model_stats,
         baseline_metrics=baseline_metrics,
         validation_probabilities=validation_probabilities,
@@ -560,6 +570,7 @@ __all__ = [
     "DEFAULT_LGBM_ARTIFACT_PATH",
     "DEFAULT_RF_ARTIFACT_PATH",
     "DEFAULT_XGB_ARTIFACT_PATH",
+    "DEFAULT_PSI_REPORT_PATH",
     "ClassicalTrainingArtifacts",
     "NUMERIC_METRIC_FIELDS",
     "train_classical_models",

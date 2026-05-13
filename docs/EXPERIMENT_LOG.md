@@ -650,3 +650,90 @@ The offline pipeline now saves the report foundation needed for `/api/score-dist
 - Continue: yes
 - Stop: no
 - Follow-up: wire the remaining analytics routes to the saved evaluation artifacts, starting with `/api/score-distribution` or the grouped curve endpoints.
+
+## EXP-20260513-005 - Persisted PSI drift artifact foundation
+
+- Status: completed
+- Owner: Codex
+- Date started: 2026-05-13
+- Date completed: 2026-05-13
+- Branch / commit: workspace (uncommitted)
+- Related decision: existing temporal-split, 35-feature-registry, and offline-training-separation decisions
+- Related issue / task: persisted `psi_report.json` foundation for the offline governance bundle
+
+### Hypothesis
+
+If the offline drift job reuses the same temporal split and feature-preparation foundations as training, then it can persist a deterministic PSI artifact for the canonical 35 model inputs only, while excluding protected attributes, temporal metadata, and the target from the saved report.
+
+### Dataset
+
+- Data version: `synthetic_v0.1.0`
+- Row count: `10,000`
+- Train split: months `1-8` (`6,800` rows)
+- Validation split: months `9-10` (`1,400` rows, not used for PSI)
+- Test split: months `11-12` (`1,800` rows)
+- Protected attributes available: gender, age group, region, education level
+- Known schema changes: none
+
+### Feature Set
+
+- Feature registry version: `0.1.0`
+- Numeric feature count: `33`
+- Categorical feature count: `2`
+- Included fields: canonical 35 model inputs only
+- Excluded fields: protected attributes, `cohort_month`, `application_date`, `repayment_label`
+- NLP configuration: drift generation reuses the persisted-dataset text-alignment and train-only PCA preparation foundations before comparing train vs test feature distributions
+
+### Model / Pipeline Configuration
+
+```json
+{
+  "job_type": "psi_drift_report",
+  "random_seed": 42,
+  "comparison": {
+    "expected_split": "train_months_1_8",
+    "actual_split": "test_months_11_12"
+  },
+  "binning": {
+    "numeric": "deterministic train-derived quantile bins",
+    "categorical": "deterministic sorted category buckets",
+    "bin_count": 10,
+    "epsilon": 1e-06
+  },
+  "thresholds": {
+    "stable_below": 0.2,
+    "watch_below": 0.3,
+    "alert_at_or_above": 0.3
+  }
+}
+```
+
+### Commands
+
+```powershell
+C:\Users\Kaustubh\anaconda3\python.exe -m pytest --basetemp .tmp\pytest tests/integration/pipeline/test_dataset_artifacts_and_baselines.py tests/integration/pipeline/test_classical_training.py tests/integration/pipeline/test_artifact_loading.py tests/integration/pipeline/test_psi_report_artifact.py
+C:\Users\Kaustubh\anaconda3\python.exe -c "from backend.ml.evaluation.drift import generate_psi_report; artifacts = generate_psi_report(); print(artifacts.report_path); print(artifacts.max_psi); print(artifacts.verdict)"
+```
+
+### Drift Summary
+
+- Max PSI: `0.2007`
+- Top drifted features: `avg_response_time_ms`, `session_duration_sec`, `cognitive_load_index`, `typing_speed_wpm`
+- Verdict: `watch`
+
+### Artifacts
+
+| Artifact | Path |
+|---|---|
+| PSI drift report | `models/reports/psi_report.json` |
+
+### Interpretation
+
+The offline governance bundle now includes a real persisted drift report without widening scope into fairness, SHAP, DICE, calibration, stacking, or runtime analytics routes. The saved report stays model-agnostic, uses the documented train/test temporal comparison only, and confirms the expected mild synthetic drift is concentrated in later-cohort timing features rather than protected or excluded fields.
+
+### Decision
+
+- Promote: no
+- Continue: yes
+- Stop: no
+- Follow-up: generate the fairness and global-importance artifacts next, then wire `/api/drift-report` together with the remaining governance analytics routes in a later backend slice.
