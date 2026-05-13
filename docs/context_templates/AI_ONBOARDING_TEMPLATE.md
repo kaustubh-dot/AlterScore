@@ -6,11 +6,12 @@ Use this at the start of every new AI-assisted engineering session.
 
 Read these files before making changes:
 
-1. `docs/ENGINEERING_CONTEXT.md`
-2. `docs/CURRENT_STATE.md`
-3. `docs/TODO.md`
-4. `docs/DECISIONS.md`
-5. Task-specific docs, usually one of:
+1. `docs/AI_WORKFLOW_RULES.md`
+2. `docs/ENGINEERING_CONTEXT.md`
+3. `docs/CURRENT_STATE.md`
+4. `docs/TODO.md`
+5. `docs/DECISIONS.md`
+6. Task-specific docs, usually one of:
    - `docs/API_CONTRACTS.md`
    - `docs/DATA_SCHEMA.md`
    - `docs/MODEL_REGISTRY.md`
@@ -44,6 +45,7 @@ Read these files before making changes:
 You are working on AlterScore, a production-grade alternative credit scoring platform.
 
 Before editing, read:
+- docs/AI_WORKFLOW_RULES.md
 - docs/ENGINEERING_CONTEXT.md
 - docs/CURRENT_STATE.md
 - docs/TODO.md
@@ -61,4 +63,3 @@ Task:
 Expected output:
 [files, tests, docs, or explanation needed]
 ```
-

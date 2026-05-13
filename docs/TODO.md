@@ -6,7 +6,8 @@ Engineering organization and scaffolding only. Application implementation has no
 
 ## Immediate TODO
 
-- [ ] Resolve the PRD feature count mismatch before writing data generator code.
+- [x] Add mandatory AI workflow rules for startup, documentation updates, testing, git, and session close.
+- [ ] Implement the canonical 35-input feature registry before writing data generator code.
 - [ ] Add `.gitignore` for generated data, model artifacts, logs, env files, caches, and node/python build outputs.
 - [ ] Add `.env.example`.
 - [ ] Add backend dependency file with pinned Python package versions.
@@ -139,4 +140,3 @@ Engineering organization and scaffolding only. Application implementation has no
 - [ ] Add Docker plan after local app works.
 - [ ] Add artifact bundle checklist.
 - [ ] Add health check and rollback plan.
-

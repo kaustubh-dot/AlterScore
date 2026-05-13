@@ -6,6 +6,10 @@ This document is the durable engineering memory for AlterScore. It is written fo
 
 AlterScore is an alternative credit scoring platform for unbanked and thin-file borrowers. It uses psychometric assessment answers, behavioral telemetry, and local NLP features to produce a calibrated credit score, explanations, counterfactual improvement actions, and evaluator analytics.
 
+## Mandatory AI Workflow
+
+Before any AI agent edits the repository, it must read and follow `docs/AI_WORKFLOW_RULES.md`. That file defines the startup protocol, documentation update rules, testing expectations, git discipline, and session close procedure.
+
 ## Non-Negotiable PRD Intent
 
 - No external LLM API is required for the product path. NLP must run locally through HuggingFace sentence-transformers, VADER, and spaCy.
@@ -334,7 +338,7 @@ AlterScore/
 
 ### Operating Principles
 
-- Every AI session starts by reading `docs/ENGINEERING_CONTEXT.md`, `docs/CURRENT_STATE.md`, `docs/TODO.md`, and the task-specific doc.
+- Every AI session starts by reading `docs/AI_WORKFLOW_RULES.md`, `docs/ENGINEERING_CONTEXT.md`, `docs/CURRENT_STATE.md`, `docs/TODO.md`, and the task-specific doc.
 - Every task must identify owned files before editing.
 - Every task ends with a session summary that states files changed, tests run, decisions made, blockers, and next step.
 - Architecture changes require an entry in `docs/DECISIONS.md`.
@@ -392,4 +396,3 @@ The complete templates live in `docs/context_templates/`:
 ### Documentation Update Policy
 
 - Any change to architecture, data schema, API contract, artifact names, or development order must update docs in the same task.
-
