@@ -144,7 +144,10 @@ def load_runtime_artifact_bundle(
     text_pca = _load_joblib_if_present(text_pca_path)
     metrics_payload = _load_json_if_present(metrics_path)
     baseline_metrics = _load_json_if_present(baseline_metrics_path)
-    population_percentiles = _load_json_if_present(population_percentiles_path)
+    population_percentiles = _resolve_population_percentiles_payload(
+        _load_json_if_present(population_percentiles_path),
+        runtime_model_name=report.runtime_model_name,
+    )
 
     if strict and model is not None and not hasattr(model, "predict_proba"):
         raise ArtifactLoadError(
@@ -412,6 +415,38 @@ def _load_json_if_present(path: Path | None) -> Any | None:
     if path is None or not path.is_file():
         return None
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _resolve_population_percentiles_payload(
+    payload: Any | None,
+    *,
+    runtime_model_name: str | None,
+) -> Any | None:
+    if not isinstance(payload, dict):
+        return payload
+
+    model_payloads = payload.get("models")
+    if not isinstance(model_payloads, dict) or not model_payloads:
+        return payload
+
+    selected_model_name = (
+        runtime_model_name
+        if isinstance(runtime_model_name, str) and runtime_model_name in model_payloads
+        else payload.get("default_model_name")
+    )
+    if not isinstance(selected_model_name, str) or selected_model_name not in model_payloads:
+        return payload
+
+    selected_payload = model_payloads.get(selected_model_name)
+    if not isinstance(selected_payload, dict):
+        return payload
+
+    return {
+        **selected_payload,
+        "selected_model_name": selected_model_name,
+        "default_model_name": payload.get("default_model_name"),
+        "available_models": payload.get("available_models"),
+    }
 
 
 __all__ = [

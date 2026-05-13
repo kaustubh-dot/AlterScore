@@ -84,6 +84,15 @@ def _lookup_percentile(
     if percentile_payload is None:
         return None
 
+    nested_models = percentile_payload.get("models")
+    default_model_name = percentile_payload.get("default_model_name")
+    if isinstance(nested_models, Mapping) and isinstance(default_model_name, str):
+        nested_payload = nested_models.get(default_model_name)
+        if isinstance(nested_payload, Mapping):
+            nested_value = _lookup_percentile(score, nested_payload)
+            if nested_value is not None:
+                return nested_value
+
     for key in ("score_to_percentile", "percentile_table"):
         nested_mapping = percentile_payload.get(key)
         if isinstance(nested_mapping, Mapping):

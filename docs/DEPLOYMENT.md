@@ -82,7 +82,7 @@ Generate data
 - [ ] `models/reports/fairness_report.json`
 - [ ] `models/reports/psi_report.json`
 - [ ] `models/reports/global_importance.json`
-- [ ] `models/reports/population_percentiles.json`
+- [x] `models/reports/population_percentiles.json`
 - [ ] `models/registry/production_manifest.json`
 
 ## Backend Startup Requirements
@@ -104,11 +104,13 @@ At startup the backend must:
   - `ALTERSCORE_RUNTIME_MODEL_PATH` fallback for the current local stub path
 - The current scoring stub can run with saved logistic or classical artifacts plus the shared preprocessor.
 - The current offline baseline and classical training commands now also persist `models/preprocessors/text_pca.pkl` from train months `1-8` only, using runtime-compatible raw embeddings derived from the saved synthetic dataset.
+- The same offline training commands now persist `models/reports/population_percentiles.json` and expand `models/reports/metrics.json` with saved validation/test ROC, PR, calibration, and confusion payloads.
 - `backend/app/main.py` now loads the runtime artifact bundle at startup and exposes `/api/health` plus `/api/score`.
 - `backend/app/services/analytics.py` now serves `/api/model-stats` from `metrics.json` and `/api/baseline-comparison` from `baseline_metrics.json` without runtime retraining or ad hoc route-level file parsing.
 - `backend/app/main.py` now also initializes the append-only request logging service for `/api/score`.
 - `/api/health` currently returns `degraded` when scoring-critical artifacts are present but optional runtime artifacts such as SHAP, DICE, fairness, or PSI are still missing.
 - When `models/preprocessors/text_pca.pkl` is present, request-time semantic dimensions now use the persisted PCA artifact; zero-filled semantic fallback remains only for intentionally PCA-less bundles and tests.
+- When `population_percentiles.json` contains multiple model-specific tables, the runtime artifact loader now resolves the table for the active serving model so logistic fallback, classical fallback, and later manifest-backed ensemble serving can reuse one artifact format.
 - If `metrics.json` or `baseline_metrics.json` is missing, the corresponding analytics endpoint now returns a structured `503` rather than recomputing reports inside the API process.
 - SHAP and DICE artifacts do not exist yet, so the current stub scoring response returns empty `explanation` and `counterfactual_actions` lists.
 

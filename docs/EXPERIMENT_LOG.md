@@ -516,3 +516,137 @@ The offline pipeline now persists a real `text_pca.pkl` fit only on months `1-8`
 - Continue: yes
 - Stop: no
 - Follow-up: build the analytics report-reading service plus `/api/model-stats` and `/api/baseline-comparison` route stubs on top of the refreshed local artifact bundle.
+
+## EXP-20260513-004 - Offline evaluation artifact foundation for analytics routes
+
+- Status: completed
+- Owner: Codex
+- Date started: 2026-05-13
+- Date completed: 2026-05-13
+- Branch / commit: workspace (uncommitted)
+- Related decision: existing temporal-split, offline-training-separation, and artifact-loading decisions
+- Related issue / task: persisted evaluation bundle for score-distribution and curve/confusion analytics
+
+### Hypothesis
+
+If the offline baseline and classical jobs save score-distribution, percentile, and curve/confusion payloads directly from the documented temporal split plus full scored synthetic population, then the remaining analytics routes can stay read-only at request time and the runtime scoring path can keep using a saved percentile lookup without hidden recomputation.
+
+### Dataset
+
+- Data version: `synthetic_v0.1.0`
+- Row count: `10,000`
+- Train split: months `1-8` (`6,800` rows)
+- Validation split: months `9-10` (`1,400` rows)
+- Test split: months `11-12` (`1,800` rows)
+- Protected attributes available: gender, age group, region, education level
+- Known schema changes: none
+
+### Feature Set
+
+- Feature registry version: `0.1.0`
+- Numeric feature count: `33`
+- Categorical feature count: `2`
+- Excluded fields: protected attributes, `cohort_month`, `application_date`, `repayment_label`
+- NLP configuration: persisted-dataset training now rebuilds deterministic surrogate Q27 text when the saved CSV does not include raw text
+- Derived features: included
+
+### Model / Pipeline Configuration
+
+```json
+{
+  "model_family": "evaluation_artifact_foundation",
+  "random_seed": 42,
+  "preprocessing": {
+    "numeric": "median imputer + standard scaler",
+    "categorical": "most-frequent imputer + ordinal encoder",
+    "text_pca": "2 components fit on months 1-8 only and reused for all scored report payloads"
+  },
+  "hyperparameters": {
+    "logistic_regression": {
+      "class_weight": "balanced",
+      "max_iter": 1000,
+      "solver": "liblinear"
+    },
+    "random_forest": {
+      "class_weight": "balanced_subsample",
+      "min_samples_leaf": 4,
+      "n_estimators": 300
+    },
+    "xgboost": {
+      "learning_rate": 0.05,
+      "max_depth": 4,
+      "n_estimators": 200,
+      "subsample": 1.0,
+      "colsample_bytree": 1.0
+    },
+    "lightgbm": {
+      "learning_rate": 0.05,
+      "n_estimators": 200,
+      "subsample": 1.0,
+      "colsample_bytree": 1.0,
+      "deterministic": true
+    }
+  },
+  "calibration": {},
+  "class_imbalance_strategy": "unchanged from the bounded baseline/classical suite"
+}
+```
+
+### Commands
+
+```powershell
+C:\Users\Kaustubh\anaconda3\python.exe -m pytest --basetemp .tmp\pytest tests/unit/ml/test_score_mapper.py tests/integration/pipeline/test_dataset_artifacts_and_baselines.py tests/integration/pipeline/test_classical_training.py tests/integration/pipeline/test_artifact_loading.py tests/integration/pipeline/test_evaluation_artifacts.py tests/integration/api/test_health_endpoint.py tests/integration/api/test_score_endpoint.py tests/integration/api/test_analytics_endpoints.py
+C:\Users\Kaustubh\anaconda3\python.exe scripts/training/train_baselines.py
+C:\Users\Kaustubh\anaconda3\python.exe scripts/training/train_classical_models.py
+```
+
+### Results
+
+| Model | Validation AUC ROC | Test AUC ROC |
+|---|---:|---:|
+| Logistic regression | 0.8099 | 0.8098 |
+| Random forest | 0.7945 | 0.8070 |
+| XGBoost | 0.7993 | 0.8072 |
+| LightGBM | 0.7959 | 0.7983 |
+
+### Baseline Comparison
+
+| Comparator | Metric | Delta |
+|---|---:|---:|
+| Majority | AUC ROC 0.5000 | -0.2614 vs simulated loan officer |
+| Logistic | AUC ROC 0.8098 | +0.0484 vs simulated loan officer |
+| Simulated loan officer | AUC ROC 0.7614 | 0.0000 |
+
+### Fairness Summary
+
+- Worst AUC gap: not computed
+- Flagged groups: not computed
+- Approval-rate gaps: not computed
+- Notes: fairness remains intentionally deferred until the dedicated offline fairness job exists
+
+### Drift Summary
+
+- Max PSI: not computed
+- Top drifted features: not computed
+- Verdict: not computed
+
+### Artifacts
+
+| Artifact | Path |
+|---|---|
+| Metrics payload with `evaluation_details` | `models/reports/metrics.json` |
+| Population percentiles and score histogram | `models/reports/population_percentiles.json` |
+| Baseline metrics | `models/reports/baseline_metrics.json` |
+| Preprocessor | `models/preprocessors/preprocessor.pkl` |
+| Text PCA | `models/preprocessors/text_pca.pkl` |
+
+### Interpretation
+
+The offline pipeline now saves the report foundation needed for `/api/score-distribution`, `/api/roc-data`, `/api/pr-curve`, `/api/calibration-curve`, and `/api/confusion-matrix` without scoring rows inside the API process. The persisted synthetic CSV path now works end-to-end even when raw Q27 text is absent, because preprocessing reconstructs deterministic surrogate text before rebuilding NLP features and embeddings. The runtime bundle also stays model-agnostic by selecting the active model's table from a multi-model `population_percentiles.json` payload.
+
+### Decision
+
+- Promote: no
+- Continue: yes
+- Stop: no
+- Follow-up: wire the remaining analytics routes to the saved evaluation artifacts, starting with `/api/score-distribution` or the grouped curve endpoints.
