@@ -13,6 +13,7 @@ from fastapi.responses import JSONResponse
 from backend.app.schemas.analytics import (
     BaselineComparisonResponse,
     ModelStatsResponse,
+    ScoreDistributionResponse,
 )
 from backend.app.schemas.common import ErrorResponse
 from backend.app.services.analytics import (
@@ -86,6 +87,41 @@ def get_baseline_comparison(request: Request) -> BaselineComparisonResponse | JS
         )
     except AnalyticsPayloadError as exc:
         logger.exception("Invalid baseline comparison payload.")
+        return _analytics_error_response(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            code="ANALYTICS_PAYLOAD_INVALID",
+            message="Saved analytics payload is invalid for the requested endpoint.",
+            details={"artifact": exc.artifact_key},
+        )
+
+
+@router.get(
+    "/score-distribution",
+    response_model=ScoreDistributionResponse,
+    responses={
+        503: {"model": ErrorResponse},
+        500: {"model": ErrorResponse},
+    },
+)
+def get_score_distribution(request: Request) -> ScoreDistributionResponse | JSONResponse:
+    analytics_service = request.app.state.analytics_service
+
+    try:
+        return analytics_service.get_score_distribution()
+    except AnalyticsArtifactMissingError as exc:
+        return _analytics_missing_response(
+            code="ARTIFACTS_NOT_READY",
+            message=(
+                "Score distribution is not ready yet. Generate and save "
+                "population_percentiles.json first."
+            ),
+            details={
+                "missing_artifacts": [exc.artifact_key],
+                "artifact_path": None if exc.artifact_path is None else str(exc.artifact_path),
+            },
+        )
+    except AnalyticsPayloadError as exc:
+        logger.exception("Invalid score distribution payload.")
         return _analytics_error_response(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             code="ANALYTICS_PAYLOAD_INVALID",

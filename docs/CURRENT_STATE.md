@@ -5,8 +5,8 @@
 - Date: 2026-05-13
 - Workspace: `C:\Kaustubh\Projects\AlterScore`
 - PRD source: `docs/AlterScore_PRD_v2.md`
-- Current phase: offline evaluation artifacts and remaining analytics routes
-- Application implementation status: feature registry, runtime foundation helpers, API schemas, the frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, the baseline training loop, the bounded classical training loop for random forest, XGBoost, and LightGBM, the persisted text PCA artifact foundation, the runtime artifact-loading plus scoring-service stubs, the first FastAPI app startup with `/api/health`, `/api/score`, `/api/model-stats`, and `/api/baseline-comparison`, append-only request logging on the score path, and the persisted evaluation-artifact foundation for curves, confusion matrices, and score percentiles/distribution are implemented; the remaining analytics routes and full production-runtime artifacts are still pending
+- Current phase: analytics route expansion
+- Application implementation status: feature registry, runtime foundation helpers, API schemas, the frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, the baseline training loop, the bounded classical training loop for random forest, XGBoost, and LightGBM, the persisted text PCA artifact foundation, the runtime artifact-loading plus scoring-service stubs, the FastAPI app startup with `/api/health`, `/api/score`, `/api/model-stats`, `/api/baseline-comparison`, and `/api/score-distribution`, append-only request logging on the score path, and the persisted evaluation-artifact foundation for curves, confusion matrices, and score percentiles/distribution are implemented; the remaining analytics routes and full production-runtime artifacts are still pending
 
 ## What Exists
 
@@ -75,7 +75,7 @@
 
 - No borrower assessment pages, results flow, dashboard workflow, or frontend tests beyond the package skeleton smoke test.
 - No neural, stacking, calibration, SHAP, DICE, fairness, or PSI jobs yet.
-- Only the first report-backed analytics endpoints exist so far: `/api/model-stats` and `/api/baseline-comparison`. The saved report foundation now exists for score-distribution plus ROC/PR/calibration/confusion endpoints, but those routes are still pending alongside fairness, drift, and global importance. Interactive frontend tests beyond the package skeleton smoke test and broader ML validation beyond the current feature, preprocessing, training, artifact-loading, evaluation-artifact, and API foundation coverage are also still pending.
+- Report-backed analytics now cover `/api/model-stats`, `/api/baseline-comparison`, and `/api/score-distribution`. ROC/PR/calibration/confusion endpoints are still pending even though their saved report foundation now exists, and fairness, drift, plus global importance remain pending as well. Interactive frontend tests beyond the package skeleton smoke test and broader ML validation beyond the current feature, preprocessing, training, artifact-loading, evaluation-artifact, and API foundation coverage are also still pending.
 - No Docker runtime files yet.
 - No SHAP explainer or DICE explainer exists yet, so the current scoring stub still returns empty explanation/counterfactual lists; semantic features now use the persisted `text_pca.pkl` when available and only fall back to zero-filled projections when the PCA artifact is intentionally missing.
 
@@ -109,8 +109,8 @@ The earlier PRD narrative referenced 39 features, but the project will not inven
 
 Continue the implementation foundation in this order:
 
-1. Expand the offline evaluation artifacts so the backend can add `/api/score-distribution`, `/api/roc-data`, `/api/pr-curve`, `/api/calibration-curve`, and `/api/confusion-matrix` without runtime recomputation.
-2. Add the remaining analytics route stubs that depend on the now-saved score-distribution and curve/confusion payloads, starting with `/api/score-distribution` or the grouped curve endpoints.
+1. Add `/api/roc-data`, `/api/pr-curve`, `/api/calibration-curve`, and `/api/confusion-matrix` on top of the saved `metrics.json` evaluation payloads.
+2. Add the governance analytics routes for fairness, drift, and global importance once those offline reports exist.
 3. Keep the refreshed logistic, classical, preprocessor, `text_pca.pkl`, `metrics.json`, `baseline_metrics.json`, and `population_percentiles.json` artifacts as the local offline foundation while neural and ensemble training are still pending.
 
 ## Session Update Protocol
