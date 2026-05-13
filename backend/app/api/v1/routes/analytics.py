@@ -14,6 +14,9 @@ from backend.app.schemas.analytics import (
     BaselineComparisonResponse,
     CalibrationCurveResponse,
     ConfusionMatrixResponse,
+    DriftReport,
+    FairnessReport,
+    GlobalImportanceResponse,
     ModelStatsResponse,
     PrecisionRecallResponse,
     RocCurveResponse,
@@ -97,6 +100,61 @@ def get_baseline_comparison(request: Request) -> BaselineComparisonResponse | JS
             message="Saved analytics payload is invalid for the requested endpoint.",
             details={"artifact": exc.artifact_key},
         )
+
+
+@router.get(
+    "/fairness-report",
+    response_model=FairnessReport,
+    responses={
+        503: {"model": ErrorResponse},
+        500: {"model": ErrorResponse},
+    },
+)
+def get_fairness_report(request: Request) -> FairnessReport | JSONResponse:
+    return _execute_analytics_request(
+        request,
+        endpoint_name="Fairness report",
+        missing_message=(
+            "Fairness report is not ready yet. Generate and save fairness_report.json first."
+        ),
+        handler_name="get_fairness_report",
+    )
+
+
+@router.get(
+    "/drift-report",
+    response_model=DriftReport,
+    responses={
+        503: {"model": ErrorResponse},
+        500: {"model": ErrorResponse},
+    },
+)
+def get_drift_report(request: Request) -> DriftReport | JSONResponse:
+    return _execute_analytics_request(
+        request,
+        endpoint_name="Drift report",
+        missing_message="Drift report is not ready yet. Generate and save psi_report.json first.",
+        handler_name="get_drift_report",
+    )
+
+
+@router.get(
+    "/global-importance",
+    response_model=GlobalImportanceResponse,
+    responses={
+        503: {"model": ErrorResponse},
+        500: {"model": ErrorResponse},
+    },
+)
+def get_global_importance(request: Request) -> GlobalImportanceResponse | JSONResponse:
+    return _execute_analytics_request(
+        request,
+        endpoint_name="Global importance report",
+        missing_message=(
+            "Global importance is not ready yet. Generate and save global_importance.json first."
+        ),
+        handler_name="get_global_importance",
+    )
 
 
 @router.get(

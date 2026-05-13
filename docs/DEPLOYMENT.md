@@ -116,8 +116,9 @@ At startup the backend must:
 - When `population_percentiles.json` contains multiple model-specific tables, the runtime artifact loader now resolves the table for the active serving model so logistic fallback, classical fallback, and later manifest-backed ensemble serving can reuse one artifact format.
 - Runtime artifact loading still succeeds when `fairness_report.json` is present alongside the current local scoring bundle; the fairness report remains optional for strict scoring readiness until the fairness API route is added.
 - Runtime artifact loading still succeeds when `psi_report.json` is present alongside the current local scoring bundle; the drift report remains optional for strict scoring readiness until the drift API route is added.
-- Runtime artifact loading still succeeds when `global_importance.json` is present alongside the current local scoring bundle; the report remains optional for strict scoring readiness until the global-importance API route is added.
+- Runtime artifact loading still succeeds when `global_importance.json` is present alongside the current local scoring bundle; the report remains optional for strict scoring readiness even though the global-importance analytics route now serves it when available.
 - If `metrics.json` or `baseline_metrics.json` is missing, the corresponding analytics endpoint now returns a structured `503` rather than recomputing reports inside the API process.
+- If `fairness_report.json`, `psi_report.json`, or `global_importance.json` is missing, the corresponding analytics endpoint now returns a structured `503` rather than recomputing reports inside the API process.
 - SHAP and DICE artifacts do not exist yet, so the current stub scoring response returns empty `explanation` and `counterfactual_actions` lists.
 
 ## Runtime Foundation Files

@@ -12,6 +12,9 @@ from backend.app.core.artifact_loader import LoadedArtifactBundle
 from backend.app.schemas.analytics import (
     BaselineComparisonResponse,
     CalibrationCurveResponse,
+    DriftReport,
+    FairnessReport,
+    GlobalImportanceResponse,
     ModelStatsResponse,
     ConfusionMatrixResponse,
     PrecisionRecallResponse,
@@ -91,6 +94,39 @@ class AnalyticsService:
             artifact_key="baseline_metrics",
         )
 
+    def get_fairness_report(self) -> FairnessReport:
+        fairness_report = self._require_payload(
+            artifact_key="fairness_report",
+            payload=self.artifacts.fairness_report,
+        )
+        return self._validate_response(
+            FairnessReport,
+            fairness_report,
+            artifact_key="fairness_report",
+        )
+
+    def get_drift_report(self) -> DriftReport:
+        psi_report = self._require_payload(
+            artifact_key="psi_report",
+            payload=self.artifacts.psi_report,
+        )
+        return self._validate_response(
+            DriftReport,
+            psi_report,
+            artifact_key="psi_report",
+        )
+
+    def get_global_importance(self) -> GlobalImportanceResponse:
+        global_importance = self._require_payload(
+            artifact_key="global_importance",
+            payload=self.artifacts.global_importance,
+        )
+        return self._validate_response(
+            GlobalImportanceResponse,
+            global_importance,
+            artifact_key="global_importance",
+        )
+
     def get_score_distribution(self) -> ScoreDistributionResponse:
         percentile_payload = self._require_mapping_payload(
             artifact_key="population_percentiles",
@@ -164,6 +200,19 @@ class AnalyticsService:
             ],
             artifact_key="metrics",
         )
+
+    def _require_payload(
+        self,
+        *,
+        artifact_key: str,
+        payload: Any | None,
+    ) -> Any:
+        if payload is None:
+            raise AnalyticsArtifactMissingError(
+                artifact_key=artifact_key,
+                artifact_path=self._resolved_path(artifact_key),
+            )
+        return payload
 
     def _require_mapping_payload(
         self,

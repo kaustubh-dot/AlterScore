@@ -5,6 +5,9 @@ from backend.app.schemas.analytics import (
     BaselineComparisonResponse,
     CalibrationCurveResponse,
     ConfusionMatrixResponse,
+    DriftReport,
+    FairnessReport,
+    GlobalImportanceResponse,
     ModelStatsResponse,
     PrecisionRecallResponse,
     RocCurveResponse,
@@ -42,6 +45,34 @@ def test_baseline_comparison_endpoint_returns_report_backed_baselines(tmp_path) 
         "logistic_regression",
         "simulated_loan_officer",
     ]
+
+
+def test_governance_report_endpoints_return_saved_report_payloads(tmp_path) -> None:
+    settings = build_runtime_settings(tmp_path)
+    app = create_app(settings)
+
+    with TestClient(app) as client:
+        fairness_response = client.get("/api/fairness-report")
+        drift_response = client.get("/api/drift-report")
+        global_importance_response = client.get("/api/global-importance")
+
+    assert fairness_response.status_code == 200
+    fairness = FairnessReport.model_validate(fairness_response.json())
+    assert fairness.groups["gender"]
+    assert fairness.worst_auc_gap >= 0.0
+
+    assert drift_response.status_code == 200
+    drift = DriftReport.model_validate(drift_response.json())
+    assert drift.all_features
+    assert drift.max_psi == drift.all_features[0].psi
+
+    assert global_importance_response.status_code == 200
+    importance = GlobalImportanceResponse.model_validate(
+        global_importance_response.json()
+    )
+    assert len(importance.root) == 35
+    assert importance.root[0].rank == 1
+    assert importance.root[0].mean_abs_shap >= importance.root[-1].mean_abs_shap
 
 
 def test_score_distribution_endpoint_returns_saved_histogram_payload(tmp_path) -> None:
@@ -126,6 +157,31 @@ def test_baseline_comparison_endpoint_returns_structured_503_when_baselines_are_
     parsed = ErrorResponse.model_validate(response.json())
     assert parsed.error.code == "ARTIFACTS_NOT_READY"
     assert parsed.error.details["missing_artifacts"] == ["baseline_metrics"]
+
+
+def test_governance_report_endpoints_return_structured_503_when_reports_are_missing(
+    tmp_path,
+) -> None:
+    settings = build_runtime_settings(tmp_path)
+    (tmp_path / "models" / "reports" / "fairness_report.json").unlink()
+    (tmp_path / "models" / "reports" / "psi_report.json").unlink()
+    (tmp_path / "models" / "reports" / "global_importance.json").unlink()
+    app = create_app(settings)
+
+    with TestClient(app) as client:
+        fairness_response = client.get("/api/fairness-report")
+        drift_response = client.get("/api/drift-report")
+        global_importance_response = client.get("/api/global-importance")
+
+    for response, artifact_key in (
+        (fairness_response, "fairness_report"),
+        (drift_response, "psi_report"),
+        (global_importance_response, "global_importance"),
+    ):
+        assert response.status_code == 503
+        parsed = ErrorResponse.model_validate(response.json())
+        assert parsed.error.code == "ARTIFACTS_NOT_READY"
+        assert parsed.error.details["missing_artifacts"] == [artifact_key]
 
 
 def test_score_distribution_endpoint_returns_structured_503_when_percentiles_are_missing(

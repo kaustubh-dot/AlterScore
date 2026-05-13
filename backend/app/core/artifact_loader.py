@@ -107,6 +107,9 @@ class LoadedArtifactBundle:
     text_pca: Any | None
     metrics_payload: dict[str, Any] | None
     baseline_metrics: list[dict[str, Any]] | None
+    fairness_report: Any | None
+    psi_report: Any | None
+    global_importance: Any | None
     population_percentiles: dict[str, Any] | None
     manifest: dict[str, Any] | None
 
@@ -137,6 +140,9 @@ def load_runtime_artifact_bundle(
     text_pca_path = report.resolved_paths.get("text_pca")
     metrics_path = report.resolved_paths.get("metrics")
     baseline_metrics_path = report.resolved_paths.get("baseline_metrics")
+    fairness_report_path = report.resolved_paths.get("fairness_report")
+    psi_report_path = report.resolved_paths.get("psi_report")
+    global_importance_path = report.resolved_paths.get("global_importance")
     population_percentiles_path = report.resolved_paths.get("population_percentiles")
 
     model = _load_joblib_if_present(runtime_model_path)
@@ -144,6 +150,9 @@ def load_runtime_artifact_bundle(
     text_pca = _load_joblib_if_present(text_pca_path)
     metrics_payload = _load_json_if_present(metrics_path)
     baseline_metrics = _load_json_if_present(baseline_metrics_path)
+    fairness_report = _load_json_if_present(fairness_report_path)
+    psi_report = _load_json_if_present(psi_report_path)
+    global_importance = _load_json_if_present(global_importance_path)
     population_percentiles = _resolve_population_percentiles_payload(
         _load_json_if_present(population_percentiles_path),
         runtime_model_name=report.runtime_model_name,
@@ -169,6 +178,9 @@ def load_runtime_artifact_bundle(
         text_pca=text_pca,
         metrics_payload=metrics_payload if isinstance(metrics_payload, dict) else None,
         baseline_metrics=baseline_metrics if isinstance(baseline_metrics, list) else None,
+        fairness_report=fairness_report,
+        psi_report=psi_report,
+        global_importance=global_importance,
         population_percentiles=(
             population_percentiles
             if isinstance(population_percentiles, dict)

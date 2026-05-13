@@ -214,7 +214,7 @@ Each analytics endpoint must:
 - `test_health_endpoint.py` verifies the startup cache and artifact-health response.
 - `test_score_endpoint.py` verifies the schema-valid happy path and structured `503` behavior when scoring-critical artifacts are missing.
 - `test_score_endpoint.py` also verifies append-only request logging for success, sanitized `500`, and artifacts-not-ready responses.
-- `test_analytics_endpoints.py` now verifies `/api/model-stats`, `/api/baseline-comparison`, `/api/score-distribution`, `/api/roc-data`, `/api/pr-curve`, `/api/calibration-curve`, and `/api/confusion-matrix` for both report-backed success responses and structured missing-artifact behavior.
+- `test_analytics_endpoints.py` now verifies `/api/model-stats`, `/api/baseline-comparison`, `/api/fairness-report`, `/api/drift-report`, `/api/global-importance`, `/api/score-distribution`, `/api/roc-data`, `/api/pr-curve`, `/api/calibration-curve`, and `/api/confusion-matrix` for both report-backed success responses and structured missing-artifact behavior.
 
 ## Frontend Tests
 

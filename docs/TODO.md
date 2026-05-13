@@ -2,7 +2,7 @@
 
 ## Current Phase
 
-Governance analytics artifact foundation with persisted fairness, drift, and global-importance reporting. The canonical feature registry, project hygiene files, backend runtime helpers, API schemas, frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, the baseline training loop, the bounded classical training loop, the persisted text PCA artifact foundation, the runtime artifact-loading plus scoring-service stubs, the FastAPI startup with health/score/model-stats/baseline-comparison/score-distribution/roc-data/pr-curve/calibration-curve/confusion-matrix routes, append-only request logging, and the persisted evaluation plus fairness/drift/global-importance artifact foundations for curves, confusion, population percentiles, held-out subgroup fairness, train-vs-test feature stability, and dashboard-ready feature ranking are implemented; the remaining governance analytics routes and full production-runtime artifacts are not started.
+Governance analytics route foundation with persisted fairness, drift, and global-importance reporting. The canonical feature registry, project hygiene files, backend runtime helpers, API schemas, frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, the baseline training loop, the bounded classical training loop, the persisted text PCA artifact foundation, the runtime artifact-loading plus scoring-service stubs, the FastAPI startup with health/score/all current analytics routes, append-only request logging, and the persisted evaluation plus fairness/drift/global-importance artifact foundations for curves, confusion, population percentiles, held-out subgroup fairness, train-vs-test feature stability, and dashboard-ready feature ranking are implemented; the remaining explainability-runtime and full production-model artifacts are not started.
 
 ## Immediate TODO
 
@@ -42,8 +42,8 @@ Governance analytics artifact foundation with persisted fairness, drift, and glo
 - [x] Implement request logging service.
 - [x] Implement health endpoint.
 - [x] Add report-backed analytics service foundation and the first `/api/model-stats` plus `/api/baseline-comparison` endpoints.
+- [x] Implement `/api/fairness-report`, `/api/drift-report`, and `/api/global-importance` from persisted report files.
 - [ ] Harden the scoring endpoint with explainability, counterfactual, and production-bundle behavior.
-- [ ] Implement `/api/drift-report` together with the remaining fairness and global-importance analytics endpoints now that all three offline report artifacts exist.
 
 ## Data Pipeline TODO
 
@@ -156,6 +156,7 @@ Governance analytics artifact foundation with persisted fairness, drift, and glo
 - [x] Add API integration coverage for request logging on `/api/score`.
 - [x] Add integration coverage for persisted text PCA artifacts, runtime semantic projections, and intentional zero-fill fallback behavior.
 - [x] Add API integration coverage for `/api/model-stats` and `/api/baseline-comparison`, including missing-report behavior.
+- [x] Add API integration coverage for `/api/fairness-report`, `/api/drift-report`, and `/api/global-importance`, including missing-report behavior.
 - [x] Add integration coverage for offline evaluation artifacts, runtime percentile-table selection, and persisted-dataset training without raw Q27 text.
 - [x] Add API integration coverage for `/api/score-distribution`, including missing-artifact behavior.
 - [x] Add API integration coverage for `/api/roc-data`, `/api/pr-curve`, `/api/calibration-curve`, and `/api/confusion-matrix`, including missing-artifact behavior.
