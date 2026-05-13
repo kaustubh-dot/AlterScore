@@ -52,7 +52,7 @@
 20. [x] Verify runtime request assembly consumes the persisted PCA artifact and only falls back to zero-filled semantics when the artifact is intentionally missing.
 21. [x] Add a report-reading analytics service layer so route handlers do not parse report files ad hoc.
 22. [x] Add `/api/model-stats` and `/api/baseline-comparison` route stubs backed by saved report files.
-23. [ ] Add `/api/fairness-report`, `/api/drift-report`, and `/api/global-importance` route stubs backed by report files once those artifacts exist.
+23. [ ] Add `/api/fairness-report`, `/api/drift-report`, and `/api/global-importance` route stubs backed by report files once the remaining global-importance artifact exists.
 24. [x] Add `/api/score-distribution` backed by a persisted population-percentiles or histogram artifact rather than runtime recomputation.
 25. [x] Add `/api/roc-data`, `/api/pr-curve`, `/api/calibration-curve`, and `/api/confusion-matrix` route stubs from the evaluation report structure.
 26. [x] Expand analytics endpoint contract tests for both happy-path and missing-artifact responses.
@@ -63,7 +63,7 @@
 31. [ ] Generate the consolidated evaluation bundle, including metrics, curves, confusion matrix data, and score distribution data.
 32. [ ] Generate SHAP explainability artifacts and dashboard-ready global-importance outputs.
 33. [ ] Generate DICE counterfactual artifacts with immutable and protected-feature guards.
-34. [ ] Generate fairness and PSI drift reports from held-out predictions without using protected fields as model inputs.
+34. [x] Generate fairness and PSI drift reports from held-out predictions without using protected fields as model inputs.
 35. [ ] Create and validate the production manifest so FastAPI can load one complete serving bundle without fallback mode.
 
 ## Detailed Checkpoint Plan
@@ -76,7 +76,7 @@ This section expands the next roadmap stretch into smaller delivery checkpoints 
 | C20 | Runtime semantic parity | Remove ambiguity between offline and runtime semantic handling by proving request assembly uses the saved PCA artifact and only zero-fills when the artifact is absent. | C19 | Updated request-assembly behavior, artifact-loader compatibility, explicit fallback coverage | Runtime scoring still works with logistic/classical artifacts, zero-fill remains documented fallback only |
 | C21 | Analytics service foundation | Add a backend service layer that loads metrics and report JSON once per request without retraining or hidden recomputation. | Current artifact loader, report path helpers | `backend/app/services/analytics.py` or equivalent, report readers, structured missing-artifact errors | Unit or integration coverage proves report-backed reads and stable error handling |
 | C22 | First analytics endpoints | Expose `/api/model-stats` and `/api/baseline-comparison` first because their backing files already exist. | C21, current metrics reports | Route stubs, response mapping, API tests | Endpoints return schema-valid JSON from `metrics.json` and `baseline_metrics.json` |
-| C23 | Governance analytics endpoints | Expose `/api/fairness-report`, `/api/drift-report`, and `/api/global-importance` after their offline artifacts exist. | Fairness, drift, and SHAP artifact jobs | Route stubs, report schemas, missing-artifact behavior | Endpoints return report-backed JSON and fail clearly when reports are absent |
+| C23 | Governance analytics endpoints | Expose `/api/fairness-report`, `/api/drift-report`, and `/api/global-importance` after the persisted fairness, drift, and global-importance artifacts exist. | Fairness, drift, and SHAP artifact jobs | Route stubs, report schemas, missing-artifact behavior | Endpoints return report-backed JSON and fail clearly when reports are absent |
 | C24 | Curve and matrix endpoints | Expose `/api/roc-data`, `/api/pr-curve`, `/api/calibration-curve`, and `/api/confusion-matrix` from persisted evaluation outputs. | Evaluation bundle generation | Route stubs, response transformers, curve-bearing report structure | Curve endpoints do not compute model outputs at request time and pass contract tests |
 | C25 | Distribution endpoint | Back `/api/score-distribution` with a persisted distribution artifact so percentiles and bands stay consistent between training and serving. | Evaluation bundle generation, percentile logic | Distribution/percentile artifact, route stub, tests | Endpoint returns deterministic histogram/bin payload from saved artifacts |
 | C26 | Analytics test hardening | Expand API integration coverage across analytics happy-path, missing-artifact, and schema-regression cases. | C21-C25 | `tests/integration/api/test_analytics_endpoints.py` or split equivalents | Contract tests cover success and failure behavior for the analytics surface |
@@ -87,15 +87,16 @@ This section expands the next roadmap stretch into smaller delivery checkpoints 
 | C31 | Evaluation bundle completion | Persist one richer evaluation bundle containing curves, confusion matrix data, thresholds, distribution data, and any dashboard-needed summaries. | C30 | Expanded `metrics.json` or related report files | Backend analytics routes can serve dashboard data without recomputation |
 | C32 | SHAP foundation | Generate the explainability artifact and dashboard-ready global importance outputs from the approved explainable model path. | C30 or approved explainable surrogate path | `shap_explainer.pkl`, `global_importance.json`, optional summary plot | Per-user and global SHAP data are non-trivial and schema-compatible |
 | C33 | DICE foundation | Build the DICE artifact and enforce immutable/protected/actionable feature guards for counterfactual generation. | C30, actionable/immutable feature lists | `dice_explainer.pkl`, action-generation helpers, tests | Counterfactual actions avoid protected and immutable features and remain bounded |
-| C34 | Fairness and drift bundle | Generate fairness and PSI artifacts from held-out predictions while preserving protected-feature separation from model inputs. | C30, protected audit attributes, test predictions | `fairness_report.json`, `psi_report.json`, status/verdict logic | Reports exist, contain subgroup guardrails, and are readable by analytics routes |
+| C34 | Fairness and drift bundle | Generate fairness and PSI artifacts from held-out predictions while preserving protected-feature separation from model inputs. | Current logistic/classical artifact bundle, protected audit attributes, test predictions | `fairness_report.json`, `psi_report.json`, status/verdict logic | Reports exist, contain subgroup guardrails, and are readable by analytics routes |
 | C35 | Production manifest handoff | Create the first complete manifest-backed serving bundle and make fallback mode optional rather than the default development path. | C19-C34 | `models/registry/production_manifest.json`, manifest validation checks, deployment notes | Backend startup succeeds from one manifest-backed bundle and `/api/health` reflects the promoted artifact set |
 
 ## Checkpoint Sequencing Notes
 
 - C19 and C20 are complete, and the offline evaluation bundle foundation for score distribution plus ROC/PR/calibration/confusion payloads now exists for the current logistic/classical artifact set.
-- C24 through C26 are now complete for the current saved evaluation bundle, so the next meaningful backend slice is the governance-report track once fairness, drift, and global-importance artifacts exist.
+- C24 through C26 are now complete for the current saved evaluation bundle, and the offline fairness plus PSI artifact foundation is also complete for the current logistic/classical bundle.
+- The next meaningful backend slice is C32 followed by C23: generate the persisted global-importance artifact, then expose `/api/fairness-report`, `/api/drift-report`, and `/api/global-importance` from saved reports.
 - C27 through C31 are the production-model track and should stay offline-only; none of those jobs should be pulled into FastAPI request handlers.
-- C32 through C34 depend on a stable production candidate or an explicitly documented surrogate explainability path.
+- C32 remains the gating explainability dependency for the governance analytics route slice; fairness and PSI report generation already exist for the current logistic/classical artifact bundle and should be reused for the later production candidate.
 - C35 should happen only after the serving bundle can load without relying on the temporary direct-model fallback path.
 
 ## Files To Create First
@@ -211,6 +212,11 @@ Docs and contracts
 
 - SHAP, DICE, fairness, and PSI reports generated.
 - Model registry candidate entry complete.
+
+Current progress toward M4:
+
+- Fairness and PSI report artifacts are already generated for the current logistic/classical artifact bundle.
+- SHAP/global importance and DICE artifacts remain pending before the full governance backend slice is complete.
 
 ### M5 - API Green
 
