@@ -19,7 +19,7 @@ from backend.ml.evaluation.metrics import compute_binary_classification_metrics
 from backend.ml.preprocessing.pipeline import (
     DEFAULT_PREPROCESSOR_ARTIFACT_PATH,
     DEFAULT_TEXT_PCA_ARTIFACT_PATH,
-    build_text_embedding_matrix,
+    align_text_features_from_raw_text,
     fit_preprocessor,
     prepare_temporal_data,
     transform_features,
@@ -87,17 +87,17 @@ def train_classical_models(
 
     np.random.seed(random_state)
     resolved_dataset, resolved_dataset_path = _load_dataset(dataset, dataset_path)
+    aligned_dataset, raw_text_embeddings = align_text_features_from_raw_text(resolved_dataset)
     validate_synthetic_dataset(
-        resolved_dataset,
+        aligned_dataset,
         expected_row_count=(
-            len(resolved_dataset) if expected_row_count is None else expected_row_count
+            len(aligned_dataset) if expected_row_count is None else expected_row_count
         ),
         minimum_test_rows=minimum_test_rows,
     )
 
-    raw_text_embeddings = build_text_embedding_matrix(resolved_dataset)
     prepared = prepare_temporal_data(
-        resolved_dataset,
+        aligned_dataset,
         raw_text_embeddings=raw_text_embeddings,
         text_pca_random_state=random_state,
         text_pca_artifact_path=text_pca_artifact_path,

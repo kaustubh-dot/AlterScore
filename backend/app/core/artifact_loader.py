@@ -28,14 +28,14 @@ RUNTIME_MODEL_CANDIDATES: Final[tuple[RuntimeModelCandidate, ...]] = (
         artifact_path=MODEL_ARTIFACTS_DIR / "calibrated_stacking.pkl",
     ),
     RuntimeModelCandidate(
-        model_name="logistic_regression",
-        model_type="classical",
-        artifact_path=MODEL_ARTIFACTS_DIR / "logistic_best.pkl",
-    ),
-    RuntimeModelCandidate(
         model_name="xgboost",
         model_type="classical",
         artifact_path=MODEL_ARTIFACTS_DIR / "xgb_best.pkl",
+    ),
+    RuntimeModelCandidate(
+        model_name="lightgbm",
+        model_type="classical",
+        artifact_path=MODEL_ARTIFACTS_DIR / "lgbm_best.pkl",
     ),
     RuntimeModelCandidate(
         model_name="random_forest",
@@ -43,11 +43,14 @@ RUNTIME_MODEL_CANDIDATES: Final[tuple[RuntimeModelCandidate, ...]] = (
         artifact_path=MODEL_ARTIFACTS_DIR / "rf_best.pkl",
     ),
     RuntimeModelCandidate(
-        model_name="lightgbm",
+        model_name="logistic_regression",
         model_type="classical",
-        artifact_path=MODEL_ARTIFACTS_DIR / "lgbm_best.pkl",
+        artifact_path=MODEL_ARTIFACTS_DIR / "logistic_best.pkl",
     ),
 )
+RUNTIME_MODEL_CANDIDATE_FILENAMES: Final[dict[str, str]] = {
+    candidate.model_name: candidate.artifact_path.name for candidate in RUNTIME_MODEL_CANDIDATES
+}
 ARTIFACT_PATH_KEY_TO_MANIFEST_KEY: Final[dict[str, str]] = {
     "preprocessor": "preprocessor",
     "text_pca": "text_pca",
@@ -60,7 +63,11 @@ ARTIFACT_PATH_KEY_TO_MANIFEST_KEY: Final[dict[str, str]] = {
     "global_importance": "global_importance",
     "population_percentiles": "percentiles",
 }
-SCORING_CRITICAL_ARTIFACTS: Final[tuple[str, str]] = ("runtime_model", "preprocessor")
+SCORING_CRITICAL_ARTIFACTS: Final[tuple[str, ...]] = (
+    "runtime_model",
+    "preprocessor",
+    "text_pca",
+)
 DEFAULT_RUNTIME_ARTIFACT_RELATIVE_PATHS: Final[dict[str, Path]] = {
     "preprocessor": Path("models/preprocessors/preprocessor.pkl"),
     "text_pca": Path("models/preprocessors/text_pca.pkl"),
@@ -210,7 +217,7 @@ def _resolve_artifact_state(
         source = "candidate"
         manifest_payload = None
         manifest_path = None
-        candidate = _select_runtime_model_candidate()
+        candidate = _select_runtime_model_candidate(resolved_settings.repo_root)
         runtime_model_path = None if candidate is None else candidate.artifact_path
         runtime_model_name = None if candidate is None else candidate.model_name
         runtime_model_type = None if candidate is None else candidate.model_type
@@ -306,11 +313,28 @@ def _load_manifest(path: Path) -> dict[str, Any]:
     return payload
 
 
-def _select_runtime_model_candidate() -> RuntimeModelCandidate | None:
-    for candidate in RUNTIME_MODEL_CANDIDATES:
-        if candidate.artifact_path.is_file():
-            return candidate
-    return None
+def _select_runtime_model_candidate(repo_root: Path) -> RuntimeModelCandidate | None:
+    available_candidates = [
+        candidate
+        for candidate in _resolve_runtime_model_candidates(repo_root)
+        if candidate.artifact_path.is_file()
+    ]
+    if not available_candidates:
+        return None
+
+    metric_scores = _load_candidate_test_auc_by_model(repo_root)
+    candidate_priority = {
+        candidate.model_name: index for index, candidate in enumerate(RUNTIME_MODEL_CANDIDATES)
+    }
+
+    return min(
+        available_candidates,
+        key=lambda candidate: (
+            0 if candidate.model_name in metric_scores else 1,
+            -metric_scores.get(candidate.model_name, float("-inf")),
+            candidate_priority[candidate.model_name],
+        ),
+    )
 
 
 def _infer_runtime_model_metadata(
@@ -324,6 +348,50 @@ def _infer_runtime_model_metadata(
             return candidate.model_name, candidate.model_type
 
     return runtime_model_path.stem, "unknown"
+
+
+def _resolve_runtime_model_candidates(repo_root: Path) -> tuple[RuntimeModelCandidate, ...]:
+    return tuple(
+        RuntimeModelCandidate(
+            model_name=candidate.model_name,
+            model_type=candidate.model_type,
+            artifact_path=resolve_repo_path(
+                Path("models/artifacts") / RUNTIME_MODEL_CANDIDATE_FILENAMES[candidate.model_name],
+                repo_root,
+            ),
+        )
+        for candidate in RUNTIME_MODEL_CANDIDATES
+    )
+
+
+def _load_candidate_test_auc_by_model(repo_root: Path) -> dict[str, float]:
+    metrics_path = resolve_repo_path(
+        DEFAULT_RUNTIME_ARTIFACT_RELATIVE_PATHS["metrics"],
+        repo_root,
+    )
+    payload = _load_json_if_present(metrics_path)
+    if not isinstance(payload, dict):
+        return {}
+
+    model_stats = payload.get("model_stats")
+    if not isinstance(model_stats, list):
+        return {}
+
+    scores: dict[str, float] = {}
+    for item in model_stats:
+        if not isinstance(item, dict):
+            continue
+        if item.get("split") != "test_months_11_12":
+            continue
+        model_name = item.get("model_name")
+        auc_roc = item.get("auc_roc")
+        if not isinstance(model_name, str):
+            continue
+        try:
+            scores[model_name] = float(auc_roc)
+        except (TypeError, ValueError):
+            continue
+    return scores
 
 
 def _critical_missing_artifacts(report: ArtifactLoadReport) -> tuple[str, ...]:

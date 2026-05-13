@@ -12,7 +12,7 @@ def build_runtime_settings(tmp_path) -> Settings:
         expected_row_count=2_400,
         minimum_test_rows=300,
         preprocessor_artifact_path=model_root / "preprocessors" / "preprocessor.pkl",
-        text_pca_artifact_path=None,
+        text_pca_artifact_path=model_root / "preprocessors" / "text_pca.pkl",
         logistic_artifact_path=model_root / "artifacts" / "logistic_best.pkl",
         baseline_metrics_path=model_root / "reports" / "baseline_metrics.json",
         metrics_path=model_root / "reports" / "metrics.json",

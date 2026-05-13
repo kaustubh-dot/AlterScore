@@ -21,4 +21,5 @@ def test_health_endpoint_reports_degraded_when_optional_artifacts_are_missing(
     assert payload.model_loaded is True
     assert "runtime_model" in payload.artifacts_loaded
     assert "preprocessor" in payload.artifacts_loaded
-    assert "text_pca" in payload.missing_artifacts
+    assert "text_pca" in payload.artifacts_loaded
+    assert "shap_explainer" in payload.missing_artifacts

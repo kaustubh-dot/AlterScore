@@ -50,6 +50,7 @@ def test_train_classical_models_saves_artifacts_and_merges_metrics(tmp_path) -> 
         assert np.all(artifacts.test_probabilities[model_name] >= 0.0)
         assert np.all(artifacts.test_probabilities[model_name] <= 1.0)
 
+    assert artifacts.text_pca_path.is_file()
     assert artifacts.metrics_path.is_file()
     assert artifacts.text_pca_path.is_file()
     assert metrics_payload["baselines"] == baseline_metrics

@@ -101,6 +101,9 @@ def main(argv: list[str] | None = None) -> int:
                 "metrics_path": None
                 if artifacts.metrics_path is None
                 else str(artifacts.metrics_path),
+                "text_pca_path": None
+                if artifacts.text_pca_path is None
+                else str(artifacts.text_pca_path),
                 "artifacts": {
                     model_name: None if path is None else str(path)
                     for model_name, path in artifacts.model_artifact_paths.items()

@@ -6,6 +6,7 @@ from backend.ml.data_generation.generator import (
     generate_synthetic_dataset,
 )
 from backend.ml.data_generation.validators import validate_synthetic_dataset
+from backend.ml.nlp.extractor import RAW_TEXT_RESPONSE_COLUMN
 from backend.ml.preprocessing.feature_registry import (
     ALL_MODEL_FEATURES,
     PROTECTED_FEATURES,
@@ -34,9 +35,16 @@ def test_generator_is_deterministic_for_fixed_seed() -> None:
 
 def test_generated_dataset_includes_model_audit_temporal_and_target_columns() -> None:
     dataset = generate_synthetic_dataset(row_count=512, seed=13)
-    expected_columns = [*ALL_MODEL_FEATURES, *PROTECTED_FEATURES, *TEMPORAL_METADATA, TARGET]
+    expected_columns = [
+        *ALL_MODEL_FEATURES,
+        *PROTECTED_FEATURES,
+        *TEMPORAL_METADATA,
+        TARGET,
+        RAW_TEXT_RESPONSE_COLUMN,
+    ]
 
     assert dataset.columns.tolist() == expected_columns
+    assert dataset[RAW_TEXT_RESPONSE_COLUMN].str.len().min() > 10
 
 
 def test_temporal_split_intent_matches_documented_months() -> None:

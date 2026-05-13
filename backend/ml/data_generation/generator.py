@@ -7,6 +7,7 @@ from typing import Final
 import numpy as np
 import pandas as pd
 
+from backend.ml.nlp.extractor import RAW_TEXT_RESPONSE_COLUMN
 from backend.ml.preprocessing.feature_registry import (
     ALL_MODEL_FEATURES,
     PROTECTED_FEATURES,
@@ -31,6 +32,46 @@ _MONTH_DISTRIBUTION_WEIGHTS: Final[np.ndarray] = np.array(
 _MONTH_LENGTHS: Final[np.ndarray] = np.array(
     [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
     dtype=int,
+)
+_POSITIVE_RESILIENCE_OPENERS: Final[tuple[str, ...]] = (
+    "When income fell, I stayed calm and made a plan.",
+    "I felt pressure, but I decided to act early and stay in control.",
+    "I was confident I could recover, so I started working on a better plan.",
+)
+_NEGATIVE_RESILIENCE_OPENERS: Final[tuple[str, ...]] = (
+    "Things fell apart and bad things kept happening.",
+    "I felt stuck and worse after the loss.",
+    "The crisis felt overwhelming and I was unable to think clearly at first.",
+)
+_HIGH_AGENCY_ACTIONS: Final[tuple[str, ...]] = (
+    "I budgeted strictly, found extra work, and saved what I could.",
+    "I managed my expenses, negotiated payments, and worked to rebuild income.",
+    "I reduced spending, planned repayments, and handled the problem directly.",
+)
+_MODERATE_AGENCY_ACTIONS: Final[tuple[str, ...]] = (
+    "I asked for help, learned what to change, and started improving the situation.",
+    "I made some changes, found support, and tried to recover step by step.",
+    "I chose a smaller plan, worked steadily, and looked for better options.",
+)
+_LOW_AGENCY_ACTIONS: Final[tuple[str, ...]] = (
+    "I had no choice and felt nothing I did would help.",
+    "I gave up for a while because I felt unable to do anything.",
+    "I felt forced to wait and stayed stuck instead of acting.",
+)
+_PROBLEM_SOLVING_CLOSERS: Final[tuple[str, ...]] = (
+    "That plan helped me improve and feel more stable.",
+    "The steps gave me relief and a better path forward.",
+    "Working through it helped me recover and build confidence.",
+)
+_NEUTRAL_CLOSERS: Final[tuple[str, ...]] = (
+    "I kept going and looked for a practical next step.",
+    "I tried to stay steady while the situation changed.",
+    "I focused on the next thing I could do.",
+)
+_NEGATIVE_CLOSERS: Final[tuple[str, ...]] = (
+    "I still felt stuck and afraid things would get worse.",
+    "The problem felt unresolved and I lost confidence.",
+    "It was hard to recover and I felt unable to improve much.",
 )
 
 
@@ -291,6 +332,12 @@ def generate_synthetic_dataset(
     )
     repayment_probability = _sigmoid(repayment_logit)
     repayment_label = (rng.random(row_count) < repayment_probability).astype(int)
+    resilience_text = _build_resilience_texts(
+        rng,
+        text_agency_score=text_agency_score,
+        text_sentiment_compound=text_sentiment_compound,
+        text_problem_solving_flag=text_problem_solving_flag,
+    )
 
     dataset = pd.DataFrame(
         {
@@ -336,8 +383,15 @@ def generate_synthetic_dataset(
             "cohort_month": cohort_month,
             "application_date": application_date,
             TARGET: repayment_label,
+            RAW_TEXT_RESPONSE_COLUMN: resilience_text,
         },
-        columns=[*ALL_MODEL_FEATURES, *PROTECTED_FEATURES, *TEMPORAL_METADATA, TARGET],
+        columns=[
+            *ALL_MODEL_FEATURES,
+            *PROTECTED_FEATURES,
+            *TEMPORAL_METADATA,
+            TARGET,
+            RAW_TEXT_RESPONSE_COLUMN,
+        ],
     )
 
     return dataset
@@ -369,6 +423,55 @@ def _build_application_dates(cohort_month: np.ndarray, rng: np.random.Generator)
         f"{DEFAULT_COHORT_YEAR}-{int(month):02d}-{day:02d}"
         for month, day in zip(cohort_month, days, strict=True)
     ]
+
+
+def _build_resilience_texts(
+    rng: np.random.Generator,
+    *,
+    text_agency_score: np.ndarray,
+    text_sentiment_compound: np.ndarray,
+    text_problem_solving_flag: np.ndarray,
+) -> list[str]:
+    texts: list[str] = []
+
+    for agency, sentiment, problem_solving in zip(
+        text_agency_score,
+        text_sentiment_compound,
+        text_problem_solving_flag,
+        strict=True,
+    ):
+        if sentiment >= 0.2:
+            opener_pool = _POSITIVE_RESILIENCE_OPENERS
+        elif sentiment <= -0.2:
+            opener_pool = _NEGATIVE_RESILIENCE_OPENERS
+        else:
+            opener_pool = _POSITIVE_RESILIENCE_OPENERS + _NEGATIVE_RESILIENCE_OPENERS
+
+        if agency >= 0.65:
+            action_pool = _HIGH_AGENCY_ACTIONS
+        elif agency >= 0.4:
+            action_pool = _MODERATE_AGENCY_ACTIONS
+        else:
+            action_pool = _LOW_AGENCY_ACTIONS
+
+        if int(problem_solving) == 1:
+            closer_pool = _PROBLEM_SOLVING_CLOSERS
+        elif sentiment <= -0.2:
+            closer_pool = _NEGATIVE_CLOSERS
+        else:
+            closer_pool = _NEUTRAL_CLOSERS
+
+        texts.append(
+            " ".join(
+                [
+                    str(rng.choice(opener_pool)),
+                    str(rng.choice(action_pool)),
+                    str(rng.choice(closer_pool)),
+                ]
+            )
+        )
+
+    return texts
 
 
 def _clip01(values: np.ndarray) -> np.ndarray:
