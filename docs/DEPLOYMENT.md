@@ -79,7 +79,7 @@ Generate data
 - [ ] `models/explainers/dice_explainer.pkl`
 - [x] `models/reports/metrics.json`
 - [x] `models/reports/baseline_metrics.json`
-- [ ] `models/reports/fairness_report.json`
+- [x] `models/reports/fairness_report.json`
 - [x] `models/reports/psi_report.json`
 - [ ] `models/reports/global_importance.json`
 - [x] `models/reports/population_percentiles.json`
@@ -105,6 +105,7 @@ At startup the backend must:
 - The current scoring stub can run with saved logistic or classical artifacts plus the shared preprocessor.
 - The current offline baseline and classical training commands now also persist `models/preprocessors/text_pca.pkl` from train months `1-8` only, using runtime-compatible raw embeddings derived from the saved synthetic dataset.
 - The same offline training commands now persist `models/reports/population_percentiles.json` and expand `models/reports/metrics.json` with saved validation/test ROC, PR, calibration, and confusion payloads.
+- The same offline training commands now also persist `models/reports/fairness_report.json`, using held-out months `11-12` predictions plus the protected audit columns only for subgroup evaluation with sample-size guards and saved green/yellow/red flags.
 - The same offline training commands now also persist `models/reports/psi_report.json`, comparing train months `1-8` to test months `11-12` only across the canonical 35 model inputs with deterministic thresholds and saved per-feature statuses.
 - `backend/app/main.py` now loads the runtime artifact bundle at startup and exposes `/api/health` plus `/api/score`.
 - `backend/app/services/analytics.py` now serves `/api/model-stats` from `metrics.json` and `/api/baseline-comparison` from `baseline_metrics.json` without runtime retraining or ad hoc route-level file parsing.
@@ -112,6 +113,7 @@ At startup the backend must:
 - `/api/health` currently returns `degraded` when scoring-critical artifacts are present but optional runtime artifacts such as SHAP, DICE, fairness, or PSI are still missing.
 - When `models/preprocessors/text_pca.pkl` is present, request-time semantic dimensions now use the persisted PCA artifact; zero-filled semantic fallback remains only for intentionally PCA-less bundles and tests.
 - When `population_percentiles.json` contains multiple model-specific tables, the runtime artifact loader now resolves the table for the active serving model so logistic fallback, classical fallback, and later manifest-backed ensemble serving can reuse one artifact format.
+- Runtime artifact loading still succeeds when `fairness_report.json` is present alongside the current local scoring bundle; the fairness report remains optional for strict scoring readiness until the fairness API route is added.
 - Runtime artifact loading still succeeds when `psi_report.json` is present alongside the current local scoring bundle; the drift report remains optional for strict scoring readiness until the drift API route is added.
 - If `metrics.json` or `baseline_metrics.json` is missing, the corresponding analytics endpoint now returns a structured `503` rather than recomputing reports inside the API process.
 - SHAP and DICE artifacts do not exist yet, so the current stub scoring response returns empty `explanation` and `counterfactual_actions` lists.

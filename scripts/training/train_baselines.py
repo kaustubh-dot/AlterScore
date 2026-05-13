@@ -13,6 +13,7 @@ if str(REPO_ROOT) not in sys.path:
 from backend.ml.training.classical.baselines import (
     DEFAULT_BASELINE_METRICS_PATH,
     DEFAULT_DATASET_PATH,
+    DEFAULT_FAIRNESS_REPORT_PATH,
     DEFAULT_LOGISTIC_ARTIFACT_PATH,
     DEFAULT_METRICS_PATH,
     DEFAULT_POPULATION_PERCENTILES_PATH,
@@ -67,6 +68,11 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         default=DEFAULT_PSI_REPORT_PATH,
     )
+    parser.add_argument(
+        "--fairness-report-path",
+        type=Path,
+        default=DEFAULT_FAIRNESS_REPORT_PATH,
+    )
     parser.add_argument("--random-state", type=int, default=42)
     return parser
 
@@ -84,6 +90,7 @@ def main(argv: list[str] | None = None) -> int:
         metrics_path=args.metrics_path,
         population_percentiles_path=args.population_percentiles_path,
         psi_report_path=args.psi_report_path,
+        fairness_report_path=args.fairness_report_path,
         random_state=args.random_state,
     )
     print(
@@ -101,6 +108,9 @@ def main(argv: list[str] | None = None) -> int:
                 "psi_report_path": None
                 if artifacts.psi_report_path is None
                 else str(artifacts.psi_report_path),
+                "fairness_report_path": None
+                if artifacts.fairness_report_path is None
+                else str(artifacts.fairness_report_path),
                 "logistic_test_auc": next(
                     metric["auc_roc"]
                     for metric in artifacts.model_stats

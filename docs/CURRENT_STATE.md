@@ -5,8 +5,8 @@
 - Date: 2026-05-13
 - Workspace: `C:\Kaustubh\Projects\AlterScore`
 - PRD source: `docs/AlterScore_PRD_v2.md`
-- Current phase: governance analytics artifact foundation with persisted drift reporting
-- Application implementation status: feature registry, runtime foundation helpers, API schemas, the frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, the baseline training loop, the bounded classical training loop for random forest, XGBoost, and LightGBM, the persisted text PCA artifact foundation, the runtime artifact-loading plus scoring-service stubs, the FastAPI app startup with `/api/health`, `/api/score`, `/api/model-stats`, `/api/baseline-comparison`, `/api/score-distribution`, `/api/roc-data`, `/api/pr-curve`, `/api/calibration-curve`, and `/api/confusion-matrix`, append-only request logging on the score path, and the persisted evaluation-artifact plus PSI drift-artifact foundations for curves, confusion matrices, score percentiles/distribution, and train-vs-test feature stability are implemented; the remaining governance analytics routes and full production-runtime artifacts are still pending
+- Current phase: governance analytics artifact foundation with persisted drift and fairness reporting
+- Application implementation status: feature registry, runtime foundation helpers, API schemas, the frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, the baseline training loop, the bounded classical training loop for random forest, XGBoost, and LightGBM, the persisted text PCA artifact foundation, the runtime artifact-loading plus scoring-service stubs, the FastAPI app startup with `/api/health`, `/api/score`, `/api/model-stats`, `/api/baseline-comparison`, `/api/score-distribution`, `/api/roc-data`, `/api/pr-curve`, `/api/calibration-curve`, and `/api/confusion-matrix`, append-only request logging on the score path, and the persisted evaluation-artifact plus fairness/drift artifact foundations for curves, confusion matrices, score percentiles/distribution, held-out subgroup fairness, and train-vs-test feature stability are implemented; the remaining governance analytics routes and full production-runtime artifacts are still pending
 
 ## What Exists
 
@@ -66,9 +66,11 @@
 - Saved classical model artifacts now exist at `models/artifacts/rf_best.pkl`, `models/artifacts/xgb_best.pkl`, and `models/artifacts/lgbm_best.pkl`.
 - `models/reports/metrics.json` now preserves the baseline section, includes validation/test rows for `random_forest`, `xgboost`, and `lightgbm`, and stores offline `evaluation_details` for validation/test ROC, PR, calibration, and confusion payloads.
 - `models/reports/population_percentiles.json` now exists with a real score histogram plus percentile lookup for the scored synthetic population, and it carries model-specific tables for the current logistic/classical artifacts.
+- `models/reports/fairness_report.json` now exists with a real persisted subgroup fairness payload generated from held-out months `11-12` using protected attributes only for audit; the current local report has `overall_auc = 0.8098`, `worst_auc_gap = 0.0379`, and no flagged groups.
 - `models/reports/psi_report.json` now exists with a real persisted drift payload generated from the canonical 35 model inputs by comparing train months `1-8` to test months `11-12` only; the current local report has `max_psi = 0.2007`, verdict `watch`, and `avg_response_time_ms` as the top drifted feature.
 - Offline training now reconstructs deterministic runtime-compatible surrogate Q27 text from the persisted synthetic dataset when raw text is unavailable, then fits `text_pca.pkl` on train months `1-8` only and saves evaluation artifacts from the same offline feature path.
 - Runtime artifact loading now resolves the active model's percentile table from a multi-model `population_percentiles.json` payload, so direct logistic fallback, candidate classical loading, and later ensemble loading can all reuse the same artifact format.
+- Runtime artifact loading still succeeds when `fairness_report.json` is present alongside the current scoring bundle, even though no fairness API route is wired yet.
 - Runtime artifact loading still succeeds when `psi_report.json` is present alongside the current scoring bundle, even though no drift API route is wired yet.
 - Root project placeholder README exists at `README.md`.
 - Frontend scaffold verification exists at `tests/unit/frontend/test_frontend_skeleton.py`.
@@ -76,8 +78,8 @@
 ## What Does Not Exist Yet
 
 - No borrower assessment pages, results flow, dashboard workflow, or frontend tests beyond the package skeleton smoke test.
-- No neural, stacking, calibration, SHAP, DICE, or fairness jobs yet.
-- Report-backed analytics now cover `/api/model-stats`, `/api/baseline-comparison`, `/api/score-distribution`, `/api/roc-data`, `/api/pr-curve`, `/api/calibration-curve`, and `/api/confusion-matrix`. A real drift report artifact now exists offline, but `/api/drift-report` is still intentionally pending, and fairness/global-importance analytics remain blocked on their offline report artifacts. Interactive frontend tests beyond the package skeleton smoke test and broader ML validation beyond the current feature, preprocessing, training, artifact-loading, evaluation-artifact, drift-artifact, and API foundation coverage are also still pending.
+- No neural, stacking, calibration, SHAP, or DICE jobs yet.
+- Report-backed analytics now cover `/api/model-stats`, `/api/baseline-comparison`, `/api/score-distribution`, `/api/roc-data`, `/api/pr-curve`, `/api/calibration-curve`, and `/api/confusion-matrix`. Real fairness and drift report artifacts now exist offline, but `/api/fairness-report` and `/api/drift-report` are still intentionally pending, and global-importance analytics remain blocked on their offline report artifact. Calibration-parity detail and the individual-fairness proxy are also still pending within the broader PRD fairness scope. Interactive frontend tests beyond the package skeleton smoke test and broader ML validation beyond the current feature, preprocessing, training, artifact-loading, evaluation-artifact, fairness/drift-artifact, and API foundation coverage are also still pending.
 - No Docker runtime files yet.
 - No SHAP explainer or DICE explainer exists yet, so the current scoring stub still returns empty explanation/counterfactual lists; semantic features now use the persisted `text_pca.pkl` when available and only fall back to zero-filled projections when the PCA artifact is intentionally missing.
 
@@ -111,9 +113,10 @@ The earlier PRD narrative referenced 39 features, but the project will not inven
 
 Continue the implementation foundation in this order:
 
-1. Generate the offline fairness and global-importance report artifacts so the remaining governance analytics routes have real saved payloads.
-2. Add `/api/fairness-report`, `/api/drift-report`, and `/api/global-importance` once those offline reports are in scope.
-3. Keep the refreshed logistic, classical, preprocessor, `text_pca.pkl`, `metrics.json`, `baseline_metrics.json`, `population_percentiles.json`, and `psi_report.json` artifacts as the local offline foundation while neural and ensemble training are still pending.
+1. Generate the offline global-importance artifact so the remaining governance analytics routes have real saved payloads.
+2. Add `/api/fairness-report`, `/api/drift-report`, and `/api/global-importance` once the remaining offline report is in scope.
+3. Extend the fairness job later with calibration-parity detail and the individual-fairness proxy required by the broader PRD.
+4. Keep the refreshed logistic, classical, preprocessor, `text_pca.pkl`, `metrics.json`, `baseline_metrics.json`, `population_percentiles.json`, `fairness_report.json`, and `psi_report.json` artifacts as the local offline foundation while neural and ensemble training are still pending.
 
 ## Session Update Protocol
 
