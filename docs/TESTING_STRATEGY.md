@@ -189,9 +189,16 @@ assert metrics["ensemble"]["auc_roc"] > metrics["baselines"]["simulated_loan_off
 - `credit_score` is 300-850.
 - `repayment_probability` is 0-1.
 - `risk_band` is one of documented bands.
-- `explanation` is present.
-- `counterfactual_actions` is present.
+- `explanation` field is present even when the current stub returns an empty list before SHAP artifacts exist.
+- `counterfactual_actions` field is present even when the current stub returns an empty list before DICE artifacts exist.
 - Protected attributes are absent from response.
+
+### Artifact Loading Smoke Test
+
+- Runtime artifact loader supports a manifest-backed bundle when available.
+- Runtime artifact loader supports a direct runtime-model fallback for the current local scoring stub.
+- Missing scoring-critical artifacts fail clearly.
+- A loaded runtime bundle can score the valid request fixture and return schema-valid JSON.
 
 ### Analytics
 

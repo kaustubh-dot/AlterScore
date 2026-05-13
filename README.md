@@ -8,8 +8,9 @@ counterfactual improvement actions, and evaluator analytics.
 ## Status
 
 The repository is in foundation mode. Backend feature contracts, runtime
-helpers, and API schemas exist. Frontend and backend application flows are not
-implemented yet.
+helpers, API schemas, offline baseline/classical training, and the first
+artifact-loading plus scoring-service stubs exist. FastAPI app startup and API
+route wiring are not implemented yet.
 
 ## Repository Guide
 

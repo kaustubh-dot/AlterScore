@@ -194,3 +194,23 @@ No promoted production model exists yet.
 - Simulated loan officer test AUC: `0.7614`
 - Logistic lift vs simulated loan officer: `+0.0483`
 - Notes: no production ensemble, calibration artifact, text PCA artifact, explainers, fairness report, or PSI report exist yet, so this run is useful only as the first offline benchmark.
+
+### Classical Run: `20260513_142208_classical`
+
+- Status: classical-model candidate set, not promotable
+- Dataset: `data/raw/synthetic_dataset.csv` with months `1-8 / 9-10 / 11-12`
+- Saved artifacts:
+  - `models/preprocessors/preprocessor.pkl`
+  - `models/artifacts/rf_best.pkl`
+  - `models/artifacts/xgb_best.pkl`
+  - `models/artifacts/lgbm_best.pkl`
+  - `models/reports/metrics.json`
+- Validation AUCs:
+  - Random forest: `0.7924`
+  - XGBoost: `0.8033`
+  - LightGBM: `0.7980`
+- Test AUCs:
+  - Random forest: `0.8040`
+  - XGBoost: `0.8087`
+  - LightGBM: `0.7977`
+- Notes: the metrics payload now preserves the existing baseline section and appends classical validation/test rows, but the bounded classical suite still trails the logistic baseline test AUC of `0.8097`, so these artifacts are training infrastructure milestones rather than promotion candidates.

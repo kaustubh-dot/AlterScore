@@ -127,3 +127,13 @@ Record every architecture-level decision here. Small implementation choices can 
 - Decision: Use the 35 explicitly named model inputs as the canonical implementation feature set: 33 numeric and 2 categorical features. Do not invent four additional psychometric features.
 - Consequences: Data generation, preprocessing, inference, SHAP, DICE, dashboard feature importance, and tests must target 35 model inputs. Documentation should describe the earlier 39-feature PRD narrative as superseded by the explicit named registry.
 - Follow-ups: Implement `feature_registry.py` with exactly these named inputs and tests for count, ordering, and protected/temporal exclusions.
+
+## DEC-0012 - Runtime Scoring Loads A Manifest Bundle When Available And A Direct Model Fallback During Scaffold
+
+- Status: accepted
+- Date: 2026-05-13
+- Owner: Codex
+- Context: The PRD and deployment docs require a production manifest bundle at backend startup, but the current milestone only has baseline and classical model artifacts plus a shared preprocessor. The backend still needs a usable scoring stub before the final serving bundle exists.
+- Decision: Implement runtime artifact loading in two layers: prefer the production manifest bundle when it exists, but allow a temporary direct runtime model path override for local scoring stubs until the full production artifact set is available.
+- Consequences: Backend startup and health logic can be built now without blocking on the future ensemble manifest. The scoring stub remains model-agnostic, but temporary fallback behavior must be documented so it is not mistaken for the final production serving contract.
+- Follow-ups: Add FastAPI startup caching and `/api/health` plus `/api/score` route stubs next, then retire the fallback path once the calibrated production bundle is promoted.

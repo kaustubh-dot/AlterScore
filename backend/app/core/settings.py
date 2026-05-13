@@ -21,6 +21,7 @@ class Settings:
     api_version: str
     repo_root: Path
     model_manifest_path: Path
+    runtime_model_path: Path | None
     log_level: str
     cors_origins: tuple[str, ...]
 
@@ -44,6 +45,12 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         if manifest_value
         else PRODUCTION_MANIFEST_PATH
     )
+    runtime_model_value = source.get("ALTERSCORE_RUNTIME_MODEL_PATH")
+    runtime_model_path = (
+        resolve_repo_path(runtime_model_value, repo_root)
+        if runtime_model_value
+        else None
+    )
     cors_origins = _split_csv(source.get("ALTERSCORE_CORS_ORIGINS"))
 
     return Settings(
@@ -51,6 +58,7 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         api_version=source.get("ALTERSCORE_API_VERSION", "0.1.0"),
         repo_root=repo_root,
         model_manifest_path=model_manifest_path,
+        runtime_model_path=runtime_model_path,
         log_level=source.get("ALTERSCORE_LOG_LEVEL", "INFO").upper(),
         cors_origins=cors_origins or DEFAULT_CORS_ORIGINS,
     )

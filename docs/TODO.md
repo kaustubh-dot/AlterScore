@@ -2,7 +2,7 @@
 
 ## Current Phase
 
-Baseline training foundation. The canonical feature registry, project hygiene files, backend runtime helpers, API schemas, frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, and the first baseline training loop are implemented; app runtime and API routes are not started.
+Backend artifact-loading and scoring-stub foundation. The canonical feature registry, project hygiene files, backend runtime helpers, API schemas, frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, the baseline training loop, the bounded classical training loop, and the first runtime artifact-loading plus scoring-service stubs are implemented; FastAPI app startup and API routes are not started.
 
 ## Immediate TODO
 
@@ -31,9 +31,13 @@ Baseline training foundation. The canonical feature registry, project hygiene fi
 ## Backend TODO
 
 - [x] Create settings and path modules.
-- [ ] Create artifact loader with clear missing-artifact errors.
+- [x] Create artifact loader with clear missing-artifact errors.
+- [x] Create backend scoring service stubs against saved runtime artifacts.
 - [x] Create Pydantic schemas for score requests and responses.
 - [x] Create Pydantic schemas for analytics responses.
+- [ ] Wire FastAPI startup artifact caching.
+- [ ] Add `/api/health` route stub backed by artifact status.
+- [ ] Add `/api/score` route stub backed by the scoring service.
 - [ ] Create route stubs only after schemas exist.
 - [ ] Implement request logging service.
 - [ ] Implement health endpoint.
@@ -83,14 +87,15 @@ Baseline training foundation. The canonical feature registry, project hygiene fi
 - [x] Implement majority baseline.
 - [x] Implement logistic baseline.
 - [x] Implement simulated loan officer comparator.
-- [ ] Train random forest.
-- [ ] Train XGBoost.
-- [ ] Train LightGBM.
+- [x] Train random forest.
+- [x] Train XGBoost.
+- [x] Train LightGBM.
 - [ ] Train TabNet.
 - [ ] Train MLP.
 - [ ] Train stacking ensemble.
 - [ ] Calibrate stacking ensemble with isotonic regression.
 - [ ] Generate metrics and curves.
+- [ ] Persist `models/preprocessors/text_pca.pkl` for runtime semantic projection.
 
 ## Explainability TODO
 
@@ -139,10 +144,12 @@ Baseline training foundation. The canonical feature registry, project hygiene fi
 - [x] Add unit tests for derived features.
 - [x] Add integration coverage for raw-request feature assembly through NLP PCA and preprocessing compatibility.
 - [x] Add integration coverage for dataset materialization and baseline training artifacts.
+- [x] Add integration coverage for classical model training artifacts, probability bounds, and metrics merging.
+- [x] Add score-mapper unit coverage.
+- [x] Add artifact-loading and scoring-smoke coverage against saved runtime artifacts.
 - [ ] Add integration tests for broader data pipeline steps beyond generator validation and preprocessing split integrity.
 - [ ] Add integration tests for API endpoints.
 - [ ] Add E2E tests for assessment and dashboard.
-- [ ] Add smoke test for artifact loading.
 
 ## Deployment TODO
 
