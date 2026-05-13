@@ -31,6 +31,7 @@ AlterScore should be reproducible locally before it is deployed anywhere. Deploy
 | `ALTERSCORE_REPO_ROOT` | repository root | Optional path override |
 | `ALTERSCORE_MODEL_MANIFEST` | `models/registry/production_manifest.json` | Serving manifest |
 | `ALTERSCORE_RUNTIME_MODEL_PATH` | `models/artifacts/logistic_best.pkl` | Local stub-model override when no production manifest is ready |
+| `ALTERSCORE_REQUEST_LOG_PATH` | `backend/runtime/logs/requests.jsonl` | Append-only score-request JSONL path |
 | `ALTERSCORE_LOG_LEVEL` | `INFO` | Backend log level |
 | `ALTERSCORE_CORS_ORIGINS` | `http://localhost:5173` | Frontend origins |
 | `VITE_API_BASE_URL` | `http://localhost:8000/api` | Frontend API base URL |
@@ -103,6 +104,7 @@ At startup the backend must:
   - `ALTERSCORE_RUNTIME_MODEL_PATH` fallback for the current local stub path
 - The current scoring stub can run with saved logistic or classical artifacts plus the shared preprocessor.
 - `backend/app/main.py` now loads the runtime artifact bundle at startup and exposes `/api/health` plus `/api/score`.
+- `backend/app/main.py` now also initializes the append-only request logging service for `/api/score`.
 - `/api/health` currently returns `degraded` when scoring-critical artifacts are present but optional runtime artifacts such as `text_pca`, SHAP, DICE, fairness, or PSI are still missing.
 - `models/preprocessors/text_pca.pkl` does not exist yet, so request-time semantic dimensions currently fall back to zero values in stub mode.
 - SHAP and DICE artifacts do not exist yet, so the current stub scoring response returns empty `explanation` and `counterfactual_actions` lists.
@@ -159,6 +161,7 @@ Backend logs should include:
 - Scoring failures with stack trace in server logs but sanitized client error.
 
 Prediction logs should be append-only JSONL and must not store raw protected attributes as model inputs.
+The current default path is `backend/runtime/logs/requests.jsonl`, overridable through `ALTERSCORE_REQUEST_LOG_PATH`.
 
 ## Rollback Plan
 

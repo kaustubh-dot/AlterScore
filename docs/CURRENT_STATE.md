@@ -5,8 +5,8 @@
 - Date: 2026-05-13
 - Workspace: `C:\Kaustubh\Projects\AlterScore`
 - PRD source: `docs/AlterScore_PRD_v2.md`
-- Current phase: FastAPI health and score route-stub foundation
-- Application implementation status: feature registry, runtime foundation helpers, API schemas, the frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, the baseline training loop, the bounded classical training loop for random forest, XGBoost, and LightGBM, the runtime artifact-loading plus scoring-service stubs, and the first FastAPI app startup with `/api/health` and `/api/score` route stubs are implemented; analytics routes and full production-runtime artifacts are still pending
+- Current phase: FastAPI request-logging foundation
+- Application implementation status: feature registry, runtime foundation helpers, API schemas, the frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, the baseline training loop, the bounded classical training loop for random forest, XGBoost, and LightGBM, the runtime artifact-loading plus scoring-service stubs, the first FastAPI app startup with `/api/health` and `/api/score` route stubs, and append-only request logging on the score path are implemented; analytics routes and full production-runtime artifacts are still pending
 
 ## What Exists
 
@@ -49,6 +49,7 @@
 - Backend scoring service stubs exist at `backend/app/services/scoring.py`, using the loaded model bundle plus request feature assembly to return schema-valid score responses.
 - FastAPI app startup now exists at `backend/app/main.py`, with artifact loading cached at startup and CORS configured from settings.
 - Route stubs now exist at `backend/app/api/v1/routes/health.py` and `backend/app/api/v1/routes/score.py`.
+- Append-only request logging now exists at `backend/app/services/request_logging.py`, writing `/api/score` success and failure entries to `backend/runtime/logs/requests.jsonl` by default without persisting raw request payloads.
 - Feature engineering unit coverage exists at `tests/unit/ml/test_answer_parser.py`, `tests/unit/ml/test_behavioral_parser.py`, and `tests/unit/ml/test_derived_features.py`.
 - Request-assembly integration coverage exists at `tests/integration/pipeline/test_feature_assembly.py`.
 - Dataset-artifact and baseline-training integration coverage exists at `tests/integration/pipeline/test_dataset_artifacts_and_baselines.py`.
@@ -104,7 +105,7 @@ The earlier PRD narrative referenced 39 features, but the project will not inven
 Continue the implementation foundation in this order:
 
 1. Persist a real `text_pca.pkl` artifact so request-time semantic features stop falling back to zero-filled stub projections.
-2. Add request logging and the first analytics route stubs on top of the new FastAPI startup path.
+2. Add the first analytics route stubs on top of the new FastAPI startup and request-logging path.
 3. Keep the saved logistic and classical artifacts as the offline foundation while neural and ensemble training are still pending.
 
 ## Session Update Protocol

@@ -47,7 +47,8 @@
 15. [x] Implement random forest, XGBoost, and LightGBM training on the same temporal split foundation.
 16. [x] Build artifact loading and backend scoring stubs against the fixed inference assembly path.
 17. [x] Wire FastAPI startup caching plus `/api/health` and `/api/score` route stubs on top of the artifact loader and scoring service.
-18. [ ] Persist `text_pca.pkl`, add request logging, and extend route coverage toward analytics stubs.
+18. [x] Add append-only request logging to the `/api/score` stub path.
+19. [ ] Persist `text_pca.pkl` and extend route coverage toward analytics stubs.
 
 ## Files To Create First
 
@@ -145,6 +146,12 @@ Docs and contracts
 - FastAPI app startup caches the runtime artifact bundle.
 - `/api/health` and `/api/score` route stubs pass integration coverage.
 - The backend can serve schema-valid score responses from saved artifacts before explainability and analytics artifacts are complete.
+
+### M2.7 - Runtime Logging Foundation Green
+
+- `/api/score` appends one JSONL entry per success or failure path.
+- Request logs include request ID, latency, status, and runtime model metadata.
+- Request logging coverage verifies the log file is created without storing raw request payloads.
 
 ### M3 - Production Candidate Green
 

@@ -2,7 +2,7 @@
 
 ## Current Phase
 
-FastAPI health and score route-stub foundation. The canonical feature registry, project hygiene files, backend runtime helpers, API schemas, frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, the baseline training loop, the bounded classical training loop, the runtime artifact-loading plus scoring-service stubs, and the first FastAPI startup with health/score route stubs are implemented; analytics routes and full production-runtime artifacts are not started.
+FastAPI request-logging foundation. The canonical feature registry, project hygiene files, backend runtime helpers, API schemas, frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, the baseline training loop, the bounded classical training loop, the runtime artifact-loading plus scoring-service stubs, the first FastAPI startup with health/score route stubs, and append-only request logging are implemented; analytics routes and full production-runtime artifacts are not started.
 
 ## Immediate TODO
 
@@ -39,7 +39,7 @@ FastAPI health and score route-stub foundation. The canonical feature registry, 
 - [x] Add `/api/health` route stub backed by artifact status.
 - [x] Add `/api/score` route stub backed by the scoring service.
 - [x] Create route stubs only after schemas exist.
-- [ ] Implement request logging service.
+- [x] Implement request logging service.
 - [x] Implement health endpoint.
 - [ ] Harden the scoring endpoint with explainability, counterfactual, and production-bundle behavior.
 - [ ] Implement analytics endpoints after reports exist.
@@ -148,15 +148,16 @@ FastAPI health and score route-stub foundation. The canonical feature registry, 
 - [x] Add score-mapper unit coverage.
 - [x] Add artifact-loading and scoring-smoke coverage against saved runtime artifacts.
 - [x] Add API integration tests for `/api/health` and `/api/score` stubs.
+- [x] Add API integration coverage for request logging on `/api/score`.
 - [ ] Add integration tests for broader data pipeline steps beyond generator validation and preprocessing split integrity.
 - [ ] Add integration tests for analytics endpoints.
 - [ ] Add E2E tests for assessment and dashboard.
 
 ## Deployment TODO
 
-- [ ] Document local setup.
-- [ ] Add backend run command.
-- [ ] Add frontend run command.
+- [x] Document local setup.
+- [x] Add backend run command.
+- [x] Add frontend run command.
 - [ ] Add Docker plan after local app works.
-- [ ] Add artifact bundle checklist.
-- [ ] Add health check and rollback plan.
+- [x] Add artifact bundle checklist.
+- [x] Add health check and rollback plan.

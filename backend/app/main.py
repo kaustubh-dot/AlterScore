@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.app.api.v1.router import api_router
 from backend.app.core.artifact_loader import LoadedArtifactBundle, load_runtime_artifact_bundle
 from backend.app.core.settings import Settings, get_settings
+from backend.app.services.request_logging import RequestLoggingService
 from backend.app.services.scoring import ScoringService
 
 
@@ -22,6 +23,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         artifact_bundle = load_runtime_artifact_bundle(resolved_settings, strict=False)
         app.state.settings = resolved_settings
         app.state.artifact_bundle = artifact_bundle
+        app.state.request_logging_service = RequestLoggingService(
+            resolved_settings.request_log_path,
+            artifact_bundle,
+        )
         app.state.scoring_service = _build_scoring_service(artifact_bundle)
         yield
 
