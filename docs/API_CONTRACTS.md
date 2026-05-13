@@ -49,6 +49,7 @@
 
 Current scaffold note:
 - Until the full production bundle exists, the backend may report health from either a manifest-backed bundle or a direct runtime-model fallback used by the scoring stub.
+- Health may currently be `degraded` even when `model_loaded` is `true` if optional runtime artifacts are still missing but scoring-critical artifacts are present.
 
 ### Response
 

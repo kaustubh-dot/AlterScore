@@ -209,6 +209,11 @@ Each analytics endpoint must:
 - Return useful error if the backing report is missing.
 - Avoid expensive model retraining during request handling.
 
+### Current Stub Coverage
+
+- `test_health_endpoint.py` verifies the startup cache and artifact-health response.
+- `test_score_endpoint.py` verifies the schema-valid happy path and structured `503` behavior when scoring-critical artifacts are missing.
+
 ## Frontend Tests
 
 ### Assessment

@@ -5,8 +5,8 @@
 - Date: 2026-05-13
 - Workspace: `C:\Kaustubh\Projects\AlterScore`
 - PRD source: `docs/AlterScore_PRD_v2.md`
-- Current phase: backend artifact-loading and scoring-stub foundation
-- Application implementation status: feature registry, runtime foundation helpers, API schemas, the frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, the baseline training loop, the bounded classical training loop for random forest, XGBoost, and LightGBM, and the first backend artifact-loading plus scoring-service stubs are implemented; FastAPI app/runtime wiring is still in scaffold stage
+- Current phase: FastAPI health and score route-stub foundation
+- Application implementation status: feature registry, runtime foundation helpers, API schemas, the frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, the baseline training loop, the bounded classical training loop for random forest, XGBoost, and LightGBM, the runtime artifact-loading plus scoring-service stubs, and the first FastAPI app startup with `/api/health` and `/api/score` route stubs are implemented; analytics routes and full production-runtime artifacts are still pending
 
 ## What Exists
 
@@ -47,11 +47,14 @@
 - Classical model training exists at `backend/ml/training/classical/train_classical.py`, with command entrypoint `scripts/training/train_classical_models.py`.
 - Runtime artifact loading exists at `backend/app/core/artifact_loader.py`, supporting either a production manifest bundle or a direct runtime model path for the current local scoring stub.
 - Backend scoring service stubs exist at `backend/app/services/scoring.py`, using the loaded model bundle plus request feature assembly to return schema-valid score responses.
+- FastAPI app startup now exists at `backend/app/main.py`, with artifact loading cached at startup and CORS configured from settings.
+- Route stubs now exist at `backend/app/api/v1/routes/health.py` and `backend/app/api/v1/routes/score.py`.
 - Feature engineering unit coverage exists at `tests/unit/ml/test_answer_parser.py`, `tests/unit/ml/test_behavioral_parser.py`, and `tests/unit/ml/test_derived_features.py`.
 - Request-assembly integration coverage exists at `tests/integration/pipeline/test_feature_assembly.py`.
 - Dataset-artifact and baseline-training integration coverage exists at `tests/integration/pipeline/test_dataset_artifacts_and_baselines.py`.
 - Classical training integration coverage exists at `tests/integration/pipeline/test_classical_training.py`.
 - Artifact-loading and scoring-stub integration coverage exists at `tests/integration/pipeline/test_artifact_loading.py`.
+- API integration coverage now exists at `tests/integration/api/test_health_endpoint.py` and `tests/integration/api/test_score_endpoint.py`.
 - Score-mapper unit coverage exists at `tests/unit/ml/test_score_mapper.py`.
 - A reusable valid score-request smoke fixture now exists at `tests/fixtures/score_request_valid.json`.
 - Persisted synthetic dataset now exists at `data/raw/synthetic_dataset.csv`.
@@ -64,11 +67,10 @@
 
 ## What Does Not Exist Yet
 
-- No FastAPI application code.
 - No borrower assessment pages, results flow, dashboard workflow, or frontend tests beyond the package skeleton smoke test.
 - No neural, stacking, calibration, SHAP, DICE, fairness, or PSI jobs yet.
-- No FastAPI route or API integration tests, no interactive frontend tests beyond the package skeleton smoke test, and no broader ML validation tests beyond feature, schema, data generation, NLP extraction, preprocessing split-integrity, behavioral parsing, request assembly, answer/derived feature coverage, baseline artifact coverage, classical training coverage, and runtime artifact-loading/scoring-smoke coverage.
-- No FastAPI app entrypoint, route modules, or Docker runtime files yet.
+- No analytics endpoints yet, no interactive frontend tests beyond the package skeleton smoke test, and no broader ML validation tests beyond feature, schema, data generation, NLP extraction, preprocessing split-integrity, behavioral parsing, request assembly, answer/derived feature coverage, baseline artifact coverage, classical training coverage, runtime artifact-loading/scoring-smoke coverage, and the first API route-stub integration coverage.
+- No Docker runtime files yet.
 - No persisted runtime `text_pca.pkl`, SHAP explainer, or DICE explainer exists yet, so the current scoring stub falls back to zero semantic projections when `text_pca` is unavailable and returns empty explanation/counterfactual lists until explainability artifacts exist.
 
 ## PRD-Derived Product Summary
@@ -101,8 +103,8 @@ The earlier PRD narrative referenced 39 features, but the project will not inven
 
 Continue the implementation foundation in this order:
 
-1. Wire a FastAPI app startup path, artifact cache, and `/api/health` plus `/api/score` route stubs on top of the new loader and scoring service.
-2. Persist a real `text_pca.pkl` artifact so request-time semantic features stop falling back to zero-filled stub projections.
+1. Persist a real `text_pca.pkl` artifact so request-time semantic features stop falling back to zero-filled stub projections.
+2. Add request logging and the first analytics route stubs on top of the new FastAPI startup path.
 3. Keep the saved logistic and classical artifacts as the offline foundation while neural and ensemble training are still pending.
 
 ## Session Update Protocol
