@@ -81,7 +81,7 @@ Generate data
 - [x] `models/reports/baseline_metrics.json`
 - [x] `models/reports/fairness_report.json`
 - [x] `models/reports/psi_report.json`
-- [ ] `models/reports/global_importance.json`
+- [x] `models/reports/global_importance.json`
 - [x] `models/reports/population_percentiles.json`
 - [ ] `models/registry/production_manifest.json`
 
@@ -107,6 +107,7 @@ At startup the backend must:
 - The same offline training commands now persist `models/reports/population_percentiles.json` and expand `models/reports/metrics.json` with saved validation/test ROC, PR, calibration, and confusion payloads.
 - The same offline training commands now also persist `models/reports/fairness_report.json`, using held-out months `11-12` predictions plus the protected audit columns only for subgroup evaluation with sample-size guards and saved green/yellow/red flags.
 - The same offline training commands now also persist `models/reports/psi_report.json`, comparing train months `1-8` to test months `11-12` only across the canonical 35 model inputs with deterministic thresholds and saved per-feature statuses.
+- The same offline training commands now also persist `models/reports/global_importance.json`, using the current saved explainability source to produce a deterministic dashboard-ready ranking over the canonical 35 model inputs.
 - `backend/app/main.py` now loads the runtime artifact bundle at startup and exposes `/api/health` plus `/api/score`.
 - `backend/app/services/analytics.py` now serves `/api/model-stats` from `metrics.json` and `/api/baseline-comparison` from `baseline_metrics.json` without runtime retraining or ad hoc route-level file parsing.
 - `backend/app/main.py` now also initializes the append-only request logging service for `/api/score`.
@@ -115,6 +116,7 @@ At startup the backend must:
 - When `population_percentiles.json` contains multiple model-specific tables, the runtime artifact loader now resolves the table for the active serving model so logistic fallback, classical fallback, and later manifest-backed ensemble serving can reuse one artifact format.
 - Runtime artifact loading still succeeds when `fairness_report.json` is present alongside the current local scoring bundle; the fairness report remains optional for strict scoring readiness until the fairness API route is added.
 - Runtime artifact loading still succeeds when `psi_report.json` is present alongside the current local scoring bundle; the drift report remains optional for strict scoring readiness until the drift API route is added.
+- Runtime artifact loading still succeeds when `global_importance.json` is present alongside the current local scoring bundle; the report remains optional for strict scoring readiness until the global-importance API route is added.
 - If `metrics.json` or `baseline_metrics.json` is missing, the corresponding analytics endpoint now returns a structured `503` rather than recomputing reports inside the API process.
 - SHAP and DICE artifacts do not exist yet, so the current stub scoring response returns empty `explanation` and `counterfactual_actions` lists.
 

@@ -837,3 +837,106 @@ The offline governance bundle now includes a real fairness report alongside the 
 - Continue: yes
 - Stop: no
 - Follow-up: generate the global-importance artifact next, then wire `/api/fairness-report`, `/api/drift-report`, and `/api/global-importance` together in the governance analytics route slice.
+
+## EXP-20260514-007 - Persisted global-importance artifact foundation
+
+- Status: completed
+- Owner: Codex
+- Date started: 2026-05-14
+- Date completed: 2026-05-14
+- Branch / commit: workspace (uncommitted)
+- Related decision: existing temporal-split, 35-feature-registry, and offline-training-separation decisions
+- Related issue / task: persisted `global_importance.json` foundation for the offline governance bundle
+
+### Hypothesis
+
+If the offline training bundle reuses the saved explainability-capable models and processed temporal splits, then it can persist a deterministic dashboard-ready `global_importance.json` payload for the canonical 35 inputs without adding runtime routes or requiring a full `shap_explainer.pkl` job yet.
+
+### Dataset
+
+- Data version: `synthetic_v0.1.0`
+- Row count: `10,000`
+- Train split: months `1-8` (`6,800` rows)
+- Validation split: months `9-10` (`1,400` rows)
+- Test split: months `11-12` (`1,800` rows)
+- Protected attributes available: gender, age group, region, education level
+- Known schema changes: none
+
+### Feature Set
+
+- Feature registry version: `0.1.0`
+- Numeric feature count: `33`
+- Categorical feature count: `2`
+- Included fields: canonical 35 model inputs only
+- Excluded fields: protected attributes, `cohort_month`, `application_date`, `repayment_label`
+- Explainability path: prefer exact linear contribution magnitudes from the saved logistic baseline when available; otherwise fall back to deterministic model-native importances from the current classical bundle
+
+### Model / Pipeline Configuration
+
+```json
+{
+  "job_type": "global_importance_report",
+  "random_seed": 42,
+  "selection": {
+    "exact_linear_preference": ["logistic_regression"],
+    "native_importance_fallback": ["xgboost", "lightgbm", "random_forest"]
+  },
+  "reference_distribution": {
+    "background_split": "train_months_1_8",
+    "explained_split": "test_months_11_12"
+  },
+  "payload": {
+    "schema": "GlobalImportanceResponse root list",
+    "sort": "descending by mean_abs_shap then feature name",
+    "categories": ["psychometric", "behavioral", "nlp", "derived"]
+  }
+}
+```
+
+### Commands
+
+```powershell
+C:\Users\Kaustubh\anaconda3\python.exe -m pytest --basetemp .tmp\pytest tests/integration/pipeline/test_dataset_artifacts_and_baselines.py tests/integration/pipeline/test_classical_training.py tests/integration/pipeline/test_artifact_loading.py tests/integration/pipeline/test_psi_report_artifact.py tests/integration/pipeline/test_fairness_report_artifact.py tests/integration/pipeline/test_global_importance_artifact.py
+C:\Users\Kaustubh\anaconda3\python.exe scripts/training/train_baselines.py
+C:\Users\Kaustubh\anaconda3\python.exe scripts/training/train_classical_models.py
+```
+
+### Results
+
+| Artifact Metric | Value |
+|---|---:|
+| Saved feature count | `35` |
+| Top feature | `cognitive_load_index` |
+| Top `mean_abs_shap` | `0.4635` |
+| Second feature | `impulsivity_index` |
+| Third feature | `scroll_hesitation_score` |
+
+### Fairness Summary
+
+- Worst AUC gap: `0.0379`
+- Flagged groups: none
+- Approval-rate gaps: unchanged from the current saved fairness artifact
+- Notes: fairness computation is unchanged in this run; the artifact remained compatible beside the new global-importance report
+
+### Drift Summary
+
+- Max PSI: `0.2007`
+- Top drifted features: `avg_response_time_ms`, `session_duration_sec`, `cognitive_load_index`, `typing_speed_wpm`
+- Verdict: `watch`
+
+### Artifacts
+
+| Artifact | Path |
+|---|---|
+| Global importance report | `models/reports/global_importance.json` |
+
+### Interpretation
+
+The offline governance bundle now includes a real dashboard-ready global-importance report without widening scope into runtime analytics routes or the persisted SHAP explainer path. The current saved report is dominated by derived and behavioral features on the held-out test split, which is directionally consistent with the existing logistic baseline and the synthetic dataset's constructed repayment signal.
+
+### Decision
+
+- Promote: no
+- Continue: yes
+- Stop: no
+- Follow-up: wire `/api/fairness-report`, `/api/drift-report`, and `/api/global-importance` to the saved report files, then return to the persisted SHAP explainer and per-user explanation path.
