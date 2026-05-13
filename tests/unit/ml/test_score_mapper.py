@@ -55,3 +55,23 @@ def test_compute_percentile_supports_saved_lookup_payloads_and_fallback() -> Non
     assert compute_percentile(560, percentile_payload) == 50
     assert compute_percentile(850, percentile_payload) == 99
     assert 0 <= compute_percentile(620, None) <= 100
+
+
+def test_compute_percentile_supports_multi_model_saved_payloads() -> None:
+    percentile_payload = {
+        "default_model_name": "logistic_regression",
+        "models": {
+            "logistic_regression": {
+                "score_to_percentile": {
+                    "560": 47,
+                }
+            },
+            "xgboost": {
+                "score_to_percentile": {
+                    "560": 52,
+                }
+            },
+        },
+    }
+
+    assert compute_percentile(560, percentile_payload) == 47

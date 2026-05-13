@@ -92,8 +92,8 @@ This section expands the next roadmap stretch into smaller delivery checkpoints 
 
 ## Checkpoint Sequencing Notes
 
-- C19 and C20 are complete, so C21 through C26 are now the preferred next backend slice because the scoring stub no longer depends on the temporary semantic zero-fill path when `text_pca.pkl` is present.
-- C21 through C26 are the preferred next backend slice because they build on already-saved baseline and classical reports without waiting for neural or ensemble training.
+- C19 and C20 are complete, and the offline evaluation bundle foundation for score distribution plus ROC/PR/calibration/confusion payloads now exists for the current logistic/classical artifact set.
+- C24 through C26 are now the preferred next backend slice because the remaining analytics routes can read saved report payloads instead of forcing more offline artifact work first.
 - C27 through C31 are the production-model track and should stay offline-only; none of those jobs should be pulled into FastAPI request handlers.
 - C32 through C34 depend on a stable production candidate or an explicitly documented surrogate explainability path.
 - C35 should happen only after the serving bundle can load without relying on the temporary direct-model fallback path.

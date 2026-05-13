@@ -73,6 +73,7 @@ class PreparedTemporalData:
     train: TemporalDataSplit
     validation: TemporalDataSplit
     test: TemporalDataSplit
+    feature_frame: pd.DataFrame
     text_pca: PCA | None
 
 
@@ -147,6 +148,7 @@ def prepare_temporal_data(
         train=_build_split(dataset, feature_frame, train_mask),
         validation=_build_split(dataset, feature_frame, validation_mask),
         test=_build_split(dataset, feature_frame, test_mask),
+        feature_frame=feature_frame.copy(),
         text_pca=text_pca,
     )
 
@@ -239,12 +241,7 @@ def align_text_features_from_raw_text(
 ) -> tuple[pd.DataFrame, np.ndarray]:
     """Overwrite text-derived model features from the raw resilience response text."""
 
-    if text_column not in dataset.columns:
-        raise ValueError(
-            f"Dataset is missing required raw-text column for NLP alignment: {text_column}."
-        )
-
-    text_values = dataset[text_column].fillna("").astype(str).tolist()
+    text_values = _resolve_text_corpus(dataset, text_column=text_column)
     nlp_feature_rows, raw_embeddings = extract_nlp_feature_batch(text_values)
     updated_dataset = dataset.copy()
     updated_dataset = updated_dataset.astype(

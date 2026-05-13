@@ -52,6 +52,8 @@ def test_load_runtime_artifact_bundle_supports_manifest_backed_scoring_bundle(
     assert bundle.metrics_payload is not None
     assert bundle.baseline_metrics is not None
     assert bundle.text_pca is not None
+    assert bundle.population_percentiles is not None
+    assert bundle.population_percentiles["selected_model_name"] == "logistic_regression"
 
 
 def test_candidate_runtime_selection_honors_repo_root_and_prefers_best_available_model(
@@ -112,6 +114,32 @@ def test_score_request_with_loaded_bundle_returns_schema_valid_stub_response(
     assert response.improvement_tips
 
 
+def test_population_percentiles_payload_is_resolved_to_the_active_runtime_model(
+    tmp_path,
+) -> None:
+    artifact_paths = _prepare_runtime_bundle(tmp_path, train_classical_suite=True)
+    population_percentiles_path = artifact_paths["population_percentiles"]
+    payload = json.loads(population_percentiles_path.read_text(encoding="utf-8"))
+    payload["default_model_name"] = "random_forest"
+    population_percentiles_path.write_text(
+        json.dumps(payload, indent=2),
+        encoding="utf-8",
+    )
+
+    settings = load_settings(
+        {
+            "ALTERSCORE_REPO_ROOT": str(tmp_path),
+            "ALTERSCORE_RUNTIME_MODEL_PATH": "models/artifacts/logistic_best.pkl",
+        }
+    )
+    bundle = load_runtime_artifact_bundle(settings, strict=True)
+
+    assert bundle.report.runtime_model_name == "logistic_regression"
+    assert bundle.population_percentiles is not None
+    assert bundle.population_percentiles["selected_model_name"] == "logistic_regression"
+    assert bundle.population_percentiles["model_name"] == "logistic_regression"
+
+
 def _prepare_runtime_bundle(tmp_path, *, train_classical_suite: bool = False):
     dataset = generate_synthetic_dataset(row_count=2_400, seed=31)
     model_root = tmp_path / "models"
@@ -136,6 +164,7 @@ def _prepare_runtime_bundle(tmp_path, *, train_classical_suite: bool = False):
         logistic_artifact_path=artifact_paths["model"],
         baseline_metrics_path=artifact_paths["baseline_metrics"],
         metrics_path=artifact_paths["metrics"],
+        population_percentiles_path=artifact_paths["population_percentiles"],
     )
     if train_classical_suite:
         train_classical_models(
@@ -147,21 +176,10 @@ def _prepare_runtime_bundle(tmp_path, *, train_classical_suite: bool = False):
             random_forest_artifact_path=artifact_paths["random_forest"],
             xgboost_artifact_path=artifact_paths["xgboost"],
             lightgbm_artifact_path=artifact_paths["lightgbm"],
+            logistic_artifact_path=artifact_paths["model"],
             baseline_metrics_path=artifact_paths["baseline_metrics"],
             metrics_path=artifact_paths["metrics"],
+            population_percentiles_path=artifact_paths["population_percentiles"],
             random_state=17,
         )
-    artifact_paths["population_percentiles"].write_text(
-        json.dumps(
-            {
-                "score_to_percentile": {
-                    "300": 0,
-                    "560": 50,
-                    "850": 100,
-                }
-            },
-            indent=2,
-        ),
-        encoding="utf-8",
-    )
     return artifact_paths

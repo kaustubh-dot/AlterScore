@@ -34,7 +34,7 @@ This file tracks expected model artifacts, promotion criteria, and the registry 
 | SHAP summary image | `models/reports/shap_summary.png` | SHAP job | No | Human inspection |
 | Fairness report | `models/reports/fairness_report.json` | Fairness job | Yes for dashboard | Group metrics and verdict |
 | PSI report | `models/reports/psi_report.json` | Drift job | Yes for dashboard | Train vs future cohort stability |
-| Population percentiles | `models/reports/population_percentiles.json` | Evaluation job | Yes | Score percentile lookup |
+| Population percentiles | `models/reports/population_percentiles.json` | Evaluation job | Yes | Score percentile lookup plus saved score histogram; current payload can hold model-specific tables and a default serving view |
 | Model manifest | `models/registry/production_manifest.json` | Promotion step | Yes | Single serving bundle declaration |
 
 ## Production Manifest Schema
@@ -184,9 +184,10 @@ No promoted production model exists yet.
 Current local runtime-artifact status:
 
 - `models/preprocessors/text_pca.pkl` now exists and is loaded opportunistically by the runtime bundle.
+- `models/reports/population_percentiles.json` now exists and the runtime loader resolves the active model's table when the artifact contains multiple model-specific payloads.
 - Zero-filled semantic fallback remains supported only for intentionally PCA-less test/runtime bundles.
 
-### Baseline Run: `20260513_160334_baselines`
+### Baseline Run: `20260513_171150_baselines`
 
 - Status: baseline-only candidate, not promotable
 - Dataset: `data/raw/synthetic_dataset.csv` with months `1-8 / 9-10 / 11-12`
@@ -196,13 +197,14 @@ Current local runtime-artifact status:
   - `models/artifacts/logistic_best.pkl`
   - `models/reports/baseline_metrics.json`
   - `models/reports/metrics.json`
-- Logistic regression validation AUC: `0.8128`
-- Logistic regression test AUC: `0.8104`
+  - `models/reports/population_percentiles.json`
+- Logistic regression validation AUC: `0.8099`
+- Logistic regression test AUC: `0.8098`
 - Simulated loan officer test AUC: `0.7614`
-- Logistic lift vs simulated loan officer: `+0.0490`
-- Notes: this refresh persists the first real `text_pca.pkl` from train months `1-8` by reconstructing deterministic runtime-compatible raw text embeddings from the saved synthetic dataset before PCA fitting. The run is still baseline-only because no production ensemble, calibration artifact, explainers, fairness report, or PSI report exist yet.
+- Logistic lift vs simulated loan officer: `+0.0484`
+- Notes: this refresh persists the real `text_pca.pkl` from train months `1-8` by reconstructing deterministic runtime-compatible surrogate Q27 text from the saved synthetic dataset before PCA fitting, and it also writes the first real `population_percentiles.json` plus validation/test evaluation details into `metrics.json`.
 
-### Classical Run: `20260513_160430_classical`
+### Classical Run: `20260513_171216_classical`
 
 - Status: classical-model candidate set, not promotable
 - Dataset: `data/raw/synthetic_dataset.csv` with months `1-8 / 9-10 / 11-12`
@@ -213,12 +215,13 @@ Current local runtime-artifact status:
   - `models/artifacts/xgb_best.pkl`
   - `models/artifacts/lgbm_best.pkl`
   - `models/reports/metrics.json`
+  - `models/reports/population_percentiles.json`
 - Validation AUCs:
-  - Random forest: `0.7950`
-  - XGBoost: `0.8022`
-  - LightGBM: `0.7932`
+  - Random forest: `0.7945`
+  - XGBoost: `0.7993`
+  - LightGBM: `0.7959`
 - Test AUCs:
-  - Random forest: `0.8055`
-  - XGBoost: `0.8080`
-  - LightGBM: `0.7964`
-- Notes: the refreshed classical suite reuses the persisted train-only `text_pca.pkl`, preserves the baseline section in `metrics.json`, and keeps the runtime bundle compatible with both logistic and classical fallback artifacts. The bounded classical suite still trails the logistic baseline test AUC of `0.8104`, so these remain training-infrastructure milestones rather than promotion candidates.
+  - Random forest: `0.8070`
+  - XGBoost: `0.8072`
+  - LightGBM: `0.7983`
+- Notes: the refreshed classical suite reuses the persisted train-only `text_pca.pkl`, preserves the baseline section in `metrics.json`, adds validation/test ROC, PR, calibration, and confusion payloads for the current logistic/classical models, and merges model-specific score percentile tables into `population_percentiles.json`. The bounded classical suite still trails the logistic baseline test AUC of `0.8098`, so the default percentile table remains `logistic_regression` for now and these remain training-infrastructure milestones rather than promotion candidates.

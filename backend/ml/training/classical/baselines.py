@@ -15,7 +15,12 @@ from sklearn.linear_model import LogisticRegression
 
 from backend.app.core.paths import MODEL_ARTIFACTS_DIR, MODEL_REPORTS_DIR, RAW_DATA_DIR
 from backend.ml.data_generation.validators import MINIMUM_TEST_ROWS, validate_synthetic_dataset
-from backend.ml.evaluation.metrics import compute_binary_classification_metrics
+from backend.ml.evaluation.metrics import (
+    build_population_percentiles_payload,
+    build_population_percentiles_report,
+    build_split_evaluation_details,
+    compute_binary_classification_metrics,
+)
 from backend.ml.preprocessing.pipeline import (
     DEFAULT_PREPROCESSOR_ARTIFACT_PATH,
     DEFAULT_TEXT_PCA_ARTIFACT_PATH,
@@ -29,6 +34,9 @@ DEFAULT_DATASET_PATH: Final[Path] = RAW_DATA_DIR / "synthetic_dataset.csv"
 DEFAULT_LOGISTIC_ARTIFACT_PATH: Final[Path] = MODEL_ARTIFACTS_DIR / "logistic_best.pkl"
 DEFAULT_BASELINE_METRICS_PATH: Final[Path] = MODEL_REPORTS_DIR / "baseline_metrics.json"
 DEFAULT_METRICS_PATH: Final[Path] = MODEL_REPORTS_DIR / "metrics.json"
+DEFAULT_POPULATION_PERCENTILES_PATH: Final[Path] = (
+    MODEL_REPORTS_DIR / "population_percentiles.json"
+)
 BASELINE_MODEL_ORDER: Final[tuple[str, ...]] = (
     "majority_class",
     "logistic_regression",
@@ -46,6 +54,7 @@ class BaselineTrainingArtifacts:
     logistic_model_path: Path | None
     baseline_metrics_path: Path | None
     metrics_path: Path | None
+    population_percentiles_path: Path | None
     model_stats: list[dict[str, Any]]
     baseline_metrics: list[dict[str, Any]]
 
@@ -128,6 +137,7 @@ def train_baselines(
     logistic_artifact_path: str | Path | None = DEFAULT_LOGISTIC_ARTIFACT_PATH,
     baseline_metrics_path: str | Path | None = DEFAULT_BASELINE_METRICS_PATH,
     metrics_path: str | Path | None = DEFAULT_METRICS_PATH,
+    population_percentiles_path: str | Path | None = DEFAULT_POPULATION_PERCENTILES_PATH,
     random_state: int = DEFAULT_RANDOM_STATE,
 ) -> BaselineTrainingArtifacts:
     """Fit the first baseline suite on the documented temporal splits."""
@@ -151,6 +161,7 @@ def train_baselines(
         prepared.train.X,
         artifact_path=preprocessor_artifact_path,
     )
+    X_full_processed = transform_features(preprocessor, prepared.feature_frame)
     X_train_processed = transform_features(preprocessor, prepared.train.X)
     X_validation_processed = transform_features(preprocessor, prepared.validation.X)
     X_test_processed = transform_features(preprocessor, prepared.test.X)
@@ -168,23 +179,28 @@ def train_baselines(
     if logistic_artifact_path is not None:
         _save_joblib(logistic_model, logistic_artifact_path)
 
+    logistic_train_probs = logistic_model.predict_proba(X_train_processed)[:, 1]
+    logistic_validation_probs = logistic_model.predict_proba(X_validation_processed)[:, 1]
+    logistic_test_probs = logistic_model.predict_proba(X_test_processed)[:, 1]
+    logistic_population_probs = logistic_model.predict_proba(X_full_processed)[:, 1]
+
     logistic_train_metrics = compute_binary_classification_metrics(
         prepared.train.y.to_numpy(dtype=int),
-        logistic_model.predict_proba(X_train_processed)[:, 1],
+        logistic_train_probs,
         model_name="logistic_regression",
         model_type="classical",
         split="train_months_1_8",
     )
     logistic_validation_metrics = compute_binary_classification_metrics(
         prepared.validation.y.to_numpy(dtype=int),
-        logistic_model.predict_proba(X_validation_processed)[:, 1],
+        logistic_validation_probs,
         model_name="logistic_regression",
         model_type="classical",
         split="validation_months_9_10",
     )
     logistic_test_metrics = compute_binary_classification_metrics(
         prepared.test.y.to_numpy(dtype=int),
-        logistic_model.predict_proba(X_test_processed)[:, 1],
+        logistic_test_probs,
         model_name="logistic_regression",
         model_type="classical",
         split="test_months_11_12",
@@ -200,7 +216,7 @@ def train_baselines(
         ),
         "logistic_regression": compute_binary_classification_metrics(
             prepared.test.y.to_numpy(dtype=int),
-            logistic_model.predict_proba(X_test_processed)[:, 1],
+            logistic_test_probs,
             model_name="logistic_regression",
             model_type="baseline",
             split="test_months_11_12",
@@ -228,6 +244,35 @@ def train_baselines(
         logistic_validation_metrics,
         logistic_test_metrics,
     ]
+    evaluation_details = {
+        "validation_months_9_10": {
+            "logistic_regression": build_split_evaluation_details(
+                prepared.validation.y.to_numpy(dtype=int),
+                logistic_validation_probs,
+                model_name="logistic_regression",
+                model_type="classical",
+                split="validation_months_9_10",
+            )
+        },
+        "test_months_11_12": {
+            "logistic_regression": build_split_evaluation_details(
+                prepared.test.y.to_numpy(dtype=int),
+                logistic_test_probs,
+                model_name="logistic_regression",
+                model_type="classical",
+                split="test_months_11_12",
+            )
+        },
+    }
+    population_percentiles_payload = build_population_percentiles_report(
+        {
+            "logistic_regression": build_population_percentiles_payload(
+                logistic_population_probs,
+                model_name="logistic_regression",
+            )
+        },
+        default_model_name="logistic_regression",
+    )
     metrics_payload = {
         "run_id": run_id,
         "split_row_counts": {
@@ -237,12 +282,15 @@ def train_baselines(
         },
         "model_stats": model_stats,
         "baselines": baseline_metrics,
+        "evaluation_details": evaluation_details,
     }
 
     if baseline_metrics_path is not None:
         _save_json(baseline_metrics, baseline_metrics_path)
     if metrics_path is not None:
         _save_json(metrics_payload, metrics_path)
+    if population_percentiles_path is not None:
+        _save_json(population_percentiles_payload, population_percentiles_path)
 
     return BaselineTrainingArtifacts(
         run_id=run_id,
@@ -252,6 +300,9 @@ def train_baselines(
         logistic_model_path=None if logistic_artifact_path is None else Path(logistic_artifact_path),
         baseline_metrics_path=None if baseline_metrics_path is None else Path(baseline_metrics_path),
         metrics_path=None if metrics_path is None else Path(metrics_path),
+        population_percentiles_path=(
+            None if population_percentiles_path is None else Path(population_percentiles_path)
+        ),
         model_stats=model_stats,
         baseline_metrics=baseline_metrics,
     )
@@ -308,6 +359,7 @@ __all__ = [
     "DEFAULT_DATASET_PATH",
     "DEFAULT_LOGISTIC_ARTIFACT_PATH",
     "DEFAULT_METRICS_PATH",
+    "DEFAULT_POPULATION_PERCENTILES_PATH",
     "DEFAULT_RANDOM_STATE",
     "MajorityClassBaseline",
     "SimulatedLoanOfficer",

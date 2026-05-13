@@ -2,7 +2,7 @@
 
 ## Current Phase
 
-First analytics endpoints. The canonical feature registry, project hygiene files, backend runtime helpers, API schemas, frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, the baseline training loop, the bounded classical training loop, the persisted text PCA artifact foundation, the runtime artifact-loading plus scoring-service stubs, the first FastAPI startup with health/score/model-stats/baseline-comparison routes, and append-only request logging are implemented; the remaining analytics routes and full production-runtime artifacts are not started.
+Offline evaluation artifacts and analytics expansion. The canonical feature registry, project hygiene files, backend runtime helpers, API schemas, frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, the baseline training loop, the bounded classical training loop, the persisted text PCA artifact foundation, the runtime artifact-loading plus scoring-service stubs, the first FastAPI startup with health/score/model-stats/baseline-comparison routes, append-only request logging, and the persisted evaluation-artifact foundation for curves, confusion, and population percentiles are implemented; the remaining analytics routes and full production-runtime artifacts are not started.
 
 ## Immediate TODO
 
@@ -43,7 +43,8 @@ First analytics endpoints. The canonical feature registry, project hygiene files
 - [x] Implement health endpoint.
 - [x] Add report-backed analytics service foundation and the first `/api/model-stats` plus `/api/baseline-comparison` endpoints.
 - [ ] Harden the scoring endpoint with explainability, counterfactual, and production-bundle behavior.
-- [ ] Implement the remaining analytics endpoints after their backing reports exist.
+- [ ] Implement `/api/score-distribution`, `/api/roc-data`, `/api/pr-curve`, `/api/calibration-curve`, and `/api/confusion-matrix` from the saved offline evaluation artifacts.
+- [ ] Implement fairness, drift, and global-importance analytics endpoints after their backing reports exist.
 
 ## Data Pipeline TODO
 
@@ -92,11 +93,13 @@ First analytics endpoints. The canonical feature registry, project hygiene files
 - [x] Train XGBoost.
 - [x] Train LightGBM.
 - [x] Persist `models/preprocessors/text_pca.pkl` for runtime semantic projection.
+- [x] Persist `models/reports/population_percentiles.json` from scored offline population predictions.
+- [x] Save offline ROC, PR, calibration, and confusion payloads into `models/reports/metrics.json`.
 - [ ] Train TabNet.
 - [ ] Train MLP.
 - [ ] Train stacking ensemble.
 - [ ] Calibrate stacking ensemble with isotonic regression.
-- [ ] Generate metrics and curves.
+- [ ] Refresh the evaluation bundle again after the future ensemble/calibration path exists.
 
 ## Explainability TODO
 
@@ -152,6 +155,7 @@ First analytics endpoints. The canonical feature registry, project hygiene files
 - [x] Add API integration coverage for request logging on `/api/score`.
 - [x] Add integration coverage for persisted text PCA artifacts, runtime semantic projections, and intentional zero-fill fallback behavior.
 - [x] Add API integration coverage for `/api/model-stats` and `/api/baseline-comparison`, including missing-report behavior.
+- [x] Add integration coverage for offline evaluation artifacts, runtime percentile-table selection, and persisted-dataset training without raw Q27 text.
 - [ ] Add integration tests for broader data pipeline steps beyond generator validation and preprocessing split integrity.
 - [ ] Add integration tests for the remaining analytics endpoints.
 - [ ] Add E2E tests for assessment and dashboard.

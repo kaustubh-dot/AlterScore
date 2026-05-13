@@ -1,5 +1,3 @@
-import json
-
 from backend.app.core.settings import Settings, load_settings
 from backend.ml.data_generation.generator import generate_synthetic_dataset
 from backend.ml.training.classical.baselines import train_baselines
@@ -16,19 +14,7 @@ def build_runtime_settings(tmp_path) -> Settings:
         logistic_artifact_path=model_root / "artifacts" / "logistic_best.pkl",
         baseline_metrics_path=model_root / "reports" / "baseline_metrics.json",
         metrics_path=model_root / "reports" / "metrics.json",
-    )
-    (model_root / "reports" / "population_percentiles.json").write_text(
-        json.dumps(
-            {
-                "score_to_percentile": {
-                    "300": 0,
-                    "560": 50,
-                    "850": 100,
-                }
-            },
-            indent=2,
-        ),
-        encoding="utf-8",
+        population_percentiles_path=model_root / "reports" / "population_percentiles.json",
     )
     return load_settings(
         {

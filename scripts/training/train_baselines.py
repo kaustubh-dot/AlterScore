@@ -15,6 +15,7 @@ from backend.ml.training.classical.baselines import (
     DEFAULT_DATASET_PATH,
     DEFAULT_LOGISTIC_ARTIFACT_PATH,
     DEFAULT_METRICS_PATH,
+    DEFAULT_POPULATION_PERCENTILES_PATH,
     train_baselines,
 )
 from backend.ml.preprocessing.pipeline import (
@@ -55,6 +56,11 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         default=DEFAULT_METRICS_PATH,
     )
+    parser.add_argument(
+        "--population-percentiles-path",
+        type=Path,
+        default=DEFAULT_POPULATION_PERCENTILES_PATH,
+    )
     parser.add_argument("--random-state", type=int, default=42)
     return parser
 
@@ -70,6 +76,7 @@ def main(argv: list[str] | None = None) -> int:
         logistic_artifact_path=args.logistic_model_path,
         baseline_metrics_path=args.baseline_metrics_path,
         metrics_path=args.metrics_path,
+        population_percentiles_path=args.population_percentiles_path,
         random_state=args.random_state,
     )
     print(
@@ -81,6 +88,9 @@ def main(argv: list[str] | None = None) -> int:
                 "text_pca_path": None if artifacts.text_pca_path is None else str(artifacts.text_pca_path),
                 "logistic_model_path": None if artifacts.logistic_model_path is None else str(artifacts.logistic_model_path),
                 "baseline_metrics_path": None if artifacts.baseline_metrics_path is None else str(artifacts.baseline_metrics_path),
+                "population_percentiles_path": None
+                if artifacts.population_percentiles_path is None
+                else str(artifacts.population_percentiles_path),
                 "logistic_test_auc": next(
                     metric["auc_roc"]
                     for metric in artifacts.model_stats

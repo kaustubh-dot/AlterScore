@@ -22,6 +22,7 @@ def test_train_classical_models_saves_artifacts_and_merges_metrics(tmp_path) -> 
         logistic_artifact_path=tmp_path / "logistic_best.pkl",
         baseline_metrics_path=tmp_path / "baseline_metrics.json",
         metrics_path=tmp_path / "metrics.json",
+        population_percentiles_path=tmp_path / "population_percentiles.json",
     )
 
     artifacts = train_classical_models(
@@ -33,14 +34,19 @@ def test_train_classical_models_saves_artifacts_and_merges_metrics(tmp_path) -> 
         random_forest_artifact_path=tmp_path / "rf_best.pkl",
         xgboost_artifact_path=tmp_path / "xgb_best.pkl",
         lightgbm_artifact_path=tmp_path / "lgbm_best.pkl",
+        logistic_artifact_path=baseline_artifacts.logistic_model_path,
         baseline_metrics_path=baseline_artifacts.baseline_metrics_path,
         metrics_path=baseline_artifacts.metrics_path,
+        population_percentiles_path=baseline_artifacts.population_percentiles_path,
         random_state=17,
     )
 
     metrics_payload = json.loads(artifacts.metrics_path.read_text(encoding="utf-8"))
     baseline_metrics = json.loads(
         baseline_artifacts.baseline_metrics_path.read_text(encoding="utf-8")
+    )
+    population_percentiles = json.loads(
+        artifacts.population_percentiles_path.read_text(encoding="utf-8")
     )
 
     for model_name in CLASSICAL_MODEL_ORDER:
@@ -53,6 +59,7 @@ def test_train_classical_models_saves_artifacts_and_merges_metrics(tmp_path) -> 
     assert artifacts.text_pca_path.is_file()
     assert artifacts.metrics_path.is_file()
     assert artifacts.text_pca_path.is_file()
+    assert artifacts.population_percentiles_path.is_file()
     assert metrics_payload["baselines"] == baseline_metrics
 
     expected_rows = {
@@ -78,3 +85,13 @@ def test_train_classical_models_saves_artifacts_and_merges_metrics(tmp_path) -> 
     for row in test_rows:
         assert row["model_type"] == "classical"
         assert np.isfinite([row[field_name] for field_name in NUMERIC_METRIC_FIELDS]).all()
+    assert "evaluation_details" in metrics_payload
+    assert "xgboost" in metrics_payload["evaluation_details"]["test_months_11_12"]
+    assert "logistic_regression" in population_percentiles["models"]
+    assert set(CLASSICAL_MODEL_ORDER).issubset(population_percentiles["models"])
+    assert population_percentiles["default_model_name"] in {
+        "logistic_regression",
+        "random_forest",
+        "xgboost",
+        "lightgbm",
+    }
