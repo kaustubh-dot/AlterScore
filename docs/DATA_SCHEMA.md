@@ -47,9 +47,19 @@ Protected attributes must never appear in `NUMERIC_FEATURES`, `CATEGORICAL_FEATU
 
 ## Model Feature Registry
 
-### PRD Count Note
+### Feature Count Decision
 
-The PRD narrative states 39 model features: 18 psychometric, 9 behavioral, 5 NLP, and 7 derived. The explicit PRD feature list currently names 33 numeric features and 2 categorical model features. This schema preserves the named fields below and marks the count mismatch as a required reconciliation item before full implementation.
+AlterScore will use the explicit named feature list from the PRD as the source of truth: 33 numeric features plus 2 categorical features, for 35 total model inputs. The project will not invent four additional psychometric features to satisfy the earlier narrative count of 39.
+
+Canonical breakdown:
+
+| Layer | Numeric | Categorical | Total Model Inputs |
+|---|---:|---:|---:|
+| Psychometric | 14 | 0 | 14 |
+| Behavioral telemetry | 7 | 2 | 9 |
+| Local NLP | 5 | 0 | 5 |
+| Derived / engineered | 7 | 0 | 7 |
+| **Total** | **33** | **2** | **35** |
 
 ### Layer 1 - Psychometric Features
 
@@ -222,4 +232,3 @@ TEMPORAL_METADATA = [
 6. Build dataframe with `NUMERIC_FEATURES + CATEGORICAL_FEATURES`.
 7. Apply saved preprocessor.
 8. Pass processed row to calibrated model.
-

@@ -21,6 +21,7 @@
   - `tests/`
 - PRD is available at `docs/AlterScore_PRD_v2.md`.
 - Engineering documentation has been scaffolded in `docs/`.
+- Mandatory AI workflow rules are available at `docs/AI_WORKFLOW_RULES.md`.
 - Repository substructure has been created for backend app code, ML pipeline code, frontend source, experiments, deployment, and tests.
 
 ## What Does Not Exist Yet
@@ -39,25 +40,16 @@
 
 AlterScore scores alternative creditworthiness through a 27-question assessment plus behavioral telemetry and a local NLP analysis of one open-text response. The system must generate a calibrated 300-850 credit score, risk band, percentile, SHAP explanation, DICE counterfactual improvement actions, loan eligibility, and dashboard analytics for model quality, fairness, and drift.
 
-## Important PRD Consistency Note
+## Feature Count Decision
 
-The PRD states "39 model features" using four layers:
-
-- 18 psychometric
-- 9 behavioral telemetry
-- 5 NLP
-- 7 derived
-
-The explicit `NUMERIC_FEATURES` and `CATEGORICAL_FEATURES` list in the PRD names:
+The implementation will use the explicit named model inputs from the PRD as the source of truth:
 
 - 33 numeric model features
 - 2 categorical model features
+- 35 total model inputs
 - 4 protected audit-only attributes
 
-Before implementation, the feature registry must reconcile this difference without inventing unsupported columns. Until resolved, preserve both facts:
-
-- Product target: 39 feature concept from the PRD narrative.
-- Implementation registry: explicit named model inputs from the PRD code block.
+The earlier PRD narrative referenced 39 features, but the project will not invent four unnamed features. Future implementation must preserve the 35 named inputs documented in `docs/DATA_SCHEMA.md`.
 
 ## Current Architectural Decisions
 
@@ -82,7 +74,7 @@ Create the implementation foundation in this order:
 
 ## Session Update Protocol
 
-Every future session should update this file with:
+Every future session must follow `docs/AI_WORKFLOW_RULES.md` and should update this file with:
 
 - Date and branch.
 - What changed.
@@ -90,4 +82,3 @@ Every future session should update this file with:
 - Tests run.
 - Open blockers.
 - Exact recommended next action.
-

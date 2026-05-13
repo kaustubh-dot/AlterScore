@@ -118,13 +118,12 @@ Record every architecture-level decision here. Small implementation choices can 
 - Consequences: Frontend and tests can follow the PRD contracts.
 - Follow-ups: If `/api/v1/*` becomes public, document backward compatibility or migration.
 
-## DEC-0011 - Feature Registry Requires Reconciliation Before Implementation
+## DEC-0011 - Use 35 Explicitly Named Model Inputs
 
-- Status: proposed
+- Status: accepted
 - Date: 2026-05-13
-- Owner: Engineering scaffold
+- Owner: User direction and engineering scaffold
 - Context: The PRD states 39 model features, but the explicit feature list names 35 model input columns when categorical columns are included.
-- Decision: Treat the explicit named feature list as the first implementation source of truth, while keeping the 39-feature narrative as an unresolved PRD reconciliation item.
-- Consequences: Data generation should not invent unnamed features without a documented decision.
-- Follow-ups: Resolve by either adding the missing named features to `DATA_SCHEMA.md` or updating the product count after user approval.
-
+- Decision: Use the 35 explicitly named model inputs as the canonical implementation feature set: 33 numeric and 2 categorical features. Do not invent four additional psychometric features.
+- Consequences: Data generation, preprocessing, inference, SHAP, DICE, dashboard feature importance, and tests must target 35 model inputs. Documentation should describe the earlier 39-feature PRD narrative as superseded by the explicit named registry.
+- Follow-ups: Implement `feature_registry.py` with exactly these named inputs and tests for count, ordering, and protected/temporal exclusions.

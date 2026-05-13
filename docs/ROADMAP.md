@@ -32,7 +32,7 @@
 
 1. Create `.gitignore`, environment examples, backend dependency file, frontend package skeleton, and root README placeholder.
 2. Implement backend package skeleton with settings, path helpers, and artifact path constants.
-3. Implement canonical feature registry in one backend module, including numeric, categorical, protected, temporal, actionable, and immutable feature lists.
+3. Implement canonical 35-input feature registry in one backend module, including numeric, categorical, protected, temporal, actionable, and immutable feature lists.
 4. Implement Pydantic schemas for `ScoreRequest`, `ScoreResponse`, analytics responses, and common errors.
 5. Add unit tests that validate feature-list exclusions, schema constraints, and PRD route contract names.
 6. Implement synthetic data generator with correlated psychometric bases, demographics, cohort month, mild drift, and latent label generation.
@@ -94,7 +94,7 @@ Docs and contracts
 
 | Risk | Why It Matters | Mitigation |
 |---|---|---|
-| Feature count mismatch | Silent schema drift can break training/inference parity | Reconcile feature registry before data implementation |
+| Feature registry drift | Silent schema drift can break training/inference parity | Lock tests to 33 numeric, 2 categorical, and protected/temporal exclusions |
 | Protected attribute leakage | Invalidates fairness claims | Tests and explicit exclusion lists |
 | Random split leakage | Inflates model quality | Temporal split tests and final metric gates |
 | NLP PCA leakage | Test information enters training transformation | Fit PCA only on train embeddings |
@@ -111,7 +111,7 @@ Docs and contracts
 
 - Docs created.
 - Repo scaffold created.
-- Feature registry reconciliation recorded.
+- 35-input feature registry decision recorded.
 
 ### M1 - Data Contract Green
 
@@ -153,4 +153,3 @@ Docs and contracts
 - Tests pass.
 - Deployment docs verified.
 - Demo checklist complete.
-
