@@ -1,0 +1,73 @@
+# Environment and local config
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+env/
+
+# Python caches and test output
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+
+# Node and frontend build output
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.vite/
+frontend/.env
+frontend/.env.*
+
+# Logs and runtime output
+*.log
+backend/runtime/logs/*
+!backend/runtime/logs/.gitkeep
+
+# Generated data and validation artifacts
+data/raw/*
+!data/raw/.gitkeep
+data/interim/*
+!data/interim/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+data/reports/*
+!data/reports/.gitkeep
+data/validation/*
+!data/validation/.gitkeep
+
+# Model binaries, explainers, preprocessors, and generated reports
+models/artifacts/*
+!models/artifacts/.gitkeep
+models/preprocessors/*
+!models/preprocessors/.gitkeep
+models/explainers/*
+!models/explainers/.gitkeep
+models/reports/*
+!models/reports/.gitkeep
+models/registry/*
+!models/registry/.gitkeep
+
+# Experiment outputs
+experiments/runs/*
+!experiments/runs/.gitkeep
+experiments/optuna/*
+!experiments/optuna/.gitkeep
+
+# Notebook and editor noise
+.ipynb_checkpoints/
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db

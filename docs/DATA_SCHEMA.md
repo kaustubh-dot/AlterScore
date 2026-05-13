@@ -167,6 +167,14 @@ CATEGORICAL_FEATURES = [
 ]
 ```
 
+### All Model Inputs And Target
+
+```python
+ALL_MODEL_FEATURES = NUMERIC_FEATURES + CATEGORICAL_FEATURES
+
+TARGET = "repayment_label"
+```
+
 ### Excluded From Model Inputs
 
 ```python
@@ -178,6 +186,35 @@ PROTECTED_FEATURES = [
 ]
 
 TEMPORAL_METADATA = [
+    "cohort_month",
+    "application_date",
+]
+```
+
+### Counterfactual Actionability
+
+`ACTIONABLE_FEATURES` are mutable numeric fields that DICE-style counterfactuals may vary. They must exclude protected attributes, temporal metadata, categorical model inputs, and immutable fields.
+
+```python
+ACTIONABLE_FEATURES = [
+    "numeracy_score",
+    "financial_literacy_score",
+    "future_orientation",
+    "conscientiousness_score",
+    "social_capital_score",
+    "engagement_score",
+    "avg_response_time_ms",
+    "answer_change_rate",
+    "text_agency_score",
+]
+
+IMMUTABLE_FEATURES = [
+    "gender",
+    "age_group",
+    "region",
+    "education_level",
+    "device_type",
+    "time_of_day",
     "cohort_month",
     "application_date",
 ]

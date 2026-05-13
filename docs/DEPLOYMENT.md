@@ -36,7 +36,7 @@ AlterScore should be reproducible locally before it is deployed anywhere. Deploy
 
 ## Local Development Commands
 
-These commands are placeholders until implementation files exist.
+The backend dependency file and frontend package skeleton now exist. The backend app entrypoint is still pending, so the backend run command remains the intended local shape until that file is implemented.
 
 ```powershell
 # Backend
@@ -94,6 +94,14 @@ At startup the backend must:
 5. Load model, preprocessor, text PCA, SHAP explainer, DICE explainer, and reports.
 6. Expose `/api/health` with loaded and missing artifacts.
 7. Fail clearly if scoring-critical artifacts are missing.
+
+## Runtime Foundation Files
+
+- `.env.example` documents local environment variables.
+- `backend/requirements.txt` pins the initial backend, ML, and test dependencies.
+- `backend/app/core/settings.py` loads runtime settings from environment variables.
+- `backend/app/core/paths.py` centralizes repository, data, model, report, and artifact paths.
+- `frontend/package.json` and the Vite entry files provide the initial frontend package scaffold.
 
 ## Health Checks
 
@@ -160,4 +168,3 @@ For a real MFI pilot, deployment should proceed in stages:
 3. Retrain on real repayment labels.
 4. Use model as recommendation with human final decision.
 5. Consider autonomous decisions only for defined low-ticket loan thresholds after monitoring proves stability.
-

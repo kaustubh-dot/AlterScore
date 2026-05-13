@@ -2,23 +2,24 @@
 
 ## Current Phase
 
-Engineering organization and scaffolding only. Application implementation has not started.
+Frontend package foundation. The canonical feature registry, project hygiene files, backend runtime helpers, API schemas, and frontend package skeleton are implemented; app runtime, data generation, training, and API routes are not started.
 
 ## Immediate TODO
 
 - [x] Add mandatory AI workflow rules for startup, documentation updates, testing, git, and session close.
-- [ ] Implement the canonical 35-input feature registry before writing data generator code.
-- [ ] Add `.gitignore` for generated data, model artifacts, logs, env files, caches, and node/python build outputs.
-- [ ] Add `.env.example`.
-- [ ] Add backend dependency file with pinned Python package versions.
-- [ ] Add frontend package skeleton.
-- [ ] Implement feature registry constants.
-- [ ] Implement API schemas.
-- [ ] Add feature registry and schema tests.
+- [x] Implement the canonical 35-input feature registry before writing data generator code.
+- [x] Add `.gitignore` for generated data, model artifacts, logs, env files, caches, and node/python build outputs.
+- [x] Add `.env.example`.
+- [x] Add backend dependency file with pinned Python package versions.
+- [x] Implement feature registry constants.
+- [x] Implement API schemas.
+- [x] Add feature registry tests.
+- [x] Add schema tests.
+- [x] Add frontend package skeleton.
 
 ## Documentation TODO
 
-- [ ] Keep `docs/CURRENT_STATE.md` updated after each task.
+- [x] Keep `docs/CURRENT_STATE.md` updated after each task.
 - [ ] Add decision entries for any architecture changes.
 - [ ] Add detailed ADR files under `docs/adr/` when a decision becomes too large for `docs/DECISIONS.md`.
 - [ ] Update `docs/API_CONTRACTS.md` when schemas change.
@@ -28,10 +29,10 @@ Engineering organization and scaffolding only. Application implementation has no
 
 ## Backend TODO
 
-- [ ] Create settings and path modules.
+- [x] Create settings and path modules.
 - [ ] Create artifact loader with clear missing-artifact errors.
-- [ ] Create Pydantic schemas for score requests and responses.
-- [ ] Create Pydantic schemas for analytics responses.
+- [x] Create Pydantic schemas for score requests and responses.
+- [x] Create Pydantic schemas for analytics responses.
 - [ ] Create route stubs only after schemas exist.
 - [ ] Implement request logging service.
 - [ ] Implement health endpoint.
@@ -66,8 +67,8 @@ Engineering organization and scaffolding only. Application implementation has no
 - [ ] Implement answer parser.
 - [ ] Implement behavioral parser.
 - [ ] Implement derived feature calculations.
-- [ ] Define actionable feature list for counterfactuals.
-- [ ] Define immutable feature list.
+- [x] Define actionable feature list for counterfactuals.
+- [x] Define immutable feature list.
 - [ ] Add known-payload tests for parsed features.
 
 ## ML Training TODO
@@ -108,7 +109,7 @@ Engineering organization and scaffolding only. Application implementation has no
 
 ## Frontend TODO
 
-- [ ] Create React app skeleton.
+- [x] Create React app skeleton.
 - [ ] Add design tokens.
 - [ ] Add question data exactly from PRD after API schema is stable.
 - [ ] Build assessment flow and telemetry.
@@ -122,8 +123,8 @@ Engineering organization and scaffolding only. Application implementation has no
 
 ## Testing TODO
 
-- [ ] Add unit tests for schemas.
-- [ ] Add unit tests for feature registry.
+- [x] Add unit tests for schemas.
+- [x] Add unit tests for feature registry.
 - [ ] Add unit tests for answer parser.
 - [ ] Add unit tests for derived features.
 - [ ] Add unit tests for NLP.
