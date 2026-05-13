@@ -2,11 +2,15 @@ from datetime import datetime, timezone
 
 from backend.app.schemas.analytics import (
     BaselineComparisonResponse,
+    CalibrationCurveResponse,
+    ConfusionMatrixResponse,
     DriftReport,
     FairnessReport,
     GlobalImportanceResponse,
     HealthResponse,
     ModelStatsResponse,
+    PrecisionRecallResponse,
+    RocCurveResponse,
     ScoreDistributionResponse,
 )
 
@@ -147,6 +151,81 @@ def test_score_distribution_shape_matches_documented_contract() -> None:
 
     assert response.row_count == 10_000
     assert response.score_histogram[0].label == "300-349"
+
+
+def test_curve_and_confusion_shapes_match_documented_contracts() -> None:
+    roc = RocCurveResponse.model_validate(
+        [
+            {
+                "model_name": "logistic_regression",
+                "model_type": "classical",
+                "split": "test_months_11_12",
+                "points": [
+                    {
+                        "fpr": 0.0,
+                        "tpr": 0.0,
+                    },
+                    {
+                        "fpr": 1.0,
+                        "tpr": 1.0,
+                    },
+                ],
+            }
+        ]
+    )
+    pr = PrecisionRecallResponse.model_validate(
+        [
+            {
+                "model_name": "logistic_regression",
+                "model_type": "classical",
+                "split": "test_months_11_12",
+                "points": [
+                    {
+                        "recall": 1.0,
+                        "precision": 0.72,
+                    }
+                ],
+            }
+        ]
+    )
+    calibration = CalibrationCurveResponse.model_validate(
+        [
+            {
+                "model_name": "logistic_regression",
+                "model_type": "classical",
+                "split": "test_months_11_12",
+                "points": [
+                    {
+                        "mean_predicted": 0.45,
+                        "fraction_positive": 0.52,
+                        "count": 168,
+                    }
+                ],
+            }
+        ]
+    )
+    confusion = ConfusionMatrixResponse.model_validate(
+        [
+            {
+                "model_name": "logistic_regression",
+                "model_type": "classical",
+                "split": "test_months_11_12",
+                "threshold": 0.24,
+                "tp": 1245,
+                "fp": 331,
+                "fn": 54,
+                "tn": 170,
+                "tpr": 0.9584,
+                "fpr": 0.6607,
+                "fnr": 0.0416,
+            }
+        ]
+    )
+
+    assert roc.root[0].points[1].tpr == 1.0
+    assert pr.root[0].points[0].precision == 0.72
+    assert calibration.root[0].points[0].count == 168
+    assert confusion.root[0].threshold == 0.24
 
 
 def test_fairness_report_shape_matches_documented_contract() -> None:

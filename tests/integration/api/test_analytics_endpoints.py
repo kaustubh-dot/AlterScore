@@ -3,7 +3,11 @@ from fastapi.testclient import TestClient
 from backend.app.main import create_app
 from backend.app.schemas.analytics import (
     BaselineComparisonResponse,
+    CalibrationCurveResponse,
+    ConfusionMatrixResponse,
     ModelStatsResponse,
+    PrecisionRecallResponse,
+    RocCurveResponse,
     ScoreDistributionResponse,
 )
 from backend.app.schemas.common import ErrorResponse
@@ -55,6 +59,43 @@ def test_score_distribution_endpoint_returns_saved_histogram_payload(tmp_path) -
     assert sum(bucket.count for bucket in parsed.score_histogram) == parsed.row_count
 
 
+def test_curve_and_confusion_endpoints_return_saved_metrics_payloads(tmp_path) -> None:
+    settings = build_runtime_settings(tmp_path)
+    app = create_app(settings)
+
+    with TestClient(app) as client:
+        roc_response = client.get("/api/roc-data")
+        pr_response = client.get("/api/pr-curve")
+        calibration_response = client.get("/api/calibration-curve")
+        confusion_response = client.get("/api/confusion-matrix")
+
+    assert roc_response.status_code == 200
+    roc_parsed = RocCurveResponse.model_validate(roc_response.json())
+    assert roc_parsed.root
+    assert roc_parsed.root[0].split == "test_months_11_12"
+    assert roc_parsed.root[0].points
+
+    assert pr_response.status_code == 200
+    pr_parsed = PrecisionRecallResponse.model_validate(pr_response.json())
+    assert pr_parsed.root
+    assert pr_parsed.root[0].points
+
+    assert calibration_response.status_code == 200
+    calibration_parsed = CalibrationCurveResponse.model_validate(
+        calibration_response.json()
+    )
+    assert calibration_parsed.root
+    assert calibration_parsed.root[0].points[0].count >= 1
+
+    assert confusion_response.status_code == 200
+    confusion_parsed = ConfusionMatrixResponse.model_validate(
+        confusion_response.json()
+    )
+    assert confusion_parsed.root
+    assert confusion_parsed.root[0].threshold >= 0.0
+    assert any(item.model_name == "logistic_regression" for item in confusion_parsed.root)
+
+
 def test_model_stats_endpoint_returns_structured_503_when_metrics_are_missing(
     tmp_path,
 ) -> None:
@@ -101,3 +142,28 @@ def test_score_distribution_endpoint_returns_structured_503_when_percentiles_are
     parsed = ErrorResponse.model_validate(response.json())
     assert parsed.error.code == "ARTIFACTS_NOT_READY"
     assert parsed.error.details["missing_artifacts"] == ["population_percentiles"]
+
+
+def test_curve_and_confusion_endpoints_return_structured_503_when_metrics_are_missing(
+    tmp_path,
+) -> None:
+    settings = build_runtime_settings(tmp_path)
+    (tmp_path / "models" / "reports" / "metrics.json").unlink()
+    app = create_app(settings)
+
+    with TestClient(app) as client:
+        roc_response = client.get("/api/roc-data")
+        pr_response = client.get("/api/pr-curve")
+        calibration_response = client.get("/api/calibration-curve")
+        confusion_response = client.get("/api/confusion-matrix")
+
+    for response in (
+        roc_response,
+        pr_response,
+        calibration_response,
+        confusion_response,
+    ):
+        assert response.status_code == 503
+        parsed = ErrorResponse.model_validate(response.json())
+        assert parsed.error.code == "ARTIFACTS_NOT_READY"
+        assert parsed.error.details["missing_artifacts"] == ["metrics"]
