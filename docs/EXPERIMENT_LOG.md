@@ -237,3 +237,132 @@ The synthetic dataset materialized cleanly with no missing values, a `30.38%` de
 - Continue: yes
 - Stop: no
 - Follow-up: train random forest, XGBoost, and LightGBM on the same temporal split foundation, then add artifact loading and backend scoring stubs once the classical artifact set stabilizes.
+
+## EXP-20260513-002 - Bounded classical model suite on the documented temporal split
+
+- Status: completed
+- Owner: Codex
+- Date started: 2026-05-13
+- Date completed: 2026-05-13
+- Branch / commit: workspace (uncommitted)
+- Related decision: existing temporal-split, 35-feature-registry, and offline-training separation decisions
+- Related issue / task: random forest, XGBoost, and LightGBM training foundation
+
+### Hypothesis
+
+If the existing preprocessor and temporal split are reused without widening scope, then a bounded classical suite can save stable artifacts and extend `models/reports/metrics.json` without dropping baseline comparisons.
+
+### Dataset
+
+- Data version: `synthetic_v0.1.0`
+- Row count: `10,000`
+- Train split: months `1-8` (`6,800` rows)
+- Validation split: months `9-10` (`1,400` rows)
+- Test split: months `11-12` (`1,800` rows)
+- Protected attributes available: gender, age group, region, education level
+- Known schema changes: none
+
+### Feature Set
+
+- Feature registry version: `0.1.0`
+- Numeric feature count: `33`
+- Categorical feature count: `2`
+- Excluded fields: protected attributes, `cohort_month`, `application_date`, `repayment_label`
+- NLP configuration: pre-generated semantic dimensions already present in the synthetic dataset
+- Derived features: included
+
+### Model / Pipeline Configuration
+
+```json
+{
+  "model_family": "classical_suite",
+  "random_seed": 42,
+  "preprocessing": {
+    "numeric": "median imputer + standard scaler",
+    "categorical": "most-frequent imputer + ordinal encoder"
+  },
+  "hyperparameters": {
+    "random_forest": {
+      "class_weight": "balanced_subsample",
+      "min_samples_leaf": 4,
+      "n_estimators": 300
+    },
+    "xgboost": {
+      "learning_rate": 0.05,
+      "max_depth": 4,
+      "n_estimators": 200,
+      "subsample": 1.0,
+      "colsample_bytree": 1.0
+    },
+    "lightgbm": {
+      "learning_rate": 0.05,
+      "n_estimators": 200,
+      "subsample": 1.0,
+      "colsample_bytree": 1.0,
+      "deterministic": true
+    }
+  },
+  "calibration": {},
+  "class_imbalance_strategy": "balanced random-forest bootstrap weighting only"
+}
+```
+
+### Commands
+
+```powershell
+C:\Users\Kaustubh\anaconda3\python.exe -m pytest tests/integration/pipeline/test_classical_training.py tests/integration/pipeline/test_dataset_artifacts_and_baselines.py
+C:\Users\Kaustubh\anaconda3\python.exe scripts/training/train_classical_models.py
+```
+
+### Results
+
+| Model | Split | AUC ROC | AUC PR | KS | Brier | ECE | Accuracy | Precision | Recall | F1 |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Random forest | Validation | 0.7924 | 0.8920 | 0.4708 | 0.1539 | 0.0619 | 0.8014 | 0.8295 | 0.9144 | 0.8699 |
+| Random forest | Test | 0.8040 | 0.9061 | 0.4798 | 0.1541 | 0.0512 | 0.7806 | 0.7931 | 0.9415 | 0.8610 |
+| XGBoost | Validation | 0.8033 | 0.8991 | 0.4816 | 0.1463 | 0.0379 | 0.8079 | 0.8291 | 0.9262 | 0.8749 |
+| XGBoost | Test | 0.8087 | 0.9110 | 0.4852 | 0.1500 | 0.0284 | 0.7872 | 0.8009 | 0.9384 | 0.8642 |
+| LightGBM | Validation | 0.7980 | 0.9012 | 0.4732 | 0.1501 | 0.0481 | 0.7943 | 0.8154 | 0.9262 | 0.8673 |
+| LightGBM | Test | 0.7977 | 0.9062 | 0.4514 | 0.1557 | 0.0354 | 0.7822 | 0.8001 | 0.9307 | 0.8605 |
+
+### Baseline Comparison
+
+| Comparator | Metric | Delta |
+|---|---:|---:|
+| Logistic | Test AUC ROC 0.8097 | XGBoost -0.0010 |
+| Simulated loan officer | Test AUC ROC 0.7614 | XGBoost +0.0473 |
+| Majority | Test AUC ROC 0.5000 | XGBoost +0.3087 |
+
+### Fairness Summary
+
+- Worst AUC gap: not computed
+- Flagged groups: not computed
+- Approval-rate gaps: not computed
+- Notes: fairness is still intentionally deferred until later report infrastructure exists
+
+### Drift Summary
+
+- Max PSI: not computed
+- Top drifted features: not computed
+- Verdict: not computed
+
+### Artifacts
+
+| Artifact | Path |
+|---|---|
+| Preprocessor | `models/preprocessors/preprocessor.pkl` |
+| Random forest model | `models/artifacts/rf_best.pkl` |
+| XGBoost model | `models/artifacts/xgb_best.pkl` |
+| LightGBM model | `models/artifacts/lgbm_best.pkl` |
+| Metrics payload | `models/reports/metrics.json` |
+
+### Interpretation
+
+The bounded classical suite trains cleanly on the documented temporal split and produces deterministic artifacts plus merged report output without dropping the baseline section. On the current synthetic dataset, however, the new models do not materially outperform the logistic baseline, so the value of this run is the training/reporting foundation rather than a new best candidate.
+
+### Decision
+
+- Promote: no
+- Continue: yes
+- Stop: no
+- Follow-up: add artifact-loading and backend scoring stubs against the stable saved artifacts, then proceed to neural and ensemble work later without reopening the classical training contract.

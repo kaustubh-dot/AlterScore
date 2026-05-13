@@ -5,8 +5,8 @@
 - Date: 2026-05-13
 - Workspace: `C:\Kaustubh\Projects\AlterScore`
 - PRD source: `docs/AlterScore_PRD_v2.md`
-- Current phase: baseline training foundation
-- Application implementation status: feature registry, runtime foundation helpers, API schemas, the frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, and the first baseline training loop are implemented; app runtime is still in scaffold stage
+- Current phase: backend artifact-loading and scoring-stub foundation
+- Application implementation status: feature registry, runtime foundation helpers, API schemas, the frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, the baseline training loop, the bounded classical training loop for random forest, XGBoost, and LightGBM, and the first backend artifact-loading plus scoring-service stubs are implemented; FastAPI app/runtime wiring is still in scaffold stage
 
 ## What Exists
 
@@ -42,13 +42,23 @@
 - Behavioral parser exists at `backend/ml/features/behavioral_parser.py` for canonical telemetry coercion, bounds, and category handling.
 - Derived feature engineering exists at `backend/ml/features/derived_features.py`, including row-level merging helpers for already-assembled psychometric, behavioral, and NLP layers.
 - Request feature assembly exists at `backend/ml/inference/feature_assembly.py`, which parses answers and behavioral payloads, extracts local NLP features, applies train-fitted text PCA, and returns canonical model-feature rows/dataframes.
+- Runtime score mapping exists at `backend/ml/inference/score_mapper.py` for probability-to-score conversion, risk bands, loan eligibility, and percentile fallback behavior.
 - Baseline training exists at `backend/ml/training/classical/baselines.py`, with command entrypoint `scripts/training/train_baselines.py`.
+- Classical model training exists at `backend/ml/training/classical/train_classical.py`, with command entrypoint `scripts/training/train_classical_models.py`.
+- Runtime artifact loading exists at `backend/app/core/artifact_loader.py`, supporting either a production manifest bundle or a direct runtime model path for the current local scoring stub.
+- Backend scoring service stubs exist at `backend/app/services/scoring.py`, using the loaded model bundle plus request feature assembly to return schema-valid score responses.
 - Feature engineering unit coverage exists at `tests/unit/ml/test_answer_parser.py`, `tests/unit/ml/test_behavioral_parser.py`, and `tests/unit/ml/test_derived_features.py`.
 - Request-assembly integration coverage exists at `tests/integration/pipeline/test_feature_assembly.py`.
 - Dataset-artifact and baseline-training integration coverage exists at `tests/integration/pipeline/test_dataset_artifacts_and_baselines.py`.
+- Classical training integration coverage exists at `tests/integration/pipeline/test_classical_training.py`.
+- Artifact-loading and scoring-stub integration coverage exists at `tests/integration/pipeline/test_artifact_loading.py`.
+- Score-mapper unit coverage exists at `tests/unit/ml/test_score_mapper.py`.
+- A reusable valid score-request smoke fixture now exists at `tests/fixtures/score_request_valid.json`.
 - Persisted synthetic dataset now exists at `data/raw/synthetic_dataset.csv`.
 - Persisted validation summary now exists at `data/validation/validation_summary.json`.
 - First saved baseline artifacts now exist at `models/preprocessors/preprocessor.pkl`, `models/artifacts/logistic_best.pkl`, `models/reports/baseline_metrics.json`, and `models/reports/metrics.json`.
+- Saved classical model artifacts now exist at `models/artifacts/rf_best.pkl`, `models/artifacts/xgb_best.pkl`, and `models/artifacts/lgbm_best.pkl`.
+- `models/reports/metrics.json` now preserves the baseline section and includes validation/test rows for `random_forest`, `xgboost`, and `lightgbm`.
 - Root project placeholder README exists at `README.md`.
 - Frontend scaffold verification exists at `tests/unit/frontend/test_frontend_skeleton.py`.
 
@@ -56,9 +66,10 @@
 
 - No FastAPI application code.
 - No borrower assessment pages, results flow, dashboard workflow, or frontend tests beyond the package skeleton smoke test.
-- No random forest, XGBoost, LightGBM, neural, stacking, calibration, SHAP, DICE, fairness, or PSI jobs yet.
-- No FastAPI route or API integration tests, no interactive frontend tests beyond the package skeleton smoke test, and no broader ML validation tests beyond feature, schema, data generation, NLP extraction, preprocessing split-integrity, behavioral parsing, request assembly, and answer/derived feature coverage.
+- No neural, stacking, calibration, SHAP, DICE, fairness, or PSI jobs yet.
+- No FastAPI route or API integration tests, no interactive frontend tests beyond the package skeleton smoke test, and no broader ML validation tests beyond feature, schema, data generation, NLP extraction, preprocessing split-integrity, behavioral parsing, request assembly, answer/derived feature coverage, baseline artifact coverage, classical training coverage, and runtime artifact-loading/scoring-smoke coverage.
 - No FastAPI app entrypoint, route modules, or Docker runtime files yet.
+- No persisted runtime `text_pca.pkl`, SHAP explainer, or DICE explainer exists yet, so the current scoring stub falls back to zero semantic projections when `text_pca` is unavailable and returns empty explanation/counterfactual lists until explainability artifacts exist.
 
 ## PRD-Derived Product Summary
 
@@ -90,9 +101,9 @@ The earlier PRD narrative referenced 39 features, but the project will not inven
 
 Continue the implementation foundation in this order:
 
-1. Expand from the logistic baseline into random forest, XGBoost, and LightGBM training on the same temporal splits.
-2. Add the artifact-loading/backend scoring stubs only after the classical artifact set is stable.
-3. Build frontend assessment pages only after backend scoring flow is wired.
+1. Wire a FastAPI app startup path, artifact cache, and `/api/health` plus `/api/score` route stubs on top of the new loader and scoring service.
+2. Persist a real `text_pca.pkl` artifact so request-time semantic features stop falling back to zero-filled stub projections.
+3. Keep the saved logistic and classical artifacts as the offline foundation while neural and ensemble training are still pending.
 
 ## Session Update Protocol
 

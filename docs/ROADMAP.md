@@ -44,8 +44,9 @@
 12. [x] Implement answer parsing and derived feature engineering, and confirm parsed psychometric + behavioral/NLP rows can flow into preprocessing.
 13. [x] Implement the behavioral parser and the full raw-request feature assembly path.
 14. [x] Implement baseline comparators and the first offline training loop on temporal splits.
-15. [ ] Implement random forest, XGBoost, and LightGBM training on the same temporal split foundation.
-16. [ ] Build artifact loading and backend scoring stubs against the fixed inference assembly path.
+15. [x] Implement random forest, XGBoost, and LightGBM training on the same temporal split foundation.
+16. [x] Build artifact loading and backend scoring stubs against the fixed inference assembly path.
+17. [ ] Wire FastAPI startup caching plus `/api/health` and `/api/score` route stubs on top of the artifact loader and scoring service.
 
 ## Files To Create First
 
@@ -131,6 +132,12 @@ Docs and contracts
 - Local NLP and preprocessing complete.
 - Baseline and classical model metrics generated.
 - Simulated loan officer comparison exists.
+
+### M2.5 - Runtime Scoring Foundation Green
+
+- Artifact loader supports manifest and temporary direct-model fallback modes.
+- Score-mapper and scoring-service stubs can return schema-valid responses from saved artifacts.
+- Artifact-loading smoke coverage exists before FastAPI route work begins.
 
 ### M3 - Production Candidate Green
 

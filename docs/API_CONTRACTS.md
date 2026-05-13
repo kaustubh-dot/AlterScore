@@ -47,6 +47,9 @@
 
 ## GET /api/health
 
+Current scaffold note:
+- Until the full production bundle exists, the backend may report health from either a manifest-backed bundle or a direct runtime-model fallback used by the scoring stub.
+
 ### Response
 
 ```json
@@ -180,6 +183,10 @@
 }
 ```
 
+Current scaffold note:
+- The response fields above remain required, but while SHAP and DICE artifacts are not implemented yet the backend scoring stub may return empty `explanation` and `counterfactual_actions` lists rather than omitting those fields.
+- Until `models/preprocessors/text_pca.pkl` exists, runtime semantic dimensions may use the documented temporary zero-fill fallback inside the stub service.
+
 ## Analytics Schemas
 
 ### Model Stats Item
@@ -283,4 +290,3 @@
 - Removing or renaming fields requires a new decision entry.
 - Changing score mapping semantics requires updates to `DATA_SCHEMA.md`, `MODEL_REGISTRY.md`, and frontend display logic.
 - Analytics endpoint files must include enough metadata for dashboard labels and timestamps.
-

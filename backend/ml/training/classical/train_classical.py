@@ -1,0 +1,382 @@
+"""Classical model training loop for AlterScore temporal splits."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from datetime import datetime, timezone
+import json
+from pathlib import Path
+from typing import Any, Final
+
+import joblib
+import numpy as np
+import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
+
+from backend.app.core.paths import MODEL_ARTIFACTS_DIR, MODEL_REPORTS_DIR, RAW_DATA_DIR
+from backend.ml.data_generation.validators import MINIMUM_TEST_ROWS, validate_synthetic_dataset
+from backend.ml.evaluation.metrics import compute_binary_classification_metrics
+from backend.ml.preprocessing.pipeline import (
+    DEFAULT_PREPROCESSOR_ARTIFACT_PATH,
+    fit_preprocessor,
+    prepare_temporal_data,
+    transform_features,
+)
+from backend.ml.training.classical.baselines import (
+    DEFAULT_BASELINE_METRICS_PATH,
+    DEFAULT_METRICS_PATH,
+    DEFAULT_RANDOM_STATE,
+)
+
+DEFAULT_DATASET_PATH: Final[Path] = RAW_DATA_DIR / "synthetic_dataset.csv"
+DEFAULT_RF_ARTIFACT_PATH: Final[Path] = MODEL_ARTIFACTS_DIR / "rf_best.pkl"
+DEFAULT_XGB_ARTIFACT_PATH: Final[Path] = MODEL_ARTIFACTS_DIR / "xgb_best.pkl"
+DEFAULT_LGBM_ARTIFACT_PATH: Final[Path] = MODEL_ARTIFACTS_DIR / "lgbm_best.pkl"
+CLASSICAL_MODEL_ORDER: Final[tuple[str, ...]] = (
+    "random_forest",
+    "xgboost",
+    "lightgbm",
+)
+CLASSICAL_MODEL_TYPE: Final[str] = "classical"
+NUMERIC_METRIC_FIELDS: Final[tuple[str, ...]] = (
+    "auc_roc",
+    "auc_pr",
+    "ks_statistic",
+    "brier_score",
+    "expected_calibration_error",
+    "accuracy",
+    "precision",
+    "recall",
+    "f1",
+    "threshold",
+)
+
+
+@dataclass(frozen=True)
+class ClassicalTrainingArtifacts:
+    run_id: str
+    dataset_path: Path | None
+    preprocessor_path: Path | None
+    model_artifact_paths: dict[str, Path | None]
+    metrics_path: Path | None
+    model_stats: list[dict[str, Any]]
+    baseline_metrics: list[dict[str, Any]]
+    validation_probabilities: dict[str, np.ndarray]
+    test_probabilities: dict[str, np.ndarray]
+
+
+def train_classical_models(
+    dataset: pd.DataFrame | None = None,
+    *,
+    dataset_path: str | Path | None = None,
+    expected_row_count: int | None = None,
+    minimum_test_rows: int = MINIMUM_TEST_ROWS,
+    preprocessor_artifact_path: str | Path | None = DEFAULT_PREPROCESSOR_ARTIFACT_PATH,
+    random_forest_artifact_path: str | Path | None = DEFAULT_RF_ARTIFACT_PATH,
+    xgboost_artifact_path: str | Path | None = DEFAULT_XGB_ARTIFACT_PATH,
+    lightgbm_artifact_path: str | Path | None = DEFAULT_LGBM_ARTIFACT_PATH,
+    baseline_metrics_path: str | Path | None = DEFAULT_BASELINE_METRICS_PATH,
+    metrics_path: str | Path | None = DEFAULT_METRICS_PATH,
+    random_state: int = DEFAULT_RANDOM_STATE,
+) -> ClassicalTrainingArtifacts:
+    """Train the bounded classical model suite on the documented temporal split."""
+
+    np.random.seed(random_state)
+    resolved_dataset, resolved_dataset_path = _load_dataset(dataset, dataset_path)
+    validate_synthetic_dataset(
+        resolved_dataset,
+        expected_row_count=(
+            len(resolved_dataset) if expected_row_count is None else expected_row_count
+        ),
+        minimum_test_rows=minimum_test_rows,
+    )
+
+    prepared = prepare_temporal_data(resolved_dataset)
+    preprocessor = fit_preprocessor(
+        prepared.train.X,
+        artifact_path=preprocessor_artifact_path,
+    )
+    X_train_processed = transform_features(preprocessor, prepared.train.X)
+    X_validation_processed = transform_features(preprocessor, prepared.validation.X)
+    X_test_processed = transform_features(preprocessor, prepared.test.X)
+    y_train = prepared.train.y.to_numpy(dtype=int)
+    y_validation = prepared.validation.y.to_numpy(dtype=int)
+    y_test = prepared.test.y.to_numpy(dtype=int)
+
+    model_artifact_paths = {
+        "random_forest": _optional_path(random_forest_artifact_path),
+        "xgboost": _optional_path(xgboost_artifact_path),
+        "lightgbm": _optional_path(lightgbm_artifact_path),
+    }
+    models = _build_classical_models(random_state=random_state)
+    validation_probabilities: dict[str, np.ndarray] = {}
+    test_probabilities: dict[str, np.ndarray] = {}
+    model_stats: list[dict[str, Any]] = []
+
+    for model_name in CLASSICAL_MODEL_ORDER:
+        model = models[model_name]
+        model.fit(X_train_processed, y_train)
+        artifact_path = model_artifact_paths[model_name]
+        if artifact_path is not None:
+            _save_joblib(model, artifact_path)
+
+        validation_probs = _predict_positive_class_probabilities(
+            model_name,
+            model.predict_proba(X_validation_processed)[:, 1],
+        )
+        test_probs = _predict_positive_class_probabilities(
+            model_name,
+            model.predict_proba(X_test_processed)[:, 1],
+        )
+        validation_probabilities[model_name] = validation_probs
+        test_probabilities[model_name] = test_probs
+        model_stats.extend(
+            [
+                compute_binary_classification_metrics(
+                    y_validation,
+                    validation_probs,
+                    model_name=model_name,
+                    model_type=CLASSICAL_MODEL_TYPE,
+                    split="validation_months_9_10",
+                ),
+                compute_binary_classification_metrics(
+                    y_test,
+                    test_probs,
+                    model_name=model_name,
+                    model_type=CLASSICAL_MODEL_TYPE,
+                    split="test_months_11_12",
+                ),
+            ]
+        )
+
+    baseline_metrics = _load_baseline_metrics(
+        baseline_metrics_path=baseline_metrics_path,
+        metrics_path=metrics_path,
+    )
+    run_id = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_classical")
+    split_row_counts = {
+        "train": int(len(y_train)),
+        "validation": int(len(y_validation)),
+        "test": int(len(y_test)),
+    }
+
+    if metrics_path is not None:
+        existing_payload = _load_existing_metrics_payload(metrics_path)
+        merged_model_stats = _merge_model_stats(
+            existing_model_stats=existing_payload.get("model_stats", []),
+            updated_model_stats=model_stats,
+        )
+        metrics_payload = {
+            **{
+                key: value
+                for key, value in existing_payload.items()
+                if key not in {"run_id", "split_row_counts", "model_stats", "baselines"}
+            },
+            "run_id": run_id,
+            "split_row_counts": split_row_counts,
+            "model_stats": merged_model_stats,
+            "baselines": baseline_metrics,
+        }
+        _save_json(metrics_payload, metrics_path)
+
+    return ClassicalTrainingArtifacts(
+        run_id=run_id,
+        dataset_path=resolved_dataset_path,
+        preprocessor_path=_optional_path(preprocessor_artifact_path),
+        model_artifact_paths=model_artifact_paths,
+        metrics_path=_optional_path(metrics_path),
+        model_stats=model_stats,
+        baseline_metrics=baseline_metrics,
+        validation_probabilities=validation_probabilities,
+        test_probabilities=test_probabilities,
+    )
+
+
+def _build_classical_models(*, random_state: int) -> dict[str, Any]:
+    try:
+        from lightgbm import LGBMClassifier
+    except ImportError as exc:  # pragma: no cover - dependency guard
+        raise RuntimeError(
+            "lightgbm is required to train the AlterScore classical model suite."
+        ) from exc
+
+    try:
+        from xgboost import XGBClassifier
+    except ImportError as exc:  # pragma: no cover - dependency guard
+        raise RuntimeError(
+            "xgboost is required to train the AlterScore classical model suite."
+        ) from exc
+
+    return {
+        "random_forest": RandomForestClassifier(
+            class_weight="balanced_subsample",
+            min_samples_leaf=4,
+            n_estimators=300,
+            n_jobs=1,
+            random_state=random_state,
+        ),
+        "xgboost": XGBClassifier(
+            colsample_bytree=1.0,
+            eval_metric="logloss",
+            learning_rate=0.05,
+            max_depth=4,
+            n_estimators=200,
+            n_jobs=1,
+            objective="binary:logistic",
+            random_state=random_state,
+            subsample=1.0,
+            tree_method="hist",
+            verbosity=0,
+        ),
+        "lightgbm": LGBMClassifier(
+            bagging_seed=random_state,
+            colsample_bytree=1.0,
+            data_random_seed=random_state,
+            deterministic=True,
+            feature_fraction_seed=random_state,
+            force_col_wise=True,
+            learning_rate=0.05,
+            n_estimators=200,
+            n_jobs=1,
+            objective="binary",
+            random_state=random_state,
+            subsample=1.0,
+            verbose=-1,
+        ),
+    }
+
+
+def _predict_positive_class_probabilities(
+    model_name: str,
+    probabilities: np.ndarray | list[float],
+) -> np.ndarray:
+    probability_array = np.asarray(probabilities, dtype=float)
+    if np.isnan(probability_array).any():
+        raise ValueError(f"{model_name} produced NaN predicted probabilities.")
+    if ((probability_array < 0.0) | (probability_array > 1.0)).any():
+        raise ValueError(
+            f"{model_name} produced probabilities outside the documented [0, 1] range."
+        )
+    return probability_array
+
+
+def _load_baseline_metrics(
+    *,
+    baseline_metrics_path: str | Path | None,
+    metrics_path: str | Path | None,
+) -> list[dict[str, Any]]:
+    metrics_payload = _load_existing_metrics_payload(metrics_path)
+    baselines = metrics_payload.get("baselines")
+    if isinstance(baselines, list) and baselines:
+        return baselines
+
+    if baseline_metrics_path is None:
+        raise FileNotFoundError(
+            "Baseline metrics are required before classical training. "
+            "Run train_baselines first or provide baseline_metrics_path."
+        )
+
+    resolved_baseline_metrics_path = Path(baseline_metrics_path)
+    if not resolved_baseline_metrics_path.is_file():
+        raise FileNotFoundError(
+            f"Baseline metrics not found at {resolved_baseline_metrics_path}. "
+            "Run train_baselines first."
+        )
+
+    baseline_metrics = json.loads(
+        resolved_baseline_metrics_path.read_text(encoding="utf-8")
+    )
+    if not isinstance(baseline_metrics, list) or not baseline_metrics:
+        raise ValueError("Baseline metrics payload must be a non-empty JSON list.")
+    return baseline_metrics
+
+
+def _load_existing_metrics_payload(
+    metrics_path: str | Path | None,
+) -> dict[str, Any]:
+    if metrics_path is None:
+        return {}
+
+    resolved_metrics_path = Path(metrics_path)
+    if not resolved_metrics_path.is_file():
+        return {}
+
+    payload = json.loads(resolved_metrics_path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("metrics.json payload must be a JSON object.")
+    return payload
+
+
+def _merge_model_stats(
+    *,
+    existing_model_stats: list[dict[str, Any]],
+    updated_model_stats: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    updated_lookup = {
+        (item["model_name"], item["split"]): item for item in updated_model_stats
+    }
+    merged_model_stats: list[dict[str, Any]] = []
+    seen_keys: set[tuple[str, str]] = set()
+
+    for item in existing_model_stats:
+        key = (str(item.get("model_name")), str(item.get("split")))
+        replacement = updated_lookup.get(key)
+        if replacement is not None:
+            merged_model_stats.append(replacement)
+            seen_keys.add(key)
+            continue
+        merged_model_stats.append(item)
+
+    for item in updated_model_stats:
+        key = (item["model_name"], item["split"])
+        if key in seen_keys:
+            continue
+        merged_model_stats.append(item)
+        seen_keys.add(key)
+
+    return merged_model_stats
+
+
+def _load_dataset(
+    dataset: pd.DataFrame | None,
+    dataset_path: str | Path | None,
+) -> tuple[pd.DataFrame, Path | None]:
+    if dataset is not None:
+        return dataset.copy(), None
+
+    resolved_dataset_path = Path(dataset_path or DEFAULT_DATASET_PATH)
+    if not resolved_dataset_path.is_file():
+        raise FileNotFoundError(
+            f"Dataset not found at {resolved_dataset_path}. "
+            "Run the synthetic dataset materialization command first."
+        )
+    return pd.read_csv(resolved_dataset_path), resolved_dataset_path
+
+
+def _optional_path(path: str | Path | None) -> Path | None:
+    return None if path is None else Path(path)
+
+
+def _save_joblib(artifact: object, path: str | Path) -> None:
+    artifact_path = Path(path)
+    artifact_path.parent.mkdir(parents=True, exist_ok=True)
+    joblib.dump(artifact, artifact_path)
+
+
+def _save_json(payload: Any, path: str | Path) -> None:
+    output_path = Path(path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+
+__all__ = [
+    "CLASSICAL_MODEL_ORDER",
+    "CLASSICAL_MODEL_TYPE",
+    "DEFAULT_DATASET_PATH",
+    "DEFAULT_LGBM_ARTIFACT_PATH",
+    "DEFAULT_RF_ARTIFACT_PATH",
+    "DEFAULT_XGB_ARTIFACT_PATH",
+    "ClassicalTrainingArtifacts",
+    "NUMERIC_METRIC_FIELDS",
+    "train_classical_models",
+]

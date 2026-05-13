@@ -49,6 +49,7 @@ def test_load_settings_uses_defaults_with_empty_env() -> None:
     assert settings.api_version == "0.1.0"
     assert settings.repo_root == REPO_ROOT
     assert settings.model_manifest_path == PRODUCTION_MANIFEST_PATH
+    assert settings.runtime_model_path is None
     assert settings.log_level == "INFO"
     assert settings.cors_origins == DEFAULT_CORS_ORIGINS
 
@@ -60,6 +61,7 @@ def test_load_settings_supports_environment_overrides(tmp_path: Path) -> None:
             "ALTERSCORE_API_VERSION": "9.9.9",
             "ALTERSCORE_REPO_ROOT": str(tmp_path),
             "ALTERSCORE_MODEL_MANIFEST": "models/registry/test_manifest.json",
+            "ALTERSCORE_RUNTIME_MODEL_PATH": "models/artifacts/logistic_best.pkl",
             "ALTERSCORE_LOG_LEVEL": "debug",
             "ALTERSCORE_CORS_ORIGINS": "http://localhost:5173, http://localhost:3000",
         }
@@ -70,6 +72,9 @@ def test_load_settings_supports_environment_overrides(tmp_path: Path) -> None:
     assert settings.repo_root == tmp_path.resolve()
     assert settings.model_manifest_path == (
         tmp_path / "models" / "registry" / "test_manifest.json"
+    ).resolve()
+    assert settings.runtime_model_path == (
+        tmp_path / "models" / "artifacts" / "logistic_best.pkl"
     ).resolve()
     assert settings.log_level == "DEBUG"
     assert settings.cors_origins == (

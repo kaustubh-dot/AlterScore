@@ -9,7 +9,7 @@ AlterScore should be reproducible locally before it is deployed anywhere. Deploy
 | Stage | Goal | Required Before Moving On |
 |---|---|---|
 | Local development | Fast iteration | Backend, frontend, and tests run locally |
-| Local artifact serving | Validate model loading | Production manifest loads in FastAPI |
+| Local artifact serving | Validate model loading | Production manifest or direct runtime-model fallback loads in FastAPI |
 | Local Docker | Package service | Health check passes in containers |
 | Cloud demo | Public demo or evaluator deployment | Secrets, artifacts, logging, and rollback documented |
 | Production pilot | Shadow-mode lender use | Real monitoring, audit, and retraining process |
@@ -30,6 +30,7 @@ AlterScore should be reproducible locally before it is deployed anywhere. Deploy
 | `ALTERSCORE_API_VERSION` | `0.1.0` | Health/version reporting |
 | `ALTERSCORE_REPO_ROOT` | repository root | Optional path override |
 | `ALTERSCORE_MODEL_MANIFEST` | `models/registry/production_manifest.json` | Serving manifest |
+| `ALTERSCORE_RUNTIME_MODEL_PATH` | `models/artifacts/logistic_best.pkl` | Local stub-model override when no production manifest is ready |
 | `ALTERSCORE_LOG_LEVEL` | `INFO` | Backend log level |
 | `ALTERSCORE_CORS_ORIGINS` | `http://localhost:5173` | Frontend origins |
 | `VITE_API_BASE_URL` | `http://localhost:8000/api` | Frontend API base URL |
@@ -89,11 +90,20 @@ At startup the backend must:
 
 1. Load settings.
 2. Resolve repository and artifact paths.
-3. Load production manifest.
-4. Validate all required artifact files exist.
-5. Load model, preprocessor, text PCA, SHAP explainer, DICE explainer, and reports.
+3. Load the production manifest when it exists, otherwise allow a local direct-model fallback for backend scoring stubs.
+4. Validate artifact paths and detect missing scoring-critical files clearly.
+5. Load model, preprocessor, and any available text PCA, explainers, and reports.
 6. Expose `/api/health` with loaded and missing artifacts.
-7. Fail clearly if scoring-critical artifacts are missing.
+7. Fail clearly if scoring-critical artifacts such as the runtime model or preprocessor are missing.
+
+## Current Stub Runtime Notes
+
+- `backend/app/core/artifact_loader.py` now supports two modes:
+  - production-manifest loading for the eventual serving bundle
+  - `ALTERSCORE_RUNTIME_MODEL_PATH` fallback for the current local stub path
+- The current scoring stub can run with saved logistic or classical artifacts plus the shared preprocessor.
+- `models/preprocessors/text_pca.pkl` does not exist yet, so request-time semantic dimensions currently fall back to zero values in stub mode.
+- SHAP and DICE artifacts do not exist yet, so the current stub scoring response returns empty `explanation` and `counterfactual_actions` lists.
 
 ## Runtime Foundation Files
 
