@@ -50,8 +50,8 @@
 18. [x] Add append-only request logging to the `/api/score` stub path.
 19. [x] Persist `models/preprocessors/text_pca.pkl` from the offline temporal-train pipeline.
 20. [x] Verify runtime request assembly consumes the persisted PCA artifact and only falls back to zero-filled semantics when the artifact is intentionally missing.
-21. [ ] Add a report-reading analytics service layer so route handlers do not parse report files ad hoc.
-22. [ ] Add `/api/model-stats` and `/api/baseline-comparison` route stubs backed by saved report files.
+21. [x] Add a report-reading analytics service layer so route handlers do not parse report files ad hoc.
+22. [x] Add `/api/model-stats` and `/api/baseline-comparison` route stubs backed by saved report files.
 23. [ ] Add `/api/fairness-report`, `/api/drift-report`, and `/api/global-importance` route stubs backed by report files once those artifacts exist.
 24. [ ] Add `/api/score-distribution` backed by a persisted population-percentiles or histogram artifact rather than runtime recomputation.
 25. [ ] Add `/api/roc-data`, `/api/pr-curve`, `/api/calibration-curve`, and `/api/confusion-matrix` route stubs from the evaluation report structure.

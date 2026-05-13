@@ -5,8 +5,8 @@
 - Date: 2026-05-13
 - Workspace: `C:\Kaustubh\Projects\AlterScore`
 - PRD source: `docs/AlterScore_PRD_v2.md`
-- Current phase: analytics route foundation
-- Application implementation status: feature registry, runtime foundation helpers, API schemas, the frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, the baseline training loop, the bounded classical training loop for random forest, XGBoost, and LightGBM, the persisted text PCA artifact foundation, the runtime artifact-loading plus scoring-service stubs, the first FastAPI app startup with `/api/health` and `/api/score` route stubs, and append-only request logging on the score path are implemented; analytics routes and full production-runtime artifacts are still pending
+- Current phase: first analytics endpoints
+- Application implementation status: feature registry, runtime foundation helpers, API schemas, the frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, the baseline training loop, the bounded classical training loop for random forest, XGBoost, and LightGBM, the persisted text PCA artifact foundation, the runtime artifact-loading plus scoring-service stubs, the first FastAPI app startup with `/api/health`, `/api/score`, `/api/model-stats`, and `/api/baseline-comparison`, plus append-only request logging on the score path, are implemented; the remaining analytics routes and full production-runtime artifacts are still pending
 
 ## What Exists
 
@@ -47,8 +47,9 @@
 - Classical model training exists at `backend/ml/training/classical/train_classical.py`, with command entrypoint `scripts/training/train_classical_models.py`.
 - Runtime artifact loading exists at `backend/app/core/artifact_loader.py`, supporting either a production manifest bundle or a direct runtime model path for the current local scoring stub.
 - Backend scoring service stubs exist at `backend/app/services/scoring.py`, using the loaded model bundle plus request feature assembly to return schema-valid score responses.
+- Backend analytics service foundation now exists at `backend/app/services/analytics.py`, serving report-backed analytics payloads from the loaded runtime bundle.
 - FastAPI app startup now exists at `backend/app/main.py`, with artifact loading cached at startup and CORS configured from settings.
-- Route stubs now exist at `backend/app/api/v1/routes/health.py` and `backend/app/api/v1/routes/score.py`.
+- Route stubs now exist at `backend/app/api/v1/routes/health.py`, `backend/app/api/v1/routes/score.py`, and `backend/app/api/v1/routes/analytics.py`.
 - Append-only request logging now exists at `backend/app/services/request_logging.py`, writing `/api/score` success and failure entries to `backend/runtime/logs/requests.jsonl` by default without persisting raw request payloads.
 - Feature engineering unit coverage exists at `tests/unit/ml/test_answer_parser.py`, `tests/unit/ml/test_behavioral_parser.py`, and `tests/unit/ml/test_derived_features.py`.
 - Request-assembly integration coverage exists at `tests/integration/pipeline/test_feature_assembly.py`.
@@ -56,7 +57,7 @@
 - Classical training integration coverage exists at `tests/integration/pipeline/test_classical_training.py`.
 - Artifact-loading and scoring-stub integration coverage exists at `tests/integration/pipeline/test_artifact_loading.py`.
 - Persisted text PCA artifact integration coverage now exists at `tests/integration/pipeline/test_text_pca_artifact.py`.
-- API integration coverage now exists at `tests/integration/api/test_health_endpoint.py` and `tests/integration/api/test_score_endpoint.py`.
+- API integration coverage now exists at `tests/integration/api/test_health_endpoint.py`, `tests/integration/api/test_score_endpoint.py`, and `tests/integration/api/test_analytics_endpoints.py`.
 - Score-mapper unit coverage exists at `tests/unit/ml/test_score_mapper.py`.
 - A reusable valid score-request smoke fixture now exists at `tests/fixtures/score_request_valid.json`.
 - Persisted synthetic dataset now exists at `data/raw/synthetic_dataset.csv`.
@@ -72,7 +73,7 @@
 
 - No borrower assessment pages, results flow, dashboard workflow, or frontend tests beyond the package skeleton smoke test.
 - No neural, stacking, calibration, SHAP, DICE, fairness, or PSI jobs yet.
-- No analytics endpoints yet, no interactive frontend tests beyond the package skeleton smoke test, and no broader ML validation tests beyond feature, schema, data generation, NLP extraction, preprocessing split-integrity, behavioral parsing, request assembly, answer/derived feature coverage, baseline artifact coverage, classical training coverage, runtime artifact-loading/scoring-smoke coverage, and the first API route-stub integration coverage.
+- Only the first report-backed analytics endpoints exist so far: `/api/model-stats` and `/api/baseline-comparison`. Fairness, drift, global importance, score-distribution, ROC/PR/calibration, and confusion-matrix endpoints are still pending, as are interactive frontend tests beyond the package skeleton smoke test and broader ML validation beyond the current feature, preprocessing, training, artifact-loading, and API foundation coverage.
 - No Docker runtime files yet.
 - No SHAP explainer or DICE explainer exists yet, so the current scoring stub still returns empty explanation/counterfactual lists; semantic features now use the persisted `text_pca.pkl` when available and only fall back to zero-filled projections when the PCA artifact is intentionally missing.
 
@@ -106,9 +107,9 @@ The earlier PRD narrative referenced 39 features, but the project will not inven
 
 Continue the implementation foundation in this order:
 
-1. Add a report-reading analytics service layer so route handlers can serve saved metrics without parsing report files ad hoc.
-2. Add `/api/model-stats` and `/api/baseline-comparison` route stubs on top of the current FastAPI startup and artifact-loading path.
-3. Keep the refreshed logistic, classical, preprocessor, and `text_pca.pkl` artifacts as the local offline foundation while neural and ensemble training are still pending.
+1. Expand the offline evaluation artifacts so the backend can add `/api/score-distribution`, `/api/roc-data`, `/api/pr-curve`, `/api/calibration-curve`, and `/api/confusion-matrix` without runtime recomputation.
+2. Add the remaining analytics route stubs that depend on saved reports, starting with whichever artifacts are available next.
+3. Keep the refreshed logistic, classical, preprocessor, `text_pca.pkl`, `metrics.json`, and `baseline_metrics.json` artifacts as the local offline foundation while neural and ensemble training are still pending.
 
 ## Session Update Protocol
 

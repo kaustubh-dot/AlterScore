@@ -2,7 +2,7 @@
 
 ## Current Phase
 
-Analytics route foundation. The canonical feature registry, project hygiene files, backend runtime helpers, API schemas, frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, the baseline training loop, the bounded classical training loop, the persisted text PCA artifact foundation, the runtime artifact-loading plus scoring-service stubs, the first FastAPI startup with health/score route stubs, and append-only request logging are implemented; analytics routes and full production-runtime artifacts are not started.
+First analytics endpoints. The canonical feature registry, project hygiene files, backend runtime helpers, API schemas, frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, the baseline training loop, the bounded classical training loop, the persisted text PCA artifact foundation, the runtime artifact-loading plus scoring-service stubs, the first FastAPI startup with health/score/model-stats/baseline-comparison routes, and append-only request logging are implemented; the remaining analytics routes and full production-runtime artifacts are not started.
 
 ## Immediate TODO
 
@@ -41,8 +41,9 @@ Analytics route foundation. The canonical feature registry, project hygiene file
 - [x] Create route stubs only after schemas exist.
 - [x] Implement request logging service.
 - [x] Implement health endpoint.
+- [x] Add report-backed analytics service foundation and the first `/api/model-stats` plus `/api/baseline-comparison` endpoints.
 - [ ] Harden the scoring endpoint with explainability, counterfactual, and production-bundle behavior.
-- [ ] Implement analytics endpoints after reports exist.
+- [ ] Implement the remaining analytics endpoints after their backing reports exist.
 
 ## Data Pipeline TODO
 
@@ -150,8 +151,9 @@ Analytics route foundation. The canonical feature registry, project hygiene file
 - [x] Add API integration tests for `/api/health` and `/api/score` stubs.
 - [x] Add API integration coverage for request logging on `/api/score`.
 - [x] Add integration coverage for persisted text PCA artifacts, runtime semantic projections, and intentional zero-fill fallback behavior.
+- [x] Add API integration coverage for `/api/model-stats` and `/api/baseline-comparison`, including missing-report behavior.
 - [ ] Add integration tests for broader data pipeline steps beyond generator validation and preprocessing split integrity.
-- [ ] Add integration tests for analytics endpoints.
+- [ ] Add integration tests for the remaining analytics endpoints.
 - [ ] Add E2E tests for assessment and dashboard.
 
 ## Deployment TODO

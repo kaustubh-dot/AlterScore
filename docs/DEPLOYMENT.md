@@ -105,9 +105,11 @@ At startup the backend must:
 - The current scoring stub can run with saved logistic or classical artifacts plus the shared preprocessor.
 - The current offline baseline and classical training commands now also persist `models/preprocessors/text_pca.pkl` from train months `1-8` only, using runtime-compatible raw embeddings derived from the saved synthetic dataset.
 - `backend/app/main.py` now loads the runtime artifact bundle at startup and exposes `/api/health` plus `/api/score`.
+- `backend/app/services/analytics.py` now serves `/api/model-stats` from `metrics.json` and `/api/baseline-comparison` from `baseline_metrics.json` without runtime retraining or ad hoc route-level file parsing.
 - `backend/app/main.py` now also initializes the append-only request logging service for `/api/score`.
 - `/api/health` currently returns `degraded` when scoring-critical artifacts are present but optional runtime artifacts such as SHAP, DICE, fairness, or PSI are still missing.
 - When `models/preprocessors/text_pca.pkl` is present, request-time semantic dimensions now use the persisted PCA artifact; zero-filled semantic fallback remains only for intentionally PCA-less bundles and tests.
+- If `metrics.json` or `baseline_metrics.json` is missing, the corresponding analytics endpoint now returns a structured `503` rather than recomputing reports inside the API process.
 - SHAP and DICE artifacts do not exist yet, so the current stub scoring response returns empty `explanation` and `counterfactual_actions` lists.
 
 ## Runtime Foundation Files
