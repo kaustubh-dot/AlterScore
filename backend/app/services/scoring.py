@@ -64,7 +64,7 @@ class ScoringService:
         assembled = assemble_request_features(
             score_request,
             text_pca=self.artifacts.text_pca,
-            require_text_pca=False,
+            require_text_pca=True,
         )
         processed_features = transform_features(
             self.artifacts.preprocessor,

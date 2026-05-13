@@ -18,7 +18,12 @@ from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 from backend.app.core.paths import MODEL_PREPROCESSORS_DIR
 from backend.ml.data_generation.generator import TEMPORAL_SPLIT_MONTHS
 from backend.ml.features.derived_features import DERIVED_FEATURES, add_derived_features
-from backend.ml.nlp.extractor import RAW_EMBEDDING_DIM, extract_raw_text_embedding
+from backend.ml.nlp.extractor import (
+    RAW_EMBEDDING_DIM,
+    RAW_TEXT_RESPONSE_COLUMN,
+    extract_raw_text_embedding,
+    extract_nlp_feature_batch,
+)
 from backend.ml.preprocessing.feature_registry import (
     ALL_MODEL_FEATURES,
     CATEGORICAL_FEATURES,
@@ -29,11 +34,16 @@ from backend.ml.preprocessing.feature_registry import (
 )
 
 TEXT_PCA_FEATURES: Final[tuple[str, str]] = ("text_semantic_dim1", "text_semantic_dim2")
+TEXT_INTERPRETABLE_FEATURES: Final[tuple[str, ...]] = (
+    "text_sentiment_compound",
+    "text_agency_score",
+    "text_problem_solving_flag",
+)
 TEXT_PCA_COMPONENTS: Final[int] = 2
 TEXT_PCA_RANDOM_STATE: Final[int] = 42
 DEFAULT_PREPROCESSOR_ARTIFACT_PATH: Final[Path] = MODEL_PREPROCESSORS_DIR / "preprocessor.pkl"
 DEFAULT_TEXT_PCA_ARTIFACT_PATH: Final[Path] = MODEL_PREPROCESSORS_DIR / "text_pca.pkl"
-TEXT_SOURCE_COLUMN: Final[str] = "q27_resilience_text"
+TEXT_SOURCE_COLUMN: Final[str] = RAW_TEXT_RESPONSE_COLUMN
 SYNTHETIC_TEXT_SOURCE_COLUMNS: Final[tuple[str, ...]] = (
     "text_sentiment_compound",
     "text_agency_score",
@@ -220,6 +230,35 @@ def fit_preprocessor(
         _save_artifact(preprocessor, artifact_path)
 
     return preprocessor
+
+
+def align_text_features_from_raw_text(
+    dataset: pd.DataFrame,
+    *,
+    text_column: str = TEXT_SOURCE_COLUMN,
+) -> tuple[pd.DataFrame, np.ndarray]:
+    """Overwrite text-derived model features from the raw resilience response text."""
+
+    if text_column not in dataset.columns:
+        raise ValueError(
+            f"Dataset is missing required raw-text column for NLP alignment: {text_column}."
+        )
+
+    text_values = dataset[text_column].fillna("").astype(str).tolist()
+    nlp_feature_rows, raw_embeddings = extract_nlp_feature_batch(text_values)
+    updated_dataset = dataset.copy()
+    updated_dataset = updated_dataset.astype(
+        {feature_name: float for feature_name in TEXT_INTERPRETABLE_FEATURES},
+        copy=False,
+    )
+
+    for feature_name in TEXT_INTERPRETABLE_FEATURES:
+        updated_dataset.loc[:, feature_name] = np.asarray(
+            [feature_row[feature_name] for feature_row in nlp_feature_rows],
+            dtype=float,
+        )
+
+    return updated_dataset, raw_embeddings
 
 
 def prepare_model_feature_frame(feature_frame: pd.DataFrame) -> pd.DataFrame:
@@ -419,11 +458,14 @@ __all__ = [
     "DEFAULT_PREPROCESSOR_ARTIFACT_PATH",
     "DEFAULT_TEXT_PCA_ARTIFACT_PATH",
     "PreparedTemporalData",
+    "RAW_TEXT_RESPONSE_COLUMN",
     "TEXT_PCA_COMPONENTS",
     "TEXT_PCA_FEATURES",
+    "TEXT_INTERPRETABLE_FEATURES",
     "TEXT_PCA_RANDOM_STATE",
     "TEXT_SOURCE_COLUMN",
     "TemporalDataSplit",
+    "align_text_features_from_raw_text",
     "apply_text_pca",
     "build_preprocessor",
     "build_text_embedding_matrix",

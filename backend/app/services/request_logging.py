@@ -84,6 +84,9 @@ class RequestLoggingService:
     ) -> dict[str, Any]:
         manifest_payload = self.artifacts.manifest or {}
         model_version = _as_optional_string(manifest_payload.get("model_version"))
+        manifest_version = _as_optional_string(
+            manifest_payload.get("manifest_version") or manifest_payload.get("run_id")
+        )
 
         return {
             "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -100,7 +103,7 @@ class RequestLoggingService:
                 self.artifacts.report.runtime_model_path
             ),
             "model_version": model_version,
-            "manifest_version": model_version,
+            "manifest_version": manifest_version,
             "manifest_path": _as_optional_string(self.artifacts.report.manifest_path),
         }
 
