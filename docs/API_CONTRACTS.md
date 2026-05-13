@@ -186,9 +186,29 @@ Current scaffold note:
 
 Current scaffold note:
 - The response fields above remain required, but while SHAP and DICE artifacts are not implemented yet the backend scoring stub may return empty `explanation` and `counterfactual_actions` lists rather than omitting those fields.
-- Until `models/preprocessors/text_pca.pkl` exists, runtime semantic dimensions may use the documented temporary zero-fill fallback inside the stub service.
+- When `models/preprocessors/text_pca.pkl` is present, runtime semantic dimensions use the persisted PCA artifact; the temporary zero-fill fallback remains only for intentionally PCA-less test or stub bundles.
 - Score requests are now append-logged to the backend runtime log path without storing the raw answers or behavioral payload in the JSONL entry.
 - Structured `500` errors now expose only a sanitized error type in the client payload; full failure details remain in server-side logs.
+
+## GET /api/model-stats
+
+Current foundation note:
+- The first analytics endpoint now serves the saved `model_stats` list from `models/reports/metrics.json`.
+- If `metrics.json` is missing at startup, the endpoint returns a structured `503` with `missing_artifacts`.
+
+### Response
+
+Uses the `ModelStatsItem` list shape documented below.
+
+## GET /api/baseline-comparison
+
+Current foundation note:
+- The second analytics endpoint now serves the saved baseline comparison list from `models/reports/baseline_metrics.json`.
+- If `baseline_metrics.json` is missing at startup, the endpoint returns a structured `503` with `missing_artifacts`.
+
+### Response
+
+Uses the `BaselineComparisonItem` list shape documented below.
 
 ## Analytics Schemas
 
