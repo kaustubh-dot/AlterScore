@@ -737,3 +737,103 @@ The offline governance bundle now includes a real persisted drift report without
 - Continue: yes
 - Stop: no
 - Follow-up: generate the fairness and global-importance artifacts next, then wire `/api/drift-report` together with the remaining governance analytics routes in a later backend slice.
+
+## EXP-20260513-006 - Persisted fairness report artifact foundation
+
+- Status: completed
+- Owner: Codex
+- Date started: 2026-05-13
+- Date completed: 2026-05-13
+- Branch / commit: workspace (uncommitted after `ce2152a`)
+- Related decision: existing temporal-split, protected-attribute-separation, and offline-training-separation decisions
+- Related issue / task: persisted `fairness_report.json` foundation for the offline governance bundle
+
+### Hypothesis
+
+If the offline fairness job reuses held-out test predictions plus the protected audit columns already preserved outside model inputs, then it can persist a backend-schema-compatible fairness report without touching runtime inference, while still enforcing subgroup sample guards and excluding protected fields from the model feature set itself.
+
+### Dataset
+
+- Data version: `synthetic_v0.1.0`
+- Row count: `10,000`
+- Train split: months `1-8` (`6,800` rows)
+- Validation split: months `9-10` (`1,400` rows)
+- Test split: months `11-12` (`1,800` rows)
+- Protected attributes available: gender, age group, region, education level
+- Known schema changes: none
+
+### Feature Set
+
+- Feature registry version: `0.1.0`
+- Numeric feature count: `33`
+- Categorical feature count: `2`
+- Included model inputs: canonical 35 features only
+- Protected attributes: retained only in `protected_test` for subgroup evaluation
+- Excluded fields from model inputs: protected attributes, `cohort_month`, `application_date`, `repayment_label`
+- NLP configuration: persisted-dataset training still rebuilds runtime-compatible text features before scoring when raw Q27 text is absent
+
+### Model / Pipeline Configuration
+
+```json
+{
+  "job_type": "fairness_report",
+  "random_seed": 42,
+  "selection": {
+    "baseline_run": "logistic_regression only",
+    "classical_run": "best available test-AUC model among logistic/classical candidates"
+  },
+  "approval_rule": {
+    "score_threshold": 550,
+    "interpretation": "fair-or-better runtime score band"
+  },
+  "group_guardrails": {
+    "minimum_group_samples": 30,
+    "yellow_auc_gap_above": 0.04,
+    "red_auc_gap_above": 0.07
+  },
+  "reported_metrics": [
+    "overall_auc",
+    "overall_approval_rate",
+    "overall_default_rate",
+    "worst_auc_gap",
+    "flagged_groups",
+    "per-group auc",
+    "approval_rate",
+    "fpr",
+    "fnr",
+    "mean_score",
+    "flag"
+  ]
+}
+```
+
+### Commands
+
+```powershell
+C:\Users\Kaustubh\anaconda3\python.exe -m pytest --basetemp .tmp\pytest tests/integration/pipeline/test_dataset_artifacts_and_baselines.py tests/integration/pipeline/test_classical_training.py tests/integration/pipeline/test_artifact_loading.py tests/integration/pipeline/test_psi_report_artifact.py tests/integration/pipeline/test_fairness_report_artifact.py
+C:\Users\Kaustubh\anaconda3\python.exe -c "from backend.ml.training.classical.baselines import train_baselines; artifacts = train_baselines(); print(artifacts.fairness_report_path)"
+```
+
+### Fairness Summary
+
+- Worst AUC gap: `0.0379`
+- Flagged groups: none
+- Approval-rate gaps: subgroup approval rates vary, but no subgroup exceeds the current saved AUC-gap warning threshold
+- Notes: this foundation persists the subgroup fairness summary already supported by the backend schema; calibration-parity curves and the individual-fairness proxy remain deferred follow-on work
+
+### Artifacts
+
+| Artifact | Path |
+|---|---|
+| Fairness report | `models/reports/fairness_report.json` |
+
+### Interpretation
+
+The offline governance bundle now includes a real fairness report alongside the existing PSI artifact, and it does so without mixing protected attributes into the model inputs or pulling fairness logic into FastAPI request handling. The saved local report currently shows no flagged groups under the bounded AUC-gap policy, which is credible for the synthetic dataset and enough to unblock the later report-backed fairness route.
+
+### Decision
+
+- Promote: no
+- Continue: yes
+- Stop: no
+- Follow-up: generate the global-importance artifact next, then wire `/api/fairness-report`, `/api/drift-report`, and `/api/global-importance` together in the governance analytics route slice.

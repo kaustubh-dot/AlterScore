@@ -19,6 +19,11 @@ from backend.ml.evaluation.drift import (
     DEFAULT_PSI_REPORT_PATH,
     build_psi_report_from_prepared_data,
 )
+from backend.ml.evaluation.fairness import (
+    DEFAULT_FAIRNESS_REPORT_PATH,
+    build_fairness_report_for_candidate_probabilities,
+    save_fairness_report,
+)
 from backend.ml.evaluation.metrics import (
     build_population_percentiles_payload,
     build_population_percentiles_report,
@@ -60,6 +65,7 @@ class BaselineTrainingArtifacts:
     metrics_path: Path | None
     population_percentiles_path: Path | None
     psi_report_path: Path | None
+    fairness_report_path: Path | None
     model_stats: list[dict[str, Any]]
     baseline_metrics: list[dict[str, Any]]
 
@@ -144,6 +150,7 @@ def train_baselines(
     metrics_path: str | Path | None = DEFAULT_METRICS_PATH,
     population_percentiles_path: str | Path | None = DEFAULT_POPULATION_PERCENTILES_PATH,
     psi_report_path: str | Path | None = DEFAULT_PSI_REPORT_PATH,
+    fairness_report_path: str | Path | None = DEFAULT_FAIRNESS_REPORT_PATH,
     random_state: int = DEFAULT_RANDOM_STATE,
 ) -> BaselineTrainingArtifacts:
     """Fit the first baseline suite on the documented temporal splits."""
@@ -251,6 +258,12 @@ def train_baselines(
         logistic_validation_metrics,
         logistic_test_metrics,
     ]
+    fairness_report, _ = build_fairness_report_for_candidate_probabilities(
+        prepared.test.y.to_numpy(dtype=int),
+        prepared.test.protected,
+        {"logistic_regression": logistic_test_probs},
+        model_stats=model_stats,
+    )
     evaluation_details = {
         "validation_months_9_10": {
             "logistic_regression": build_split_evaluation_details(
@@ -300,6 +313,8 @@ def train_baselines(
         _save_json(population_percentiles_payload, population_percentiles_path)
     if psi_report_path is not None:
         _save_json(psi_report, psi_report_path)
+    if fairness_report_path is not None:
+        save_fairness_report(fairness_report, fairness_report_path)
 
     return BaselineTrainingArtifacts(
         run_id=run_id,
@@ -313,6 +328,9 @@ def train_baselines(
             None if population_percentiles_path is None else Path(population_percentiles_path)
         ),
         psi_report_path=None if psi_report_path is None else Path(psi_report_path),
+        fairness_report_path=(
+            None if fairness_report_path is None else Path(fairness_report_path)
+        ),
         model_stats=model_stats,
         baseline_metrics=baseline_metrics,
     )
@@ -367,6 +385,7 @@ __all__ = [
     "BaselineTrainingArtifacts",
     "DEFAULT_BASELINE_METRICS_PATH",
     "DEFAULT_DATASET_PATH",
+    "DEFAULT_FAIRNESS_REPORT_PATH",
     "DEFAULT_LOGISTIC_ARTIFACT_PATH",
     "DEFAULT_METRICS_PATH",
     "DEFAULT_POPULATION_PERCENTILES_PATH",
