@@ -57,6 +57,28 @@ class BaselineComparisonResponse(RootModel[list[BaselineComparisonItem]]):
     pass
 
 
+class ScoreDistributionBucket(SchemaModel):
+    label: str = Field(..., min_length=1)
+    score_min: int = Field(..., ge=300, le=850)
+    score_max: int = Field(..., ge=300, le=850)
+    count: int = Field(..., ge=0)
+    share: float = Field(..., ge=0, le=1)
+
+
+class ScoreDistributionSummary(SchemaModel):
+    min_score: int = Field(..., ge=300, le=850)
+    max_score: int = Field(..., ge=300, le=850)
+    mean_score: float = Field(..., ge=300, le=850)
+    median_score: float = Field(..., ge=300, le=850)
+
+
+class ScoreDistributionResponse(SchemaModel):
+    model_name: str = Field(..., min_length=1)
+    row_count: int = Field(..., ge=1)
+    summary: ScoreDistributionSummary
+    score_histogram: list[ScoreDistributionBucket]
+
+
 class GlobalImportanceItem(SchemaModel):
     feature: str = Field(..., min_length=1)
     display_name: str = Field(..., min_length=1)
@@ -123,4 +145,7 @@ __all__ = [
     "HealthResponse",
     "ModelStatsItem",
     "ModelStatsResponse",
+    "ScoreDistributionBucket",
+    "ScoreDistributionResponse",
+    "ScoreDistributionSummary",
 ]

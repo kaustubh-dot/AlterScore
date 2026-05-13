@@ -4,6 +4,7 @@ from backend.app.main import create_app
 from backend.app.schemas.analytics import (
     BaselineComparisonResponse,
     ModelStatsResponse,
+    ScoreDistributionResponse,
 )
 from backend.app.schemas.common import ErrorResponse
 from tests.integration.api._support import build_runtime_settings
@@ -39,6 +40,21 @@ def test_baseline_comparison_endpoint_returns_report_backed_baselines(tmp_path) 
     ]
 
 
+def test_score_distribution_endpoint_returns_saved_histogram_payload(tmp_path) -> None:
+    settings = build_runtime_settings(tmp_path)
+    app = create_app(settings)
+
+    with TestClient(app) as client:
+        response = client.get("/api/score-distribution")
+
+    assert response.status_code == 200
+    parsed = ScoreDistributionResponse.model_validate(response.json())
+    assert parsed.model_name == "logistic_regression"
+    assert parsed.row_count == 2_400
+    assert parsed.score_histogram
+    assert sum(bucket.count for bucket in parsed.score_histogram) == parsed.row_count
+
+
 def test_model_stats_endpoint_returns_structured_503_when_metrics_are_missing(
     tmp_path,
 ) -> None:
@@ -69,3 +85,19 @@ def test_baseline_comparison_endpoint_returns_structured_503_when_baselines_are_
     parsed = ErrorResponse.model_validate(response.json())
     assert parsed.error.code == "ARTIFACTS_NOT_READY"
     assert parsed.error.details["missing_artifacts"] == ["baseline_metrics"]
+
+
+def test_score_distribution_endpoint_returns_structured_503_when_percentiles_are_missing(
+    tmp_path,
+) -> None:
+    settings = build_runtime_settings(tmp_path)
+    (tmp_path / "models" / "reports" / "population_percentiles.json").unlink()
+    app = create_app(settings)
+
+    with TestClient(app) as client:
+        response = client.get("/api/score-distribution")
+
+    assert response.status_code == 503
+    parsed = ErrorResponse.model_validate(response.json())
+    assert parsed.error.code == "ARTIFACTS_NOT_READY"
+    assert parsed.error.details["missing_artifacts"] == ["population_percentiles"]

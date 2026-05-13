@@ -53,7 +53,7 @@
 21. [x] Add a report-reading analytics service layer so route handlers do not parse report files ad hoc.
 22. [x] Add `/api/model-stats` and `/api/baseline-comparison` route stubs backed by saved report files.
 23. [ ] Add `/api/fairness-report`, `/api/drift-report`, and `/api/global-importance` route stubs backed by report files once those artifacts exist.
-24. [ ] Add `/api/score-distribution` backed by a persisted population-percentiles or histogram artifact rather than runtime recomputation.
+24. [x] Add `/api/score-distribution` backed by a persisted population-percentiles or histogram artifact rather than runtime recomputation.
 25. [ ] Add `/api/roc-data`, `/api/pr-curve`, `/api/calibration-curve`, and `/api/confusion-matrix` route stubs from the evaluation report structure.
 26. [ ] Expand analytics endpoint contract tests for both happy-path and missing-artifact responses.
 27. [ ] Train TabNet on the documented temporal split with deterministic seeds and smoke coverage.
@@ -93,7 +93,7 @@ This section expands the next roadmap stretch into smaller delivery checkpoints 
 ## Checkpoint Sequencing Notes
 
 - C19 and C20 are complete, and the offline evaluation bundle foundation for score distribution plus ROC/PR/calibration/confusion payloads now exists for the current logistic/classical artifact set.
-- C24 through C26 are now the preferred next backend slice because the remaining analytics routes can read saved report payloads instead of forcing more offline artifact work first.
+- C25 and C26 are now the preferred next backend slice because `/api/score-distribution` is already report-backed and the grouped curve/confusion routes can now follow the same pattern.
 - C27 through C31 are the production-model track and should stay offline-only; none of those jobs should be pulled into FastAPI request handlers.
 - C32 through C34 depend on a stable production candidate or an explicitly documented surrogate explainability path.
 - C35 should happen only after the serving bundle can load without relying on the temporary direct-model fallback path.

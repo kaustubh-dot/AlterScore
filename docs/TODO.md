@@ -2,7 +2,7 @@
 
 ## Current Phase
 
-Offline evaluation artifacts and analytics expansion. The canonical feature registry, project hygiene files, backend runtime helpers, API schemas, frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, the baseline training loop, the bounded classical training loop, the persisted text PCA artifact foundation, the runtime artifact-loading plus scoring-service stubs, the first FastAPI startup with health/score/model-stats/baseline-comparison routes, append-only request logging, and the persisted evaluation-artifact foundation for curves, confusion, and population percentiles are implemented; the remaining analytics routes and full production-runtime artifacts are not started.
+Analytics route expansion. The canonical feature registry, project hygiene files, backend runtime helpers, API schemas, frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, the baseline training loop, the bounded classical training loop, the persisted text PCA artifact foundation, the runtime artifact-loading plus scoring-service stubs, the FastAPI startup with health/score/model-stats/baseline-comparison/score-distribution routes, append-only request logging, and the persisted evaluation-artifact foundation for curves, confusion, and population percentiles are implemented; the remaining analytics routes and full production-runtime artifacts are not started.
 
 ## Immediate TODO
 
@@ -43,7 +43,7 @@ Offline evaluation artifacts and analytics expansion. The canonical feature regi
 - [x] Implement health endpoint.
 - [x] Add report-backed analytics service foundation and the first `/api/model-stats` plus `/api/baseline-comparison` endpoints.
 - [ ] Harden the scoring endpoint with explainability, counterfactual, and production-bundle behavior.
-- [ ] Implement `/api/score-distribution`, `/api/roc-data`, `/api/pr-curve`, `/api/calibration-curve`, and `/api/confusion-matrix` from the saved offline evaluation artifacts.
+- [ ] Implement `/api/roc-data`, `/api/pr-curve`, `/api/calibration-curve`, and `/api/confusion-matrix` from the saved offline evaluation artifacts.
 - [ ] Implement fairness, drift, and global-importance analytics endpoints after their backing reports exist.
 
 ## Data Pipeline TODO
@@ -156,6 +156,7 @@ Offline evaluation artifacts and analytics expansion. The canonical feature regi
 - [x] Add integration coverage for persisted text PCA artifacts, runtime semantic projections, and intentional zero-fill fallback behavior.
 - [x] Add API integration coverage for `/api/model-stats` and `/api/baseline-comparison`, including missing-report behavior.
 - [x] Add integration coverage for offline evaluation artifacts, runtime percentile-table selection, and persisted-dataset training without raw Q27 text.
+- [x] Add API integration coverage for `/api/score-distribution`, including missing-artifact behavior.
 - [ ] Add integration tests for broader data pipeline steps beyond generator validation and preprocessing split integrity.
 - [ ] Add integration tests for the remaining analytics endpoints.
 - [ ] Add E2E tests for assessment and dashboard.

@@ -10,6 +10,7 @@ from backend.app.core.artifact_loader import LoadedArtifactBundle
 from backend.app.schemas.analytics import (
     BaselineComparisonResponse,
     ModelStatsResponse,
+    ScoreDistributionResponse,
 )
 
 
@@ -75,6 +76,30 @@ class AnalyticsService:
                 reason="baseline metrics payload must be a JSON list.",
             )
         return BaselineComparisonResponse.model_validate(baseline_metrics)
+
+    def get_score_distribution(self) -> ScoreDistributionResponse:
+        percentile_payload = self._require_mapping_payload(
+            artifact_key="population_percentiles",
+            payload=self.artifacts.population_percentiles,
+        )
+
+        try:
+            return ScoreDistributionResponse.model_validate(
+                {
+                    "model_name": percentile_payload["model_name"],
+                    "row_count": percentile_payload["row_count"],
+                    "summary": percentile_payload["summary"],
+                    "score_histogram": percentile_payload["score_histogram"],
+                }
+            )
+        except KeyError as exc:
+            raise AnalyticsPayloadError(
+                artifact_key="population_percentiles",
+                reason=(
+                    "population percentiles payload must contain "
+                    "'model_name', 'row_count', 'summary', and 'score_histogram'."
+                ),
+            ) from exc
 
     def _require_mapping_payload(
         self,

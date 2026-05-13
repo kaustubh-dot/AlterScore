@@ -7,6 +7,7 @@ from backend.app.schemas.analytics import (
     GlobalImportanceResponse,
     HealthResponse,
     ModelStatsResponse,
+    ScoreDistributionResponse,
 )
 
 
@@ -119,6 +120,33 @@ def test_global_importance_and_drift_report_shapes_match_contract() -> None:
         "top_drifted_features",
         "all_features",
     }
+
+
+def test_score_distribution_shape_matches_documented_contract() -> None:
+    response = ScoreDistributionResponse.model_validate(
+        {
+            "model_name": "logistic_regression",
+            "row_count": 10_000,
+            "summary": {
+                "min_score": 300,
+                "max_score": 850,
+                "mean_score": 590.8,
+                "median_score": 596.0,
+            },
+            "score_histogram": [
+                {
+                    "label": "300-349",
+                    "score_min": 300,
+                    "score_max": 349,
+                    "count": 367,
+                    "share": 0.0367,
+                }
+            ],
+        }
+    )
+
+    assert response.row_count == 10_000
+    assert response.score_histogram[0].label == "300-349"
 
 
 def test_fairness_report_shape_matches_documented_contract() -> None:

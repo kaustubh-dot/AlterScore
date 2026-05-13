@@ -210,6 +210,37 @@ Current foundation note:
 
 Uses the `BaselineComparisonItem` list shape documented below.
 
+## GET /api/score-distribution
+
+Current foundation note:
+- The score-distribution endpoint now serves the saved histogram and summary payload from `models/reports/population_percentiles.json`.
+- The response reflects the active runtime model's saved percentile table when the artifact contains multiple model-specific payloads.
+- If `population_percentiles.json` is missing at startup, the endpoint returns a structured `503` with `missing_artifacts`.
+
+### Response
+
+```json
+{
+  "model_name": "logistic_regression",
+  "row_count": 10000,
+  "summary": {
+    "min_score": 300,
+    "max_score": 850,
+    "mean_score": 590.8,
+    "median_score": 596.0
+  },
+  "score_histogram": [
+    {
+      "label": "300-349",
+      "score_min": 300,
+      "score_max": 349,
+      "count": 367,
+      "share": 0.0367
+    }
+  ]
+}
+```
+
 ## Analytics Schemas
 
 ### Model Stats Item
@@ -243,6 +274,30 @@ Uses the `BaselineComparisonItem` list shape documented below.
   "brier_score": 0.19,
   "expected_calibration_error": 0.08,
   "lift_vs_loan_officer": 0.0
+}
+```
+
+### Score Distribution Response
+
+```json
+{
+  "model_name": "logistic_regression",
+  "row_count": 10000,
+  "summary": {
+    "min_score": 300,
+    "max_score": 850,
+    "mean_score": 590.8,
+    "median_score": 596.0
+  },
+  "score_histogram": [
+    {
+      "label": "300-349",
+      "score_min": 300,
+      "score_max": 349,
+      "count": 367,
+      "share": 0.0367
+    }
+  ]
 }
 ```
 
