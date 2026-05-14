@@ -307,6 +307,7 @@ def train_classical_models(
         prepared.test.protected,
         fairness_candidate_test_probabilities,
         model_stats=merged_model_stats,
+        feature_frame=prepared.test.X,
     )
     global_importance_report, _ = build_global_importance_report_for_candidate_models(
         {

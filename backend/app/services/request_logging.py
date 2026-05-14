@@ -82,11 +82,8 @@ class RequestLoggingService:
         status_code: int,
         outcome: str,
     ) -> dict[str, Any]:
-        manifest_payload = self.artifacts.manifest or {}
-        model_version = _as_optional_string(manifest_payload.get("model_version"))
-        manifest_version = _as_optional_string(
-            manifest_payload.get("manifest_version") or manifest_payload.get("run_id")
-        )
+        model_version = _as_optional_string(self.artifacts.report.model_version)
+        manifest_version = _as_optional_string(self.artifacts.report.manifest_version)
 
         return {
             "timestamp": datetime.now(timezone.utc).isoformat(),

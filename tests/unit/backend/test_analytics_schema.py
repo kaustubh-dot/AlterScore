@@ -21,15 +21,23 @@ def test_health_response_matches_documented_contract_shape() -> None:
             "status": "ok",
             "version": "0.1.0",
             "model_loaded": True,
+            "artifact_source": "manifest",
+            "manifest_backed": True,
+            "manifest_version": "local_logistic_runtime_v1",
+            "model_version": "0.1.0",
             "artifacts_loaded": [
-                "calibrated_stacking",
+                "production_manifest",
+                "runtime_model",
                 "preprocessor",
                 "text_pca",
                 "shap_explainer",
                 "dice_explainer",
                 "metrics",
+                "baseline_metrics",
                 "fairness_report",
                 "psi_report",
+                "global_importance",
+                "population_percentiles",
             ],
             "missing_artifacts": [],
             "invalid_artifacts": [],
@@ -41,6 +49,10 @@ def test_health_response_matches_documented_contract_shape() -> None:
         "status",
         "version",
         "model_loaded",
+        "artifact_source",
+        "manifest_backed",
+        "manifest_version",
+        "model_version",
         "artifacts_loaded",
         "missing_artifacts",
         "invalid_artifacts",
@@ -260,6 +272,58 @@ def test_fairness_report_shape_matches_documented_contract() -> None:
                     }
                 }
             },
+            "calibration_parity": {
+                "n_bins": 10,
+                "overall_expected_calibration_error": 0.04,
+                "max_ece_gap": 0.02,
+                "evaluated_group_count": 1,
+                "skipped_group_count": 0,
+                "groups": {
+                    "gender": {
+                        "female": {
+                            "n_samples": 450,
+                            "expected_calibration_error": 0.05,
+                            "ece_gap_from_overall": 0.01,
+                            "mean_predicted_probability": 0.68,
+                            "observed_repayment_rate": 0.70,
+                            "points": [
+                                {
+                                    "mean_predicted": 0.65,
+                                    "fraction_positive": 0.68,
+                                    "count": 120,
+                                }
+                            ],
+                        }
+                    }
+                },
+            },
+            "individual_fairness_proxy": {
+                "similarity_feature_set": [
+                    "numeracy_score",
+                    "CRT_score",
+                ],
+                "similarity_threshold": 0.9,
+                "score_gap_threshold": 50,
+                "evaluated_applicants": 450,
+                "evaluated_pairs": 80,
+                "flagged_pair_count": 1,
+                "flagged_pair_share": 0.0125,
+                "max_score_gap": 64,
+                "mean_score_gap": 18.5,
+                "p95_score_gap": 42.0,
+                "worst_pairs": [
+                    {
+                        "row_position_a": 0,
+                        "row_position_b": 9,
+                        "score_a": 710,
+                        "score_b": 646,
+                        "score_gap": 64,
+                        "cosine_similarity": 0.94,
+                        "differing_attributes": ["gender"],
+                    }
+                ],
+                "verdict": "Individual fairness proxy found one pair to review.",
+            },
         }
     )
 
@@ -271,4 +335,6 @@ def test_fairness_report_shape_matches_documented_contract() -> None:
         "flagged_groups",
         "verdict",
         "groups",
+        "calibration_parity",
+        "individual_fairness_proxy",
     }

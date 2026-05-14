@@ -24,6 +24,12 @@ from backend.ml.explainability.shap_explainer import (
     load_persisted_shap_explainer,
 )
 from backend.ml.preprocessing.feature_registry import ALL_MODEL_FEATURES
+from backend.ml.registry.production_manifest import (
+    MANIFEST_REQUIRED_ARTIFACT_KEYS,
+    ProductionManifest,
+    compute_file_sha256,
+    load_production_manifest,
+)
 
 
 @dataclass(frozen=True)
@@ -63,18 +69,6 @@ RUNTIME_MODEL_CANDIDATES: Final[tuple[RuntimeModelCandidate, ...]] = (
 RUNTIME_MODEL_CANDIDATE_FILENAMES: Final[dict[str, str]] = {
     candidate.model_name: candidate.artifact_path.name for candidate in RUNTIME_MODEL_CANDIDATES
 }
-ARTIFACT_PATH_KEY_TO_MANIFEST_KEY: Final[dict[str, str]] = {
-    "preprocessor": "preprocessor",
-    "text_pca": "text_pca",
-    "shap_explainer": "shap_explainer",
-    "dice_explainer": "dice_explainer",
-    "metrics": "metrics",
-    "baseline_metrics": "baseline_metrics",
-    "fairness_report": "fairness",
-    "psi_report": "psi",
-    "global_importance": "global_importance",
-    "population_percentiles": "percentiles",
-}
 SCORING_CRITICAL_ARTIFACTS: Final[tuple[str, ...]] = (
     "runtime_model",
     "preprocessor",
@@ -103,6 +97,8 @@ class ArtifactLoadReport:
     source: str
     runtime_model_name: str | None
     runtime_model_type: str | None
+    manifest_version: str | None
+    model_version: str | None
     runtime_model_path: Path | None
     manifest_path: Path | None
     resolved_paths: dict[str, Path]
@@ -144,12 +140,17 @@ def load_runtime_artifact_bundle(
 ) -> LoadedArtifactBundle:
     """Load the current runtime artifact bundle for backend scoring."""
 
-    base_report, manifest_payload = _resolve_artifact_state(settings)
+    base_report, manifest = _resolve_artifact_state(settings)
     loaded_artifacts: set[str] = set()
     invalid_artifacts: set[str] = set()
     artifact_errors: dict[str, str] = {}
+    manifest_checksums = (
+        {key: entry.sha256 for key, entry in manifest.artifacts.items()}
+        if manifest is not None
+        else {}
+    )
 
-    if manifest_payload is not None and "production_manifest" in base_report.artifacts_present:
+    if manifest is not None and "production_manifest" in base_report.artifacts_present:
         loaded_artifacts.add("production_manifest")
 
     runtime_model_path = base_report.resolved_paths.get("runtime_model")
@@ -169,6 +170,7 @@ def load_runtime_artifact_bundle(
         path=runtime_model_path,
         loader=_load_joblib,
         validator=_validate_runtime_model,
+        expected_sha256=manifest_checksums.get("runtime_model"),
         loaded_artifacts=loaded_artifacts,
         invalid_artifacts=invalid_artifacts,
         artifact_errors=artifact_errors,
@@ -178,6 +180,7 @@ def load_runtime_artifact_bundle(
         path=preprocessor_path,
         loader=_load_joblib,
         validator=_validate_preprocessor,
+        expected_sha256=manifest_checksums.get("preprocessor"),
         loaded_artifacts=loaded_artifacts,
         invalid_artifacts=invalid_artifacts,
         artifact_errors=artifact_errors,
@@ -187,6 +190,7 @@ def load_runtime_artifact_bundle(
         path=text_pca_path,
         loader=_load_joblib,
         validator=_validate_text_pca,
+        expected_sha256=manifest_checksums.get("text_pca"),
         loaded_artifacts=loaded_artifacts,
         invalid_artifacts=invalid_artifacts,
         artifact_errors=artifact_errors,
@@ -199,6 +203,7 @@ def load_runtime_artifact_bundle(
             expected_feature_names=ALL_MODEL_FEATURES,
         ),
         validator=None,
+        expected_sha256=manifest_checksums.get("shap_explainer"),
         loaded_artifacts=loaded_artifacts,
         invalid_artifacts=invalid_artifacts,
         artifact_errors=artifact_errors,
@@ -211,6 +216,7 @@ def load_runtime_artifact_bundle(
             expected_feature_names=ALL_MODEL_FEATURES,
         ),
         validator=None,
+        expected_sha256=manifest_checksums.get("dice_explainer"),
         loaded_artifacts=loaded_artifacts,
         invalid_artifacts=invalid_artifacts,
         artifact_errors=artifact_errors,
@@ -220,6 +226,7 @@ def load_runtime_artifact_bundle(
         path=metrics_path,
         loader=_load_json,
         validator=_validate_json_mapping,
+        expected_sha256=manifest_checksums.get("metrics"),
         loaded_artifacts=loaded_artifacts,
         invalid_artifacts=invalid_artifacts,
         artifact_errors=artifact_errors,
@@ -229,6 +236,7 @@ def load_runtime_artifact_bundle(
         path=baseline_metrics_path,
         loader=_load_json,
         validator=_validate_json_sequence,
+        expected_sha256=manifest_checksums.get("baseline_metrics"),
         loaded_artifacts=loaded_artifacts,
         invalid_artifacts=invalid_artifacts,
         artifact_errors=artifact_errors,
@@ -238,6 +246,7 @@ def load_runtime_artifact_bundle(
         path=fairness_report_path,
         loader=_load_json,
         validator=_validate_json_mapping,
+        expected_sha256=manifest_checksums.get("fairness_report"),
         loaded_artifacts=loaded_artifacts,
         invalid_artifacts=invalid_artifacts,
         artifact_errors=artifact_errors,
@@ -247,6 +256,7 @@ def load_runtime_artifact_bundle(
         path=psi_report_path,
         loader=_load_json,
         validator=_validate_json_mapping,
+        expected_sha256=manifest_checksums.get("psi_report"),
         loaded_artifacts=loaded_artifacts,
         invalid_artifacts=invalid_artifacts,
         artifact_errors=artifact_errors,
@@ -260,6 +270,7 @@ def load_runtime_artifact_bundle(
             default_model_type=base_report.runtime_model_type,
         ),
         validator=_validate_json_mapping,
+        expected_sha256=manifest_checksums.get("global_importance"),
         loaded_artifacts=loaded_artifacts,
         invalid_artifacts=invalid_artifacts,
         artifact_errors=artifact_errors,
@@ -272,6 +283,7 @@ def load_runtime_artifact_bundle(
             runtime_model_name=base_report.runtime_model_name,
         ),
         validator=_validate_json_mapping,
+        expected_sha256=manifest_checksums.get("population_percentiles"),
         loaded_artifacts=loaded_artifacts,
         invalid_artifacts=invalid_artifacts,
         artifact_errors=artifact_errors,
@@ -299,7 +311,7 @@ def load_runtime_artifact_bundle(
         psi_report=psi_report,
         global_importance=global_importance,
         population_percentiles=population_percentiles,
-        manifest=manifest_payload,
+        manifest=None if manifest is None else dict(manifest.raw_payload),
     )
 
 
@@ -312,7 +324,7 @@ def get_runtime_artifact_bundle() -> LoadedArtifactBundle:
 
 def _resolve_artifact_state(
     settings: Settings | None,
-) -> tuple[ArtifactLoadReport, dict[str, Any] | None]:
+) -> tuple[ArtifactLoadReport, ProductionManifest | None]:
     resolved_settings = settings or get_settings()
 
     if resolved_settings.runtime_model_path is not None:
@@ -321,8 +333,10 @@ def _resolve_artifact_state(
             runtime_model_path
         )
         source = "runtime_model_path"
-        manifest_payload = None
+        manifest = None
         manifest_path = None
+        manifest_version = None
+        model_version = None
         resolved_paths = _build_fallback_paths(
             repo_root=resolved_settings.repo_root,
             runtime_model_path=runtime_model_path,
@@ -332,19 +346,39 @@ def _resolve_artifact_state(
     elif resolved_settings.model_manifest_path.is_file():
         source = "manifest"
         manifest_path = resolved_settings.model_manifest_path
-        manifest_payload = _load_manifest(manifest_path)
+        manifest = _load_manifest(manifest_path)
         resolved_paths = _build_manifest_paths(
             settings=resolved_settings,
-            manifest_payload=manifest_payload,
+            manifest=manifest,
         )
         runtime_model_path = resolved_paths.get("runtime_model")
-        runtime_model_name, runtime_model_type = _infer_runtime_model_metadata(
+        runtime_model_name = manifest.runtime_model_name
+        runtime_model_type = manifest.runtime_model_type
+        manifest_version = manifest.manifest_version
+        model_version = manifest.model_version
+        inferred_model_name, inferred_model_type = _infer_runtime_model_metadata(
             runtime_model_path
         )
+        if (
+            inferred_model_name is not None
+            and inferred_model_type != "unknown"
+            and (
+                inferred_model_name != runtime_model_name
+                or inferred_model_type != runtime_model_type
+            )
+        ):
+            raise ArtifactLoadError(
+                "production manifest runtime model metadata does not match the "
+                f"resolved artifact path: manifest declares {runtime_model_name!r} "
+                f"({runtime_model_type!r}) but path resolves to "
+                f"{inferred_model_name!r} ({inferred_model_type!r})."
+            )
     else:
         source = "candidate"
-        manifest_payload = None
+        manifest = None
         manifest_path = None
+        manifest_version = None
+        model_version = None
         candidate = _select_runtime_model_candidate(resolved_settings.repo_root)
         runtime_model_path = None if candidate is None else candidate.artifact_path
         runtime_model_name = None if candidate is None else candidate.model_name
@@ -368,6 +402,8 @@ def _resolve_artifact_state(
             source=source,
             runtime_model_name=runtime_model_name,
             runtime_model_type=runtime_model_type,
+            manifest_version=manifest_version,
+            model_version=model_version,
             runtime_model_path=runtime_model_path,
             manifest_path=manifest_path,
             resolved_paths=resolved_paths,
@@ -378,32 +414,19 @@ def _resolve_artifact_state(
             artifact_errors={},
             scoring_ready=False,
         ),
-        manifest_payload,
+        manifest,
     )
 
 
 def _build_manifest_paths(
     *,
     settings: Settings,
-    manifest_payload: dict[str, Any],
+    manifest: ProductionManifest,
 ) -> dict[str, Path]:
-    artifact_paths = _base_runtime_paths(settings.repo_root)
-    manifest_artifacts = manifest_payload.get("artifacts", {})
-    if not isinstance(manifest_artifacts, dict):
-        raise ArtifactLoadError("production manifest 'artifacts' field must be a JSON object.")
-
-    model_value = manifest_artifacts.get("model")
-    if model_value:
-        artifact_paths["runtime_model"] = resolve_repo_path(model_value, settings.repo_root)
-
-    for artifact_key, manifest_key in ARTIFACT_PATH_KEY_TO_MANIFEST_KEY.items():
-        manifest_value = manifest_artifacts.get(manifest_key)
-        if manifest_value:
-            artifact_paths[artifact_key] = resolve_repo_path(
-                manifest_value,
-                settings.repo_root,
-            )
-
+    artifact_paths = {
+        artifact_key: manifest.artifact_path(artifact_key, settings.repo_root)
+        for artifact_key in MANIFEST_REQUIRED_ARTIFACT_KEYS
+    }
     artifact_paths["production_manifest"] = settings.model_manifest_path
     return artifact_paths
 
@@ -430,11 +453,11 @@ def _base_runtime_paths(repo_root: Path) -> dict[str, Path]:
     }
 
 
-def _load_manifest(path: Path) -> dict[str, Any]:
-    payload = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(payload, dict):
-        raise ArtifactLoadError("production manifest payload must be a JSON object.")
-    return payload
+def _load_manifest(path: Path) -> ProductionManifest:
+    try:
+        return load_production_manifest(path)
+    except ValueError as exc:
+        raise ArtifactLoadError(str(exc)) from exc
 
 
 def _select_runtime_model_candidate(repo_root: Path) -> RuntimeModelCandidate | None:
@@ -524,6 +547,7 @@ def _load_validated_artifact(
     path: Path | None,
     loader: Callable[[Path], Any],
     validator: Callable[[Any], None] | None,
+    expected_sha256: str | None,
     loaded_artifacts: set[str],
     invalid_artifacts: set[str],
     artifact_errors: dict[str, str],
@@ -532,6 +556,13 @@ def _load_validated_artifact(
         return None
 
     try:
+        if expected_sha256 is not None:
+            actual_sha256 = compute_file_sha256(path)
+            if actual_sha256 != expected_sha256:
+                raise ValueError(
+                    "artifact checksum does not match the production manifest: "
+                    f"expected {expected_sha256}, got {actual_sha256}."
+                )
         payload = loader(path)
         if validator is not None:
             validator(payload)

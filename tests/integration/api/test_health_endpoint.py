@@ -19,6 +19,10 @@ def test_health_endpoint_reports_degraded_when_optional_artifacts_are_missing(
     assert payload.status == "degraded"
     assert payload.version == settings.api_version
     assert payload.model_loaded is True
+    assert payload.artifact_source == "runtime_model_path"
+    assert payload.manifest_backed is False
+    assert payload.manifest_version is None
+    assert payload.model_version is None
     assert "runtime_model" in payload.artifacts_loaded
     assert "preprocessor" in payload.artifacts_loaded
     assert "text_pca" in payload.artifacts_loaded
@@ -42,6 +46,8 @@ def test_health_endpoint_reports_invalid_optional_artifacts_separately(
     assert response.status_code == 200
     payload = HealthResponse.model_validate(response.json())
     assert payload.status == "degraded"
+    assert payload.artifact_source == "runtime_model_path"
+    assert payload.manifest_backed is False
     assert "dice_explainer" in payload.artifacts_loaded
     assert "shap_explainer" not in payload.artifacts_loaded
     assert "shap_explainer" in payload.invalid_artifacts

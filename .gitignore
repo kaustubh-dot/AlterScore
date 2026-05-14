@@ -70,6 +70,7 @@ models/reports/*
 !models/reports/psi_report.json
 models/registry/*
 !models/registry/.gitkeep
+!models/registry/production_manifest.json
 
 # Experiment outputs
 experiments/runs/*

@@ -18,6 +18,10 @@ class HealthResponse(SchemaModel):
     status: HealthStatus
     version: str = Field(..., min_length=1)
     model_loaded: bool
+    artifact_source: Literal["manifest", "runtime_model_path", "candidate"]
+    manifest_backed: bool
+    manifest_version: str | None = None
+    model_version: str | None = None
     artifacts_loaded: list[str]
     missing_artifacts: list[str]
     invalid_artifacts: list[str]
@@ -192,6 +196,49 @@ class FairnessGroupMetrics(SchemaModel):
     flag: FairnessFlag
 
 
+class FairnessCalibrationGroupMetrics(SchemaModel):
+    n_samples: int = Field(..., ge=0)
+    expected_calibration_error: float = Field(..., ge=0, le=1)
+    ece_gap_from_overall: float = Field(..., ge=0, le=1)
+    mean_predicted_probability: float = Field(..., ge=0, le=1)
+    observed_repayment_rate: float = Field(..., ge=0, le=1)
+    points: list[CalibrationPoint]
+
+
+class FairnessCalibrationParity(SchemaModel):
+    n_bins: int = Field(..., ge=1)
+    overall_expected_calibration_error: float = Field(..., ge=0, le=1)
+    max_ece_gap: float = Field(..., ge=0, le=1)
+    evaluated_group_count: int = Field(..., ge=0)
+    skipped_group_count: int = Field(..., ge=0)
+    groups: dict[str, dict[str, FairnessCalibrationGroupMetrics]]
+
+
+class IndividualFairnessPair(SchemaModel):
+    row_position_a: int = Field(..., ge=0)
+    row_position_b: int = Field(..., ge=0)
+    score_a: int = Field(..., ge=300, le=850)
+    score_b: int = Field(..., ge=300, le=850)
+    score_gap: int = Field(..., ge=0, le=550)
+    cosine_similarity: float = Field(..., ge=0, le=1)
+    differing_attributes: list[str]
+
+
+class IndividualFairnessProxy(SchemaModel):
+    similarity_feature_set: list[str]
+    similarity_threshold: float = Field(..., ge=0, le=1)
+    score_gap_threshold: int = Field(..., ge=0)
+    evaluated_applicants: int = Field(..., ge=0)
+    evaluated_pairs: int = Field(..., ge=0)
+    flagged_pair_count: int = Field(..., ge=0)
+    flagged_pair_share: float = Field(..., ge=0, le=1)
+    max_score_gap: int = Field(..., ge=0, le=550)
+    mean_score_gap: float = Field(..., ge=0, le=550)
+    p95_score_gap: float = Field(..., ge=0, le=550)
+    worst_pairs: list[IndividualFairnessPair]
+    verdict: str = Field(..., min_length=1)
+
+
 class FairnessReport(SchemaModel):
     overall_auc: float = Field(..., ge=0, le=1)
     overall_approval_rate: float = Field(..., ge=0, le=1)
@@ -200,6 +247,8 @@ class FairnessReport(SchemaModel):
     flagged_groups: list[str]
     verdict: str = Field(..., min_length=1)
     groups: dict[str, dict[str, FairnessGroupMetrics]]
+    calibration_parity: FairnessCalibrationParity | None = None
+    individual_fairness_proxy: IndividualFairnessProxy | None = None
 
 
 __all__ = [
@@ -213,11 +262,15 @@ __all__ = [
     "DriftFeatureItem",
     "DriftReport",
     "DriftThresholds",
+    "FairnessCalibrationGroupMetrics",
+    "FairnessCalibrationParity",
     "FairnessGroupMetrics",
     "FairnessReport",
     "GlobalImportanceItem",
     "GlobalImportanceResponse",
     "HealthResponse",
+    "IndividualFairnessPair",
+    "IndividualFairnessProxy",
     "ModelStatsItem",
     "ModelStatsResponse",
     "PrecisionRecallPoint",

@@ -295,6 +295,7 @@ def train_baselines(
         prepared.test.protected,
         {"logistic_regression": logistic_test_probs},
         model_stats=model_stats,
+        feature_frame=prepared.test.X,
     )
     evaluation_details = {
         "validation_months_9_10": {
