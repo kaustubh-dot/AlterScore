@@ -7,7 +7,7 @@
 - Prefer deterministic small smoke tests for CI and heavier full-pipeline tests for local milestone gates.
 - Every dashboard panel needs a backend contract test before frontend work is considered complete.
 - ML acceptance is based on temporal test split, not random split.
-- Tests that need temporary files should use the workspace-local `tmp_path` fixture override in `tests/conftest.py` so they do not depend on machine-specific permissions under the global Windows temp path.
+- Tests that need temporary files should use the workspace-local `tmp_path` fixture override in `tests/conftest.py`, which now writes under `runtime/pytest-workspace`, and pytest cache output is now redirected to `runtime/pytest-cache` so local runs do not depend on the global Windows temp path, the unwritable local `.tmp` path, or the unwritable repo-root `.pytest_cache` path.
 
 ## Test Layout
 
@@ -32,6 +32,7 @@ tests/
       test_health_endpoint.py
       test_score_endpoint.py
       test_analytics_endpoints.py
+      test_checked_in_runtime_bundle_smoke.py
     pipeline/
       test_data_generation_validation.py
       test_dataset_artifacts_and_baselines.py
@@ -165,7 +166,7 @@ assert metrics["ensemble"]["auc_roc"] > metrics["baselines"]["simulated_loan_off
 
 ### DICE
 
-- Generates 1-3 actions for eligible low/mid applicants.
+- The checked-in `dice_explainer.pkl` artifact generates 1-3 actions for eligible low/mid applicants.
 - Does not suggest protected attributes.
 - Does not suggest immutable categorical fields.
 - Includes plain-language action text.
@@ -180,7 +181,7 @@ assert metrics["ensemble"]["auc_roc"] > metrics["baselines"]["simulated_loan_off
 ### Health
 
 - `GET /api/health` returns 200.
-- Response includes `status`, `version`, `model_loaded`, `artifacts_loaded`, and `missing_artifacts`.
+- Response includes `status`, `version`, `model_loaded`, `artifacts_loaded`, `missing_artifacts`, and `invalid_artifacts`.
 
 ### Score
 
@@ -189,8 +190,10 @@ assert metrics["ensemble"]["auc_roc"] > metrics["baselines"]["simulated_loan_off
 - `credit_score` is 300-850.
 - `repayment_probability` is 0-1.
 - `risk_band` is one of documented bands.
-- `explanation` field is present even when the current stub returns an empty list before SHAP artifacts exist.
-- `counterfactual_actions` field is present even when the current stub returns an empty list before DICE artifacts exist.
+- Checked-in bundles with a valid SHAP artifact return non-empty per-user `explanation` items.
+- Bundles without a SHAP artifact still preserve the `explanation` field as a list, even if it is empty.
+- Checked-in bundles with a valid `dice_explainer.pkl` artifact return non-empty persisted `counterfactual_actions`.
+- Intentionally artifact-less bundles may still use the bounded runtime contingency path without breaking the response contract.
 - Protected attributes are absent from response.
 
 ### Artifact Loading Smoke Test
@@ -198,6 +201,7 @@ assert metrics["ensemble"]["auc_roc"] > metrics["baselines"]["simulated_loan_off
 - Runtime artifact loader supports a manifest-backed bundle when available.
 - Runtime artifact loader supports a direct runtime-model fallback for the current local scoring stub.
 - Missing scoring-critical artifacts fail clearly.
+- Present-but-invalid optional artifacts are reported separately from missing optional artifacts.
 - A loaded runtime bundle can score the valid request fixture and return schema-valid JSON.
 
 ### Analytics
@@ -215,6 +219,7 @@ Each analytics endpoint must:
 - `test_score_endpoint.py` verifies the schema-valid happy path and structured `503` behavior when scoring-critical artifacts are missing.
 - `test_score_endpoint.py` also verifies append-only request logging for success, sanitized `500`, and artifacts-not-ready responses.
 - `test_analytics_endpoints.py` now verifies `/api/model-stats`, `/api/baseline-comparison`, `/api/fairness-report`, `/api/drift-report`, `/api/global-importance`, `/api/score-distribution`, `/api/roc-data`, `/api/pr-curve`, `/api/calibration-curve`, and `/api/confusion-matrix` for both report-backed success responses and structured missing-artifact behavior.
+- `test_checked_in_runtime_bundle_smoke.py` now verifies the real checked-in local bundle directly, including the restored SHAP artifact load path, the validated `dice_explainer.pkl` load path, the saved `global_importance.json` payload, non-empty score-response explainability fields, the runtime log path behavior, and health behavior for missing versus invalid optional artifacts.
 
 ## Frontend Tests
 

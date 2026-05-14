@@ -18,7 +18,7 @@ def get_health(request: Request) -> HealthResponse:
     artifact_bundle = request.app.state.artifact_bundle
     report = artifact_bundle.report
 
-    if report.scoring_ready and not report.missing_artifacts:
+    if report.scoring_ready and not report.missing_artifacts and not report.invalid_artifacts:
         status = "ok"
     elif report.scoring_ready:
         status = "degraded"
@@ -31,6 +31,7 @@ def get_health(request: Request) -> HealthResponse:
         model_loaded=artifact_bundle.model is not None,
         artifacts_loaded=list(report.artifacts_loaded),
         missing_artifacts=list(report.missing_artifacts),
+        invalid_artifacts=list(report.invalid_artifacts),
         timestamp=datetime.now(timezone.utc),
     )
 

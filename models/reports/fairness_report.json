@@ -1,0 +1,158 @@
+{
+  "overall_auc": 0.8098,
+  "overall_approval_rate": 0.6767,
+  "overall_default_rate": 0.2783,
+  "worst_auc_gap": 0.0379,
+  "flagged_groups": [],
+  "verdict": "Model shows acceptable fairness across all tested demographic groups. No subgroup shows AUC deviation >4% from the overall model.",
+  "groups": {
+    "gender": {
+      "female": {
+        "n_samples": 867,
+        "auc": 0.8107,
+        "auc_gap_from_overall": 0.0009,
+        "approval_rate": 0.6528,
+        "fpr": 0.3068,
+        "fnr": 0.2062,
+        "mean_score": 601.7,
+        "flag": "green"
+      },
+      "male": {
+        "n_samples": 876,
+        "auc": 0.8087,
+        "auc_gap_from_overall": 0.0011,
+        "approval_rate": 0.7043,
+        "fpr": 0.3833,
+        "fnr": 0.1834,
+        "mean_score": 610.3,
+        "flag": "green"
+      },
+      "non_binary": {
+        "n_samples": 57,
+        "auc": 0.789,
+        "auc_gap_from_overall": 0.0208,
+        "approval_rate": 0.614,
+        "fpr": 0.3478,
+        "fnr": 0.2059,
+        "mean_score": 569.4,
+        "flag": "green"
+      }
+    },
+    "age_group": {
+      "18-25": {
+        "n_samples": 451,
+        "auc": 0.8111,
+        "auc_gap_from_overall": 0.0013,
+        "approval_rate": 0.6984,
+        "fpr": 0.3455,
+        "fnr": 0.1877,
+        "mean_score": 610.4,
+        "flag": "green"
+      },
+      "26-35": {
+        "n_samples": 694,
+        "auc": 0.7945,
+        "auc_gap_from_overall": 0.0153,
+        "approval_rate": 0.6571,
+        "fpr": 0.3544,
+        "fnr": 0.2152,
+        "mean_score": 599.5,
+        "flag": "green"
+      },
+      "36-50": {
+        "n_samples": 458,
+        "auc": 0.8291,
+        "auc_gap_from_overall": 0.0193,
+        "approval_rate": 0.6921,
+        "fpr": 0.3409,
+        "fnr": 0.1656,
+        "mean_score": 610.4,
+        "flag": "green"
+      },
+      "50+": {
+        "n_samples": 197,
+        "auc": 0.8153,
+        "auc_gap_from_overall": 0.0054,
+        "approval_rate": 0.6599,
+        "fpr": 0.3019,
+        "fnr": 0.2083,
+        "mean_score": 598.0,
+        "flag": "green"
+      }
+    },
+    "region": {
+      "rural": {
+        "n_samples": 620,
+        "auc": 0.8114,
+        "auc_gap_from_overall": 0.0016,
+        "approval_rate": 0.6887,
+        "fpr": 0.3046,
+        "fnr": 0.1876,
+        "mean_score": 608.1,
+        "flag": "green"
+      },
+      "semi-urban": {
+        "n_samples": 658,
+        "auc": 0.8051,
+        "auc_gap_from_overall": 0.0047,
+        "approval_rate": 0.6641,
+        "fpr": 0.3594,
+        "fnr": 0.2103,
+        "mean_score": 603.9,
+        "flag": "green"
+      },
+      "urban": {
+        "n_samples": 522,
+        "auc": 0.8126,
+        "auc_gap_from_overall": 0.0028,
+        "approval_rate": 0.6782,
+        "fpr": 0.3608,
+        "fnr": 0.1841,
+        "mean_score": 602.1,
+        "flag": "green"
+      }
+    },
+    "education_level": {
+      "graduate": {
+        "n_samples": 352,
+        "auc": 0.8477,
+        "auc_gap_from_overall": 0.0379,
+        "approval_rate": 0.7131,
+        "fpr": 0.3571,
+        "fnr": 0.1496,
+        "mean_score": 608.0,
+        "flag": "green"
+      },
+      "none": {
+        "n_samples": 172,
+        "auc": 0.8327,
+        "auc_gap_from_overall": 0.0228,
+        "approval_rate": 0.657,
+        "fpr": 0.2564,
+        "fnr": 0.2256,
+        "mean_score": 605.4,
+        "flag": "green"
+      },
+      "primary": {
+        "n_samples": 438,
+        "auc": 0.7965,
+        "auc_gap_from_overall": 0.0134,
+        "approval_rate": 0.6667,
+        "fpr": 0.3252,
+        "fnr": 0.2,
+        "mean_score": 605.8,
+        "flag": "green"
+      },
+      "secondary": {
+        "n_samples": 838,
+        "auc": 0.7995,
+        "auc_gap_from_overall": 0.0103,
+        "approval_rate": 0.6706,
+        "fpr": 0.361,
+        "fnr": 0.2044,
+        "mean_score": 602.9,
+        "flag": "green"
+      }
+    }
+  }
+}

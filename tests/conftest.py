@@ -10,7 +10,7 @@ import pytest
 
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-TEST_TMP_ROOT = REPO_ROOT / ".tmp" / "pytest-workspace"
+TEST_TMP_ROOT = REPO_ROOT / "runtime" / "pytest-workspace"
 
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))

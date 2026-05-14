@@ -30,6 +30,7 @@
 
 ## Exact Near-Term Implementation Steps
 
+0. [x] Complete the repository integrity remediation pass: reconcile docs, repair the checked-in SHAP artifact/module path, regenerate or adapt the checked-in global-importance artifact, and verify the default runtime request-log path.
 1. [x] Create `.gitignore`, environment examples, and backend dependency file.
 2. [x] Implement backend package skeleton with settings, path helpers, and artifact path constants.
 3. [x] Implement canonical 35-input feature registry in one backend module, including numeric, categorical, protected, temporal, actionable, and immutable feature lists.
@@ -61,8 +62,8 @@
 29. [ ] Train the stacking ensemble from the approved base-model set without crossing train/validation/test boundaries.
 30. [ ] Calibrate the ensemble on months 9-10 only and freeze the production-candidate scoring artifact.
 31. [ ] Generate the consolidated evaluation bundle, including metrics, curves, confusion matrix data, and score distribution data.
-32. [ ] Generate SHAP explainability artifacts and dashboard-ready global-importance outputs.
-33. [ ] Generate DICE counterfactual artifacts with immutable and protected-feature guards.
+32. [x] Generate SHAP explainability artifacts and dashboard-ready global-importance outputs.
+33. [x] Generate the checked-in persisted counterfactual artifact with immutable and protected-feature guards.
 34. [x] Generate fairness and PSI drift reports from held-out predictions without using protected fields as model inputs.
 35. [ ] Create and validate the production manifest so FastAPI can load one complete serving bundle without fallback mode.
 
@@ -92,11 +93,12 @@ This section expands the next roadmap stretch into smaller delivery checkpoints 
 
 ## Checkpoint Sequencing Notes
 
+- The repository-integrity checkpoint is now complete: the checked-in SHAP explainer artifact deserializes from restored repo source, the checked-in `dice_explainer.pkl` artifact now validates and serves score actions, the checked-in global-importance artifact matches the active API contract, the default request-log path moved to writable repo-root `runtime/logs/`, and health now distinguishes loaded, missing, and invalid optional artifacts.
 - C19 and C20 are complete, and the offline evaluation bundle foundation for score distribution plus ROC/PR/calibration/confusion payloads now exists for the current logistic/classical artifact set.
 - C24 through C26 are now complete for the current saved evaluation bundle, and the offline fairness plus PSI artifact foundation is also complete for the current logistic/classical bundle.
 - C23 is now complete for the current logistic/classical bundle, so the report-backed governance analytics route surface is in place for fairness, drift, and global importance.
 - C27 through C31 are the production-model track and should stay offline-only; none of those jobs should be pulled into FastAPI request handlers.
-- The next meaningful backend/product slice is the remaining C32/C33 explainability path for `/api/score`: persisted `shap_explainer.pkl`, per-user top factors, and DICE-backed actions. Fairness, PSI, and the dashboard-ready global-importance report already exist for the current logistic/classical artifact bundle and should be reused for the later production candidate.
+- The next meaningful backend/product slice after the integrity remediation is now C35 manifest handoff. Per-user SHAP factors, persisted counterfactual actions, fairness, PSI, and the current-contract global-importance report already exist for the current logistic/classical artifact bundle.
 - C35 should happen only after the serving bundle can load without relying on the temporary direct-model fallback path.
 
 ## Files To Create First
@@ -216,8 +218,8 @@ Docs and contracts
 Current progress toward M4:
 
 - Fairness and PSI report artifacts are already generated for the current logistic/classical artifact bundle.
-- The dashboard-ready global-importance report artifact is also generated for the current logistic/classical artifact bundle.
-- Persisted `shap_explainer.pkl`, SHAP summary output, and DICE artifacts remain pending before the full governance backend slice is complete.
+- A global-importance artifact exists for the current logistic/classical artifact bundle and the checked-in saved payload now matches the active API contract.
+- The checked-in `shap_explainer.pkl` and `dice_explainer.pkl` files now both validate from repository source, and `/api/score` now emits persisted per-user SHAP factors plus persisted counterfactual actions from those artifacts. SHAP summary output and future production-model explainability refreshes still remain pending before the full governance backend slice is complete.
 
 ### M5 - API Green
 
@@ -227,8 +229,8 @@ Current progress toward M4:
 
 Current progress toward M5:
 
-- The backend now serves all 12 documented route stubs, including the fairness, drift, and global-importance analytics routes backed by saved reports.
-- The remaining API gap is the richer `/api/score` explainability and counterfactual behavior once SHAP and DICE artifacts exist.
+- The backend now serves all 12 documented route stubs against the checked-in local bundle, `/api/score` now emits real per-user SHAP explanations plus persisted counterfactual actions, and `/api/health` reports `ok` for the checked-in bundle while still degrading copied or intentionally broken bundles with invalid optional artifacts.
+- The remaining API gap is promoting one manifest-backed serving bundle so startup can stop depending on candidate selection or direct-model fallback behavior.
 
 ### M6 - Frontend Demo Green
 

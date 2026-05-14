@@ -20,6 +20,7 @@ class HealthResponse(SchemaModel):
     model_loaded: bool
     artifacts_loaded: list[str]
     missing_artifacts: list[str]
+    invalid_artifacts: list[str]
     timestamp: datetime
 
 

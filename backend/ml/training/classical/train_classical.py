@@ -14,6 +14,11 @@ import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 
 from backend.app.core.paths import MODEL_ARTIFACTS_DIR, MODEL_REPORTS_DIR, RAW_DATA_DIR
+from backend.ml.explainability.dice_explainer import (
+    DEFAULT_DICE_EXPLAINER_PATH,
+    build_default_persisted_dice_explainer,
+    save_persisted_dice_explainer,
+)
 from backend.ml.data_generation.validators import MINIMUM_TEST_ROWS, validate_synthetic_dataset
 from backend.ml.evaluation.drift import (
     DEFAULT_PSI_REPORT_PATH,
@@ -90,6 +95,7 @@ class ClassicalTrainingArtifacts:
     psi_report_path: Path | None
     fairness_report_path: Path | None
     global_importance_path: Path | None
+    dice_explainer_path: Path | None
     model_stats: list[dict[str, Any]]
     baseline_metrics: list[dict[str, Any]]
     validation_probabilities: dict[str, np.ndarray]
@@ -114,6 +120,7 @@ def train_classical_models(
     psi_report_path: str | Path | None = DEFAULT_PSI_REPORT_PATH,
     fairness_report_path: str | Path | None = DEFAULT_FAIRNESS_REPORT_PATH,
     global_importance_path: str | Path | None = DEFAULT_GLOBAL_IMPORTANCE_PATH,
+    dice_explainer_path: str | Path | None = DEFAULT_DICE_EXPLAINER_PATH,
     random_state: int = DEFAULT_RANDOM_STATE,
 ) -> ClassicalTrainingArtifacts:
     """Train the bounded classical model suite on the documented temporal split."""
@@ -362,6 +369,11 @@ def train_classical_models(
         save_fairness_report(fairness_report, fairness_report_path)
     if global_importance_path is not None:
         save_global_importance_report(global_importance_report, global_importance_path)
+    if dice_explainer_path is not None:
+        save_persisted_dice_explainer(
+            build_default_persisted_dice_explainer(model_name="logistic_regression"),
+            dice_explainer_path,
+        )
 
     return ClassicalTrainingArtifacts(
         run_id=run_id,
@@ -374,6 +386,7 @@ def train_classical_models(
         psi_report_path=_optional_path(psi_report_path),
         fairness_report_path=_optional_path(fairness_report_path),
         global_importance_path=_optional_path(global_importance_path),
+        dice_explainer_path=_optional_path(dice_explainer_path),
         model_stats=model_stats,
         baseline_metrics=baseline_metrics,
         validation_probabilities=validation_probabilities,
@@ -626,6 +639,7 @@ __all__ = [
     "CLASSICAL_MODEL_ORDER",
     "CLASSICAL_MODEL_TYPE",
     "DEFAULT_DATASET_PATH",
+    "DEFAULT_DICE_EXPLAINER_PATH",
     "DEFAULT_FAIRNESS_REPORT_PATH",
     "DEFAULT_GLOBAL_IMPORTANCE_PATH",
     "DEFAULT_LGBM_ARTIFACT_PATH",

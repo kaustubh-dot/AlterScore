@@ -64,7 +64,7 @@ def test_load_settings_supports_environment_overrides(tmp_path: Path) -> None:
             "ALTERSCORE_REPO_ROOT": str(tmp_path),
             "ALTERSCORE_MODEL_MANIFEST": "models/registry/test_manifest.json",
             "ALTERSCORE_RUNTIME_MODEL_PATH": "models/artifacts/logistic_best.pkl",
-            "ALTERSCORE_REQUEST_LOG_PATH": "backend/runtime/logs/test_requests.jsonl",
+            "ALTERSCORE_REQUEST_LOG_PATH": "runtime/logs/test_requests.jsonl",
             "ALTERSCORE_LOG_LEVEL": "debug",
             "ALTERSCORE_CORS_ORIGINS": "http://localhost:5173, http://localhost:3000",
         }
@@ -80,7 +80,7 @@ def test_load_settings_supports_environment_overrides(tmp_path: Path) -> None:
         tmp_path / "models" / "artifacts" / "logistic_best.pkl"
     ).resolve()
     assert settings.request_log_path == (
-        tmp_path / "backend" / "runtime" / "logs" / "test_requests.jsonl"
+        tmp_path / "runtime" / "logs" / "test_requests.jsonl"
     ).resolve()
     assert settings.log_level == "DEBUG"
     assert settings.cors_origins == (

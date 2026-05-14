@@ -184,6 +184,30 @@ def save_global_importance_report(
     output_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
 
 
+def normalize_global_importance_payload(
+    payload: Any,
+    *,
+    default_model_name: str | None = None,
+    default_model_type: str | None = None,
+) -> Any:
+    """Normalize legacy global-importance payloads to the active API shape."""
+
+    if isinstance(payload, list):
+        return {
+            "model_name": default_model_name or "unknown",
+            "model_type": default_model_type or "unknown",
+            "items": payload,
+        }
+
+    if isinstance(payload, dict) and isinstance(payload.get("items"), list):
+        normalized_payload = dict(payload)
+        normalized_payload.setdefault("model_name", default_model_name or "unknown")
+        normalized_payload.setdefault("model_type", default_model_type or "unknown")
+        return normalized_payload
+
+    return payload
+
+
 def _select_importance_source_model(
     candidate_models: dict[str, Any],
     *,
@@ -330,5 +354,6 @@ __all__ = [
     "FEATURE_CATEGORY_LOOKUP",
     "FEATURE_DISPLAY_NAMES",
     "build_global_importance_report_for_candidate_models",
+    "normalize_global_importance_payload",
     "save_global_importance_report",
 ]

@@ -18,6 +18,7 @@ def build_runtime_settings(tmp_path) -> Settings:
         fairness_report_path=model_root / "reports" / "fairness_report.json",
         psi_report_path=model_root / "reports" / "psi_report.json",
         global_importance_path=model_root / "reports" / "global_importance.json",
+        dice_explainer_path=model_root / "explainers" / "dice_explainer.pkl",
     )
     return load_settings(
         {

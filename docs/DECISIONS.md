@@ -137,3 +137,23 @@ Record every architecture-level decision here. Small implementation choices can 
 - Decision: Implement runtime artifact loading in two layers: prefer the production manifest bundle when it exists, but allow a temporary direct runtime model path override for local scoring stubs until the full production artifact set is available.
 - Consequences: Backend startup and health logic can be built now without blocking on the future ensemble manifest. The scoring stub remains model-agnostic, but temporary fallback behavior must be documented so it is not mistaken for the final production serving contract.
 - Follow-ups: Add FastAPI startup caching and `/api/health` plus `/api/score` route stubs next, then retire the fallback path once the calibrated production bundle is promoted.
+
+## DEC-0013 - Use A Bounded Counterfactual Fallback Until The Persisted DICE Artifact Exists
+
+- Status: superseded
+- Date: 2026-05-14
+- Owner: Codex
+- Context: The checked-in bundle now has a valid persisted SHAP explainer, but `models/explainers/dice_explainer.pkl` is still missing. Leaving `/api/score` counterfactual fields empty overstates implementation progress and weakens runtime smoke coverage, while blocking all actions on full DICE integration would stall repository-integrity remediation.
+- Decision: Keep DICE-ML as the target production counterfactual interface, but use a bounded runtime fallback in the current score service that simulates documented actionable feature adjustments against the loaded model and returns only improving or probability-strengthening suggestions.
+- Consequences: The checked-in bundle now returns non-empty score-response action fields without pretending a DICE artifact exists. Current fallback actions must stay clearly documented as interim behavior, and they do not satisfy the final DICE acceptance gate.
+- Follow-ups: Completed as an interim mitigation and superseded by DEC-0014 once the checked-in bundle gained a validated persisted counterfactual artifact.
+
+## DEC-0014 - Track A Curated Local Runtime Bundle And Persist The Counterfactual Artifact Contract
+
+- Status: accepted
+- Date: 2026-05-14
+- Owner: Codex
+- Context: The repository needed a portable runtime bundle that could be validated directly in smoke tests, but the default local environment did not include a production manifest or a preexisting persisted counterfactual artifact. Keeping the runtime bundle ignored in Git hid regressions, and overclaiming a third-party `dice_ml` object would have been inaccurate for the current logistic stub bundle.
+- Decision: Intentionally source-control a small curated local runtime bundle under `models/` for backend portability and smoke coverage, and implement `models/explainers/dice_explainer.pkl` as a validated persisted actionable-counterfactual contract loaded from repository source rather than as an opaque third-party object.
+- Consequences: Fresh clones can now validate the real local serving assets directly, `/api/health` can report `ok` for the checked-in bundle, and `/api/score` no longer depends on a non-persisted counterfactual fallback in the default path. Heavy future training outputs still remain ignored by default, and a richer production-model-specific counterfactual artifact can supersede this contract later if needed.
+- Follow-ups: Freeze the first manifest-backed serving bundle, then decide whether future production bundles should retain this lightweight persisted contract or migrate to a fuller `dice_ml`-backed artifact.

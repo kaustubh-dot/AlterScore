@@ -64,7 +64,7 @@ Before any AI agent edits the repository, it must read and follow `docs/AI_WORKF
 - Ensemble training: stacking classifier with logistic meta-learner and isotonic calibration.
 - Metrics computation and artifact export.
 - SHAP explainer creation and global importance report generation.
-- DICE-ML counterfactual explainer creation with immutable/protected feature exclusions.
+- DICE-style counterfactual explainer creation with immutable/protected feature exclusions; the checked-in local bundle currently persists a lightweight validated counterfactual artifact at `models/explainers/dice_explainer.pkl`.
 - Fairness audit and PSI drift report generation.
 
 ### Frontend Components
@@ -91,7 +91,7 @@ Before any AI agent edits the repository, it must read and follow `docs/AI_WORKF
 - Local development must run backend and frontend independently.
 - Backend must load the production artifact bundle at startup and fail clearly if required artifacts are missing.
 - Frontend must use a configurable API base URL.
-- Model artifacts and generated data are not source-controlled by default.
+- Heavy model artifacts and generated data are not source-controlled by default; the curated small local runtime bundle checked into `models/` is the approved portability exception for backend smoke coverage.
 - Deployment must include model artifact promotion, health checks, structured logs, and rollback guidance.
 - Cloud deployment can come after local reproducibility and artifact stability.
 
@@ -99,7 +99,7 @@ Before any AI agent edits the repository, it must read and follow `docs/AI_WORKF
 
 - Global feature importance: SHAP mean absolute values, top features, and summary plot.
 - Per-user explanation: top 6 SHAP factors with direction, value, display name, and contribution.
-- Counterfactual actions: 2-3 DICE-generated suggestions limited to actionable mutable features.
+- Counterfactual actions: the checked-in local runtime bundle now uses a persisted `dice_explainer.pkl` artifact that emits 2-3 bounded actionable suggestions for the current logistic model, while future production bundles may decide whether to keep this lightweight contract or migrate to a fuller `dice_ml` object.
 - Plain-language tip generation mapped from negative or weak factors.
 
 ### Fairness Modules
@@ -244,7 +244,6 @@ AlterScore/
       fairness/               Fairness audit jobs
       drift/                  PSI jobs
       registry/               Artifact metadata helpers
-    runtime/logs/             Local append-only runtime logs
   data/
     raw/                      Raw or generated source data
     interim/                  Intermediate transformation outputs
@@ -281,6 +280,10 @@ AlterScore/
     docker/                   Docker assets
     cloud/                    Cloud deployment notes/config
     monitoring/               Monitoring configuration
+  runtime/
+    logs/                     Local append-only runtime logs
+    pytest-cache/             Workspace-local pytest cache output
+    pytest-workspace/         Workspace-local temp root for tests
   tests/
     unit/backend/             Backend unit tests
     unit/ml/                  ML unit tests
@@ -330,7 +333,7 @@ AlterScore/
 - Do not place inference-only code inside notebooks.
 - Do not import frontend question scoring as the backend source of truth; backend parsing must independently enforce scoring logic.
 - Do not read protected attributes from runtime score requests for model inference.
-- Do not store generated datasets or trained binary artifacts in Git unless explicitly approved.
+- Do not store generated datasets or trained binary artifacts in Git unless explicitly approved. The curated small local runtime bundle in `models/` is the current approved exception.
 - Keep reports as JSON for backend consumption and Markdown for human context.
 - Keep long-lived architecture knowledge in `docs/`, not scattered across chat history.
 

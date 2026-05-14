@@ -13,6 +13,7 @@ if str(REPO_ROOT) not in sys.path:
 from backend.ml.training.classical.baselines import (
     DEFAULT_BASELINE_METRICS_PATH,
     DEFAULT_DATASET_PATH,
+    DEFAULT_DICE_EXPLAINER_PATH,
     DEFAULT_FAIRNESS_REPORT_PATH,
     DEFAULT_GLOBAL_IMPORTANCE_PATH,
     DEFAULT_LOGISTIC_ARTIFACT_PATH,
@@ -79,6 +80,11 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         default=DEFAULT_GLOBAL_IMPORTANCE_PATH,
     )
+    parser.add_argument(
+        "--dice-explainer-path",
+        type=Path,
+        default=DEFAULT_DICE_EXPLAINER_PATH,
+    )
     parser.add_argument("--random-state", type=int, default=42)
     return parser
 
@@ -98,6 +104,7 @@ def main(argv: list[str] | None = None) -> int:
         psi_report_path=args.psi_report_path,
         fairness_report_path=args.fairness_report_path,
         global_importance_path=args.global_importance_path,
+        dice_explainer_path=args.dice_explainer_path,
         random_state=args.random_state,
     )
     print(
@@ -121,6 +128,9 @@ def main(argv: list[str] | None = None) -> int:
                 "global_importance_path": None
                 if artifacts.global_importance_path is None
                 else str(artifacts.global_importance_path),
+                "dice_explainer_path": None
+                if artifacts.dice_explainer_path is None
+                else str(artifacts.dice_explainer_path),
                 "logistic_test_auc": next(
                     metric["auc_roc"]
                     for metric in artifacts.model_stats

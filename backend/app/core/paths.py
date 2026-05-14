@@ -51,9 +51,9 @@ MODEL_EXPLAINERS_DIR: Final[Path] = MODELS_DIR / "explainers"
 MODEL_REPORTS_DIR: Final[Path] = MODELS_DIR / "reports"
 MODEL_REGISTRY_DIR: Final[Path] = MODELS_DIR / "registry"
 
-RUNTIME_DIR: Final[Path] = BACKEND_DIR / "runtime"
+RUNTIME_DIR: Final[Path] = REPO_ROOT / "runtime"
 RUNTIME_LOG_DIR: Final[Path] = RUNTIME_DIR / "logs"
-REQUEST_LOG_RELATIVE_PATH: Final[Path] = Path("backend/runtime/logs/requests.jsonl")
+REQUEST_LOG_RELATIVE_PATH: Final[Path] = Path("runtime/logs/requests.jsonl")
 REQUEST_LOG_PATH: Final[Path] = REPO_ROOT / REQUEST_LOG_RELATIVE_PATH
 
 PRODUCTION_MANIFEST_PATH: Final[Path] = (
