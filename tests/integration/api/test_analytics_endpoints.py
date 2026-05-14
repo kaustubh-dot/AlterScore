@@ -1,3 +1,5 @@
+import json
+
 from fastapi.testclient import TestClient
 
 from backend.app.main import create_app
@@ -70,9 +72,10 @@ def test_governance_report_endpoints_return_saved_report_payloads(tmp_path) -> N
     importance = GlobalImportanceResponse.model_validate(
         global_importance_response.json()
     )
-    assert len(importance.root) == 35
-    assert importance.root[0].rank == 1
-    assert importance.root[0].mean_abs_shap >= importance.root[-1].mean_abs_shap
+    assert importance.model_name == "logistic_regression"
+    assert len(importance.items) == 35
+    assert importance.items[0].rank == 1
+    assert importance.items[0].mean_abs_shap >= importance.items[-1].mean_abs_shap
 
 
 def test_score_distribution_endpoint_returns_saved_histogram_payload(tmp_path) -> None:
@@ -223,3 +226,24 @@ def test_curve_and_confusion_endpoints_return_structured_503_when_metrics_are_mi
         parsed = ErrorResponse.model_validate(response.json())
         assert parsed.error.code == "ARTIFACTS_NOT_READY"
         assert parsed.error.details["missing_artifacts"] == ["metrics"]
+
+
+def test_curve_endpoint_returns_structured_500_when_saved_payload_is_invalid(
+    tmp_path,
+) -> None:
+    settings = build_runtime_settings(tmp_path)
+    metrics_path = tmp_path / "models" / "reports" / "metrics.json"
+    metrics_payload = json.loads(metrics_path.read_text(encoding="utf-8"))
+    del metrics_payload["evaluation_details"]["test_months_11_12"]["logistic_regression"][
+        "model_type"
+    ]
+    metrics_path.write_text(json.dumps(metrics_payload, indent=2), encoding="utf-8")
+    app = create_app(settings)
+
+    with TestClient(app) as client:
+        response = client.get("/api/roc-data")
+
+    assert response.status_code == 500
+    parsed = ErrorResponse.model_validate(response.json())
+    assert parsed.error.code == "ANALYTICS_PAYLOAD_INVALID"
+    assert parsed.error.details["artifact"] == "metrics"

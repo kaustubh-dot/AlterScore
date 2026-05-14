@@ -34,13 +34,18 @@ def compute_binary_classification_metrics(
     model_name: str,
     model_type: str,
     split: str,
+    threshold: float | None = None,
 ) -> dict[str, Any]:
     """Compute the core ranking and calibration metrics for a binary classifier."""
 
     y_true_array = np.asarray(y_true, dtype=int)
     y_prob_array = np.asarray(y_prob, dtype=float)
-    threshold = optimal_threshold(y_true_array, y_prob_array)
-    y_pred_array = (y_prob_array >= threshold).astype(int)
+    resolved_threshold = _resolve_threshold(
+        y_true_array,
+        y_prob_array,
+        threshold=threshold,
+    )
+    y_pred_array = (y_prob_array >= resolved_threshold).astype(int)
 
     auc_roc = _safe_roc_auc_score(y_true_array, y_prob_array)
     defaulters = y_prob_array[y_true_array == 0]
@@ -65,7 +70,7 @@ def compute_binary_classification_metrics(
         ),
         "recall": round(recall_score(y_true_array, y_pred_array, zero_division=0), 4),
         "f1": round(f1_score(y_true_array, y_pred_array, zero_division=0), 4),
-        "threshold": round(threshold, 4),
+        "threshold": round(resolved_threshold, 4),
         "split": split,
     }
 
@@ -79,12 +84,17 @@ def build_split_evaluation_details(
     split: str,
     curve_point_count: int = CURVE_POINT_COUNT,
     calibration_bins: int = CALIBRATION_BIN_COUNT,
+    threshold: float | None = None,
 ) -> dict[str, Any]:
     """Build curve and confusion payloads for one model on one split."""
 
     y_true_array = np.asarray(y_true, dtype=int)
     y_prob_array = np.asarray(y_prob, dtype=float)
-    threshold = optimal_threshold(y_true_array, y_prob_array)
+    resolved_threshold = _resolve_threshold(
+        y_true_array,
+        y_prob_array,
+        threshold=threshold,
+    )
 
     return {
         "model_name": model_name,
@@ -108,7 +118,7 @@ def build_split_evaluation_details(
         "confusion_matrix": compute_confusion_matrix(
             y_true_array,
             y_prob_array,
-            threshold=threshold,
+            threshold=resolved_threshold,
         ),
     }
 
@@ -211,10 +221,10 @@ def compute_confusion_matrix(
 
     y_true_array = np.asarray(y_true, dtype=int)
     y_prob_array = np.asarray(y_prob, dtype=float)
-    resolved_threshold = (
-        optimal_threshold(y_true_array, y_prob_array)
-        if threshold is None
-        else float(threshold)
+    resolved_threshold = _resolve_threshold(
+        y_true_array,
+        y_prob_array,
+        threshold=threshold,
     )
     y_pred_array = (y_prob_array >= resolved_threshold).astype(int)
 
@@ -434,6 +444,17 @@ def optimal_threshold(
         for threshold in thresholds
     ]
     return float(thresholds[int(np.argmax(f1_scores))])
+
+
+def _resolve_threshold(
+    y_true: np.ndarray,
+    y_prob: np.ndarray,
+    *,
+    threshold: float | None,
+) -> float:
+    if threshold is None:
+        return optimal_threshold(y_true, y_prob)
+    return float(threshold)
 
 
 def _safe_roc_auc_score(y_true: np.ndarray, y_prob: np.ndarray) -> float:

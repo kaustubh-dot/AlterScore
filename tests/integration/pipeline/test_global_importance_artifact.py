@@ -37,14 +37,16 @@ def test_train_baselines_persists_global_importance_report_for_canonical_model_i
     report = GlobalImportanceResponse.model_validate(
         json.loads(artifacts.global_importance_path.read_text(encoding="utf-8"))
     )
-    feature_names = [row.feature for row in report.root]
+    feature_names = [row.feature for row in report.items]
     importance_values = np.asarray(
-        [row.mean_abs_shap for row in report.root],
+        [row.mean_abs_shap for row in report.items],
         dtype=float,
     )
     excluded_features = set(PROTECTED_FEATURES) | set(TEMPORAL_METADATA) | {TARGET}
 
     assert artifacts.global_importance_path.is_file()
+    assert report.model_name == "logistic_regression"
+    assert report.model_type == "classical"
     assert set(feature_names) == set(ALL_MODEL_FEATURES)
     assert len(feature_names) == len(ALL_MODEL_FEATURES)
     assert excluded_features.isdisjoint(feature_names)
@@ -52,8 +54,8 @@ def test_train_baselines_persists_global_importance_report_for_canonical_model_i
     assert np.all(importance_values >= 0.0)
     assert np.any(importance_values > 0.0)
     assert importance_values.tolist() == sorted(importance_values.tolist(), reverse=True)
-    assert [row.rank for row in report.root] == list(range(1, len(report.root) + 1))
-    assert {row.category for row in report.root} == {
+    assert [row.rank for row in report.items] == list(range(1, len(report.items) + 1))
+    assert {row.category for row in report.items} == {
         "psychometric",
         "behavioral",
         "nlp",
@@ -90,7 +92,7 @@ def test_train_baselines_supports_persisted_dataset_path_without_raw_text_for_gl
     assert artifacts.dataset_path == dataset_path
     assert artifacts.text_pca_path.is_file()
     assert artifacts.global_importance_path.is_file()
-    assert len(report.root) == len(ALL_MODEL_FEATURES)
+    assert len(report.items) == len(ALL_MODEL_FEATURES)
 
 
 def test_train_classical_models_persists_global_importance_and_runtime_loading_still_succeeds(
@@ -131,6 +133,7 @@ def test_train_classical_models_persists_global_importance_and_runtime_loading_s
     report = GlobalImportanceResponse.model_validate(
         json.loads(artifacts.global_importance_path.read_text(encoding="utf-8"))
     )
+    metrics_payload = json.loads(artifacts.metrics_path.read_text(encoding="utf-8"))
     settings = load_settings(
         {
             "ALTERSCORE_REPO_ROOT": str(tmp_path),
@@ -140,6 +143,28 @@ def test_train_classical_models_persists_global_importance_and_runtime_loading_s
     bundle = load_runtime_artifact_bundle(settings, strict=True)
 
     assert artifacts.global_importance_path.is_file()
-    assert report.root[0].mean_abs_shap >= report.root[-1].mean_abs_shap
+    assert report.items[0].mean_abs_shap >= report.items[-1].mean_abs_shap
+    assert report.model_name == _best_supported_model_name(metrics_payload["model_stats"])
     assert bundle.report.scoring_ready is True
     assert "global_importance" in bundle.report.artifacts_loaded
+
+
+def _best_supported_model_name(model_stats: list[dict[str, object]]) -> str:
+    supported_model_names = {
+        "logistic_regression",
+        "random_forest",
+        "xgboost",
+        "lightgbm",
+    }
+    best_model_name = ""
+    best_auc = float("-inf")
+    for row in model_stats:
+        if row["split"] != "test_months_11_12":
+            continue
+        if row["model_name"] not in supported_model_names:
+            continue
+        auc_roc = float(row["auc_roc"])
+        if auc_roc > best_auc:
+            best_model_name = str(row["model_name"])
+            best_auc = auc_roc
+    return best_model_name

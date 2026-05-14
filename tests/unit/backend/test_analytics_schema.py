@@ -86,15 +86,19 @@ def test_model_stats_and_baseline_comparison_list_shapes_parse() -> None:
 
 def test_global_importance_and_drift_report_shapes_match_contract() -> None:
     importance = GlobalImportanceResponse.model_validate(
-        [
-            {
-                "feature": "future_orientation",
-                "display_name": "Future Orientation",
-                "mean_abs_shap": 0.083,
-                "category": "psychometric",
-                "rank": 1,
-            }
-        ]
+        {
+            "model_name": "xgboost",
+            "model_type": "classical",
+            "items": [
+                {
+                    "feature": "future_orientation",
+                    "display_name": "Future Orientation",
+                    "mean_abs_shap": 0.083,
+                    "category": "psychometric",
+                    "rank": 1,
+                }
+            ],
+        }
     )
     drift = DriftReport.model_validate(
         {
@@ -116,7 +120,8 @@ def test_global_importance_and_drift_report_shapes_match_contract() -> None:
         }
     )
 
-    assert importance.root[0].rank == 1
+    assert importance.model_name == "xgboost"
+    assert importance.items[0].rank == 1
     assert set(drift.model_dump(mode="json")) == {
         "max_psi",
         "verdict",
