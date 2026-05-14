@@ -31,7 +31,7 @@ AlterScore should be reproducible locally before it is deployed anywhere. Deploy
 | `ALTERSCORE_REPO_ROOT` | repository root | Optional path override |
 | `ALTERSCORE_MODEL_MANIFEST` | `models/registry/production_manifest.json` | Serving manifest |
 | `ALTERSCORE_RUNTIME_MODEL_PATH` | `models/artifacts/logistic_best.pkl` | Local stub-model override when no production manifest is ready |
-| `ALTERSCORE_REQUEST_LOG_PATH` | `backend/runtime/logs/requests.jsonl` | Append-only score-request JSONL path |
+| `ALTERSCORE_REQUEST_LOG_PATH` | `runtime/logs/requests.jsonl` | Append-only score-request JSONL path |
 | `ALTERSCORE_LOG_LEVEL` | `INFO` | Backend log level |
 | `ALTERSCORE_CORS_ORIGINS` | `http://localhost:5173` | Frontend origins |
 | `VITE_API_BASE_URL` | `http://localhost:8000/api` | Frontend API base URL |
@@ -75,8 +75,8 @@ Generate data
 - [ ] `models/artifacts/calibrated_stacking.pkl`
 - [x] `models/preprocessors/preprocessor.pkl`
 - [x] `models/preprocessors/text_pca.pkl`
-- [ ] `models/explainers/shap_explainer.pkl`
-- [ ] `models/explainers/dice_explainer.pkl`
+- [x] `models/explainers/shap_explainer.pkl` loads successfully from repository source and passes runtime smoke verification
+- [x] `models/explainers/dice_explainer.pkl`
 - [x] `models/reports/metrics.json`
 - [x] `models/reports/baseline_metrics.json`
 - [x] `models/reports/fairness_report.json`
@@ -94,7 +94,7 @@ At startup the backend must:
 3. Load the production manifest when it exists, otherwise allow a local direct-model fallback for backend scoring stubs.
 4. Validate artifact paths and detect missing scoring-critical files clearly.
 5. Load model, preprocessor, and any available text PCA, explainers, and reports.
-6. Expose `/api/health` with loaded and missing artifacts.
+6. Expose `/api/health` with loaded, missing, and invalid artifact status.
 7. Fail clearly if scoring-critical artifacts such as the runtime model or preprocessor are missing.
 
 ## Current Stub Runtime Notes
@@ -108,18 +108,20 @@ At startup the backend must:
 - The same offline training commands now also persist `models/reports/fairness_report.json`, using held-out months `11-12` predictions plus the protected audit columns only for subgroup evaluation with sample-size guards and saved green/yellow/red flags.
 - The same offline training commands now also persist `models/reports/psi_report.json`, comparing train months `1-8` to test months `11-12` only across the canonical 35 model inputs with deterministic thresholds and saved per-feature statuses.
 - The same offline training commands now also persist `models/reports/global_importance.json`, using the current saved explainability source to produce a deterministic dashboard-ready ranking over the canonical 35 model inputs.
+- The same offline training commands now also persist `models/explainers/dice_explainer.pkl` for the current logistic runtime bundle, using the validated persisted actionable-counterfactual contract defined in repository source.
 - `backend/app/main.py` now loads the runtime artifact bundle at startup and exposes `/api/health` plus `/api/score`.
 - `backend/app/services/analytics.py` now serves `/api/model-stats` from `metrics.json` and `/api/baseline-comparison` from `baseline_metrics.json` without runtime retraining or ad hoc route-level file parsing.
 - `backend/app/main.py` now also initializes the append-only request logging service for `/api/score`.
-- `/api/health` currently returns `degraded` when scoring-critical artifacts are present but optional runtime artifacts such as SHAP, DICE, fairness, or PSI are still missing.
+- The checked-in local runtime bundle now loads cleanly for the current stub route surface: `models/explainers/shap_explainer.pkl` deserializes from restored repo source, `models/explainers/dice_explainer.pkl` also validates, `models/reports/global_importance.json` matches the active API contract, and the default request-log path is now writable at repo-root `runtime/logs/requests.jsonl`.
+- `/api/health` now returns `ok` for the checked-in bundle and degrades only when scoring-critical artifacts are present but optional runtime artifacts are missing or invalid; it reports loaded, missing, and invalid optional artifacts separately.
 - When `models/preprocessors/text_pca.pkl` is present, request-time semantic dimensions now use the persisted PCA artifact; zero-filled semantic fallback remains only for intentionally PCA-less bundles and tests.
 - When `population_percentiles.json` contains multiple model-specific tables, the runtime artifact loader now resolves the table for the active serving model so logistic fallback, classical fallback, and later manifest-backed ensemble serving can reuse one artifact format.
 - Runtime artifact loading still succeeds when `fairness_report.json` is present alongside the current local scoring bundle; the fairness report remains optional for strict scoring readiness until the fairness API route is added.
 - Runtime artifact loading still succeeds when `psi_report.json` is present alongside the current local scoring bundle; the drift report remains optional for strict scoring readiness until the drift API route is added.
-- Runtime artifact loading still succeeds when `global_importance.json` is present alongside the current local scoring bundle; the report remains optional for strict scoring readiness even though the global-importance analytics route now serves it when available.
+- Runtime artifact loading still succeeds when `global_importance.json` is present alongside the current local scoring bundle; the report remains optional for strict scoring readiness even though the global-importance analytics route now serves it when available. The loader also normalizes legacy list-shaped payloads defensively if an older saved bundle is encountered.
 - If `metrics.json` or `baseline_metrics.json` is missing, the corresponding analytics endpoint now returns a structured `503` rather than recomputing reports inside the API process.
 - If `fairness_report.json`, `psi_report.json`, or `global_importance.json` is missing, the corresponding analytics endpoint now returns a structured `503` rather than recomputing reports inside the API process.
-- SHAP and DICE artifacts do not exist yet, so the current stub scoring response returns empty `explanation` and `counterfactual_actions` lists.
+- The current stub scoring response now returns per-user SHAP explanations when a valid persisted explainer is present, and it uses the persisted checked-in `dice_explainer.pkl` artifact for counterfactual actions.
 
 ## Runtime Foundation Files
 
@@ -139,13 +141,13 @@ At startup the backend must:
 ### Readiness
 
 - Endpoint: `GET /api/health`
-- Pass condition: `model_loaded` is true and required artifacts are present.
+- Pass condition: `model_loaded` is true, scoring-critical artifacts are loaded successfully, and `invalid_artifacts` does not contain any scoring-critical bundle entry.
 
 ### Scoring Smoke Test
 
 - Endpoint: `POST /api/score`
 - Payload: known valid fixture from `tests/fixtures/score_request_valid.json`.
-- Pass condition: status 200, score in 300-850, probability in 0-1, and the explanation/counterfactual fields are present even if the current stub returns empty lists before SHAP and DICE artifacts exist.
+- Pass condition: status 200, score in 300-850, probability in 0-1, and the response includes explanation/counterfactual fields with checked-in bundle behavior matching the current runtime contract.
 
 ## Docker Plan
 
@@ -173,7 +175,7 @@ Backend logs should include:
 - Scoring failures with stack trace in server logs but sanitized client error.
 
 Prediction logs should be append-only JSONL and must not store raw protected attributes as model inputs.
-The current default path is `backend/runtime/logs/requests.jsonl`, overridable through `ALTERSCORE_REQUEST_LOG_PATH`.
+The current default path is `runtime/logs/requests.jsonl`, overridable through `ALTERSCORE_REQUEST_LOG_PATH`.
 
 ## Rollback Plan
 

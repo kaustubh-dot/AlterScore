@@ -2,16 +2,28 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from functools import lru_cache
 import json
 from pathlib import Path
-from typing import Any, Final
+from typing import Any, Callable, Final
 
 import joblib
 
 from backend.app.core.paths import MODEL_ARTIFACTS_DIR, resolve_repo_path
 from backend.app.core.settings import Settings, get_settings
+from backend.ml.explainability.global_importance import (
+    normalize_global_importance_payload,
+)
+from backend.ml.explainability.dice_explainer import (
+    PersistedDiceExplainer,
+    load_persisted_dice_explainer,
+)
+from backend.ml.explainability.shap_explainer import (
+    PersistedShapExplainer,
+    load_persisted_shap_explainer,
+)
+from backend.ml.preprocessing.feature_registry import ALL_MODEL_FEATURES
 
 
 @dataclass(frozen=True)
@@ -94,8 +106,11 @@ class ArtifactLoadReport:
     runtime_model_path: Path | None
     manifest_path: Path | None
     resolved_paths: dict[str, Path]
+    artifacts_present: tuple[str, ...]
     artifacts_loaded: tuple[str, ...]
     missing_artifacts: tuple[str, ...]
+    invalid_artifacts: tuple[str, ...]
+    artifact_errors: dict[str, str]
     scoring_ready: bool
 
 
@@ -105,6 +120,8 @@ class LoadedArtifactBundle:
     model: Any | None
     preprocessor: Any | None
     text_pca: Any | None
+    shap_explainer: PersistedShapExplainer | None
+    dice_explainer: PersistedDiceExplainer | None
     metrics_payload: dict[str, Any] | None
     baseline_metrics: list[dict[str, Any]] | None
     fairness_report: Any | None
@@ -115,10 +132,9 @@ class LoadedArtifactBundle:
 
 
 def inspect_runtime_artifacts(settings: Settings | None = None) -> ArtifactLoadReport:
-    """Inspect the current runtime artifact state without loading binaries."""
+    """Inspect the current runtime artifact state using the same validation as startup."""
 
-    report, _ = _resolve_artifact_state(settings)
-    return report
+    return load_runtime_artifact_bundle(settings, strict=False).report
 
 
 def load_runtime_artifact_bundle(
@@ -128,64 +144,161 @@ def load_runtime_artifact_bundle(
 ) -> LoadedArtifactBundle:
     """Load the current runtime artifact bundle for backend scoring."""
 
-    report, manifest_payload = _resolve_artifact_state(settings)
-    if strict and not report.scoring_ready:
-        raise ArtifactLoadError(
-            "Missing scoring-critical artifacts: "
-            f"{list(_critical_missing_artifacts(report))}"
-        )
+    base_report, manifest_payload = _resolve_artifact_state(settings)
+    loaded_artifacts: set[str] = set()
+    invalid_artifacts: set[str] = set()
+    artifact_errors: dict[str, str] = {}
 
-    runtime_model_path = report.resolved_paths.get("runtime_model")
-    preprocessor_path = report.resolved_paths.get("preprocessor")
-    text_pca_path = report.resolved_paths.get("text_pca")
-    metrics_path = report.resolved_paths.get("metrics")
-    baseline_metrics_path = report.resolved_paths.get("baseline_metrics")
-    fairness_report_path = report.resolved_paths.get("fairness_report")
-    psi_report_path = report.resolved_paths.get("psi_report")
-    global_importance_path = report.resolved_paths.get("global_importance")
-    population_percentiles_path = report.resolved_paths.get("population_percentiles")
+    if manifest_payload is not None and "production_manifest" in base_report.artifacts_present:
+        loaded_artifacts.add("production_manifest")
 
-    model = _load_joblib_if_present(runtime_model_path)
-    preprocessor = _load_joblib_if_present(preprocessor_path)
-    text_pca = _load_joblib_if_present(text_pca_path)
-    metrics_payload = _load_json_if_present(metrics_path)
-    baseline_metrics = _load_json_if_present(baseline_metrics_path)
-    fairness_report = _load_json_if_present(fairness_report_path)
-    psi_report = _load_json_if_present(psi_report_path)
-    global_importance = _load_json_if_present(global_importance_path)
-    population_percentiles = _resolve_population_percentiles_payload(
-        _load_json_if_present(population_percentiles_path),
-        runtime_model_name=report.runtime_model_name,
+    runtime_model_path = base_report.resolved_paths.get("runtime_model")
+    preprocessor_path = base_report.resolved_paths.get("preprocessor")
+    text_pca_path = base_report.resolved_paths.get("text_pca")
+    shap_explainer_path = base_report.resolved_paths.get("shap_explainer")
+    dice_explainer_path = base_report.resolved_paths.get("dice_explainer")
+    metrics_path = base_report.resolved_paths.get("metrics")
+    baseline_metrics_path = base_report.resolved_paths.get("baseline_metrics")
+    fairness_report_path = base_report.resolved_paths.get("fairness_report")
+    psi_report_path = base_report.resolved_paths.get("psi_report")
+    global_importance_path = base_report.resolved_paths.get("global_importance")
+    population_percentiles_path = base_report.resolved_paths.get("population_percentiles")
+
+    model = _load_validated_artifact(
+        artifact_key="runtime_model",
+        path=runtime_model_path,
+        loader=_load_joblib,
+        validator=_validate_runtime_model,
+        loaded_artifacts=loaded_artifacts,
+        invalid_artifacts=invalid_artifacts,
+        artifact_errors=artifact_errors,
+    )
+    preprocessor = _load_validated_artifact(
+        artifact_key="preprocessor",
+        path=preprocessor_path,
+        loader=_load_joblib,
+        validator=_validate_preprocessor,
+        loaded_artifacts=loaded_artifacts,
+        invalid_artifacts=invalid_artifacts,
+        artifact_errors=artifact_errors,
+    )
+    text_pca = _load_validated_artifact(
+        artifact_key="text_pca",
+        path=text_pca_path,
+        loader=_load_joblib,
+        validator=_validate_text_pca,
+        loaded_artifacts=loaded_artifacts,
+        invalid_artifacts=invalid_artifacts,
+        artifact_errors=artifact_errors,
+    )
+    shap_explainer = _load_validated_artifact(
+        artifact_key="shap_explainer",
+        path=shap_explainer_path,
+        loader=lambda path: load_persisted_shap_explainer(
+            path,
+            expected_feature_names=ALL_MODEL_FEATURES,
+        ),
+        validator=None,
+        loaded_artifacts=loaded_artifacts,
+        invalid_artifacts=invalid_artifacts,
+        artifact_errors=artifact_errors,
+    )
+    dice_explainer = _load_validated_artifact(
+        artifact_key="dice_explainer",
+        path=dice_explainer_path,
+        loader=lambda path: load_persisted_dice_explainer(
+            path,
+            expected_feature_names=ALL_MODEL_FEATURES,
+        ),
+        validator=None,
+        loaded_artifacts=loaded_artifacts,
+        invalid_artifacts=invalid_artifacts,
+        artifact_errors=artifact_errors,
+    )
+    metrics_payload = _load_validated_artifact(
+        artifact_key="metrics",
+        path=metrics_path,
+        loader=_load_json,
+        validator=_validate_json_mapping,
+        loaded_artifacts=loaded_artifacts,
+        invalid_artifacts=invalid_artifacts,
+        artifact_errors=artifact_errors,
+    )
+    baseline_metrics = _load_validated_artifact(
+        artifact_key="baseline_metrics",
+        path=baseline_metrics_path,
+        loader=_load_json,
+        validator=_validate_json_sequence,
+        loaded_artifacts=loaded_artifacts,
+        invalid_artifacts=invalid_artifacts,
+        artifact_errors=artifact_errors,
+    )
+    fairness_report = _load_validated_artifact(
+        artifact_key="fairness_report",
+        path=fairness_report_path,
+        loader=_load_json,
+        validator=_validate_json_mapping,
+        loaded_artifacts=loaded_artifacts,
+        invalid_artifacts=invalid_artifacts,
+        artifact_errors=artifact_errors,
+    )
+    psi_report = _load_validated_artifact(
+        artifact_key="psi_report",
+        path=psi_report_path,
+        loader=_load_json,
+        validator=_validate_json_mapping,
+        loaded_artifacts=loaded_artifacts,
+        invalid_artifacts=invalid_artifacts,
+        artifact_errors=artifact_errors,
+    )
+    global_importance = _load_validated_artifact(
+        artifact_key="global_importance",
+        path=global_importance_path,
+        loader=lambda path: normalize_global_importance_payload(
+            _load_json(path),
+            default_model_name=base_report.runtime_model_name,
+            default_model_type=base_report.runtime_model_type,
+        ),
+        validator=_validate_json_mapping,
+        loaded_artifacts=loaded_artifacts,
+        invalid_artifacts=invalid_artifacts,
+        artifact_errors=artifact_errors,
+    )
+    population_percentiles = _load_validated_artifact(
+        artifact_key="population_percentiles",
+        path=population_percentiles_path,
+        loader=lambda path: _resolve_population_percentiles_payload(
+            _load_json(path),
+            runtime_model_name=base_report.runtime_model_name,
+        ),
+        validator=_validate_json_mapping,
+        loaded_artifacts=loaded_artifacts,
+        invalid_artifacts=invalid_artifacts,
+        artifact_errors=artifact_errors,
     )
 
-    if strict and model is not None and not hasattr(model, "predict_proba"):
-        raise ArtifactLoadError(
-            f"Runtime model at {runtime_model_path} does not expose predict_proba()."
-        )
-    if strict and preprocessor is not None and not hasattr(preprocessor, "transform"):
-        raise ArtifactLoadError(
-            f"Preprocessor at {preprocessor_path} does not expose transform()."
-        )
-    if text_pca is not None and not callable(getattr(text_pca, "transform", None)):
-        raise ArtifactLoadError(
-            f"Text PCA artifact at {text_pca_path} does not expose transform()."
-        )
+    report = _finalize_artifact_report(
+        base_report,
+        loaded_artifacts=loaded_artifacts,
+        invalid_artifacts=invalid_artifacts,
+        artifact_errors=artifact_errors,
+    )
+    if strict and not report.scoring_ready:
+        raise ArtifactLoadError(_format_scoring_ready_error(report))
 
     return LoadedArtifactBundle(
         report=report,
         model=model,
         preprocessor=preprocessor,
         text_pca=text_pca,
-        metrics_payload=metrics_payload if isinstance(metrics_payload, dict) else None,
-        baseline_metrics=baseline_metrics if isinstance(baseline_metrics, list) else None,
+        shap_explainer=shap_explainer,
+        dice_explainer=dice_explainer,
+        metrics_payload=metrics_payload,
+        baseline_metrics=baseline_metrics,
         fairness_report=fairness_report,
         psi_report=psi_report,
         global_importance=global_importance,
-        population_percentiles=(
-            population_percentiles
-            if isinstance(population_percentiles, dict)
-            else None
-        ),
+        population_percentiles=population_percentiles,
         manifest=manifest_payload,
     )
 
@@ -243,18 +356,11 @@ def _resolve_artifact_state(
             include_manifest=False,
         )
 
-    artifacts_loaded = tuple(
-        key
-        for key, path in sorted(resolved_paths.items())
-        if path.is_file()
+    artifacts_present = tuple(
+        key for key, path in sorted(resolved_paths.items()) if path.is_file()
     )
     missing_artifacts = tuple(
-        key
-        for key, path in sorted(resolved_paths.items())
-        if not path.is_file()
-    )
-    scoring_ready = all(
-        artifact_key in artifacts_loaded for artifact_key in SCORING_CRITICAL_ARTIFACTS
+        key for key, path in sorted(resolved_paths.items()) if not path.is_file()
     )
 
     return (
@@ -265,9 +371,12 @@ def _resolve_artifact_state(
             runtime_model_path=runtime_model_path,
             manifest_path=manifest_path,
             resolved_paths=resolved_paths,
-            artifacts_loaded=artifacts_loaded,
+            artifacts_present=artifacts_present,
+            artifacts_loaded=(),
             missing_artifacts=missing_artifacts,
-            scoring_ready=scoring_ready,
+            invalid_artifacts=(),
+            artifact_errors={},
+            scoring_ready=False,
         ),
         manifest_payload,
     )
@@ -409,24 +518,114 @@ def _load_candidate_test_auc_by_model(repo_root: Path) -> dict[str, float]:
     return scores
 
 
-def _critical_missing_artifacts(report: ArtifactLoadReport) -> tuple[str, ...]:
-    return tuple(
+def _load_validated_artifact(
+    *,
+    artifact_key: str,
+    path: Path | None,
+    loader: Callable[[Path], Any],
+    validator: Callable[[Any], None] | None,
+    loaded_artifacts: set[str],
+    invalid_artifacts: set[str],
+    artifact_errors: dict[str, str],
+) -> Any | None:
+    if path is None or not path.is_file():
+        return None
+
+    try:
+        payload = loader(path)
+        if validator is not None:
+            validator(payload)
+    except Exception as exc:
+        invalid_artifacts.add(artifact_key)
+        artifact_errors[artifact_key] = f"{type(exc).__name__}: {exc}"
+        return None
+
+    loaded_artifacts.add(artifact_key)
+    return payload
+
+
+def _finalize_artifact_report(
+    base_report: ArtifactLoadReport,
+    *,
+    loaded_artifacts: set[str],
+    invalid_artifacts: set[str],
+    artifact_errors: dict[str, str],
+) -> ArtifactLoadReport:
+    return replace(
+        base_report,
+        artifacts_loaded=tuple(sorted(loaded_artifacts)),
+        invalid_artifacts=tuple(sorted(invalid_artifacts)),
+        artifact_errors=dict(sorted(artifact_errors.items())),
+        scoring_ready=all(
+            artifact_key in loaded_artifacts for artifact_key in SCORING_CRITICAL_ARTIFACTS
+        ),
+    )
+
+
+def _format_scoring_ready_error(report: ArtifactLoadReport) -> str:
+    critical_missing = [
         artifact_key
         for artifact_key in SCORING_CRITICAL_ARTIFACTS
         if artifact_key in report.missing_artifacts
-    )
+    ]
+    critical_invalid = [
+        artifact_key
+        for artifact_key in SCORING_CRITICAL_ARTIFACTS
+        if artifact_key in report.invalid_artifacts
+    ]
+    details: list[str] = []
+    if critical_missing:
+        details.append(f"missing {critical_missing}")
+    if critical_invalid:
+        details.append(f"invalid {critical_invalid}")
+    if not details:
+        details.append("unknown scoring-critical artifact failure")
+    return "Scoring artifacts are not ready: " + "; ".join(details) + "."
+
+
+def _load_joblib(path: Path) -> Any:
+    return joblib.load(path)
 
 
 def _load_joblib_if_present(path: Path | None) -> Any | None:
     if path is None or not path.is_file():
         return None
-    return joblib.load(path)
+    return _load_joblib(path)
+
+
+def _load_json(path: Path) -> Any:
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def _load_json_if_present(path: Path | None) -> Any | None:
     if path is None or not path.is_file():
         return None
-    return json.loads(path.read_text(encoding="utf-8"))
+    return _load_json(path)
+
+
+def _validate_runtime_model(model: Any) -> None:
+    if not hasattr(model, "predict_proba"):
+        raise ValueError("runtime model does not expose predict_proba().")
+
+
+def _validate_preprocessor(preprocessor: Any) -> None:
+    if not callable(getattr(preprocessor, "transform", None)):
+        raise ValueError("preprocessor does not expose transform().")
+
+
+def _validate_text_pca(text_pca: Any) -> None:
+    if not callable(getattr(text_pca, "transform", None)):
+        raise ValueError("text PCA artifact does not expose transform().")
+
+
+def _validate_json_mapping(payload: Any) -> None:
+    if not isinstance(payload, dict):
+        raise ValueError("artifact payload must be a JSON object.")
+
+
+def _validate_json_sequence(payload: Any) -> None:
+    if not isinstance(payload, list):
+        raise ValueError("artifact payload must be a JSON list.")
 
 
 def _resolve_population_percentiles_payload(

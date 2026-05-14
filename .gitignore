@@ -31,6 +31,10 @@ frontend/.env.*
 *.log
 backend/runtime/logs/*
 !backend/runtime/logs/.gitkeep
+runtime/logs/*
+!runtime/logs/.gitkeep
+runtime/pytest-cache/*
+runtime/pytest-workspace/*
 
 # Generated data and validation artifacts
 data/raw/*
@@ -47,12 +51,23 @@ data/validation/*
 # Model binaries, explainers, preprocessors, and generated reports
 models/artifacts/*
 !models/artifacts/.gitkeep
+!models/artifacts/logistic_best.pkl
 models/preprocessors/*
 !models/preprocessors/.gitkeep
+!models/preprocessors/preprocessor.pkl
+!models/preprocessors/text_pca.pkl
 models/explainers/*
 !models/explainers/.gitkeep
+!models/explainers/shap_explainer.pkl
+!models/explainers/dice_explainer.pkl
 models/reports/*
 !models/reports/.gitkeep
+!models/reports/baseline_metrics.json
+!models/reports/fairness_report.json
+!models/reports/global_importance.json
+!models/reports/metrics.json
+!models/reports/population_percentiles.json
+!models/reports/psi_report.json
 models/registry/*
 !models/registry/.gitkeep
 

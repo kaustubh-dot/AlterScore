@@ -8,7 +8,17 @@ from typing import Any
 import numpy as np
 
 from backend.app.core.artifact_loader import LoadedArtifactBundle
-from backend.app.schemas.score import ImprovementTip, ScoreRequest, ScoreResponse
+from backend.app.schemas.score import (
+    CounterfactualAction,
+    ExplanationItem,
+    ImprovementTip,
+    ScoreRequest,
+    ScoreResponse,
+)
+from backend.ml.explainability.dice_explainer import (
+    build_default_persisted_dice_explainer,
+)
+from backend.ml.explainability.global_importance import FEATURE_DISPLAY_NAMES
 from backend.ml.inference.feature_assembly import assemble_request_features
 from backend.ml.inference.score_mapper import (
     compute_percentile,
@@ -45,6 +55,8 @@ _TIP_LIBRARY: dict[str, tuple[str, str]] = {
     ),
 }
 
+_MAX_EXPLANATION_ITEMS = 6
+
 
 class ScoringService:
     """Runtime score service backed by the current loaded artifact bundle."""
@@ -80,6 +92,25 @@ class ScoringService:
             credit_score,
             self.artifacts.population_percentiles,
         )
+        shap_contributions = _compute_shap_contributions(
+            self.artifacts.shap_explainer,
+            processed_features[0],
+        )
+        explanation_items = _build_explanation_items(
+            assembled.feature_row,
+            shap_contributions,
+        )
+        counterfactual_actions = _build_counterfactual_actions(
+            dice_explainer=self.artifacts.dice_explainer,
+            runtime_model_name=self.artifacts.report.runtime_model_name,
+            model=self.artifacts.model,
+            preprocessor=self.artifacts.preprocessor,
+            feature_row=assembled.feature_row,
+            feature_frame=assembled.feature_frame,
+            current_credit_score=credit_score,
+            current_probability=repayment_probability,
+            shap_contributions=shap_contributions,
+        )
 
         return ScoreResponse.model_validate(
             {
@@ -88,8 +119,12 @@ class ScoringService:
                 "risk_band": risk_band,
                 "repayment_probability": round(repayment_probability, 4),
                 "percentile": percentile,
-                "explanation": [],
-                "counterfactual_actions": [],
+                "explanation": [
+                    explanation.model_dump(mode="json") for explanation in explanation_items
+                ],
+                "counterfactual_actions": [
+                    action.model_dump(mode="json") for action in counterfactual_actions
+                ],
                 "loan_eligibility": get_loan_eligibility(credit_score),
                 "improvement_tips": [
                     tip.model_dump(mode="json")
@@ -118,6 +153,120 @@ def _predict_repayment_probability(model: Any, processed_features: np.ndarray) -
     if np.isnan(repayment_probability):
         raise ValueError("Runtime model produced a NaN repayment probability.")
     return repayment_probability
+
+
+def _compute_shap_contributions(
+    shap_explainer: Any | None,
+    processed_row: np.ndarray,
+) -> dict[str, float]:
+    if shap_explainer is None:
+        return {}
+
+    contributions = np.asarray(
+        shap_explainer.explain_processed_row(processed_row),
+        dtype=float,
+    )
+    if contributions.ndim != 1:
+        return {}
+
+    return {
+        feature_name: float(shap_value)
+        for feature_name, shap_value in zip(
+            tuple(shap_explainer.feature_names),
+            contributions.tolist(),
+            strict=True,
+        )
+    }
+
+
+def _build_explanation_items(
+    feature_row: dict[str, Any],
+    shap_contributions: dict[str, float],
+) -> list[ExplanationItem]:
+    if not shap_contributions:
+        return []
+
+    explanation_candidates: list[ExplanationItem] = []
+    for feature_name, shap_value in sorted(
+        shap_contributions.items(),
+        key=lambda item: (-abs(item[1]), item[0]),
+    ):
+        if abs(shap_value) < 1e-6:
+            continue
+
+        feature_value = _coerce_numeric_feature_value(feature_row.get(feature_name))
+        if feature_value is None:
+            continue
+
+        direction = "positive" if shap_value >= 0.0 else "negative"
+        display_name = FEATURE_DISPLAY_NAMES.get(
+            feature_name,
+            feature_name.replace("_", " ").title(),
+        )
+        explanation_candidates.append(
+            ExplanationItem(
+                feature=feature_name,
+                display_name=display_name,
+                shap_value=round(float(shap_value), 4),
+                direction=direction,
+                feature_value=round(feature_value, 4),
+                plain_language=_build_explanation_plain_language(
+                    display_name=display_name,
+                    direction=direction,
+                ),
+            )
+        )
+        if len(explanation_candidates) == _MAX_EXPLANATION_ITEMS:
+            break
+
+    return explanation_candidates
+
+
+def _build_counterfactual_actions(
+    *,
+    dice_explainer: Any | None,
+    runtime_model_name: str | None,
+    model: Any,
+    preprocessor: Any,
+    feature_row: dict[str, Any],
+    feature_frame: Any,
+    current_credit_score: int,
+    current_probability: float,
+    shap_contributions: dict[str, float],
+) -> list[CounterfactualAction]:
+    explainer = dice_explainer or build_default_persisted_dice_explainer(
+        model_name=runtime_model_name or "logistic_regression",
+    )
+    raw_actions = explainer.generate_actions(
+        feature_row=feature_row,
+        feature_frame=feature_frame,
+        model=model,
+        preprocessor=preprocessor,
+        current_probability=current_probability,
+        current_credit_score=current_credit_score,
+        shap_contributions=shap_contributions,
+    )
+    return [
+        CounterfactualAction.model_validate(action)
+        for action in raw_actions
+    ]
+
+
+def _coerce_numeric_feature_value(value: Any) -> float | None:
+    try:
+        numeric_value = float(value)
+    except (TypeError, ValueError):
+        return None
+
+    if not np.isfinite(numeric_value):
+        return None
+    return numeric_value
+
+
+def _build_explanation_plain_language(*, display_name: str, direction: str) -> str:
+    if direction == "positive":
+        return f"{display_name} is supporting the current score."
+    return f"{display_name} is pulling the current score down."
 
 
 def _build_stub_improvement_tips(feature_row: dict[str, Any]) -> list[ImprovementTip]:

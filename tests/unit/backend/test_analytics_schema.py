@@ -32,6 +32,7 @@ def test_health_response_matches_documented_contract_shape() -> None:
                 "psi_report",
             ],
             "missing_artifacts": [],
+            "invalid_artifacts": [],
             "timestamp": datetime(2026, 5, 13, tzinfo=timezone.utc),
         }
     )
@@ -42,6 +43,7 @@ def test_health_response_matches_documented_contract_shape() -> None:
         "model_loaded",
         "artifacts_loaded",
         "missing_artifacts",
+        "invalid_artifacts",
         "timestamp",
     }
 

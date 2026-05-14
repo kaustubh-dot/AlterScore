@@ -43,6 +43,10 @@ def score_request(request: Request, payload: ScoreRequest) -> ScoreResponse | JS
             request_id=request_id,
             details={
                 "missing_artifacts": list(request.app.state.artifact_bundle.report.missing_artifacts),
+                "invalid_artifacts": list(request.app.state.artifact_bundle.report.invalid_artifacts),
+                "artifact_errors": dict(
+                    request.app.state.artifact_bundle.report.artifact_errors
+                ),
             },
         )
         _log_failure(

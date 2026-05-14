@@ -51,6 +51,7 @@ def test_load_runtime_artifact_bundle_supports_manifest_backed_scoring_bundle(
     assert "text_pca" in bundle.report.artifacts_loaded
     assert bundle.metrics_payload is not None
     assert bundle.baseline_metrics is not None
+    assert bundle.dice_explainer is not None
     assert bundle.text_pca is not None
     assert bundle.population_percentiles is not None
     assert bundle.population_percentiles["selected_model_name"] == "logistic_regression"
@@ -81,7 +82,7 @@ def test_candidate_runtime_selection_honors_repo_root_and_prefers_best_available
     assert report.scoring_ready is True
 
 
-def test_score_request_with_loaded_bundle_returns_schema_valid_stub_response(
+def test_score_request_with_loaded_bundle_returns_schema_valid_runtime_response(
     tmp_path,
 ) -> None:
     _prepare_runtime_bundle(tmp_path)
@@ -103,13 +104,15 @@ def test_score_request_with_loaded_bundle_returns_schema_valid_stub_response(
     response = score_request_with_bundle(fixture_payload, bundle)
 
     assert bundle.report.source == "runtime_model_path"
+    assert bundle.dice_explainer is not None
     assert response.session_id
     assert 300 <= response.credit_score <= 850
     assert response.risk_band in {"poor", "fair", "good", "excellent"}
     assert 0.0 <= response.repayment_probability <= 1.0
     assert 0 <= response.percentile <= 100
     assert response.explanation == []
-    assert response.counterfactual_actions == []
+    assert response.counterfactual_actions
+    assert all(action.estimated_score_gain >= 0 for action in response.counterfactual_actions)
     assert response.loan_eligibility.band == response.risk_band
     assert response.improvement_tips
 
@@ -152,7 +155,11 @@ def _prepare_runtime_bundle(tmp_path, *, train_classical_suite: bool = False):
         "lightgbm": model_root / "artifacts" / "lgbm_best.pkl",
         "baseline_metrics": model_root / "reports" / "baseline_metrics.json",
         "metrics": model_root / "reports" / "metrics.json",
+        "fairness_report": model_root / "reports" / "fairness_report.json",
+        "psi_report": model_root / "reports" / "psi_report.json",
+        "global_importance": model_root / "reports" / "global_importance.json",
         "population_percentiles": model_root / "reports" / "population_percentiles.json",
+        "dice_explainer": model_root / "explainers" / "dice_explainer.pkl",
     }
 
     train_baselines(
@@ -164,7 +171,11 @@ def _prepare_runtime_bundle(tmp_path, *, train_classical_suite: bool = False):
         logistic_artifact_path=artifact_paths["model"],
         baseline_metrics_path=artifact_paths["baseline_metrics"],
         metrics_path=artifact_paths["metrics"],
+        fairness_report_path=artifact_paths["fairness_report"],
+        psi_report_path=artifact_paths["psi_report"],
+        global_importance_path=artifact_paths["global_importance"],
         population_percentiles_path=artifact_paths["population_percentiles"],
+        dice_explainer_path=artifact_paths["dice_explainer"],
     )
     if train_classical_suite:
         train_classical_models(
@@ -179,7 +190,11 @@ def _prepare_runtime_bundle(tmp_path, *, train_classical_suite: bool = False):
             logistic_artifact_path=artifact_paths["model"],
             baseline_metrics_path=artifact_paths["baseline_metrics"],
             metrics_path=artifact_paths["metrics"],
+            fairness_report_path=artifact_paths["fairness_report"],
+            psi_report_path=artifact_paths["psi_report"],
+            global_importance_path=artifact_paths["global_importance"],
             population_percentiles_path=artifact_paths["population_percentiles"],
+            dice_explainer_path=artifact_paths["dice_explainer"],
             random_state=17,
         )
     return artifact_paths

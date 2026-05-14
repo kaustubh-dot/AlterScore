@@ -5,8 +5,8 @@
 - Date: 2026-05-14
 - Workspace: `C:\Kaustubh\Projects\AlterScore`
 - PRD source: `docs/AlterScore_PRD_v2.md`
-- Current phase: governance analytics route foundation with persisted fairness, drift, and global-importance reporting
-- Application implementation status: feature registry, runtime foundation helpers, API schemas, the frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, the baseline training loop, the bounded classical training loop for random forest, XGBoost, and LightGBM, the persisted text PCA artifact foundation, the runtime artifact-loading plus scoring-service stubs, the FastAPI app startup with `/api/health`, `/api/score`, all current analytics route stubs including `/api/model-stats`, `/api/baseline-comparison`, `/api/fairness-report`, `/api/drift-report`, `/api/global-importance`, `/api/score-distribution`, `/api/roc-data`, `/api/pr-curve`, `/api/calibration-curve`, and `/api/confusion-matrix`, append-only request logging on the score path, and the persisted evaluation-artifact plus fairness/drift/global-importance artifact foundations for curves, confusion matrices, score percentiles/distribution, held-out subgroup fairness, train-vs-test feature stability, and dashboard-ready feature ranking are implemented; the remaining explainability-runtime and full production-model artifacts are still pending
+- Current phase: checked-in runtime bundle integrity and explainability artifact remediation are complete for the current scoring and analytics stub; the next backend slice is manifest-backed serving and later production-model refresh work.
+- Application implementation status: feature registry, runtime foundation helpers, API schemas, the frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, the baseline training loop, the bounded classical training loop for random forest, XGBoost, and LightGBM, the persisted text PCA artifact foundation, the runtime artifact-loading plus scoring-service stubs, the FastAPI app startup with `/api/health`, `/api/score`, the analytics route surface including `/api/model-stats`, `/api/baseline-comparison`, `/api/fairness-report`, `/api/drift-report`, `/api/global-importance`, `/api/score-distribution`, `/api/roc-data`, `/api/pr-curve`, `/api/calibration-curve`, and `/api/confusion-matrix`, and the persisted evaluation-artifact plus fairness/drift/global-importance artifact foundations for curves, confusion matrices, score percentiles/distribution, held-out subgroup fairness, train-vs-test feature stability, and dashboard-ready feature ranking are implemented. The checked-in local bundle now loads cleanly for the current stub route surface: the restored SHAP compatibility module deserializes the saved explainer, the new persisted counterfactual explainer artifact also validates, the saved global-importance artifact matches the active API contract, the default request-log path is writable again, and health/readiness now distinguishes loaded, missing, and invalid optional artifacts while the checked-in bundle itself reports `ok`.
 
 ## What Exists
 
@@ -17,6 +17,7 @@
   - `frontend/`
   - `models/`
   - `notebooks/`
+  - `runtime/`
   - `scripts/`
   - `tests/`
 - PRD is available at `docs/AlterScore_PRD_v2.md`.
@@ -46,12 +47,12 @@
 - Baseline training exists at `backend/ml/training/classical/baselines.py`, with command entrypoint `scripts/training/train_baselines.py`.
 - Classical model training exists at `backend/ml/training/classical/train_classical.py`, with command entrypoint `scripts/training/train_classical_models.py`.
 - Runtime artifact loading exists at `backend/app/core/artifact_loader.py`, supporting either a production manifest bundle or a direct runtime model path for the current local scoring stub.
-- Backend scoring service stubs exist at `backend/app/services/scoring.py`, using the loaded model bundle plus request feature assembly to return schema-valid score responses.
+- Backend scoring service stubs exist at `backend/app/services/scoring.py`, using the loaded model bundle plus request feature assembly to return schema-valid score responses with per-user SHAP factors and persisted counterfactual actions when the explainability artifacts are available.
 - Backend analytics service foundation now exists at `backend/app/services/analytics.py`, serving report-backed analytics payloads from the loaded runtime bundle.
 - FastAPI app startup now exists at `backend/app/main.py`, with artifact loading cached at startup and CORS configured from settings.
 - Route stubs now exist at `backend/app/api/v1/routes/health.py`, `backend/app/api/v1/routes/score.py`, and `backend/app/api/v1/routes/analytics.py`.
-- The analytics route surface now includes `/api/fairness-report`, `/api/drift-report`, and `/api/global-importance`, all served directly from persisted report files with structured `503` responses when a report is missing.
-- Append-only request logging now exists at `backend/app/services/request_logging.py`, writing `/api/score` success and failure entries to `backend/runtime/logs/requests.jsonl` by default without persisting raw request payloads.
+- The analytics route surface now includes `/api/fairness-report`, `/api/drift-report`, and `/api/global-importance`, and the checked-in local bundle now serves `/api/global-importance` successfully from the saved artifact.
+- Append-only request logging exists at `backend/app/services/request_logging.py`, and the default local path now resolves to `runtime/logs/requests.jsonl` so checked-in bundle scoring can append without the earlier `backend/runtime` permission failure.
 - Feature engineering unit coverage exists at `tests/unit/ml/test_answer_parser.py`, `tests/unit/ml/test_behavioral_parser.py`, and `tests/unit/ml/test_derived_features.py`.
 - Request-assembly integration coverage exists at `tests/integration/pipeline/test_feature_assembly.py`.
 - Dataset-artifact and baseline-training integration coverage exists at `tests/integration/pipeline/test_dataset_artifacts_and_baselines.py`.
@@ -64,6 +65,7 @@
 - Persisted synthetic dataset now exists at `data/raw/synthetic_dataset.csv`.
 - Persisted validation summary now exists at `data/validation/validation_summary.json`.
 - Refreshed baseline artifacts now exist at `models/preprocessors/preprocessor.pkl`, `models/preprocessors/text_pca.pkl`, `models/artifacts/logistic_best.pkl`, `models/reports/baseline_metrics.json`, and `models/reports/metrics.json`.
+- The curated checked-in local runtime bundle now also includes `models/explainers/shap_explainer.pkl`, `models/explainers/dice_explainer.pkl`, and the report JSON files needed by the current backend smoke suite so repository clones can validate the real serving assets directly.
 - Saved classical model artifacts now exist at `models/artifacts/rf_best.pkl`, `models/artifacts/xgb_best.pkl`, and `models/artifacts/lgbm_best.pkl`.
 - `models/reports/metrics.json` now preserves the baseline section, includes validation/test rows for `random_forest`, `xgboost`, and `lightgbm`, and stores offline `evaluation_details` for validation/test ROC, PR, calibration, and confusion payloads.
 - `models/reports/population_percentiles.json` now exists with a real score histogram plus percentile lookup for the scored synthetic population, and it carries model-specific tables for the current logistic/classical artifacts.
@@ -74,17 +76,22 @@
 - Runtime artifact loading now resolves the active model's percentile table from a multi-model `population_percentiles.json` payload, so direct logistic fallback, candidate classical loading, and later ensemble loading can all reuse the same artifact format.
 - Runtime artifact loading now also reads the saved fairness, PSI, and global-importance report payloads so the analytics service can serve them without ad hoc file parsing in route handlers.
 - Runtime artifact loading still succeeds when `fairness_report.json`, `psi_report.json`, and `global_importance.json` are present alongside the current scoring bundle, and the analytics routes now read those payloads from the startup-loaded bundle rather than reparsing files inside handlers.
-- Runtime artifact loading still treats fairness, PSI, and global-importance reports as optional for strict scoring readiness, but the corresponding analytics routes now serve them when present and fail clearly when they are missing.
+- Runtime artifact loading now validates the runtime model, preprocessor, text PCA, persisted SHAP explainer, persisted counterfactual explainer, and saved report payload types at startup, then reports optional artifacts as loaded, missing, or invalid instead of inferring readiness from path presence alone.
+- The restored `backend/ml/explainability/shap_explainer.py` compatibility module now makes the checked-in `models/explainers/shap_explainer.pkl` artifact deserialize and validate from repository source, and `/api/score` now formats top per-user SHAP factors directly from that loaded artifact for the checked-in bundle.
+- The new `backend/ml/explainability/dice_explainer.py` module now defines the validated persisted counterfactual artifact contract used by the checked-in `models/explainers/dice_explainer.pkl` file, and `/api/score` now formats counterfactual actions from that loaded artifact for the checked-in bundle.
+- The checked-in `models/reports/global_importance.json` file now matches the active `GlobalImportanceResponse` contract, and the runtime loader also normalizes legacy list-shaped payloads defensively if older bundles are encountered.
+- A checked-in runtime-bundle smoke suite now exists at `tests/integration/api/test_checked_in_runtime_bundle_smoke.py`, covering artifact loading, `/api/global-importance`, the writable runtime log path behavior, health behavior for missing versus invalid optional artifacts, and non-empty score-response explainability fields against the saved local bundle.
+- The shared `tmp_path` override in `tests/conftest.py` now writes under `runtime/pytest-workspace` instead of `.tmp` because the local environment reproduced write-permission failures under `.tmp`.
 - Root project placeholder README exists at `README.md`.
 - Frontend scaffold verification exists at `tests/unit/frontend/test_frontend_skeleton.py`.
 
 ## What Does Not Exist Yet
 
 - No borrower assessment pages, results flow, dashboard workflow, or frontend tests beyond the package skeleton smoke test.
-- No neural, stacking, calibration, SHAP, or DICE jobs yet.
-- Report-backed analytics now cover `/api/model-stats`, `/api/baseline-comparison`, `/api/fairness-report`, `/api/drift-report`, `/api/global-importance`, `/api/score-distribution`, `/api/roc-data`, `/api/pr-curve`, `/api/calibration-curve`, and `/api/confusion-matrix`. Persisted `shap_explainer.pkl`, per-user SHAP factors for the score response, DICE counterfactual artifacts, calibration-parity detail, and the individual-fairness proxy are still pending within the broader PRD fairness and explainability scope. Neural models, stacking/calibration, the production manifest, interactive frontend tests beyond the package skeleton smoke test, and broader ML validation beyond the current feature, preprocessing, training, artifact-loading, evaluation-artifact, governance-artifact, and API foundation coverage are also still pending.
+- No neural, stacking, or calibration jobs yet.
+- Report-backed analytics now cover `/api/model-stats`, `/api/baseline-comparison`, `/api/fairness-report`, `/api/drift-report`, `/api/global-importance`, `/api/score-distribution`, `/api/roc-data`, `/api/pr-curve`, `/api/calibration-curve`, and `/api/confusion-matrix`. The checked-in bundle now includes both persisted per-user SHAP support and persisted counterfactual actions for the current logistic runtime model. Calibration-parity detail, the individual-fairness proxy, neural models, stacking/calibration, the production manifest, interactive frontend tests beyond the package skeleton smoke test, and broader ML validation beyond the current feature, preprocessing, training, artifact-loading, evaluation-artifact, governance-artifact, and API foundation coverage are still pending.
 - No Docker runtime files yet.
-- No SHAP explainer or DICE explainer exists yet, so the current scoring stub still returns empty explanation/counterfactual lists; semantic features now use the persisted `text_pca.pkl` when available and only fall back to zero-filled projections when the PCA artifact is intentionally missing.
+- The checked-in bundle now includes valid persisted SHAP and counterfactual explainability artifacts. Semantic features still use the persisted `text_pca.pkl` when available and only fall back to zero-filled projections when the PCA artifact is intentionally missing.
 
 ## PRD-Derived Product Summary
 
@@ -108,7 +115,7 @@ The earlier PRD narrative referenced 39 features, but the project will not inven
 - Use local NLP only.
 - Use offline ML training separated from runtime inference.
 - Use calibrated stacking ensemble as production scoring model.
-- Use SHAP and DICE-ML for explanations.
+- Use SHAP and persisted DICE-style counterfactual artifacts for explanations.
 - Use PSI and fairness reports for dashboard analytics.
 - Use temporal cohort split for final validation.
 
@@ -116,10 +123,8 @@ The earlier PRD narrative referenced 39 features, but the project will not inven
 
 Continue the implementation foundation in this order:
 
-1. Build the persisted SHAP explainer and per-user factor path for `/api/score`, using the current saved bundle as the temporary explainability source until the production candidate exists.
-2. Extend the fairness job later with calibration-parity detail and the individual-fairness proxy required by the broader PRD.
-3. Build the DICE explainer artifact and actionable counterfactual flow after the SHAP path is in place.
-4. Keep the refreshed logistic, classical, preprocessor, `text_pca.pkl`, `metrics.json`, `baseline_metrics.json`, `population_percentiles.json`, `fairness_report.json`, `psi_report.json`, and `global_importance.json` artifacts as the local offline foundation while neural, ensemble, and manifest work are still pending.
+1. Freeze the first manifest-backed serving bundle so health/readiness can reflect one promoted runtime package instead of relying on candidate selection or direct model fallback.
+2. After the manifest path is complete, continue with calibration-parity, the individual-fairness proxy, frontend flows, and later neural/ensemble work.
 
 ## Session Update Protocol
 

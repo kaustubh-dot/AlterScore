@@ -20,7 +20,7 @@ def _load_valid_score_payload() -> dict:
     )
 
 
-def test_score_endpoint_returns_schema_valid_stub_response(tmp_path) -> None:
+def test_score_endpoint_returns_schema_valid_runtime_response(tmp_path) -> None:
     settings = build_runtime_settings(tmp_path)
     payload = _load_valid_score_payload()
     app = create_app(settings)
@@ -35,7 +35,8 @@ def test_score_endpoint_returns_schema_valid_stub_response(tmp_path) -> None:
     assert 0.0 <= parsed.repayment_probability <= 1.0
     assert 0 <= parsed.percentile <= 100
     assert parsed.explanation == []
-    assert parsed.counterfactual_actions == []
+    assert parsed.counterfactual_actions
+    assert all(action.estimated_score_gain >= 0 for action in parsed.counterfactual_actions)
     assert parsed.loan_eligibility.band == parsed.risk_band
     assert parsed.improvement_tips
 
@@ -162,6 +163,7 @@ def test_score_endpoint_returns_structured_503_when_artifacts_are_missing(tmp_pa
     parsed = ErrorResponse.model_validate(response.json())
     assert parsed.error.code == "ARTIFACTS_NOT_READY"
     assert "missing_artifacts" in parsed.error.details
+    assert parsed.error.details["invalid_artifacts"] == []
     assert settings.request_log_path.is_file()
 
     entries = [

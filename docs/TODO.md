@@ -2,10 +2,16 @@
 
 ## Current Phase
 
-Governance analytics route foundation with persisted fairness, drift, and global-importance reporting. The canonical feature registry, project hygiene files, backend runtime helpers, API schemas, frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, the baseline training loop, the bounded classical training loop, the persisted text PCA artifact foundation, the runtime artifact-loading plus scoring-service stubs, the FastAPI startup with health/score/all current analytics routes, append-only request logging, and the persisted evaluation plus fairness/drift/global-importance artifact foundations for curves, confusion, population percentiles, held-out subgroup fairness, train-vs-test feature stability, and dashboard-ready feature ranking are implemented; the remaining explainability-runtime and full production-model artifacts are not started.
+Repository integrity remediation after merges/refactors is now landed for the checked-in runtime bundle. The canonical feature registry, project hygiene files, backend runtime helpers, API schemas, frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, the baseline training loop, the bounded classical training loop, the persisted text PCA artifact foundation, the runtime artifact-loading plus scoring-service stubs, the FastAPI startup with health/score/all current analytics routes, and the persisted evaluation plus fairness/drift/global-importance artifact foundations for curves, confusion, population percentiles, held-out subgroup fairness, train-vs-test feature stability, and dashboard-ready feature ranking are implemented. `/api/score` now uses the loaded SHAP artifact for per-user explanations and the persisted checked-in `dice_explainer.pkl` artifact for counterfactual actions.
 
 ## Immediate TODO
 
+- [x] Reconcile all project docs with the post-merge audit findings before further feature work.
+- [x] Restore the missing `backend/ml/explainability/shap_explainer.py` source expected by the checked-in `models/explainers/shap_explainer.pkl`.
+- [x] Keep the checked-in `models/explainers/shap_explainer.pkl` artifact for now and validate it from repository source rather than removing it; defer regeneration until richer score-time explainability work lands.
+- [x] Regenerate or adapt `models/reports/global_importance.json` so it matches the active `GlobalImportanceResponse` contract.
+- [x] Verify and repair the default runtime request-log path so score-request logging works locally; the default now resolves to `runtime/logs/requests.jsonl`.
+- [x] Add a fast checked-in artifact-bundle smoke test that validates the local runtime bundle without retraining models in every test case.
 - [x] Add mandatory AI workflow rules for startup, documentation updates, testing, git, and session close.
 - [x] Implement the canonical 35-input feature registry before writing data generator code.
 - [x] Add `.gitignore` for generated data, model artifacts, logs, env files, caches, and node/python build outputs.
@@ -43,7 +49,12 @@ Governance analytics route foundation with persisted fairness, drift, and global
 - [x] Implement health endpoint.
 - [x] Add report-backed analytics service foundation and the first `/api/model-stats` plus `/api/baseline-comparison` endpoints.
 - [x] Implement `/api/fairness-report`, `/api/drift-report`, and `/api/global-importance` from persisted report files.
-- [ ] Harden the scoring endpoint with explainability, counterfactual, and production-bundle behavior.
+- [ ] Finalize production-bundle behavior for manifest-backed serving after explainability runtime stabilizes.
+- [x] Make runtime readiness/health checks distinguish between artifact presence and successful optional-artifact deserialization.
+- [x] Load and validate SHAP/DICE explainers explicitly when present, and report missing versus invalid optional explainers separately.
+- [x] Wire the loaded SHAP explainer into `/api/score`.
+- [x] Persist and validate a checked-in `dice_explainer.pkl` so `/api/score` returns artifact-backed counterfactual actions from the default bundle.
+- [ ] Decide whether future production bundles should keep the lightweight persisted counterfactual contract or migrate to a richer `dice_ml`-backed artifact after manifest promotion.
 
 ## Data Pipeline TODO
 
@@ -107,10 +118,12 @@ Governance analytics route foundation with persisted fairness, drift, and global
 - [ ] Build SHAP explainer using the selected explainable model path.
 - [x] Generate global SHAP importance JSON.
 - [ ] Generate SHAP summary plot.
-- [ ] Implement per-user top factor formatting.
-- [ ] Build DICE data/model interface.
-- [ ] Generate DICE explainer artifact.
-- [ ] Validate DICE actions exclude protected and immutable fields.
+- [x] Implement per-user top factor formatting.
+- [x] Persist the current counterfactual artifact and keep the bounded runtime fallback only as a non-default contingency for intentionally artifact-less tests or bundles.
+- [x] Build the current counterfactual data/model interface for the checked-in runtime bundle.
+- [x] Generate the checked-in `models/explainers/dice_explainer.pkl` artifact.
+- [x] Validate that persisted counterfactual actions exclude protected and immutable fields.
+- [ ] Evaluate whether to replace the lightweight persisted counterfactual contract with a fuller `dice_ml` object after manifest promotion.
 
 ## Fairness And Drift TODO
 
@@ -161,7 +174,7 @@ Governance analytics route foundation with persisted fairness, drift, and global
 - [x] Add API integration coverage for `/api/score-distribution`, including missing-artifact behavior.
 - [x] Add API integration coverage for `/api/roc-data`, `/api/pr-curve`, `/api/calibration-curve`, and `/api/confusion-matrix`, including missing-artifact behavior.
 - [ ] Add integration tests for broader data pipeline steps beyond generator validation and preprocessing split integrity.
-- [ ] Add integration tests for the remaining governance analytics endpoints.
+- [x] Add integration tests that exercise the checked-in local runtime bundle directly, including the actual saved `global_importance.json` and request-log path behavior.
 - [ ] Add E2E tests for assessment and dashboard.
 
 ## Deployment TODO

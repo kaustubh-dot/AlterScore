@@ -49,7 +49,8 @@
 
 Current scaffold note:
 - Until the full production bundle exists, the backend may report health from either a manifest-backed bundle or a direct runtime-model fallback used by the scoring stub.
-- Health may currently be `degraded` even when `model_loaded` is `true` if optional runtime artifacts are still missing but scoring-critical artifacts are present.
+- The checked-in curated bundle currently reports `ok`, while copied or intentionally broken bundles may still report `degraded` even when `model_loaded` is `true` if optional runtime artifacts are missing or invalid but scoring-critical artifacts are present.
+- `artifacts_loaded` reflects successful startup load/validation, not just file presence, and `invalid_artifacts` is reserved for present-but-unusable optional artifacts.
 
 ### Response
 
@@ -69,6 +70,7 @@ Current scaffold note:
     "psi_report"
   ],
   "missing_artifacts": [],
+  "invalid_artifacts": [],
   "timestamp": "2026-05-13T00:00:00Z"
 }
 ```
@@ -185,9 +187,11 @@ Current scaffold note:
 ```
 
 Current scaffold note:
-- The response fields above remain required, but while SHAP and DICE artifacts are not implemented yet the backend scoring stub may return empty `explanation` and `counterfactual_actions` lists rather than omitting those fields.
+- The response fields above remain required, and the checked-in bundle now returns real `explanation` items when the persisted SHAP artifact loads successfully.
+- The checked-in bundle now returns `counterfactual_actions` from the persisted `models/explainers/dice_explainer.pkl` artifact, which stores bounded actionable counterfactual policies against the loaded model bundle and is validated at startup.
+- The fallback may legitimately report `estimated_score_gain = 0` when the applicant is already at the current score ceiling but a simulated change still improves repayment probability.
 - When `models/preprocessors/text_pca.pkl` is present, runtime semantic dimensions use the persisted PCA artifact; the temporary zero-fill fallback remains only for intentionally PCA-less test or stub bundles.
-- Score requests are now append-logged to the backend runtime log path without storing the raw answers or behavioral payload in the JSONL entry.
+- Score requests are now append-logged to `runtime/logs/requests.jsonl` by default, without storing the raw answers or behavioral payload in the JSONL entry.
 - Structured `500` errors now expose only a sanitized error type in the client payload; full failure details remain in server-side logs.
 
 ## GET /api/model-stats
@@ -238,6 +242,7 @@ Current foundation note:
 - The global-importance endpoint now serves the saved dashboard ranking from `models/reports/global_importance.json`.
 - The response identifies which saved model produced the ranking so dashboard consumers do not have to infer it from deployment context.
 - The response is read from the startup-loaded runtime bundle and does not recompute explainability values inside the API process.
+- Startup loading now accepts the current dict-shaped artifact and also normalizes legacy list-shaped saved payloads defensively if older local bundles are encountered.
 - If `global_importance.json` is missing at startup, the endpoint returns a structured `503` with `missing_artifacts`.
 
 ### Response

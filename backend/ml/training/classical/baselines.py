@@ -13,7 +13,16 @@ import numpy as np
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
 
-from backend.app.core.paths import MODEL_ARTIFACTS_DIR, MODEL_REPORTS_DIR, RAW_DATA_DIR
+from backend.app.core.paths import (
+    MODEL_ARTIFACTS_DIR,
+    MODEL_REPORTS_DIR,
+    RAW_DATA_DIR,
+)
+from backend.ml.explainability.dice_explainer import (
+    DEFAULT_DICE_EXPLAINER_PATH,
+    build_default_persisted_dice_explainer,
+    save_persisted_dice_explainer,
+)
 from backend.ml.data_generation.validators import MINIMUM_TEST_ROWS, validate_synthetic_dataset
 from backend.ml.evaluation.drift import (
     DEFAULT_PSI_REPORT_PATH,
@@ -73,6 +82,7 @@ class BaselineTrainingArtifacts:
     psi_report_path: Path | None
     fairness_report_path: Path | None
     global_importance_path: Path | None
+    dice_explainer_path: Path | None
     model_stats: list[dict[str, Any]]
     baseline_metrics: list[dict[str, Any]]
 
@@ -159,6 +169,7 @@ def train_baselines(
     psi_report_path: str | Path | None = DEFAULT_PSI_REPORT_PATH,
     fairness_report_path: str | Path | None = DEFAULT_FAIRNESS_REPORT_PATH,
     global_importance_path: str | Path | None = DEFAULT_GLOBAL_IMPORTANCE_PATH,
+    dice_explainer_path: str | Path | None = DEFAULT_DICE_EXPLAINER_PATH,
     random_state: int = DEFAULT_RANDOM_STATE,
 ) -> BaselineTrainingArtifacts:
     """Fit the first baseline suite on the documented temporal splits."""
@@ -340,6 +351,11 @@ def train_baselines(
         save_fairness_report(fairness_report, fairness_report_path)
     if global_importance_path is not None:
         save_global_importance_report(global_importance_report, global_importance_path)
+    if dice_explainer_path is not None:
+        save_persisted_dice_explainer(
+            build_default_persisted_dice_explainer(model_name="logistic_regression"),
+            dice_explainer_path,
+        )
 
     return BaselineTrainingArtifacts(
         run_id=run_id,
@@ -358,6 +374,9 @@ def train_baselines(
         ),
         global_importance_path=(
             None if global_importance_path is None else Path(global_importance_path)
+        ),
+        dice_explainer_path=(
+            None if dice_explainer_path is None else Path(dice_explainer_path)
         ),
         model_stats=model_stats,
         baseline_metrics=baseline_metrics,
@@ -413,6 +432,7 @@ __all__ = [
     "BaselineTrainingArtifacts",
     "DEFAULT_BASELINE_METRICS_PATH",
     "DEFAULT_DATASET_PATH",
+    "DEFAULT_DICE_EXPLAINER_PATH",
     "DEFAULT_FAIRNESS_REPORT_PATH",
     "DEFAULT_GLOBAL_IMPORTANCE_PATH",
     "DEFAULT_LOGISTIC_ARTIFACT_PATH",
