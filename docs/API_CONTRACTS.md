@@ -236,12 +236,13 @@ Uses the `DriftReport` shape documented below.
 
 Current foundation note:
 - The global-importance endpoint now serves the saved dashboard ranking from `models/reports/global_importance.json`.
+- The response identifies which saved model produced the ranking so dashboard consumers do not have to infer it from deployment context.
 - The response is read from the startup-loaded runtime bundle and does not recompute explainability values inside the API process.
 - If `global_importance.json` is missing at startup, the endpoint returns a structured `503` with `missing_artifacts`.
 
 ### Response
 
-Uses the `GlobalImportanceItem` list shape documented below.
+Uses the `GlobalImportanceResponse` shape documented below.
 
 ## GET /api/score-distribution
 
@@ -358,7 +359,7 @@ Current foundation note:
 
 Current foundation note:
 - The confusion-matrix endpoint now serves the saved test-split `confusion_matrix` payloads from `models/reports/metrics.json`.
-- The response is a list of per-model matrices at the saved optimal threshold and does not run any model inference at request time.
+- The response is a list of per-model matrices at the saved validation-selected threshold and does not run any model inference at request time.
 - If `metrics.json` is missing at startup, the endpoint returns a structured `503` with `missing_artifacts`.
 
 ### Response
@@ -516,15 +517,21 @@ Current foundation note:
 ]
 ```
 
-### Global Importance Item
+### Global Importance Response
 
 ```json
 {
-  "feature": "future_orientation",
-  "display_name": "Future Orientation",
-  "mean_abs_shap": 0.083,
-  "category": "psychometric",
-  "rank": 1
+  "model_name": "xgboost",
+  "model_type": "classical",
+  "items": [
+    {
+      "feature": "future_orientation",
+      "display_name": "Future Orientation",
+      "mean_abs_shap": 0.083,
+      "category": "psychometric",
+      "rank": 1
+    }
+  ]
 }
 ```
 

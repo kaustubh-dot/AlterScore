@@ -85,6 +85,13 @@ def test_train_classical_models_saves_artifacts_and_merges_metrics(tmp_path) -> 
     for row in test_rows:
         assert row["model_type"] == "classical"
         assert np.isfinite([row[field_name] for field_name in NUMERIC_METRIC_FIELDS]).all()
+        validation_row = next(
+            item
+            for item in metrics_payload["model_stats"]
+            if item["model_name"] == row["model_name"]
+            and item["split"] == "validation_months_9_10"
+        )
+        assert row["threshold"] == validation_row["threshold"]
     assert "evaluation_details" in metrics_payload
     assert "xgboost" in metrics_payload["evaluation_details"]["test_months_11_12"]
     assert "logistic_regression" in population_percentiles["models"]

@@ -62,6 +62,8 @@ def build_fairness_report(
 
     worst_auc_gap = 0.0
     flagged_groups: list[str] = []
+    evaluated_group_count = 0
+    skipped_group_count = 0
 
     for attribute_name in PROTECTED_FEATURES:
         if attribute_name not in protected_frame.columns:
@@ -76,12 +78,15 @@ def build_fairness_report(
             mask = (attribute_values == group_value).to_numpy(dtype=bool)
             n_samples = int(mask.sum())
             if n_samples < min_group_samples:
+                skipped_group_count += 1
                 continue
 
             subgroup_true = y_true_array[mask]
             if len(np.unique(subgroup_true)) < 2:
+                skipped_group_count += 1
                 continue
 
+            evaluated_group_count += 1
             subgroup_prob = y_prob_array[mask]
             subgroup_scores = scores[mask]
             subgroup_approved = approved[mask]
@@ -108,7 +113,11 @@ def build_fairness_report(
 
     report["worst_auc_gap"] = round(worst_auc_gap, 4)
     report["flagged_groups"] = flagged_groups
-    report["verdict"] = _build_verdict(flagged_groups)
+    report["verdict"] = _build_verdict(
+        flagged_groups,
+        evaluated_group_count=evaluated_group_count,
+        skipped_group_count=skipped_group_count,
+    )
     return report
 
 
@@ -162,18 +171,36 @@ def _determine_group_flag(auc_gap: float) -> str:
     return "green"
 
 
-def _build_verdict(flagged_groups: list[str]) -> str:
+def _build_verdict(
+    flagged_groups: list[str],
+    *,
+    evaluated_group_count: int,
+    skipped_group_count: int,
+) -> str:
+    if evaluated_group_count == 0:
+        return (
+            "Fairness audit is inconclusive because no subgroup met the minimum "
+            "sample and class-coverage requirements."
+        )
     if not flagged_groups:
+        if skipped_group_count:
+            return (
+                "Model shows acceptable fairness across evaluated demographic groups, "
+                "but some subgroups were skipped due to limited support."
+            )
         return (
             "Model shows acceptable fairness across all tested demographic groups. "
             "No subgroup shows AUC deviation >4% from the overall model."
         )
-    return (
+    verdict = (
         "Model requires attention for: "
         f"{', '.join(flagged_groups)}. "
         "These groups show AUC deviation beyond threshold. "
         "Recommend targeted feature collection or separate calibration."
     )
+    if skipped_group_count:
+        verdict += " Some additional subgroups were skipped due to limited support."
+    return verdict
 
 
 def _safe_roc_auc_score(

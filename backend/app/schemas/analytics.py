@@ -154,8 +154,10 @@ class GlobalImportanceItem(SchemaModel):
     rank: int = Field(..., ge=1)
 
 
-class GlobalImportanceResponse(RootModel[list[GlobalImportanceItem]]):
-    pass
+class GlobalImportanceResponse(SchemaModel):
+    model_name: str = Field(..., min_length=1)
+    model_type: str = Field(..., min_length=1)
+    items: list[GlobalImportanceItem]
 
 
 class DriftThresholds(SchemaModel):

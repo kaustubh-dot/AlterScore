@@ -66,11 +66,17 @@ def test_train_baselines_saves_preprocessor_model_and_metrics_artifacts(tmp_path
     assert len(metrics_payload["model_stats"]) == 3
     assert metrics_payload["baselines"][1]["model_name"] == "logistic_regression"
     assert "evaluation_details" in metrics_payload
+    validation_row = next(
+        row
+        for row in metrics_payload["model_stats"]
+        if row["model_name"] == "logistic_regression"
+        and row["split"] == "validation_months_9_10"
+    )
     assert (
         metrics_payload["evaluation_details"]["test_months_11_12"]["logistic_regression"][
             "confusion_matrix"
         ]["threshold"]
-        >= 0.0
+        == validation_row["threshold"]
     )
     assert population_percentiles["default_model_name"] == "logistic_regression"
     assert population_percentiles["models"]["logistic_regression"]["row_count"] == 2_400

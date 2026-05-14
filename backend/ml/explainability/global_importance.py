@@ -24,6 +24,10 @@ NATIVE_IMPORTANCE_PREFERENCE: Final[tuple[str, ...]] = (
     "lightgbm",
     "random_forest",
 )
+GLOBAL_IMPORTANCE_SOURCE_PREFERENCE: Final[tuple[str, ...]] = (
+    *NATIVE_IMPORTANCE_PREFERENCE,
+    *EXACT_LINEAR_IMPORTANCE_PREFERENCE,
+)
 PSYCHOMETRIC_FEATURES: Final[tuple[str, ...]] = (
     "numeracy_score",
     "CRT_score",
@@ -118,14 +122,16 @@ def build_global_importance_report_for_candidate_models(
     train_processed_features: np.ndarray,
     test_processed_features: np.ndarray,
     model_stats: list[dict[str, Any]],
+    candidate_model_types: dict[str, str] | None = None,
     feature_names: list[str] | tuple[str, ...] = tuple(ALL_MODEL_FEATURES),
-) -> tuple[list[dict[str, Any]], str]:
+) -> tuple[dict[str, Any], str]:
     """Build the dashboard-ready global-importance payload for the best source model."""
 
     if not candidate_models:
         raise ValueError("At least one candidate model is required for global importance.")
 
     resolved_feature_names = list(feature_names)
+    resolved_model_types = candidate_model_types or {}
     selected_model_name = _select_importance_source_model(
         candidate_models,
         model_stats=model_stats,
@@ -157,11 +163,18 @@ def build_global_importance_report_for_candidate_models(
     for rank, report_row in enumerate(report_rows, start=1):
         report_row["rank"] = rank
 
-    return report_rows, selected_model_name
+    return (
+        {
+            "model_name": selected_model_name,
+            "model_type": resolved_model_types.get(selected_model_name, "unknown"),
+            "items": report_rows,
+        },
+        selected_model_name,
+    )
 
 
 def save_global_importance_report(
-    report: list[dict[str, Any]],
+    report: dict[str, Any],
     path: str | Path,
 ) -> None:
     """Persist a global-importance report payload as JSON."""
@@ -176,28 +189,17 @@ def _select_importance_source_model(
     *,
     model_stats: list[dict[str, Any]],
 ) -> str:
-    exact_linear_candidates = {
+    supported_candidates = {
         model_name: model
         for model_name, model in candidate_models.items()
         if _supports_exact_linear_importance(model)
+        or _supports_native_feature_importance(model)
     }
-    if exact_linear_candidates:
+    if supported_candidates:
         return _select_best_candidate_name(
-            exact_linear_candidates,
+            supported_candidates,
             model_stats=model_stats,
-            preferred_order=EXACT_LINEAR_IMPORTANCE_PREFERENCE,
-        )
-
-    native_importance_candidates = {
-        model_name: model
-        for model_name, model in candidate_models.items()
-        if _supports_native_feature_importance(model)
-    }
-    if native_importance_candidates:
-        return _select_best_candidate_name(
-            native_importance_candidates,
-            model_stats=model_stats,
-            preferred_order=NATIVE_IMPORTANCE_PREFERENCE,
+            preferred_order=GLOBAL_IMPORTANCE_SOURCE_PREFERENCE,
         )
 
     raise ValueError(

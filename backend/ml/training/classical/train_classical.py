@@ -30,6 +30,7 @@ from backend.ml.evaluation.metrics import (
     compute_binary_classification_metrics,
     merge_evaluation_details,
     merge_population_percentiles_reports,
+    optimal_threshold,
     select_best_test_auc_model,
 )
 from backend.ml.explainability.global_importance import (
@@ -162,6 +163,9 @@ def train_classical_models(
         "test_months_11_12": {},
     }
     population_model_payloads: dict[str, dict[str, Any]] = {}
+    importance_model_types = {
+        model_name: CLASSICAL_MODEL_TYPE for model_name in CLASSICAL_MODEL_ORDER
+    }
 
     for model_name in CLASSICAL_MODEL_ORDER:
         model = models[model_name]
@@ -181,6 +185,7 @@ def train_classical_models(
         validation_probabilities[model_name] = validation_probs
         test_probabilities[model_name] = test_probs
         fairness_candidate_test_probabilities[model_name] = test_probs
+        validation_threshold = optimal_threshold(y_validation, validation_probs)
         model_stats.extend(
             [
                 compute_binary_classification_metrics(
@@ -189,6 +194,7 @@ def train_classical_models(
                     model_name=model_name,
                     model_type=CLASSICAL_MODEL_TYPE,
                     split="validation_months_9_10",
+                    threshold=validation_threshold,
                 ),
                 compute_binary_classification_metrics(
                     y_test,
@@ -196,6 +202,7 @@ def train_classical_models(
                     model_name=model_name,
                     model_type=CLASSICAL_MODEL_TYPE,
                     split="test_months_11_12",
+                    threshold=validation_threshold,
                 ),
             ]
         )
@@ -206,6 +213,7 @@ def train_classical_models(
                 model_name=model_name,
                 model_type=CLASSICAL_MODEL_TYPE,
                 split="validation_months_9_10",
+                threshold=validation_threshold,
             )
         )
         evaluation_details["test_months_11_12"][model_name] = (
@@ -215,6 +223,7 @@ def train_classical_models(
                 model_name=model_name,
                 model_type=CLASSICAL_MODEL_TYPE,
                 split="test_months_11_12",
+                threshold=validation_threshold,
             )
         )
         population_model_payloads[model_name] = build_population_percentiles_payload(
@@ -236,6 +245,11 @@ def train_classical_models(
             logistic_model.predict_proba(X_test_processed)[:, 1],
         )
         fairness_candidate_test_probabilities["logistic_regression"] = logistic_test_probs
+        importance_model_types["logistic_regression"] = CLASSICAL_MODEL_TYPE
+        logistic_validation_threshold = optimal_threshold(
+            y_validation,
+            logistic_validation_probs,
+        )
         evaluation_details["validation_months_9_10"]["logistic_regression"] = (
             build_split_evaluation_details(
                 y_validation,
@@ -243,6 +257,7 @@ def train_classical_models(
                 model_name="logistic_regression",
                 model_type=CLASSICAL_MODEL_TYPE,
                 split="validation_months_9_10",
+                threshold=logistic_validation_threshold,
             )
         )
         evaluation_details["test_months_11_12"]["logistic_regression"] = (
@@ -252,6 +267,7 @@ def train_classical_models(
                 model_name="logistic_regression",
                 model_type=CLASSICAL_MODEL_TYPE,
                 split="test_months_11_12",
+                threshold=logistic_validation_threshold,
             )
         )
         population_model_payloads["logistic_regression"] = (
@@ -297,6 +313,7 @@ def train_classical_models(
         train_processed_features=X_train_processed,
         test_processed_features=X_test_processed,
         model_stats=merged_model_stats,
+        candidate_model_types=importance_model_types,
     )
 
     if metrics_path is not None:

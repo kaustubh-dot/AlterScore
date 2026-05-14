@@ -185,19 +185,7 @@ class AnalyticsService:
         evaluation_details = self._require_split_evaluation_details()
         return self._validate_response(
             ConfusionMatrixResponse,
-            [
-                {
-                    "model_name": model_name,
-                    "model_type": model_payload["model_type"],
-                    "split": model_payload["split"],
-                    **self._require_nested_mapping(
-                        model_payload,
-                        nested_key="confusion_matrix",
-                        artifact_key="metrics",
-                    ),
-                }
-                for model_name, model_payload in evaluation_details.items()
-            ],
+            self._build_confusion_matrix_payload(evaluation_details),
             artifact_key="metrics",
         )
 
@@ -284,19 +272,57 @@ class AnalyticsService:
         *,
         points_key: str,
     ) -> list[dict[str, Any]]:
-        return [
-            {
-                "model_name": model_name,
-                "model_type": model_payload["model_type"],
-                "split": model_payload["split"],
-                "points": self._require_nested_sequence(
-                    model_payload,
-                    nested_key=points_key,
-                    artifact_key="metrics",
-                ),
-            }
-            for model_name, model_payload in evaluation_details.items()
-        ]
+        payload: list[dict[str, Any]] = []
+        for model_name, model_payload in evaluation_details.items():
+            payload.append(
+                {
+                    "model_name": model_name,
+                    "model_type": self._require_string_field(
+                        model_payload,
+                        field_key="model_type",
+                        artifact_key="metrics",
+                    ),
+                    "split": self._require_string_field(
+                        model_payload,
+                        field_key="split",
+                        artifact_key="metrics",
+                    ),
+                    "points": self._require_nested_sequence(
+                        model_payload,
+                        nested_key=points_key,
+                        artifact_key="metrics",
+                    ),
+                }
+            )
+        return payload
+
+    def _build_confusion_matrix_payload(
+        self,
+        evaluation_details: dict[str, dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        payload: list[dict[str, Any]] = []
+        for model_name, model_payload in evaluation_details.items():
+            payload.append(
+                {
+                    "model_name": model_name,
+                    "model_type": self._require_string_field(
+                        model_payload,
+                        field_key="model_type",
+                        artifact_key="metrics",
+                    ),
+                    "split": self._require_string_field(
+                        model_payload,
+                        field_key="split",
+                        artifact_key="metrics",
+                    ),
+                    **self._require_nested_mapping(
+                        model_payload,
+                        nested_key="confusion_matrix",
+                        artifact_key="metrics",
+                    ),
+                }
+            )
+        return payload
 
     def _require_nested_mapping(
         self,
@@ -327,6 +353,24 @@ class AnalyticsService:
                 reason=f"'{nested_key}' must be a JSON list in evaluation_details.",
             )
         return nested_payload
+
+    def _require_string_field(
+        self,
+        payload: dict[str, Any],
+        *,
+        field_key: str,
+        artifact_key: str,
+    ) -> str:
+        value = payload.get(field_key)
+        if not isinstance(value, str) or not value:
+            raise AnalyticsPayloadError(
+                artifact_key=artifact_key,
+                reason=(
+                    f"'{field_key}' must be a non-empty string in split-level "
+                    "evaluation_details payloads."
+                ),
+            )
+        return value
 
     def _validate_response(
         self,

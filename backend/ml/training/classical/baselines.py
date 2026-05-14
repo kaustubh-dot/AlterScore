@@ -29,6 +29,7 @@ from backend.ml.evaluation.metrics import (
     build_population_percentiles_report,
     build_split_evaluation_details,
     compute_binary_classification_metrics,
+    optimal_threshold,
 )
 from backend.ml.explainability.global_importance import (
     DEFAULT_GLOBAL_IMPORTANCE_PATH,
@@ -212,12 +213,17 @@ def train_baselines(
         model_type="classical",
         split="train_months_1_8",
     )
+    logistic_validation_threshold = optimal_threshold(
+        prepared.validation.y.to_numpy(dtype=int),
+        logistic_validation_probs,
+    )
     logistic_validation_metrics = compute_binary_classification_metrics(
         prepared.validation.y.to_numpy(dtype=int),
         logistic_validation_probs,
         model_name="logistic_regression",
         model_type="classical",
         split="validation_months_9_10",
+        threshold=logistic_validation_threshold,
     )
     logistic_test_metrics = compute_binary_classification_metrics(
         prepared.test.y.to_numpy(dtype=int),
@@ -225,6 +231,7 @@ def train_baselines(
         model_name="logistic_regression",
         model_type="classical",
         split="test_months_11_12",
+        threshold=logistic_validation_threshold,
     )
 
     comparison_metrics = {
@@ -270,6 +277,7 @@ def train_baselines(
         train_processed_features=X_train_processed,
         test_processed_features=X_test_processed,
         model_stats=model_stats,
+        candidate_model_types={"logistic_regression": "classical"},
     )
     fairness_report, _ = build_fairness_report_for_candidate_probabilities(
         prepared.test.y.to_numpy(dtype=int),
@@ -285,6 +293,7 @@ def train_baselines(
                 model_name="logistic_regression",
                 model_type="classical",
                 split="validation_months_9_10",
+                threshold=logistic_validation_threshold,
             )
         },
         "test_months_11_12": {
@@ -294,6 +303,7 @@ def train_baselines(
                 model_name="logistic_regression",
                 model_type="classical",
                 split="test_months_11_12",
+                threshold=logistic_validation_threshold,
             )
         },
     }
