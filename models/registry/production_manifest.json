@@ -1,0 +1,109 @@
+{
+  "manifest_schema_version": "1.0.0",
+  "manifest_version": "local_logistic_runtime_bundle_v1",
+  "model_version": "0.1.0",
+  "run_id": "20260513_171150_baselines",
+  "created_at": "2026-05-14T00:00:00Z",
+  "code_ref": "864eeed4d3ddd781121e052bba0f8a618760c3e5",
+  "data_version": "synthetic_v0.1.0",
+  "feature_registry_version": "0.1.0",
+  "runtime_model_name": "logistic_regression",
+  "runtime_model_type": "classical",
+  "target": "repayment_label",
+  "split": {
+    "train": "cohort_month 1-8",
+    "validation": "cohort_month 9-10",
+    "test": "cohort_month 11-12"
+  },
+  "artifacts": {
+    "runtime_model": {
+      "path": "models/artifacts/logistic_best.pkl",
+      "sha256": "163f6370115487868627405a32e9bc16921da4ea2caa2e4e2ef9e6e1444e82f4"
+    },
+    "preprocessor": {
+      "path": "models/preprocessors/preprocessor.pkl",
+      "sha256": "3887c3e103f114d4890e99458129270be6ff0ce4b1a48650d0b9146f085844ee"
+    },
+    "text_pca": {
+      "path": "models/preprocessors/text_pca.pkl",
+      "sha256": "9364a94bb6b2a457195bf32052a9ca81676177ca711593714b9de779baa7be13"
+    },
+    "shap_explainer": {
+      "path": "models/explainers/shap_explainer.pkl",
+      "sha256": "ca484db1d2ca913ce2d98b2b2accd12db15e39f14403fb3f8d9acdb5e74e1c98"
+    },
+    "dice_explainer": {
+      "path": "models/explainers/dice_explainer.pkl",
+      "sha256": "2f6195455593d05bf8325c9481a9f73134297f5f9a8244c01f0e4670fc954feb"
+    },
+    "metrics": {
+      "path": "models/reports/metrics.json",
+      "sha256": "08ad5eb176f21ff97800588ff3198ae7d95f6d5c90caae1f8bf7ded55bb7422d"
+    },
+    "baseline_metrics": {
+      "path": "models/reports/baseline_metrics.json",
+      "sha256": "35588aeea38e80ca89c7c62d02fd0443def2811a11d8cdb93447165b6eb99c82"
+    },
+    "fairness_report": {
+      "path": "models/reports/fairness_report.json",
+      "sha256": "fc63e4d9fd83a1e5333e06f95070a330ac6773bcf188411e6e62940794382ba7"
+    },
+    "psi_report": {
+      "path": "models/reports/psi_report.json",
+      "sha256": "e599912f0b1b82e56788b1912dff5dee58048774c1f8c635a6f3bffba5501d3e"
+    },
+    "global_importance": {
+      "path": "models/reports/global_importance.json",
+      "sha256": "3533795d23a6e17049ec72bc39f954da1c9d6a542cb3e84b32279a2d04696e7d"
+    },
+    "population_percentiles": {
+      "path": "models/reports/population_percentiles.json",
+      "sha256": "b4f6c709b98deefb18e4a5058d734e5db4045d23d7de7b448c26dd745dd5fe5e"
+    }
+  },
+  "metrics_summary": {
+    "test_split": "test_months_11_12",
+    "test_auc_roc": 0.8098,
+    "test_auc_pr": 0.9109,
+    "test_ks": 0.4837,
+    "test_brier": 0.1665,
+    "test_ece": 0.1227,
+    "test_accuracy": 0.7861,
+    "test_precision": 0.79,
+    "test_recall": 0.9584,
+    "test_f1": 0.8661,
+    "test_threshold": 0.24
+  },
+  "fairness_summary": {
+    "overall_auc": 0.8098,
+    "worst_auc_gap": 0.0379,
+    "calibration_max_ece_gap": 0.0528,
+    "individual_fairness_flagged_pair_count": 374894,
+    "individual_fairness_flagged_pair_share": 0.731,
+    "flagged_groups": [],
+    "verdict": "Model shows acceptable fairness across all tested demographic groups. No subgroup shows AUC deviation >4% from the overall model."
+  },
+  "drift_summary": {
+    "max_psi": 0.2007,
+    "verdict": "watch",
+    "top_drifted_features": [
+      {
+        "feature": "avg_response_time_ms",
+        "psi": 0.2007,
+        "status": "watch"
+      },
+      {
+        "feature": "session_duration_sec",
+        "psi": 0.1726,
+        "status": "stable"
+      },
+      {
+        "feature": "cognitive_load_index",
+        "psi": 0.1319,
+        "status": "stable"
+      }
+    ]
+  },
+  "promotion_status": "candidate",
+  "promotion_notes": "First manifest-backed local serving bundle for the checked-in validated logistic runtime artifacts."
+}

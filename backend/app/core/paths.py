@@ -56,9 +56,10 @@ RUNTIME_LOG_DIR: Final[Path] = RUNTIME_DIR / "logs"
 REQUEST_LOG_RELATIVE_PATH: Final[Path] = Path("runtime/logs/requests.jsonl")
 REQUEST_LOG_PATH: Final[Path] = REPO_ROOT / REQUEST_LOG_RELATIVE_PATH
 
-PRODUCTION_MANIFEST_PATH: Final[Path] = (
-    MODEL_REGISTRY_DIR / "production_manifest.json"
+PRODUCTION_MANIFEST_RELATIVE_PATH: Final[Path] = Path(
+    "models/registry/production_manifest.json"
 )
+PRODUCTION_MANIFEST_PATH: Final[Path] = REPO_ROOT / PRODUCTION_MANIFEST_RELATIVE_PATH
 
 REQUIRED_ARTIFACT_PATHS: Final[dict[str, Path]] = {
     "calibrated_stacking": MODEL_ARTIFACTS_DIR / "calibrated_stacking.pkl",
@@ -91,6 +92,7 @@ __all__ = [
     "MODEL_REPORTS_DIR",
     "PROCESSED_DATA_DIR",
     "PRODUCTION_MANIFEST_PATH",
+    "PRODUCTION_MANIFEST_RELATIVE_PATH",
     "REQUEST_LOG_PATH",
     "REQUEST_LOG_RELATIVE_PATH",
     "RAW_DATA_DIR",

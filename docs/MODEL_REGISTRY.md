@@ -32,21 +32,31 @@ This file tracks expected model artifacts, promotion criteria, and the registry 
 | Baseline metrics | `models/reports/baseline_metrics.json` | Baselines job | Yes for dashboard | Majority, logistic, loan officer, ensemble |
 | Global importance | `models/reports/global_importance.json` | Explainability job | Yes for dashboard | Dashboard-ready feature ranking; current foundation prefers exact linear contribution magnitudes from the saved logistic explainability source and keeps the contract field name `mean_abs_shap` for backend compatibility with the existing analytics schema. The checked-in saved payload now matches the active backend response contract. |
 | SHAP summary image | `models/reports/shap_summary.png` | SHAP job | No | Human inspection |
-| Fairness report | `models/reports/fairness_report.json` | Fairness job | Yes for dashboard | Group metrics and verdict across protected audit attributes; deeper calibration-parity and individual-fairness follow-ons can extend it later |
+| Fairness report | `models/reports/fairness_report.json` | Fairness job | Yes for dashboard | Group metrics and verdict across protected audit attributes, plus calibration-parity curves/ECE gaps and the individual-fairness proxy |
 | PSI report | `models/reports/psi_report.json` | Drift job | Yes for dashboard | Train months `1-8` vs test months `11-12` on the canonical 35 inputs only |
 | Population percentiles | `models/reports/population_percentiles.json` | Evaluation job | Yes | Score percentile lookup plus saved score histogram; current payload can hold model-specific tables and a default serving view |
 | Model manifest | `models/registry/production_manifest.json` | Promotion step | Yes | Single serving bundle declaration |
 
 ## Production Manifest Schema
 
+Manifest contract notes:
+
+- The manifest now uses exact runtime artifact keys rather than ambiguous aliases, so the loader can validate one coherent bundle contract for startup, health, and analytics.
+- Every manifest-declared artifact entry must be an object with deterministic `path` and lowercase SHA256 `sha256` fields.
+- The backend validates the manifest structure before startup and verifies each manifest-backed artifact checksum during loading.
+
 ```json
 {
+  "manifest_schema_version": "1.0.0",
+  "manifest_version": "local_logistic_runtime_bundle_v1",
   "model_version": "0.1.0",
-  "run_id": "20260513_120000_initial_stack",
-  "created_at": "2026-05-13T00:00:00Z",
+  "run_id": "20260513_171150_baselines",
+  "created_at": "2026-05-14T00:00:00Z",
   "code_ref": "git-sha-or-branch",
   "data_version": "synthetic_v0.1.0",
   "feature_registry_version": "0.1.0",
+  "runtime_model_name": "logistic_regression",
+  "runtime_model_type": "classical",
   "target": "repayment_label",
   "split": {
     "train": "cohort_month 1-8",
@@ -54,34 +64,69 @@ This file tracks expected model artifacts, promotion criteria, and the registry 
     "test": "cohort_month 11-12"
   },
   "artifacts": {
-    "model": "models/artifacts/calibrated_stacking.pkl",
-    "preprocessor": "models/preprocessors/preprocessor.pkl",
-    "text_pca": "models/preprocessors/text_pca.pkl",
-    "shap_explainer": "models/explainers/shap_explainer.pkl",
-    "dice_explainer": "models/explainers/dice_explainer.pkl",
-    "metrics": "models/reports/metrics.json",
-    "fairness": "models/reports/fairness_report.json",
-    "psi": "models/reports/psi_report.json",
-    "percentiles": "models/reports/population_percentiles.json"
+    "runtime_model": {
+      "path": "models/artifacts/logistic_best.pkl",
+      "sha256": "..."
+    },
+    "preprocessor": {
+      "path": "models/preprocessors/preprocessor.pkl",
+      "sha256": "..."
+    },
+    "text_pca": {
+      "path": "models/preprocessors/text_pca.pkl",
+      "sha256": "..."
+    },
+    "shap_explainer": {
+      "path": "models/explainers/shap_explainer.pkl",
+      "sha256": "..."
+    },
+    "dice_explainer": {
+      "path": "models/explainers/dice_explainer.pkl",
+      "sha256": "..."
+    },
+    "metrics": {
+      "path": "models/reports/metrics.json",
+      "sha256": "..."
+    },
+    "baseline_metrics": {
+      "path": "models/reports/baseline_metrics.json",
+      "sha256": "..."
+    },
+    "fairness_report": {
+      "path": "models/reports/fairness_report.json",
+      "sha256": "..."
+    },
+    "psi_report": {
+      "path": "models/reports/psi_report.json",
+      "sha256": "..."
+    },
+    "global_importance": {
+      "path": "models/reports/global_importance.json",
+      "sha256": "..."
+    },
+    "population_percentiles": {
+      "path": "models/reports/population_percentiles.json",
+      "sha256": "..."
+    }
   },
-  "checksums": {},
-  "metrics": {
+  "metrics_summary": {
     "test_auc_roc": null,
+    "test_auc_pr": null,
     "test_ks": null,
     "test_brier": null,
-    "test_ece": null,
-    "ensemble_auc_lift_vs_loan_officer": null
+    "test_ece": null
   },
-  "fairness": {
+  "fairness_summary": {
     "worst_auc_gap": null,
+    "calibration_max_ece_gap": null,
+    "individual_fairness_flagged_pair_share": null,
     "flagged_groups": []
   },
-  "drift": {
+  "drift_summary": {
     "max_psi": null,
     "verdict": null
   },
-  "promotion_status": "not_promoted",
-  "promoted_by": null,
+  "promotion_status": "candidate",
   "promotion_notes": ""
 }
 ```
@@ -183,9 +228,12 @@ No promoted production model exists yet.
 
 Current local runtime-artifact status:
 
+- `models/registry/production_manifest.json` now exists and freezes the first manifest-backed local serving bundle for the checked-in validated logistic runtime candidate.
+- The local manifest-backed bundle now declares and checksum-locks the runtime model, preprocessor, text PCA, SHAP explainer, DICE explainer, metrics, baseline metrics, fairness report, PSI report, global-importance report, and population-percentiles artifact set.
+- Default local backend startup now prefers the checked-in manifest-backed bundle, while `ALTERSCORE_RUNTIME_MODEL_PATH` remains an explicit override for tests or intentional direct-model runs.
 - `models/preprocessors/text_pca.pkl` now exists and is loaded opportunistically by the runtime bundle.
 - `models/reports/population_percentiles.json` now exists and the runtime loader resolves the active model's table when the artifact contains multiple model-specific payloads.
-- `models/reports/fairness_report.json` now exists and is generated offline from held-out months `11-12` using protected attributes only for subgroup evaluation, never as model inputs.
+- `models/reports/fairness_report.json` now exists and is generated offline from held-out months `11-12` using protected attributes only for subgroup evaluation, never as model inputs. The refreshed artifact now includes subgroup calibration-parity curves/ECE gaps and the PRD individual-fairness proxy for demographically different but psychometrically similar applicants.
 - `models/reports/psi_report.json` now exists and is generated offline from the canonical 35 model inputs by comparing train months `1-8` to test months `11-12` only.
 - `models/reports/global_importance.json` now exists, is generated offline from the canonical 35 model inputs using the current saved explainability source, and the checked-in payload now matches the active backend response contract.
 - `models/explainers/shap_explainer.pkl` is now present on disk, deserializes through the restored `backend.ml.explainability.shap_explainer` module, passes runtime validation for the current stub bundle, and drives the checked-in bundle's per-user score explanations.
@@ -193,7 +241,7 @@ Current local runtime-artifact status:
 - The curated local runtime bundle is now intentionally source-controlled for portability and smoke coverage, while heavier future training outputs remain ignored by default.
 - `/api/score` now emits persisted counterfactual actions from the checked-in artifact, and the code-level default builder remains only a non-default contingency for intentionally artifact-less test bundles.
 - Zero-filled semantic fallback remains supported only for intentionally PCA-less test/runtime bundles.
-- The current local fairness artifact reports `overall_auc = 0.8098`, `worst_auc_gap = 0.0379`, and no flagged groups in the saved subgroup summary.
+- The current local fairness artifact reports `overall_auc = 0.8098`, `worst_auc_gap = 0.0379`, calibration `max_ece_gap = 0.0528`, no flagged subgroups, and an individual-fairness proxy with `374894` flagged similar-pair score gaps under the current synthetic/logistic bundle.
 - The current local PSI artifact reports `max_psi = 0.2007`, overall verdict `watch`, and `avg_response_time_ms` as the most drifted feature.
 - The current local global-importance artifact ranks `cognitive_load_index` first at `mean_abs_shap = 0.4635`, followed by `impulsivity_index`, `scroll_hesitation_score`, and `repayment_intention_score`.
 
@@ -212,7 +260,7 @@ Current local runtime-artifact status:
 - Logistic regression test AUC: `0.8098`
 - Simulated loan officer test AUC: `0.7614`
 - Logistic lift vs simulated loan officer: `+0.0484`
-- Notes: this refresh persists the real `text_pca.pkl` from train months `1-8` by reconstructing deterministic runtime-compatible surrogate Q27 text from the saved synthetic dataset before PCA fitting, and it also writes the first real `population_percentiles.json` plus validation/test evaluation details into `metrics.json`.
+- Notes: this refresh persists the real `text_pca.pkl` from train months `1-8` by reconstructing deterministic runtime-compatible surrogate Q27 text from the saved synthetic dataset before PCA fitting, and it also writes the first real `population_percentiles.json` plus validation/test evaluation details into `metrics.json`. The new checked-in manifest-backed local serving bundle currently points at this logistic runtime candidate because it remains the strongest validated checked-in local scorer.
 
 ### Classical Run: `20260513_171216_classical`
 

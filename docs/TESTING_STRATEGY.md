@@ -176,12 +176,18 @@ assert metrics["ensemble"]["auc_roc"] > metrics["baselines"]["simulated_loan_off
 - PSI values are non-negative.
 - Report includes max PSI, verdict, top drifted features, and all feature table.
 
+### Fairness
+
+- Calibration-parity tests cover per-group calibration curves and ECE gaps across protected audit groups.
+- Individual-fairness proxy tests cover demographically different but psychometrically similar pairs and assert protected attributes are not part of the similarity feature set.
+- Artifact/API smoke tests validate that the refreshed fairness report still loads through the current manifest-backed bundle and serves through `/api/fairness-report`.
+
 ## API Integration Tests
 
 ### Health
 
 - `GET /api/health` returns 200.
-- Response includes `status`, `version`, `model_loaded`, `artifacts_loaded`, `missing_artifacts`, and `invalid_artifacts`.
+- Response includes `status`, `version`, `model_loaded`, `artifact_source`, `manifest_backed`, `manifest_version`, `model_version`, `artifacts_loaded`, `missing_artifacts`, and `invalid_artifacts`.
 
 ### Score
 
@@ -198,8 +204,9 @@ assert metrics["ensemble"]["auc_roc"] > metrics["baselines"]["simulated_loan_off
 
 ### Artifact Loading Smoke Test
 
-- Runtime artifact loader supports a manifest-backed bundle when available.
-- Runtime artifact loader supports a direct runtime-model fallback for the current local scoring stub.
+- Runtime artifact loader supports a manifest-backed bundle when available and verifies manifest-declared SHA256 checksums.
+- Runtime artifact loader supports a direct runtime-model fallback for the current local scoring stub when explicitly requested.
+- Incomplete or malformed manifests fail clearly rather than silently falling back to candidate loading.
 - Missing scoring-critical artifacts fail clearly.
 - Present-but-invalid optional artifacts are reported separately from missing optional artifacts.
 - A loaded runtime bundle can score the valid request fixture and return schema-valid JSON.
@@ -215,11 +222,12 @@ Each analytics endpoint must:
 
 ### Current Stub Coverage
 
-- `test_health_endpoint.py` verifies the startup cache and artifact-health response.
+- `test_health_endpoint.py` verifies the startup cache and artifact-health response, including explicit manifest-backed state fields for health payloads.
 - `test_score_endpoint.py` verifies the schema-valid happy path and structured `503` behavior when scoring-critical artifacts are missing.
 - `test_score_endpoint.py` also verifies append-only request logging for success, sanitized `500`, and artifacts-not-ready responses.
 - `test_analytics_endpoints.py` now verifies `/api/model-stats`, `/api/baseline-comparison`, `/api/fairness-report`, `/api/drift-report`, `/api/global-importance`, `/api/score-distribution`, `/api/roc-data`, `/api/pr-curve`, `/api/calibration-curve`, and `/api/confusion-matrix` for both report-backed success responses and structured missing-artifact behavior.
-- `test_checked_in_runtime_bundle_smoke.py` now verifies the real checked-in local bundle directly, including the restored SHAP artifact load path, the validated `dice_explainer.pkl` load path, the saved `global_importance.json` payload, non-empty score-response explainability fields, the runtime log path behavior, and health behavior for missing versus invalid optional artifacts.
+- `test_artifact_loading.py` now also verifies manifest priority over candidate fallback plus clear failures for incomplete or malformed manifest payloads.
+- `test_checked_in_runtime_bundle_smoke.py` now verifies the real checked-in manifest-backed local bundle directly, including the restored SHAP artifact load path, the validated `dice_explainer.pkl` load path, the refreshed fairness payload, the saved `global_importance.json` payload, non-empty score-response explainability fields, the runtime log path behavior, and manifest-backed health behavior for missing versus invalid optional artifacts.
 
 ## Frontend Tests
 

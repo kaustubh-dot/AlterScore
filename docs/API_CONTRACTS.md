@@ -47,10 +47,10 @@
 
 ## GET /api/health
 
-Current scaffold note:
-- Until the full production bundle exists, the backend may report health from either a manifest-backed bundle or a direct runtime-model fallback used by the scoring stub.
-- The checked-in curated bundle currently reports `ok`, while copied or intentionally broken bundles may still report `degraded` even when `model_loaded` is `true` if optional runtime artifacts are missing or invalid but scoring-critical artifacts are present.
-- `artifacts_loaded` reflects successful startup load/validation, not just file presence, and `invalid_artifacts` is reserved for present-but-unusable optional artifacts.
+Current runtime note:
+- The checked-in local backend now starts from `models/registry/production_manifest.json` by default and reports that manifest-backed state explicitly in `/api/health`.
+- `ALTERSCORE_RUNTIME_MODEL_PATH` remains an explicit dev/test override path, and candidate selection remains a last-resort fallback only when neither a manifest nor an explicit runtime override is available.
+- `artifacts_loaded` reflects successful startup load, validation, and manifest-checksum verification rather than bare file presence, and `invalid_artifacts` is reserved for present-but-unusable artifacts such as checksum mismatches or deserialize failures.
 
 ### Response
 
@@ -59,15 +59,23 @@ Current scaffold note:
   "status": "ok",
   "version": "0.1.0",
   "model_loaded": true,
+  "artifact_source": "manifest",
+  "manifest_backed": true,
+  "manifest_version": "local_logistic_runtime_bundle_v1",
+  "model_version": "0.1.0",
   "artifacts_loaded": [
-    "calibrated_stacking",
+    "production_manifest",
+    "runtime_model",
     "preprocessor",
     "text_pca",
     "shap_explainer",
     "dice_explainer",
     "metrics",
+    "baseline_metrics",
     "fairness_report",
-    "psi_report"
+    "psi_report",
+    "global_importance",
+    "population_percentiles"
   ],
   "missing_artifacts": [],
   "invalid_artifacts": [],
@@ -218,6 +226,7 @@ Uses the `BaselineComparisonItem` list shape documented below.
 
 Current foundation note:
 - The fairness endpoint now serves the saved subgroup-audit payload from `models/reports/fairness_report.json`.
+- The saved report now includes calibration-parity curves/ECE gaps and an individual-fairness proxy in addition to subgroup AUC, approval-rate, and equalized-odds fields.
 - The response is read from the startup-loaded runtime bundle and does not recompute subgroup metrics inside the API process.
 - If `fairness_report.json` is missing at startup, the endpoint returns a structured `503` with `missing_artifacts`.
 
@@ -585,6 +594,55 @@ Current foundation note:
         "flag": "green"
       }
     }
+  },
+  "calibration_parity": {
+    "n_bins": 10,
+    "overall_expected_calibration_error": 0.04,
+    "max_ece_gap": 0.02,
+    "evaluated_group_count": 14,
+    "skipped_group_count": 0,
+    "groups": {
+      "gender": {
+        "female": {
+          "n_samples": 450,
+          "expected_calibration_error": 0.05,
+          "ece_gap_from_overall": 0.01,
+          "mean_predicted_probability": 0.68,
+          "observed_repayment_rate": 0.70,
+          "points": [
+            {
+              "mean_predicted": 0.65,
+              "fraction_positive": 0.68,
+              "count": 120
+            }
+          ]
+        }
+      }
+    }
+  },
+  "individual_fairness_proxy": {
+    "similarity_feature_set": ["numeracy_score", "CRT_score"],
+    "similarity_threshold": 0.9,
+    "score_gap_threshold": 50,
+    "evaluated_applicants": 1800,
+    "evaluated_pairs": 512839,
+    "flagged_pair_count": 374894,
+    "flagged_pair_share": 0.731,
+    "max_score_gap": 544,
+    "mean_score_gap": 115.72,
+    "p95_score_gap": 281.0,
+    "worst_pairs": [
+      {
+        "row_position_a": 1418,
+        "row_position_b": 1464,
+        "score_a": 300,
+        "score_b": 844,
+        "score_gap": 544,
+        "cosine_similarity": 0.9045,
+        "differing_attributes": ["age_group", "region", "education_level"]
+      }
+    ],
+    "verdict": "Individual fairness proxy found demographically different, psychometrically similar pairs with score gaps above 50 points."
   }
 }
 ```

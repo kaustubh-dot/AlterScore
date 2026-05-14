@@ -940,3 +940,68 @@ The offline governance bundle now includes a real dashboard-ready global-importa
 - Continue: yes
 - Stop: no
 - Follow-up: wire `/api/fairness-report`, `/api/drift-report`, and `/api/global-importance` to the saved report files, then return to the persisted SHAP explainer and per-user explanation path.
+
+## EXP-20260514-008 - Fairness governance detail refresh for manifest-backed bundle
+
+- Status: completed
+- Owner: Codex
+- Date started: 2026-05-14
+- Date completed: 2026-05-14
+- Branch / commit: workspace (pending commit)
+- Related decision: existing protected-attribute audit-only and offline-governance decisions
+- Related issue / task: calibration parity and individual-fairness proxy for the persisted fairness artifact
+
+### Hypothesis
+
+If calibration parity and the individual-fairness proxy are computed inside the offline fairness report generator, then the checked-in manifest-backed bundle can expose the full PRD governance surface without moving protected attributes or fairness computation into FastAPI request handling.
+
+### Dataset
+
+- Data version: `synthetic_v0.1.0`
+- Row count: `10,000`
+- Train split: months `1-8`
+- Validation split: months `9-10`
+- Test split: months `11-12` (`1,800` rows)
+- Protected attributes available: gender, age group, region, education level
+- Known schema changes: `/api/fairness-report` now includes optional `calibration_parity` and `individual_fairness_proxy` sections
+
+### Feature Set
+
+- Feature registry version: `0.1.0`
+- Numeric feature count: `33`
+- Categorical feature count: `2`
+- Excluded fields: protected attributes, `cohort_month`, `application_date`, `repayment_label`
+- Similarity proxy features: the 14 psychometric model-input features only; protected attributes are used only to require demographic difference after similarity is computed
+
+### Commands
+
+```powershell
+C:\Users\Kaustubh\anaconda3\python.exe -m pytest tests/unit/ml/test_fairness.py tests/unit/backend/test_analytics_schema.py tests/integration/pipeline/test_fairness_report_artifact.py tests/integration/api/test_analytics_endpoints.py tests/integration/api/test_checked_in_runtime_bundle_smoke.py
+C:\Users\Kaustubh\anaconda3\python.exe -m pytest tests/integration/pipeline/test_artifact_loading.py tests/integration/api/test_checked_in_runtime_bundle_smoke.py
+```
+
+### Fairness Summary
+
+- Overall AUC: `0.8098`
+- Worst subgroup AUC gap: `0.0379`
+- Calibration max ECE gap: `0.0528`
+- Flagged subgroups: none
+- Individual-fairness proxy: `512839` evaluated similar demographic-difference pairs; `374894` exceed the `50` point score-gap threshold
+
+### Artifacts
+
+| Artifact | Path |
+|---|---|
+| Refreshed fairness report | `models/reports/fairness_report.json` |
+| Updated manifest checksum | `models/registry/production_manifest.json` |
+
+### Interpretation
+
+The governance artifact now covers demographic parity, equalized odds, calibration parity, and the PRD individual-fairness proxy while keeping protected attributes outside model inputs. The high pair-flag share is a useful signal for the current synthetic/logistic bundle: psychometrically similar applicants can still diverge sharply because behavioral and derived features drive score movement, so this should be revisited after the calibrated ensemble exists.
+
+### Decision
+
+- Promote: no
+- Continue: yes
+- Stop: no
+- Follow-up: move to the offline neural-model track, then revisit fairness once a calibrated ensemble candidate is available.

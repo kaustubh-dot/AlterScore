@@ -8,6 +8,7 @@ from typing import Mapping
 
 from backend.app.core.paths import (
     PRODUCTION_MANIFEST_PATH,
+    PRODUCTION_MANIFEST_RELATIVE_PATH,
     REPO_ROOT,
     REQUEST_LOG_RELATIVE_PATH,
     resolve_repo_path,
@@ -49,7 +50,7 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
     model_manifest_path = (
         resolve_repo_path(manifest_value, repo_root)
         if manifest_value
-        else PRODUCTION_MANIFEST_PATH
+        else resolve_repo_path(PRODUCTION_MANIFEST_RELATIVE_PATH, repo_root)
     )
     runtime_model_value = source.get("ALTERSCORE_RUNTIME_MODEL_PATH")
     runtime_model_path = (

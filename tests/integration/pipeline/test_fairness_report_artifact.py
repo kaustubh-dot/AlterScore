@@ -24,7 +24,10 @@ def test_train_baselines_persists_fairness_report_with_guarded_subgroup_metrics(
         baseline_metrics_path=tmp_path / "baseline_metrics.json",
         metrics_path=tmp_path / "metrics.json",
         population_percentiles_path=tmp_path / "population_percentiles.json",
+        psi_report_path=tmp_path / "psi_report.json",
         fairness_report_path=tmp_path / "fairness_report.json",
+        global_importance_path=tmp_path / "global_importance.json",
+        dice_explainer_path=tmp_path / "dice_explainer.pkl",
     )
 
     report = FairnessReport.model_validate(
@@ -43,6 +46,8 @@ def test_train_baselines_persists_fairness_report_with_guarded_subgroup_metrics(
 
     assert artifacts.fairness_report_path.is_file()
     assert set(report.groups) == set(PROTECTED_FEATURES)
+    assert report.calibration_parity is not None
+    assert report.individual_fairness_proxy is not None
     assert subgroup_rows
     assert all(group_metrics.n_samples >= 30 for _, _, group_metrics in subgroup_rows)
     assert all(0.0 <= group_metrics.auc <= 1.0 for _, _, group_metrics in subgroup_rows)
@@ -60,6 +65,14 @@ def test_train_baselines_persists_fairness_report_with_guarded_subgroup_metrics(
         [0.0, *[group_metrics.auc_gap_from_overall for _, _, group_metrics in subgroup_rows]]
     )
     assert sorted(report.flagged_groups) == expected_flagged_groups
+    assert set(report.calibration_parity.groups) == set(PROTECTED_FEATURES)
+    assert report.calibration_parity.evaluated_group_count > 0
+    assert report.calibration_parity.max_ece_gap >= 0.0
+    assert report.individual_fairness_proxy.evaluated_applicants > 0
+    assert report.individual_fairness_proxy.evaluated_pairs > 0
+    assert not set(report.individual_fairness_proxy.similarity_feature_set) & set(
+        PROTECTED_FEATURES
+    )
     if report.flagged_groups:
         assert "requires attention" in report.verdict
     else:
@@ -85,7 +98,10 @@ def test_train_baselines_supports_persisted_dataset_path_without_raw_text_for_fa
         baseline_metrics_path=tmp_path / "baseline_metrics.json",
         metrics_path=tmp_path / "metrics.json",
         population_percentiles_path=tmp_path / "population_percentiles.json",
+        psi_report_path=tmp_path / "psi_report.json",
         fairness_report_path=tmp_path / "fairness_report.json",
+        global_importance_path=tmp_path / "global_importance.json",
+        dice_explainer_path=tmp_path / "dice_explainer.pkl",
     )
 
     report = FairnessReport.model_validate(
@@ -96,6 +112,8 @@ def test_train_baselines_supports_persisted_dataset_path_without_raw_text_for_fa
     assert artifacts.text_pca_path.is_file()
     assert artifacts.fairness_report_path.is_file()
     assert set(report.groups) == set(PROTECTED_FEATURES)
+    assert report.calibration_parity is not None
+    assert report.individual_fairness_proxy is not None
 
 
 def test_train_classical_models_persists_fairness_report_and_runtime_loading_still_succeeds(
@@ -114,7 +132,10 @@ def test_train_classical_models_persists_fairness_report_and_runtime_loading_sti
         baseline_metrics_path=model_root / "reports" / "baseline_metrics.json",
         metrics_path=model_root / "reports" / "metrics.json",
         population_percentiles_path=model_root / "reports" / "population_percentiles.json",
+        psi_report_path=model_root / "reports" / "psi_report.json",
         fairness_report_path=model_root / "reports" / "fairness_report.json",
+        global_importance_path=model_root / "reports" / "global_importance.json",
+        dice_explainer_path=model_root / "explainers" / "dice_explainer.pkl",
     )
     artifacts = train_classical_models(
         dataset,
@@ -129,7 +150,10 @@ def test_train_classical_models_persists_fairness_report_and_runtime_loading_sti
         baseline_metrics_path=baseline_artifacts.baseline_metrics_path,
         metrics_path=baseline_artifacts.metrics_path,
         population_percentiles_path=baseline_artifacts.population_percentiles_path,
+        psi_report_path=baseline_artifacts.psi_report_path,
         fairness_report_path=baseline_artifacts.fairness_report_path,
+        global_importance_path=baseline_artifacts.global_importance_path,
+        dice_explainer_path=baseline_artifacts.dice_explainer_path,
         random_state=17,
     )
 
@@ -146,5 +170,7 @@ def test_train_classical_models_persists_fairness_report_and_runtime_loading_sti
 
     assert artifacts.fairness_report_path.is_file()
     assert report.groups["gender"]
+    assert report.calibration_parity is not None
+    assert report.individual_fairness_proxy is not None
     assert bundle.report.scoring_ready is True
     assert "fairness_report" in bundle.report.artifacts_loaded

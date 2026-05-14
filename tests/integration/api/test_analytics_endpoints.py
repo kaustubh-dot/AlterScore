@@ -62,6 +62,10 @@ def test_governance_report_endpoints_return_saved_report_payloads(tmp_path) -> N
     fairness = FairnessReport.model_validate(fairness_response.json())
     assert fairness.groups["gender"]
     assert fairness.worst_auc_gap >= 0.0
+    assert fairness.calibration_parity is not None
+    assert fairness.calibration_parity.groups["gender"]
+    assert fairness.individual_fairness_proxy is not None
+    assert fairness.individual_fairness_proxy.evaluated_pairs > 0
 
     assert drift_response.status_code == 200
     drift = DriftReport.model_validate(drift_response.json())

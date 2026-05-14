@@ -156,4 +156,14 @@ Record every architecture-level decision here. Small implementation choices can 
 - Context: The repository needed a portable runtime bundle that could be validated directly in smoke tests, but the default local environment did not include a production manifest or a preexisting persisted counterfactual artifact. Keeping the runtime bundle ignored in Git hid regressions, and overclaiming a third-party `dice_ml` object would have been inaccurate for the current logistic stub bundle.
 - Decision: Intentionally source-control a small curated local runtime bundle under `models/` for backend portability and smoke coverage, and implement `models/explainers/dice_explainer.pkl` as a validated persisted actionable-counterfactual contract loaded from repository source rather than as an opaque third-party object.
 - Consequences: Fresh clones can now validate the real local serving assets directly, `/api/health` can report `ok` for the checked-in bundle, and `/api/score` no longer depends on a non-persisted counterfactual fallback in the default path. Heavy future training outputs still remain ignored by default, and a richer production-model-specific counterfactual artifact can supersede this contract later if needed.
-- Follow-ups: Freeze the first manifest-backed serving bundle, then decide whether future production bundles should retain this lightweight persisted contract or migrate to a fuller `dice_ml`-backed artifact.
+- Follow-ups: The first manifest-backed local serving bundle is now frozen. Next decide whether future production bundles should retain this lightweight persisted contract or migrate to a fuller `dice_ml`-backed artifact.
+
+## DEC-0015 - Default Local Serving Now Uses A Checksum-Verified Manifest Bundle
+
+- Status: accepted
+- Date: 2026-05-14
+- Owner: Codex
+- Context: The repository already had a curated checked-in runtime artifact set, but backend startup still relied on candidate selection or explicit direct-model overrides by default. That kept serving behavior ambiguous and made it too easy for a copied or partially edited bundle to drift away from what health/readiness claimed to be loading.
+- Decision: Freeze the checked-in local serving bundle behind `models/registry/production_manifest.json`, require an explicit manifest contract for the runtime model, preprocessor, text PCA, SHAP explainer, DICE explainer, metrics, baseline metrics, fairness report, PSI report, global-importance report, and population-percentiles artifact set, and verify SHA256 checksums for manifest-backed artifacts during startup loading.
+- Consequences: Default local backend startup is now deterministic and visibly manifest-backed in `/api/health`, copied or tampered bundles surface as invalid instead of silently drifting, and direct runtime-model loading remains available only as an explicit dev/test override rather than the repository default.
+- Follow-ups: Extend the governance reports with calibration parity and the individual-fairness proxy, then later replace the current logistic manifest bundle with a calibrated ensemble bundle once the offline model track is ready.
