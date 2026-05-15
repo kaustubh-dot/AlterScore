@@ -1005,3 +1005,112 @@ The governance artifact now covers demographic parity, equalized odds, calibrati
 - Continue: yes
 - Stop: no
 - Follow-up: move to the offline neural-model track, then revisit fairness once a calibrated ensemble candidate is available.
+
+## EXP-20260515-008 - TabNet neural training infrastructure (Phase 1)
+
+- Status: completed
+- Owner: Antigravity / Codex
+- Date started: 2026-05-15
+- Date completed: 2026-05-15
+- Branch / commit: `antigravity/dev`
+- Related decision: neural model track (Track B), offline-training-separation, temporal-split integrity
+- Related issue / task: TabNet Phase 1 — offline training module, CLI script, integration smoke tests
+
+### Hypothesis
+
+If the TabNet training module strictly reuses the existing preprocessing, temporal-split, evaluation, and metrics infrastructure (without duplicating any feature paths), then it can produce deterministic `.zip` artifacts, pass a full pipeline smoke-test suite, and merge its output metrics cleanly into the existing `metrics.json` and `population_percentiles.json` without breaking any classical or baseline report consumers.
+
+### Dataset
+
+- Data version: `synthetic_v0.1.0`
+- Row count: `10,000` (full run); `1,800` (smoke test)
+- Train split: months `1-8`
+- Validation split: months `9-10`
+- Test split: months `11-12`
+- Protected attributes available: gender, age group, region, education level
+- Known schema changes: none
+
+### Feature Set
+
+- Feature registry version: `0.1.0`
+- Numeric feature count: `33`
+- Categorical feature count: `2`
+- Excluded fields: protected attributes, `cohort_month`, `application_date`, `repayment_label`
+- NLP configuration: same surrogate-text + text-PCA path as classical training
+- Derived features: included
+
+### Model / Pipeline Configuration
+
+```json
+{
+  "model_family": "tabnet_neural",
+  "random_seed": 42,
+  "dependency": "pytorch-tabnet==4.1.0",
+  "preprocessing": {
+    "numeric": "median imputer + standard scaler (reused from classical)",
+    "categorical": "most-frequent imputer + ordinal encoder (reused from classical)",
+    "text_pca": "2 components fit on months 1-8 only (reused artifact)"
+  },
+  "hyperparameters": {
+    "n_d": 16,
+    "n_a": 16,
+    "n_steps": 3,
+    "gamma": 1.3,
+    "n_independent": 2,
+    "n_shared": 2,
+    "momentum": 0.02,
+    "epsilon": 1e-15,
+    "mask_type": "sparsemax",
+    "max_epochs": 50,
+    "patience": 10,
+    "batch_size": 1024,
+    "virtual_batch_size": 256
+  },
+  "artifact_format": ".zip (pytorch-tabnet native save_model / load_model)",
+  "class_imbalance_strategy": "none (TabNet handles internally via eval AUC selection)"
+}
+```
+
+### Commands
+
+```powershell
+# Install dependency
+C:\Users\Kaustubh\anaconda3\python.exe -m pip install pytorch-tabnet==4.1.0
+
+# Run smoke tests (all 6 pass in ~23s)
+C:\Users\Kaustubh\anaconda3\python.exe -m pytest tests/integration/pipeline/test_tabnet_training.py -v
+
+# Full pipeline regression (81/81 passing)
+C:\Users\Kaustubh\anaconda3\python.exe -m pytest tests/integration/pipeline/ tests/unit/ml/ -q
+
+# Train on the full dataset (requires synthetic_dataset.csv and baseline metrics)
+C:\Users\Kaustubh\anaconda3\python.exe scripts/training/train_tabnet.py
+```
+
+### Results
+
+Smoke tests only (2 epochs, 1,800-row dataset, no saved artifact target AUC recorded).
+Full-dataset AUC targets from `docs/MODEL_REGISTRY.md`: above `0.72` on test split months `11-12`.
+
+### Artifacts
+
+| Artifact | Path |
+|---|---|
+| TabNet training module | `backend/ml/training/neural/train_tabnet.py` |
+| Neural package init | `backend/ml/training/neural/__init__.py` |
+| CLI entrypoint | `scripts/training/train_tabnet.py` |
+| Integration smoke tests (6 tests) | `tests/integration/pipeline/test_tabnet_training.py` |
+| Dependency pin | `backend/requirements.txt` (pytorch-tabnet==4.1.0) |
+| Artifact (offline, not checked in) | `models/artifacts/tabnet_epoch_best.zip` |
+
+### Interpretation
+
+The TabNet training infrastructure integrates cleanly into the existing pipeline without any duplication of preprocessing or feature paths. The `.zip` save/load round-trip is validated in the smoke test: the loaded model produces bit-identical probabilities to the training-time model. Neural metrics merge into `metrics.json` and `population_percentiles.json` without dropping classical (random_forest, xgboost, lightgbm) or baseline (logistic_regression) rows. The serving/manifest path is untouched. The only downstream dependency change is `pytorch-tabnet==4.1.0` (which pulls PyTorch 2.12.0 as a transitive dependency).
+
+### Decision
+
+- Promote: no
+- Continue: yes
+- Stop: no
+- Follow-up: implement the offline residual MLP training module (`backend/ml/training/neural/train_mlp.py`) following the same pattern, then proceed to stacking feature generation (Track C).
+

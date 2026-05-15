@@ -49,12 +49,20 @@ Exit criteria:
 Goal:
 Land the TabNet and MLP artifact paths as true offline jobs.
 
+Status:
+
+- TabNet training module (`backend/ml/training/neural/train_tabnet.py`) and CLI entrypoint (`scripts/training/train_tabnet.py`) are implemented.
+- `pytorch-tabnet==4.1.0` added to `backend/requirements.txt`.
+- `backend/ml/training/neural/__init__.py` package exists.
+- 6 integration/smoke tests in `tests/integration/pipeline/test_tabnet_training.py` pass (full pipeline roundtrip, metrics merge, `.zip` save/load, import guard, temporal split integrity, missing file error).
+- The module strictly reuses existing preprocessing, temporal-split, evaluation, and metrics infrastructure; no duplicate paths introduced.
+- TabNet metrics merge cleanly into `metrics.json` and `population_percentiles.json` without breaking existing classical entries.
+
 Remaining work:
 
-- Implement TabNet training module and script.
 - Implement residual MLP training module and script.
-- Add deterministic seed handling and smoke tests.
-- Merge neural metrics into the existing report structure.
+- Add smoke tests for MLP path.
+- Ensure MLP metrics also merge without breaking existing report consumers.
 
 Exit criteria:
 
@@ -235,7 +243,7 @@ This roadmap maps back to the PRD sections as follows:
 
 The most valuable bounded next session is:
 
-1. Implement the offline TabNet training path.
-2. Implement the offline residual MLP training path.
-3. Add deterministic smoke tests for both neural jobs.
-4. Merge neural metrics into the existing report structure without breaking analytics readers.
+1. Implement the offline residual MLP training path.
+2. Add deterministic smoke tests for the MLP job.
+3. Confirm MLP metrics merge into the existing report structure without breaking analytics readers.
+4. After both neural jobs exist, move to stacking (Track C).

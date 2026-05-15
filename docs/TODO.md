@@ -39,12 +39,14 @@ The repository now has a stable backend foundation plus a checked-in manifest-ba
 
 ### 2. Neural Model Track
 
-- [ ] Create the offline TabNet training module and script path.
+- [x] Create the offline TabNet training module and script path.
 - [ ] Create the offline residual MLP training module and script path.
-- [ ] Ensure deterministic seed handling for both neural paths.
-- [ ] Add smoke tests that prove both artifacts can be trained on the documented temporal split without leaking validation/test data.
-- [ ] Merge neural metrics into the existing report structure without breaking current analytics consumers.
-- [ ] Update `docs/MODEL_REGISTRY.md` and `docs/EXPERIMENT_LOG.md` when the first neural runs exist.
+- [x] Ensure deterministic seed handling for both neural paths (TabNet done; MLP pending).
+- [x] Add smoke tests that prove TabNet artifacts can be trained on the documented temporal split without leaking validation/test data.
+- [ ] Add smoke tests for the MLP path.
+- [x] Merge TabNet neural metrics into the existing report structure without breaking current analytics consumers.
+- [ ] Merge MLP metrics the same way.
+- [ ] Update `docs/MODEL_REGISTRY.md` and `docs/EXPERIMENT_LOG.md` when the first neural runs exist (TabNet experiment logged as EXP-20260515-008; MLP pending).
 
 ### 3. Ensemble And Calibration Track
 
@@ -129,7 +131,7 @@ The repository now has a stable backend foundation plus a checked-in manifest-ba
 
 If a future session wants the highest-value bounded task, start here:
 
-1. Add the offline TabNet training module and script path.
-2. Add the offline residual MLP training module and script path.
-3. Add deterministic smoke tests that keep the temporal split and protected-attribute exclusions intact.
-4. Decide how neural metrics merge into the existing `metrics.json` shape without breaking analytics readers.
+1. Add the offline residual MLP training module and script path (`backend/ml/training/neural/train_mlp.py`, `scripts/training/train_mlp.py`).
+2. Add deterministic smoke tests for the MLP path that keep the temporal split and protected-attribute exclusions intact.
+3. Decide how to merge MLP metrics into `metrics.json` once both neural artifacts exist.
+4. After both neural jobs exist, move to stacking feature generation (Track C).
