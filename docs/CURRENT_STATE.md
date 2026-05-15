@@ -2,11 +2,11 @@
 
 ## Snapshot
 
-- Date: 2026-05-14
+- Date: 2026-05-15
 - Workspace: `C:\Kaustubh\Projects\AlterScore`
 - PRD source: `docs/AlterScore_PRD_v2.md`
-- Current phase: checked-in runtime bundle integrity, explainability artifact remediation, the first manifest-backed local serving bundle, and the post-manifest governance refresh are complete for the current scoring and analytics stub; the next backend slice is the offline neural/stacking/calibration track while the broader production-model refresh remains pending.
-- Application implementation status: feature registry, runtime foundation helpers, API schemas, the frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, the baseline training loop, the bounded classical training loop for random forest, XGBoost, and LightGBM, the persisted text PCA artifact foundation, the runtime artifact-loading plus scoring-service stubs, the FastAPI app startup with `/api/health`, `/api/score`, the analytics route surface including `/api/model-stats`, `/api/baseline-comparison`, `/api/fairness-report`, `/api/drift-report`, `/api/global-importance`, `/api/score-distribution`, `/api/roc-data`, `/api/pr-curve`, `/api/calibration-curve`, and `/api/confusion-matrix`, and the persisted evaluation-artifact plus fairness/drift/global-importance artifact foundations for curves, confusion matrices, score percentiles/distribution, held-out subgroup fairness, calibration parity, individual-fairness proxying, train-vs-test feature stability, and dashboard-ready feature ranking are implemented. The checked-in local bundle now loads cleanly for the current stub route surface: the restored SHAP compatibility module deserializes the saved explainer, the new persisted counterfactual explainer artifact also validates, the refreshed fairness artifact matches the active API contract, the saved global-importance artifact matches the active API contract, the default request-log path is writable again, and health/readiness now distinguishes loaded, missing, and invalid optional artifacts while the checked-in bundle itself reports `ok`.
+- Current phase: TabNet Phase 1 (neural training foundation) complete on branch `antigravity/dev`. The offline neural package is live with a fully tested TabNet training loop, `.zip` artifact save/load, and clean metrics/percentile merge into the existing report structure. The next slice is the offline residual MLP path, after which the ensemble/calibration track can begin.
+- Application implementation status: feature registry, runtime foundation helpers, API schemas, the frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, the baseline training loop, the bounded classical training loop for random forest, XGBoost, and LightGBM, the persisted text PCA artifact foundation, the runtime artifact-loading plus scoring-service stubs, the FastAPI app startup with `/api/health`, `/api/score`, the analytics route surface including `/api/model-stats`, `/api/baseline-comparison`, `/api/fairness-report`, `/api/drift-report`, `/api/global-importance`, `/api/score-distribution`, `/api/roc-data`, `/api/pr-curve`, `/api/calibration-curve`, and `/api/confusion-matrix`, the persisted evaluation-artifact plus fairness/drift/global-importance artifact foundations, and the TabNet neural training module with CLI script and integration smoke test suite are implemented. The checked-in local bundle loads cleanly; the neural training package is offline-only and does not touch the serving/manifest path.
 
 ## What Exists
 
@@ -46,6 +46,7 @@
 - Runtime score mapping exists at `backend/ml/inference/score_mapper.py` for probability-to-score conversion, risk bands, loan eligibility, and percentile fallback behavior.
 - Baseline training exists at `backend/ml/training/classical/baselines.py`, with command entrypoint `scripts/training/train_baselines.py`.
 - Classical model training exists at `backend/ml/training/classical/train_classical.py`, with command entrypoint `scripts/training/train_classical_models.py`.
+- TabNet neural training exists at `backend/ml/training/neural/train_tabnet.py`, with CLI entrypoint `scripts/training/train_tabnet.py`. The module reuses the existing preprocessing, temporal-split, evaluation, and metrics infrastructure without duplication. Artifacts are saved as `.zip` archives using pytorch-tabnet's native save/load interface; `load_tabnet_model` is the inference-time counterpart for downstream stacking. The `backend/ml/training/neural/__init__.py` package file exists. `pytorch-tabnet==4.1.0` is pinned in `backend/requirements.txt`.
 - Runtime artifact loading exists at `backend/app/core/artifact_loader.py`, now preferring the checked-in `models/registry/production_manifest.json` bundle by default while keeping `ALTERSCORE_RUNTIME_MODEL_PATH` as an explicit override and candidate selection as a last-resort fallback.
 - Backend scoring service stubs exist at `backend/app/services/scoring.py`, using the loaded model bundle plus request feature assembly to return schema-valid score responses with per-user SHAP factors and persisted counterfactual actions when the explainability artifacts are available.
 - Backend analytics service foundation now exists at `backend/app/services/analytics.py`, serving report-backed analytics payloads from the loaded runtime bundle.
@@ -91,8 +92,9 @@
 ## What Does Not Exist Yet
 
 - No borrower assessment pages, results flow, dashboard workflow, or frontend tests beyond the package skeleton smoke test.
-- No neural, stacking, or ensemble-calibration jobs yet.
-- Report-backed analytics now cover `/api/model-stats`, `/api/baseline-comparison`, `/api/fairness-report`, `/api/drift-report`, `/api/global-importance`, `/api/score-distribution`, `/api/roc-data`, `/api/pr-curve`, `/api/calibration-curve`, and `/api/confusion-matrix`. The checked-in bundle now includes both persisted per-user SHAP support and persisted counterfactual actions for the current logistic runtime model, and it now loads through the repository’s manifest-backed local serving bundle by default. Neural models, stacking/calibration, a promoted calibrated production ensemble, interactive frontend tests beyond the package skeleton smoke test, and broader ML validation beyond the current feature, preprocessing, training, artifact-loading, evaluation-artifact, governance-artifact, and API foundation coverage are still pending.
+- No residual MLP training module yet (next neural track item).
+- No stacking or ensemble-calibration jobs yet.
+- Report-backed analytics now cover `/api/model-stats`, `/api/baseline-comparison`, `/api/fairness-report`, `/api/drift-report`, `/api/global-importance`, `/api/score-distribution`, `/api/roc-data`, `/api/pr-curve`, `/api/calibration-curve`, and `/api/confusion-matrix`. The checked-in bundle now includes both persisted per-user SHAP support and persisted counterfactual actions for the current logistic runtime model. TabNet training infrastructure is complete but no TabNet artifact is checked into `models/` yet (it is offline-only until a stacking ensemble is built). A promoted calibrated production ensemble, the MLP path, interactive frontend tests, and broader ML validation are still pending.
 - No Docker runtime files yet.
 - The checked-in bundle now includes valid persisted SHAP and counterfactual explainability artifacts. Semantic features still use the persisted `text_pca.pkl` when available and only fall back to zero-filled projections when the PCA artifact is intentionally missing.
 
@@ -126,8 +128,8 @@ The earlier PRD narrative referenced 39 features, but the project will not inven
 
 Continue the implementation foundation in this order:
 
-1. Start the offline neural-model foundation with TabNet and MLP smoke-train paths on the existing temporal split.
-2. After neural artifacts exist, return to stacking and validation-month calibration so a later manifest can promote a true calibrated ensemble instead of the current logistic local candidate.
+1. Implement the offline residual MLP training module and script (`backend/ml/training/neural/train_mlp.py`, `scripts/training/train_mlp.py`) following the same pattern as `train_tabnet.py`.
+2. After both neural artifacts exist, move to stacking feature generation and validation-month calibration so a later manifest can promote a true calibrated ensemble instead of the current logistic local candidate.
 
 ## Session Update Protocol
 

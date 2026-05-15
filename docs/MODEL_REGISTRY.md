@@ -283,3 +283,17 @@ Current local runtime-artifact status:
   - XGBoost: `0.8072`
   - LightGBM: `0.7983`
 - Notes: the refreshed classical suite reuses the persisted train-only `text_pca.pkl`, preserves the baseline section in `metrics.json`, adds validation/test ROC, PR, calibration, and confusion payloads for the current logistic/classical models, and merges model-specific score percentile tables into `population_percentiles.json`. The bounded classical suite still trails the logistic baseline test AUC of `0.8098`, so the default percentile table remains `logistic_regression` for now and these remain training-infrastructure milestones rather than promotion candidates.
+
+### Neural TabNet Smoke Run: `EXP-20260515-008` (offline-only, not promotable)
+
+- Status: neural training infrastructure validated, not promotable standalone
+- Date: 2026-05-15
+- Branch: `antigravity/dev`
+- Dataset: `data/raw/synthetic_dataset.csv` with months `1-8 / 9-10 / 11-12`
+- Module: `backend/ml/training/neural/train_tabnet.py`
+- CLI: `scripts/training/train_tabnet.py`
+- Dependency: `pytorch-tabnet==4.1.0` pinned in `backend/requirements.txt`
+- Artifact path: `models/artifacts/tabnet_epoch_best.zip` (not checked in; offline-only until stacking)
+- Smoke test suite: `tests/integration/pipeline/test_tabnet_training.py` (6/6 passing)
+- AUC target: above `0.72` on test split months `11-12` (see MODEL_REGISTRY.md Model Families table)
+- Notes: the TabNet module strictly reuses the existing `align_text_features_from_raw_text`, `prepare_temporal_data`, `fit_preprocessor`, `transform_features`, evaluation metrics, and `merge_evaluation_details`/`merge_population_percentiles_reports` infrastructure. The `.zip` save/load contract is exercised end-to-end in the smoke roundtrip test. Neural metrics merge cleanly into `metrics.json` and `population_percentiles.json` without dropping classical or baseline entries. No manifest or serving path was modified.
