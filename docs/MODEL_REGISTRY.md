@@ -297,3 +297,19 @@ Current local runtime-artifact status:
 - Smoke test suite: `tests/integration/pipeline/test_tabnet_training.py` (6/6 passing)
 - AUC target: above `0.72` on test split months `11-12` (see MODEL_REGISTRY.md Model Families table)
 - Notes: the TabNet module strictly reuses the existing `align_text_features_from_raw_text`, `prepare_temporal_data`, `fit_preprocessor`, `transform_features`, evaluation metrics, and `merge_evaluation_details`/`merge_population_percentiles_reports` infrastructure. The `.zip` save/load contract is exercised end-to-end in the smoke roundtrip test. Neural metrics merge cleanly into `metrics.json` and `population_percentiles.json` without dropping classical or baseline entries. No manifest or serving path was modified.
+
+### Neural Residual MLP Smoke Run: `EXP-20260515-009` (offline-only, not promotable)
+
+- Status: neural training infrastructure validated, not promotable standalone
+- Date: 2026-05-15
+- Branch: `antigravity/dev`
+- Dataset: `data/raw/synthetic_dataset.csv` with months `1-8 / 9-10 / 11-12`
+- Module: `backend/ml/training/neural/train_mlp.py`
+- CLI: `scripts/training/train_mlp.py`
+- Dependency: `torch>=1.3` (transitively pinned via `pytorch-tabnet==4.1.0`)
+- Artifact path: `models/artifacts/mlp_best.pt` (not checked in; offline-only until stacking)
+- Artifact format: `torch.save` checkpoint containing `model_name`, `config`, and `state_dict`
+- Architecture: `ResidualMLP` — 2-block (Linear→BatchNorm→ReLU→Dropout) with skip projections, Adam optimiser, early stopping on validation AUC, class-imbalance weighting
+- Smoke test suite: `tests/integration/pipeline/test_mlp_training.py` (6/6 passing)
+- AUC target: above `0.72` on test split months `11-12` (see Model Families table)
+- Notes: the MLP module mirrors `train_tabnet.py` exactly in structure and reuses the same preprocessing, temporal-split, evaluation, and metrics infrastructure. The `.pt` save/load round-trip is validated in the smoke roundtrip test: loaded model produces bit-identical probabilities. MLP metrics merge into `metrics.json` and `population_percentiles.json` without dropping TabNet, classical, or baseline entries. No manifest or serving path was modified. Track B (neural) is now complete.

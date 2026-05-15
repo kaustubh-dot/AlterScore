@@ -1112,5 +1112,75 @@ The TabNet training infrastructure integrates cleanly into the existing pipeline
 - Promote: no
 - Continue: yes
 - Stop: no
-- Follow-up: implement the offline residual MLP training module (`backend/ml/training/neural/train_mlp.py`) following the same pattern, then proceed to stacking feature generation (Track C).
+- Follow-up: ~~implement the offline residual MLP training module~~ — done. Proceed to stacking (Track C).
 
+## EXP-20260515-009 - Residual MLP neural training infrastructure (Phase 1)
+
+- Status: completed
+- Owner: Antigravity / Codex
+- Date started: 2026-05-15
+- Date completed: 2026-05-15
+- Branch / commit: `antigravity/dev`
+- Related decision: neural model track (Track B), offline-training-separation, temporal-split integrity
+- Related issue / task: Residual MLP Phase 1 — offline training module, CLI script, 6 integration smoke tests
+
+### Hypothesis
+
+If the residual MLP training module mirrors `train_tabnet.py` (same preprocessing chain, metrics merge, artifact-save pattern) and adds a 2-block residual MLP with early stopping on validation AUC, then it can pass the full 6-test smoke suite and merge its metrics into `metrics.json` without breaking any prior row.
+
+### Dataset
+
+- Data version: `synthetic_v0.1.0`
+- Row count: `10,000` (full run); `1,800` (smoke test)
+- Train split: months `1-8`; Validation: months `9-10`; Test: months `11-12`
+- Protected attributes available: gender, age group, region, education level
+
+### Feature Set
+
+- Feature registry version: `0.1.0`; Numeric: `33`; Categorical: `2`
+- Excluded: protected attributes, `cohort_month`, `application_date`, `repayment_label`
+- NLP: same surrogate-text + text-PCA path as classical and TabNet
+
+### Model / Pipeline Configuration
+
+```json
+{
+  "model_family": "residual_mlp",
+  "random_seed": 42,
+  "architecture": { "hidden_dim": 128, "n_hidden_layers": 2, "dropout": 0.3, "skip_connection": true, "batch_norm": true },
+  "training": { "optimiser": "Adam", "lr": 0.001, "weight_decay": 1e-4, "max_epochs": 50, "patience": 10, "batch_size": 512, "class_imbalance": "pos_weight=neg/pos ratio", "early_stopping": "validation_auc" },
+  "artifact_format": ".pt (torch.save: state_dict + config)"
+}
+```
+
+### Commands
+
+```powershell
+C:\Users\Kaustubh\anaconda3\python.exe -m pytest tests/integration/pipeline/test_mlp_training.py -v
+C:\Users\Kaustubh\anaconda3\python.exe -m pytest tests/integration/pipeline/ tests/unit/ml/ -q
+C:\Users\Kaustubh\anaconda3\python.exe scripts/training/train_mlp.py
+```
+
+### Results
+
+Smoke tests only (2 epochs, 1,800 rows). Full-dataset AUC target: above `0.72` on test months 11-12.
+
+### Artifacts
+
+| Artifact | Path |
+|---|---|
+| MLP training module | `backend/ml/training/neural/train_mlp.py` |
+| CLI entrypoint | `scripts/training/train_mlp.py` |
+| Smoke tests (6/6) | `tests/integration/pipeline/test_mlp_training.py` |
+| Artifact (offline, not checked in) | `models/artifacts/mlp_best.pt` |
+
+### Interpretation
+
+`.pt` save/load round-trip validated: loaded model produces bit-identical probabilities. MLP metrics merge into `metrics.json` and `population_percentiles.json` without dropping TabNet, classical, or baseline entries. Track B (neural) is now fully complete.
+
+### Decision
+
+- Promote: no
+- Continue: yes
+- Stop: no
+- Follow-up: proceed to Track C — stacking ensemble training module with logistic meta-learner and isotonic calibration on months 9-10.
