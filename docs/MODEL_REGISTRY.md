@@ -330,3 +330,22 @@ Current local runtime-artifact status:
 - Smoke test suite: `tests/integration/pipeline/test_stacking_training.py` (6/6 passing)
 - AUC target: above best base-model test AUC on months `11-12` (calibration + ensemble should improve over logistic ~0.81)
 - Notes: the stacking module accepts `StackingInputs` (pre-computed base model probability arrays) or re-trains all six base models automatically. The meta-learner and isotonic calibrator are fitted on months 9-10 only (no test contamination). The `.pkl` round-trip is validated: loaded model produces bit-identical probabilities. Stacking metrics merge cleanly into `metrics.json` and `population_percentiles.json`. The `default_model_name` in the percentile report is updated to the model with the highest test AUC. Track C (ensemble + calibration) is now complete.
+
+### Calibrated Stacking Promotion Run: `EXP-20260515-011` (promoted)
+
+- Status: Promoted to `production_manifest.json` as `stacking_ensemble`
+- Date: 2026-05-15
+- Branch: `antigravity/dev`
+- Dataset: `data/raw/synthetic_dataset.csv` with months `1-8 / 9-10 / 11-12`
+- Module: `backend/ml/training/ensemble/promote_ensemble.py`
+- CLI: `scripts/training/promote_ensemble.py`
+- Artifact paths:
+  - `models/artifacts/calibrated_stacking.pkl`
+  - `models/explainers/shap_explainer.pkl`
+  - `models/explainers/dice_explainer.pkl`
+  - `models/reports/global_importance.json`
+  - `models/reports/fairness_report.json`
+  - `models/reports/psi_report.json`
+  - `models/registry/production_manifest.json`
+- Test AUC: `0.8051`
+- Notes: The `calibrated_stacking` ensemble has now officially been promoted. The local runtime uses this model. A surrogate LR is fitted on training features against ensemble outputs to give accurate and fast SHAP approximations. DICE explainer leverages predict_proba. Global importance, PSI, and fairness reporting point to this ensemble. Track D is complete.

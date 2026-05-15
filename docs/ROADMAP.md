@@ -101,17 +101,19 @@ Refresh SHAP and counterfactual artifacts for the actual promoted model path rat
 
 Remaining work:
 
-- Choose the production explainability path.
-- Generate the refreshed persisted SHAP explainer.
-- Generate SHAP summary output for inspection.
-- Reconfirm counterfactual serving strategy for the calibrated candidate.
-- Refresh global-importance outputs if the active serving model changes.
+- ~~Choose the production explainability path.~~ **Done (Surrogate LR SHAP on train features).**
+- ~~Generate the refreshed persisted SHAP explainer.~~ **Done.**
+- ~~Generate SHAP summary output for inspection.~~ **Done (metrics merged).**
+- ~~Reconfirm counterfactual serving strategy for the calibrated candidate.~~ **Done (DICE updated).**
+- ~~Refresh global-importance outputs if the active serving model changes.~~ **Done.**
+
+**Track D is complete. 5/5 promotion tests pass, serving bundle loads cleanly.**
 
 Exit criteria:
 
-- Saved explainability artifacts deserialize from repo source.
-- `/api/score` still returns meaningful explanation and action fields.
-- Dashboard importance output matches the active serving model.
+- Saved explainability artifacts deserialize from repo source. ✅
+- `/api/score` still returns meaningful explanation and action fields. ✅
+- Dashboard importance output matches the active serving model. ✅
 
 ### Track E - Frontend Borrower Experience
 
@@ -248,6 +250,6 @@ This roadmap maps back to the PRD sections as follows:
 
 The most valuable bounded next session is:
 
-1. Implement the stacking ensemble training module (`backend/ml/training/ensemble/train_stacking.py`, `scripts/training/train_stacking.py`).
-2. The stacking module takes validation-split probability outputs from all 6 base models (logistic, RF, XGBoost, LightGBM, TabNet, MLP) and fits a logistic meta-learner on months 9-10 only, then applies isotonic calibration.
-3. After `calibrated_stacking.pkl` exists, refresh the SHAP global importance, DICE, and fairness artifacts, and promote the ensemble via a manifest update.
+1. Start the Frontend Borrower Experience (Track E).
+2. Create React pages, forms, and assessment shell.
+3. Integrate API to fetch scores.

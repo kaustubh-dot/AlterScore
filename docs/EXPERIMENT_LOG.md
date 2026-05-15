@@ -1246,7 +1246,61 @@ Full regression suite: 93/93 passing.
 
 ### Decision
 
-- Promote: pending (requires SHAP, DICE, fairness refresh and manifest update — Track D)
+- Promote: yes (completed in Track D)
 - Continue: yes
 - Stop: no
 - Follow-up: Track D — refresh SHAP, DICE, and fairness artifacts against the calibrated ensemble candidate; update `production_manifest.json` to promote it; validate the serving bundle end-to-end.
+
+## EXP-20260515-011 - Calibrated Stacking Promotion (Track D)
+
+- Status: completed
+- Owner: Codex
+- Date started: 2026-05-15
+- Date completed: 2026-05-15
+- Branch / commit: `antigravity/dev`
+- Related decision: Promoted the calibrated stacking ensemble
+- Related issue / task: Track D
+
+### Hypothesis
+
+If we retrain all models on the full data, fit the calibrated stacking ensemble, use a surrogate LogisticRegression model on the ensemble predictions for SHAP, use model-agnostic DICE explainers, and compute governance reports (Fairness, PSI, Global Importance), we can safely promote `calibrated_stacking.pkl` via `production_manifest.json` under the alias `stacking_ensemble`.
+
+### Dataset
+
+- Data version: `synthetic_v0.1.0`
+- Row count: `10,000`
+- Train split: months `1-8`
+- Validation split: months `9-10`
+- Test split: months `11-12`
+
+### Commands
+
+```powershell
+C:\Users\Kaustubh\anaconda3\python.exe scripts/training/promote_ensemble.py
+```
+
+### Results
+
+- Test AUC: `0.8051`
+
+### Artifacts
+
+| Artifact | Path |
+|---|---|
+| Manifest | `models/registry/production_manifest.json` |
+| SHAP Explainer | `models/explainers/shap_explainer.pkl` |
+| DICE Explainer | `models/explainers/dice_explainer.pkl` |
+| Fairness | `models/reports/fairness_report.json` |
+| PSI | `models/reports/psi_report.json` |
+| Global Importance | `models/reports/global_importance.json` |
+
+### Interpretation
+
+The full offline pipeline effectively promotes the calibrated stacking ensemble to the `production_manifest.json` under `stacking_ensemble`. A surrogate LogisticRegression model was fitted on the ensemble's predictions over the train-split features to provide linear SHAP explanations, maintaining compatibility with the fast inference exact_linear_shap Explainer. A model-agnostic DICE explainer was configured. The bundle loads cleanly end-to-end.
+
+### Decision
+
+- Promote: yes
+- Continue: yes
+- Stop: no
+- Follow-up: Track E - Frontend Borrower UI.

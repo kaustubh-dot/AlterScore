@@ -1,5 +1,5 @@
 {
-  "max_psi": 0.2007,
+  "max_psi": 0.2323,
   "verdict": "watch",
   "thresholds": {
     "stable_below": 0.2,
@@ -9,229 +9,229 @@
   "top_drifted_features": [
     {
       "feature": "avg_response_time_ms",
-      "psi": 0.2007,
+      "psi": 0.2323,
+      "status": "watch"
+    },
+    {
+      "feature": "typing_speed_wpm",
+      "psi": 0.2027,
       "status": "watch"
     },
     {
       "feature": "session_duration_sec",
-      "psi": 0.1726,
-      "status": "stable"
-    },
-    {
-      "feature": "cognitive_load_index",
-      "psi": 0.1319,
-      "status": "stable"
-    },
-    {
-      "feature": "typing_speed_wpm",
-      "psi": 0.0843,
+      "psi": 0.1925,
       "status": "stable"
     },
     {
       "feature": "risk_response_speed_ratio",
-      "psi": 0.0343,
+      "psi": 0.1765,
       "status": "stable"
     },
     {
-      "feature": "text_semantic_dim2",
-      "psi": 0.013,
+      "feature": "cognitive_load_index",
+      "psi": 0.1279,
       "status": "stable"
     },
     {
       "feature": "reciprocity_norm",
-      "psi": 0.0122,
+      "psi": 0.0968,
       "status": "stable"
     },
     {
-      "feature": "answer_change_rate",
-      "psi": 0.0104,
+      "feature": "numeracy_score",
+      "psi": 0.0914,
       "status": "stable"
     },
     {
-      "feature": "CRT_score",
-      "psi": 0.0097,
+      "feature": "text_semantic_dim1",
+      "psi": 0.0727,
       "status": "stable"
     },
     {
-      "feature": "future_orientation",
-      "psi": 0.0083,
+      "feature": "financial_literacy_score",
+      "psi": 0.0709,
+      "status": "stable"
+    },
+    {
+      "feature": "social_capital_score",
+      "psi": 0.0702,
       "status": "stable"
     }
   ],
   "all_features": [
     {
       "feature": "avg_response_time_ms",
-      "psi": 0.2007,
+      "psi": 0.2323,
+      "status": "watch"
+    },
+    {
+      "feature": "typing_speed_wpm",
+      "psi": 0.2027,
       "status": "watch"
     },
     {
       "feature": "session_duration_sec",
-      "psi": 0.1726,
-      "status": "stable"
-    },
-    {
-      "feature": "cognitive_load_index",
-      "psi": 0.1319,
-      "status": "stable"
-    },
-    {
-      "feature": "typing_speed_wpm",
-      "psi": 0.0843,
+      "psi": 0.1925,
       "status": "stable"
     },
     {
       "feature": "risk_response_speed_ratio",
-      "psi": 0.0343,
+      "psi": 0.1765,
       "status": "stable"
     },
     {
-      "feature": "text_semantic_dim2",
-      "psi": 0.013,
+      "feature": "cognitive_load_index",
+      "psi": 0.1279,
       "status": "stable"
     },
     {
       "feature": "reciprocity_norm",
-      "psi": 0.0122,
-      "status": "stable"
-    },
-    {
-      "feature": "answer_change_rate",
-      "psi": 0.0104,
-      "status": "stable"
-    },
-    {
-      "feature": "CRT_score",
-      "psi": 0.0097,
-      "status": "stable"
-    },
-    {
-      "feature": "future_orientation",
-      "psi": 0.0083,
-      "status": "stable"
-    },
-    {
-      "feature": "social_capital_score",
-      "psi": 0.0083,
-      "status": "stable"
-    },
-    {
-      "feature": "text_agency_score",
-      "psi": 0.0082,
-      "status": "stable"
-    },
-    {
-      "feature": "delay_discounting_rate",
-      "psi": 0.0078,
-      "status": "stable"
-    },
-    {
-      "feature": "resilience_score",
-      "psi": 0.0075,
-      "status": "stable"
-    },
-    {
-      "feature": "behavioral_trust_score",
-      "psi": 0.007,
-      "status": "stable"
-    },
-    {
-      "feature": "impulsivity_index",
-      "psi": 0.0066,
-      "status": "stable"
-    },
-    {
-      "feature": "locus_of_control",
-      "psi": 0.0066,
-      "status": "stable"
-    },
-    {
-      "feature": "text_sentiment_compound",
-      "psi": 0.0062,
-      "status": "stable"
-    },
-    {
-      "feature": "conscientiousness_score",
-      "psi": 0.0058,
-      "status": "stable"
-    },
-    {
-      "feature": "repayment_intention_score",
-      "psi": 0.0058,
-      "status": "stable"
-    },
-    {
-      "feature": "loss_aversion_score",
-      "psi": 0.0052,
-      "status": "stable"
-    },
-    {
-      "feature": "scroll_hesitation_score",
-      "psi": 0.005,
-      "status": "stable"
-    },
-    {
-      "feature": "psychological_credit_index",
-      "psi": 0.0045,
-      "status": "stable"
-    },
-    {
-      "feature": "engagement_score",
-      "psi": 0.0037,
-      "status": "stable"
-    },
-    {
-      "feature": "financial_literacy_score",
-      "psi": 0.0034,
-      "status": "stable"
-    },
-    {
-      "feature": "risk_attitude",
-      "psi": 0.0033,
-      "status": "stable"
-    },
-    {
-      "feature": "text_semantic_dim1",
-      "psi": 0.0032,
-      "status": "stable"
-    },
-    {
-      "feature": "cognitive_consistency_index",
-      "psi": 0.0026,
-      "status": "stable"
-    },
-    {
-      "feature": "honesty_score",
-      "psi": 0.0017,
+      "psi": 0.0968,
       "status": "stable"
     },
     {
       "feature": "numeracy_score",
-      "psi": 0.0017,
+      "psi": 0.0914,
+      "status": "stable"
+    },
+    {
+      "feature": "text_semantic_dim1",
+      "psi": 0.0727,
+      "status": "stable"
+    },
+    {
+      "feature": "financial_literacy_score",
+      "psi": 0.0709,
+      "status": "stable"
+    },
+    {
+      "feature": "social_capital_score",
+      "psi": 0.0702,
+      "status": "stable"
+    },
+    {
+      "feature": "risk_attitude",
+      "psi": 0.0689,
+      "status": "stable"
+    },
+    {
+      "feature": "answer_change_rate",
+      "psi": 0.0603,
+      "status": "stable"
+    },
+    {
+      "feature": "honesty_score",
+      "psi": 0.0592,
+      "status": "stable"
+    },
+    {
+      "feature": "psychological_credit_index",
+      "psi": 0.0582,
+      "status": "stable"
+    },
+    {
+      "feature": "text_agency_score",
+      "psi": 0.0553,
+      "status": "stable"
+    },
+    {
+      "feature": "engagement_score",
+      "psi": 0.0548,
+      "status": "stable"
+    },
+    {
+      "feature": "conscientiousness_score",
+      "psi": 0.0512,
+      "status": "stable"
+    },
+    {
+      "feature": "cognitive_consistency_index",
+      "psi": 0.0464,
+      "status": "stable"
+    },
+    {
+      "feature": "text_sentiment_compound",
+      "psi": 0.0402,
+      "status": "stable"
+    },
+    {
+      "feature": "scroll_hesitation_score",
+      "psi": 0.0394,
+      "status": "stable"
+    },
+    {
+      "feature": "behavioral_trust_score",
+      "psi": 0.039,
+      "status": "stable"
+    },
+    {
+      "feature": "CRT_score",
+      "psi": 0.0388,
+      "status": "stable"
+    },
+    {
+      "feature": "future_orientation",
+      "psi": 0.0385,
+      "status": "stable"
+    },
+    {
+      "feature": "loss_aversion_score",
+      "psi": 0.038,
+      "status": "stable"
+    },
+    {
+      "feature": "resilience_score",
+      "psi": 0.0339,
+      "status": "stable"
+    },
+    {
+      "feature": "repayment_intention_score",
+      "psi": 0.0308,
+      "status": "stable"
+    },
+    {
+      "feature": "text_semantic_dim2",
+      "psi": 0.0299,
+      "status": "stable"
+    },
+    {
+      "feature": "impulsivity_index",
+      "psi": 0.0275,
       "status": "stable"
     },
     {
       "feature": "time_of_day",
-      "psi": 0.0005,
+      "psi": 0.0238,
       "status": "stable"
     },
     {
-      "feature": "device_type",
-      "psi": 0.0001,
+      "feature": "delay_discounting_rate",
+      "psi": 0.0218,
+      "status": "stable"
+    },
+    {
+      "feature": "locus_of_control",
+      "psi": 0.0144,
       "status": "stable"
     },
     {
       "feature": "dropout_count",
-      "psi": 0.0001,
+      "psi": 0.0111,
       "status": "stable"
     },
     {
       "feature": "risk_consistency_flag",
-      "psi": 0.0,
+      "psi": 0.0102,
+      "status": "stable"
+    },
+    {
+      "feature": "device_type",
+      "psi": 0.0054,
       "status": "stable"
     },
     {
       "feature": "text_problem_solving_flag",
-      "psi": 0.0,
+      "psi": 0.0009,
       "status": "stable"
     }
   ]
