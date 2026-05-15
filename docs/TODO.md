@@ -39,14 +39,13 @@ The repository now has a stable backend foundation plus a checked-in manifest-ba
 
 ### 2. Neural Model Track
 
-- [x] Create the offline TabNet training module and script path.
-- [ ] Create the offline residual MLP training module and script path.
-- [x] Ensure deterministic seed handling for both neural paths (TabNet done; MLP pending).
+- [x] Create the offline residual MLP training module and script path.
+- [x] Ensure deterministic seed handling for both neural paths (TabNet done; MLP done).
 - [x] Add smoke tests that prove TabNet artifacts can be trained on the documented temporal split without leaking validation/test data.
-- [ ] Add smoke tests for the MLP path.
+- [x] Add smoke tests for the MLP path.
 - [x] Merge TabNet neural metrics into the existing report structure without breaking current analytics consumers.
-- [ ] Merge MLP metrics the same way.
-- [ ] Update `docs/MODEL_REGISTRY.md` and `docs/EXPERIMENT_LOG.md` when the first neural runs exist (TabNet experiment logged as EXP-20260515-008; MLP pending).
+- [x] Merge MLP metrics the same way.
+- [ ] Update `docs/MODEL_REGISTRY.md` and `docs/EXPERIMENT_LOG.md` when the first neural runs exist (TabNet EXP-20260515-008 and MLP EXP-20260515-009 logged).
 
 ### 3. Ensemble And Calibration Track
 
@@ -131,7 +130,6 @@ The repository now has a stable backend foundation plus a checked-in manifest-ba
 
 If a future session wants the highest-value bounded task, start here:
 
-1. Add the offline residual MLP training module and script path (`backend/ml/training/neural/train_mlp.py`, `scripts/training/train_mlp.py`).
-2. Add deterministic smoke tests for the MLP path that keep the temporal split and protected-attribute exclusions intact.
-3. Decide how to merge MLP metrics into `metrics.json` once both neural artifacts exist.
-4. After both neural jobs exist, move to stacking feature generation (Track C).
+1. Implement the stacking ensemble training module (`backend/ml/training/ensemble/train_stacking.py`, `scripts/training/train_stacking.py`).
+2. The stacking module takes validation-split probability arrays from all 6 base models (logistic, RF, XGBoost, LightGBM, TabNet, MLP), fits a logistic meta-learner on months 9-10 only, and applies isotonic calibration.
+3. After a `calibrated_stacking.pkl` artifact exists, refresh SHAP, DICE, fairness, and manifest to promote the ensemble candidate.

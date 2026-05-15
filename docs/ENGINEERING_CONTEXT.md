@@ -60,7 +60,7 @@ Before any AI agent edits the repository, it must read and follow `docs/AI_WORKF
 - Local NLP extractor using VADER, spaCy, and sentence-transformers.
 - Preprocessing pipeline with scaling, imputation, ordinal/categorical encoding, and saved `ColumnTransformer`.
 - Classical training: logistic regression, random forest, XGBoost, LightGBM, Optuna tuning where appropriate.
-- Neural training: TabNet (`backend/ml/training/neural/train_tabnet.py`) is implemented with `.zip` artifact save/load, deterministic seeds, and 6 passing integration smoke tests. Residual MLP is the next item on this track.
+- Neural training: TabNet (`backend/ml/training/neural/train_tabnet.py`, `.zip` artifacts, 6/6 smoke tests) and residual MLP (`backend/ml/training/neural/train_mlp.py`, `.pt` checkpoints, 6/6 smoke tests) are both implemented. Track B (neural) is complete. Stacking ensemble is the next track (Track C).
 - Ensemble training: stacking classifier with logistic meta-learner and isotonic calibration.
 - Metrics computation and artifact export.
 - SHAP explainer creation and global importance report generation.

@@ -61,14 +61,17 @@ Status:
 Remaining work:
 
 - Implement residual MLP training module and script.
-- Add smoke tests for MLP path.
-- Ensure MLP metrics also merge without breaking existing report consumers.
+- ~~Implement residual MLP training module and script.~~ **Done.**
+- ~~Add smoke tests for MLP path.~~ **Done (6/6 passing).**
+- ~~Ensure MLP metrics also merge without breaking existing report consumers.~~ **Done.**
+
+**Track B is complete. Both neural artifacts (TabNet .zip, MLP .pt) are implemented and tested.**
 
 Exit criteria:
 
-- Neural artifacts are saved reproducibly.
-- Test metrics are persisted without breaking current analytics readers.
-- Docs and experiment logs reflect the new artifact families.
+- Neural artifacts are saved reproducibly. ✅
+- Test metrics are persisted without breaking current analytics readers. ✅
+- Docs and experiment logs reflect the new artifact families. ✅
 
 ### Track C - Ensemble And Calibration
 
@@ -243,7 +246,6 @@ This roadmap maps back to the PRD sections as follows:
 
 The most valuable bounded next session is:
 
-1. Implement the offline residual MLP training path.
-2. Add deterministic smoke tests for the MLP job.
-3. Confirm MLP metrics merge into the existing report structure without breaking analytics readers.
-4. After both neural jobs exist, move to stacking (Track C).
+1. Implement the stacking ensemble training module (`backend/ml/training/ensemble/train_stacking.py`, `scripts/training/train_stacking.py`).
+2. The stacking module takes validation-split probability outputs from all 6 base models (logistic, RF, XGBoost, LightGBM, TabNet, MLP) and fits a logistic meta-learner on months 9-10 only, then applies isotonic calibration.
+3. After `calibrated_stacking.pkl` exists, refresh the SHAP global importance, DICE, and fairness artifacts, and promote the ensemble via a manifest update.
