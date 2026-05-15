@@ -52,6 +52,7 @@ data/validation/*
 models/artifacts/*
 !models/artifacts/.gitkeep
 !models/artifacts/logistic_best.pkl
+!models/artifacts/calibrated_stacking.pkl
 models/preprocessors/*
 !models/preprocessors/.gitkeep
 !models/preprocessors/preprocessor.pkl

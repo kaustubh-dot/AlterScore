@@ -94,7 +94,6 @@
 ## What Does Not Exist Yet
 
 - No borrower assessment pages, results flow, dashboard workflow, or frontend tests beyond the package skeleton smoke test.
-- No docker runtime files yet.
 - No Docker runtime files yet.
 - The checked-in bundle now includes valid persisted SHAP and counterfactual explainability artifacts. Semantic features still use the persisted `text_pca.pkl` when available and only fall back to zero-filled projections when the PCA artifact is intentionally missing.
 
