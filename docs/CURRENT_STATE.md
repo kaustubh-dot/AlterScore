@@ -5,8 +5,8 @@
 - Date: 2026-05-15
 - Workspace: `C:\Kaustubh\Projects\AlterScore`
 - PRD source: `docs/AlterScore_PRD_v2.md`
-- Current phase: Track C (stacking ensemble + calibration) complete on branch `antigravity/dev`. The calibrated stacking ensemble (LogisticRegression meta-learner + isotonic CalibratedClassifierCV) is implemented, tested with 6 smoke tests, and its `.pkl` + config sidecar save/load contract is validated. All three offline training tracks (baselines/classical, TabNet, MLP, stacking) are now complete. The next slice is the explainability and manifest promotion refresh for the ensemble candidate (Track D).
-- Application implementation status: feature registry, runtime foundation helpers, API schemas, the frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, the baseline training loop, the bounded classical training loop for random forest, XGBoost, and LightGBM, the persisted text PCA artifact foundation, the runtime artifact-loading plus scoring-service stubs, the FastAPI app startup with `/api/health`, `/api/score`, the full analytics route surface, the persisted evaluation-artifact plus fairness/drift/global-importance artifact foundations, the TabNet neural training module (`.zip` + 6 smoke tests), the residual MLP training module (`.pt` + 6 smoke tests), and the calibrated stacking ensemble training module (`.pkl` + config sidecar + 6 smoke tests) are all implemented. The checked-in local bundle loads cleanly; all training modules are offline-only and do not touch the serving/manifest path.
+- Current phase: Track D (explainability refresh + manifest promotion) complete on branch `antigravity/dev`. The calibrated stacking ensemble is now the promoted production candidate. A surrogate-LR SHAP explainer was generated mapping base features to the ensemble predictions. A model-agnostic DICE counterfactual explainer was generated. Global importance, PSI, and fairness reports were refreshed against the new ensemble. The `models/registry/production_manifest.json` now points to `calibrated_stacking.pkl` (served as `stacking_ensemble`). The checked-in local bundle loads cleanly end-to-end, serving health, score, and analytics requests correctly.
+- Application implementation status: feature registry, runtime foundation helpers, API schemas, the frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, the baseline training loop, the bounded classical training loop for random forest, XGBoost, and LightGBM, the persisted text PCA artifact foundation, the runtime artifact-loading plus scoring-service stubs, the FastAPI app startup with `/api/health`, `/api/score`, the full analytics route surface, the persisted evaluation-artifact plus fairness/drift/global-importance artifact foundations, the TabNet neural training module (`.zip` + 6 smoke tests), the residual MLP training module (`.pt` + 6 smoke tests), the calibrated stacking ensemble training module (`.pkl` + config sidecar + 6 smoke tests), and the full ensemble promotion pipeline (`promote_ensemble.py` + 5 smoke tests) are all implemented. The checked-in local bundle loads cleanly and runs smoothly.
 
 ## What Exists
 
@@ -94,10 +94,7 @@
 ## What Does Not Exist Yet
 
 - No borrower assessment pages, results flow, dashboard workflow, or frontend tests beyond the package skeleton smoke test.
-- No stacking or ensemble-calibration jobs yet (next track).
-+ No borrower assessment pages, results flow, dashboard workflow, or frontend tests beyond the package skeleton smoke test.
-- No explainability/manifest refresh for the stacking ensemble candidate yet (Track D — next).
-- No calibrated ensemble artifact is checked into `models/` yet (offline training only). A manifest promotion, SHAP refresh, DICE refresh, and fairness re-run against the calibrated stacking candidate are still pending.
+- No docker runtime files yet.
 - No Docker runtime files yet.
 - The checked-in bundle now includes valid persisted SHAP and counterfactual explainability artifacts. Semantic features still use the persisted `text_pca.pkl` when available and only fall back to zero-filled projections when the PCA artifact is intentionally missing.
 
@@ -131,9 +128,9 @@ The earlier PRD narrative referenced 39 features, but the project will not inven
 
 Continue the implementation foundation in this order:
 
-1. Refresh SHAP, DICE, and fairness artifacts against the calibrated stacking ensemble candidate.
-2. Update the production manifest to promote the calibrated ensemble as the active local serving model.
-3. Validate the updated serving bundle end-to-end (health, score, analytics routes).
+1. Move to Track E - Frontend Borrower Experience.
+2. Build design tokens, PRD-faithful question data, and landing page.
+3. Build the assessment flow, telemetry capture, and results page with APIs integrated.
 
 ## Session Update Protocol
 

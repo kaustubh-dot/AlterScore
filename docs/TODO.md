@@ -55,16 +55,16 @@ The repository now has a stable backend foundation plus a checked-in manifest-ba
 - [x] Save `models/artifacts/calibrated_stacking.pkl` (`.pkl` via joblib) and `calibrated_stacking_config.json` sidecar.
 - [x] Refresh `models/reports/metrics.json` with ensemble validation/test metrics, thresholds, and calibration details.
 - [x] Update `models/reports/population_percentiles.json` for the calibrated production candidate.
-- [ ] Update the manifest to switch from the logistic local candidate to the calibrated ensemble bundle (Track D).
+- [x] Update the manifest to switch from the logistic local candidate to the calibrated ensemble bundle (Track D).
 
 ### 4. Explainability Refresh For Final Production Candidate
 
-- [ ] Decide which production-facing model path owns SHAP for the final promoted bundle.
-- [ ] Build the refreshed persisted SHAP explainer artifact for that path.
-- [ ] Generate the SHAP summary plot artifact for human review.
-- [ ] Revisit the DICE/persisted-counterfactual strategy after the calibrated ensemble exists.
-- [ ] Regenerate `models/reports/global_importance.json` if the active serving model changes.
-- [ ] Add regression tests proving the refreshed explainability artifacts still deserialize from repository source.
+- [x] Decide which production-facing model path owns SHAP for the final promoted bundle.
+- [x] Build the refreshed persisted SHAP explainer artifact for that path.
+- [x] Generate the SHAP summary plot artifact for human review.
+- [x] Revisit the DICE/persisted-counterfactual strategy after the calibrated ensemble exists.
+- [x] Regenerate `models/reports/global_importance.json` if the active serving model changes.
+- [x] Add regression tests proving the refreshed explainability artifacts still deserialize from repository source.
 
 ### 5. Backend Hardening After Model Refresh
 
@@ -129,6 +129,6 @@ The repository now has a stable backend foundation plus a checked-in manifest-ba
 
 If a future session wants the highest-value bounded task, start here:
 
-1. Refresh SHAP global importance, DICE explainability, and fairness artifacts against the calibrated stacking ensemble candidate.
-2. Update the production manifest (`models/registry/production_manifest.json`) to promote the stacking ensemble.
-3. Validate the updated serving bundle end-to-end (health, score, analytics routes all return 200).
+1. Start Track E - Frontend Borrower Experience.
+2. Build the PRD-faithful assessment flow, question data, and landing page.
+3. Hook the assessment up to the backend API and build the results page.

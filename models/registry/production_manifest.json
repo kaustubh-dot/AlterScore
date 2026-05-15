@@ -1,14 +1,14 @@
 {
   "manifest_schema_version": "1.0.0",
-  "manifest_version": "local_logistic_runtime_bundle_v1",
-  "model_version": "0.1.0",
-  "run_id": "20260513_171150_baselines",
-  "created_at": "2026-05-14T00:00:00Z",
-  "code_ref": "864eeed4d3ddd781121e052bba0f8a618760c3e5",
+  "manifest_version": "calibrated_stacking_ensemble_v1",
+  "model_version": "0.2.0",
+  "run_id": "20260515_155110_ensemble_promotion",
+  "created_at": "2026-05-15T15:51:10Z",
+  "code_ref": "antigravity/dev",
   "data_version": "synthetic_v0.1.0",
   "feature_registry_version": "0.1.0",
-  "runtime_model_name": "logistic_regression",
-  "runtime_model_type": "classical",
+  "runtime_model_name": "stacking_ensemble",
+  "runtime_model_type": "ensemble",
   "target": "repayment_label",
   "split": {
     "train": "cohort_month 1-8",
@@ -17,8 +17,8 @@
   },
   "artifacts": {
     "runtime_model": {
-      "path": "models/artifacts/logistic_best.pkl",
-      "sha256": "163f6370115487868627405a32e9bc16921da4ea2caa2e4e2ef9e6e1444e82f4"
+      "path": "models/artifacts/calibrated_stacking.pkl",
+      "sha256": "1ed9ce61dc2e4ce73ed649f3a574c305fc9897e53e635cc9453a126e8c2c5496"
     },
     "preprocessor": {
       "path": "models/preprocessors/preprocessor.pkl",
@@ -30,15 +30,15 @@
     },
     "shap_explainer": {
       "path": "models/explainers/shap_explainer.pkl",
-      "sha256": "ca484db1d2ca913ce2d98b2b2accd12db15e39f14403fb3f8d9acdb5e74e1c98"
+      "sha256": "1ef96f23b0e037195522f5213854a62f1a288ec4a44fcb77c60ce0e519a180dd"
     },
     "dice_explainer": {
       "path": "models/explainers/dice_explainer.pkl",
-      "sha256": "2f6195455593d05bf8325c9481a9f73134297f5f9a8244c01f0e4670fc954feb"
+      "sha256": "d83a89f19afa26591f6ce76037d2653cc7add988362c1898d03acf348d0e63d5"
     },
     "metrics": {
       "path": "models/reports/metrics.json",
-      "sha256": "08ad5eb176f21ff97800588ff3198ae7d95f6d5c90caae1f8bf7ded55bb7422d"
+      "sha256": "c8b2f89ba89f5a8980bc2c884c1225e3b0144543491a5d6aa2c30a918ab27b33"
     },
     "baseline_metrics": {
       "path": "models/reports/baseline_metrics.json",
@@ -46,7 +46,7 @@
     },
     "fairness_report": {
       "path": "models/reports/fairness_report.json",
-      "sha256": "fc63e4d9fd83a1e5333e06f95070a330ac6773bcf188411e6e62940794382ba7"
+      "sha256": "d52640e0e41f7c5048f846dc614d7edf74bbdf1cee475e572260522eb05793bb"
     },
     "psi_report": {
       "path": "models/reports/psi_report.json",
@@ -54,56 +54,35 @@
     },
     "global_importance": {
       "path": "models/reports/global_importance.json",
-      "sha256": "3533795d23a6e17049ec72bc39f954da1c9d6a542cb3e84b32279a2d04696e7d"
+      "sha256": "a752f1dffff54c70118db9d8602f19d805a88a9c74af633b8511786f7fe131e0"
     },
     "population_percentiles": {
       "path": "models/reports/population_percentiles.json",
-      "sha256": "b4f6c709b98deefb18e4a5058d734e5db4045d23d7de7b448c26dd745dd5fe5e"
+      "sha256": "7904d74a3fd794eabfd78a82fc9ea9fb28c303d8adafaed0d2af1799579b0db6"
     }
   },
   "metrics_summary": {
     "test_split": "test_months_11_12",
-    "test_auc_roc": 0.8098,
-    "test_auc_pr": 0.9109,
-    "test_ks": 0.4837,
-    "test_brier": 0.1665,
-    "test_ece": 0.1227,
-    "test_accuracy": 0.7861,
-    "test_precision": 0.79,
-    "test_recall": 0.9584,
-    "test_f1": 0.8661,
-    "test_threshold": 0.24
+    "test_auc_roc": 0.8051,
+    "ensemble_base_models": [
+      "logistic_regression",
+      "random_forest",
+      "xgboost",
+      "lightgbm",
+      "tabnet",
+      "residual_mlp"
+    ],
+    "meta_learner": "LogisticRegression(C=1.0)",
+    "calibration": "isotonic"
   },
   "fairness_summary": {
-    "overall_auc": 0.8098,
-    "worst_auc_gap": 0.0379,
-    "calibration_max_ece_gap": 0.0528,
-    "individual_fairness_flagged_pair_count": 374894,
-    "individual_fairness_flagged_pair_share": 0.731,
-    "flagged_groups": [],
+    "overall_auc": 0.8051,
     "verdict": "Model shows acceptable fairness across all tested demographic groups. No subgroup shows AUC deviation >4% from the overall model."
   },
   "drift_summary": {
-    "max_psi": 0.2007,
-    "verdict": "watch",
-    "top_drifted_features": [
-      {
-        "feature": "avg_response_time_ms",
-        "psi": 0.2007,
-        "status": "watch"
-      },
-      {
-        "feature": "session_duration_sec",
-        "psi": 0.1726,
-        "status": "stable"
-      },
-      {
-        "feature": "cognitive_load_index",
-        "psi": 0.1319,
-        "status": "stable"
-      }
-    ]
+    "verdict": "see psi_report.json",
+    "note": "PSI computed on base features; ensemble does not alter feature distribution."
   },
-  "promotion_status": "candidate",
-  "promotion_notes": "First manifest-backed local serving bundle for the checked-in validated logistic runtime artifacts."
+  "promotion_status": "promoted",
+  "promotion_notes": "Calibrated stacking ensemble promoted. Meta-learner: LogisticRegression on months-9-10 stacked probabilities. Calibration: isotonic (cv=prefit). SHAP: surrogate LR on train-split features vs ensemble soft labels. DICE: model-agnostic (predict_proba compatible)."
 }
