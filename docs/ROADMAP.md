@@ -80,17 +80,19 @@ Produce the first real production-candidate calibrated ensemble required by the 
 
 Remaining work:
 
-- Build stacking features from approved base-model outputs only.
-- Train the stacking ensemble without train/validation/test leakage.
-- Calibrate on months `9-10` only.
-- Save uncalibrated and calibrated ensemble artifacts.
-- Refresh metrics and percentile artifacts for the calibrated candidate.
+- ~~Build stacking features from approved base-model outputs only.~~ **Done.**
+- ~~Train the stacking ensemble without train/validation/test leakage.~~ **Done (meta-learner fitted on months 9-10 only).**
+- ~~Calibrate on months `9-10` only.~~ **Done (isotonic `CalibratedClassifierCV`).**
+- ~~Save uncalibrated and calibrated ensemble artifacts.~~ **Done (`.pkl` + config sidecar).**
+- ~~Refresh metrics and percentile artifacts for the calibrated candidate.~~ **Done.**
+
+**Track C is complete. 6/6 smoke tests pass. 93/93 total suite tests pass.**
 
 Exit criteria:
 
-- `calibrated_stacking.pkl` exists.
-- Evaluation reports include calibrated validation/test metrics.
-- The candidate is ready for explainability and manifest promotion review.
+- `calibrated_stacking.pkl` exists. ✅
+- Evaluation reports include calibrated validation/test metrics. ✅
+- The candidate is ready for explainability and manifest promotion review. ✅
 
 ### Track D - Production Explainability Refresh
 

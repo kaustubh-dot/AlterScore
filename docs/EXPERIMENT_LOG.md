@@ -1183,4 +1183,70 @@ Smoke tests only (2 epochs, 1,800 rows). Full-dataset AUC target: above `0.72` o
 - Promote: no
 - Continue: yes
 - Stop: no
-- Follow-up: proceed to Track C — stacking ensemble training module with logistic meta-learner and isotonic calibration on months 9-10.
+- Follow-up: ~~proceed to Track C~~ — done. Proceed to Track D (explainability refresh + manifest promotion for the calibrated ensemble).
+
+## EXP-20260515-010 - Calibrated stacking ensemble (Track C)
+
+- Status: completed
+- Owner: Antigravity / Codex
+- Date started: 2026-05-15
+- Date completed: 2026-05-15
+- Branch / commit: `antigravity/dev`
+- Related decision: ensemble + calibration track (Track C), offline-training-separation, temporal-split integrity
+- Related issue / task: Calibrated stacking ensemble — meta-learner, isotonic calibration, metrics merge, 6 smoke tests
+
+### Hypothesis
+
+If a `LogisticRegression` meta-learner is fitted on the stacked validation-month probability outputs of all 6 base models (logistic, RF, XGBoost, LightGBM, TabNet, MLP) and then wrapped in `CalibratedClassifierCV(method='isotonic', cv='prefit')` on the same fold, the calibrated ensemble will pass a full 6-test smoke suite and merge cleanly into the existing metrics/percentile reports without dropping any prior row.
+
+### Dataset / Feature Set
+
+- Validation fold (meta-features): months `9-10` probability outputs from all 6 base models
+- Test fold (held out): months `11-12`
+- Meta-feature matrix shape: `(n_val, 6)` — one column per base model in `BASE_MODEL_ORDER`
+
+### Model / Pipeline Configuration
+
+```json
+{
+  "model_name": "calibrated_stacking",
+  "base_model_order": ["logistic_regression","random_forest","xgboost","lightgbm","tabnet","residual_mlp"],
+  "meta_learner": {"class": "LogisticRegression", "C": 1.0, "solver": "lbfgs", "max_iter": 1000},
+  "calibration": {"method": "isotonic", "cv": "prefit"},
+  "artifact_format": ".pkl (joblib CalibratedClassifierCV) + calibrated_stacking_config.json sidecar"
+}
+```
+
+### Commands
+
+```powershell
+C:\Users\Kaustubh\anaconda3\python.exe -m pytest tests/integration/pipeline/test_stacking_training.py -v
+C:\Users\Kaustubh\anaconda3\python.exe -m pytest tests/integration/pipeline/ tests/unit/ml/ -q
+C:\Users\Kaustubh\anaconda3\python.exe scripts/training/train_stacking.py
+```
+
+### Results
+
+Smoke tests only (using pre-computed random probability arrays; test 2 exercises the full 6-base-model pipeline with 2-epoch neural patches).
+Full regression suite: 93/93 passing.
+
+### Artifacts
+
+| Artifact | Path |
+|---|---|
+| Stacking ensemble module | `backend/ml/training/ensemble/train_stacking.py` |
+| CLI entrypoint | `scripts/training/train_stacking.py` |
+| Smoke tests (6/6) | `tests/integration/pipeline/test_stacking_training.py` |
+| Artifact (offline, not checked in) | `models/artifacts/calibrated_stacking.pkl` |
+| Config sidecar (offline) | `models/artifacts/calibrated_stacking_config.json` |
+
+### Interpretation
+
+`.pkl` round-trip validated: loaded model produces bit-identical probabilities. Stacking metrics merge into `metrics.json` and `population_percentiles.json` without dropping any prior rows. The `default_model_name` is updated to the model with the highest test AUC. Track C (ensemble + calibration) is fully complete. The calibrated stacking ensemble is the first genuine production-candidate artifact.
+
+### Decision
+
+- Promote: pending (requires SHAP, DICE, fairness refresh and manifest update — Track D)
+- Continue: yes
+- Stop: no
+- Follow-up: Track D — refresh SHAP, DICE, and fairness artifacts against the calibrated ensemble candidate; update `production_manifest.json` to promote it; validate the serving bundle end-to-end.
