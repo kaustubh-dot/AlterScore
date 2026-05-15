@@ -49,14 +49,13 @@ The repository now has a stable backend foundation plus a checked-in manifest-ba
 
 ### 3. Ensemble And Calibration Track
 
-- [ ] Implement stacking feature generation from the approved base-model set only.
-- [ ] Prevent split leakage by ensuring the meta-learner sees only approved train/validation outputs.
-- [ ] Add the calibration job for months `9-10` only.
-- [ ] Save `models/artifacts/stacking_uncalibrated.pkl`.
-- [ ] Save `models/artifacts/calibrated_stacking.pkl`.
-- [ ] Refresh `models/reports/metrics.json` with ensemble validation/test metrics, thresholds, and calibration details.
-- [ ] Update `models/reports/population_percentiles.json` for the calibrated production candidate.
-- [ ] Decide when the manifest should switch from the logistic local candidate to the calibrated ensemble bundle.
+- [x] Implement stacking feature generation from the approved base-model set only.
+- [x] Prevent split leakage (meta-learner fitted on validation months 9-10 only; test months never touched during training).
+- [x] Add the calibration job for months `9-10` only (isotonic `CalibratedClassifierCV`).
+- [x] Save `models/artifacts/calibrated_stacking.pkl` (`.pkl` via joblib) and `calibrated_stacking_config.json` sidecar.
+- [x] Refresh `models/reports/metrics.json` with ensemble validation/test metrics, thresholds, and calibration details.
+- [x] Update `models/reports/population_percentiles.json` for the calibrated production candidate.
+- [ ] Update the manifest to switch from the logistic local candidate to the calibrated ensemble bundle (Track D).
 
 ### 4. Explainability Refresh For Final Production Candidate
 
@@ -130,6 +129,6 @@ The repository now has a stable backend foundation plus a checked-in manifest-ba
 
 If a future session wants the highest-value bounded task, start here:
 
-1. Implement the stacking ensemble training module (`backend/ml/training/ensemble/train_stacking.py`, `scripts/training/train_stacking.py`).
-2. The stacking module takes validation-split probability arrays from all 6 base models (logistic, RF, XGBoost, LightGBM, TabNet, MLP), fits a logistic meta-learner on months 9-10 only, and applies isotonic calibration.
-3. After a `calibrated_stacking.pkl` artifact exists, refresh SHAP, DICE, fairness, and manifest to promote the ensemble candidate.
+1. Refresh SHAP global importance, DICE explainability, and fairness artifacts against the calibrated stacking ensemble candidate.
+2. Update the production manifest (`models/registry/production_manifest.json`) to promote the stacking ensemble.
+3. Validate the updated serving bundle end-to-end (health, score, analytics routes all return 200).

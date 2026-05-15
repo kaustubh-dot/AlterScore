@@ -313,3 +313,20 @@ Current local runtime-artifact status:
 - Smoke test suite: `tests/integration/pipeline/test_mlp_training.py` (6/6 passing)
 - AUC target: above `0.72` on test split months `11-12` (see Model Families table)
 - Notes: the MLP module mirrors `train_tabnet.py` exactly in structure and reuses the same preprocessing, temporal-split, evaluation, and metrics infrastructure. The `.pt` save/load round-trip is validated in the smoke roundtrip test: loaded model produces bit-identical probabilities. MLP metrics merge into `metrics.json` and `population_percentiles.json` without dropping TabNet, classical, or baseline entries. No manifest or serving path was modified. Track B (neural) is now complete.
+
+### Calibrated Stacking Ensemble Smoke Run: `EXP-20260515-010` (offline-only, promotion candidate)
+
+- Status: neural training infrastructure validated, not yet promoted to manifest
+- Date: 2026-05-15
+- Branch: `antigravity/dev`
+- Dataset: `data/raw/synthetic_dataset.csv` with months `1-8 / 9-10 / 11-12`
+- Module: `backend/ml/training/ensemble/train_stacking.py`
+- CLI: `scripts/training/train_stacking.py`
+- Base models: logistic_regression, random_forest, xgboost, lightgbm, tabnet, residual_mlp (all 6)
+- Meta-learner: `LogisticRegression(C=1.0, solver=lbfgs)` fitted on stacked validation-month probabilities
+- Calibration: `CalibratedClassifierCV(method='isotonic', cv='prefit')` on validation months 9-10
+- Artifact path: `models/artifacts/calibrated_stacking.pkl` (not checked in; offline-only until manifest promotion)
+- Config sidecar: `models/artifacts/calibrated_stacking_config.json`
+- Smoke test suite: `tests/integration/pipeline/test_stacking_training.py` (6/6 passing)
+- AUC target: above best base-model test AUC on months `11-12` (calibration + ensemble should improve over logistic ~0.81)
+- Notes: the stacking module accepts `StackingInputs` (pre-computed base model probability arrays) or re-trains all six base models automatically. The meta-learner and isotonic calibrator are fitted on months 9-10 only (no test contamination). The `.pkl` round-trip is validated: loaded model produces bit-identical probabilities. Stacking metrics merge cleanly into `metrics.json` and `population_percentiles.json`. The `default_model_name` in the percentile report is updated to the model with the highest test AUC. Track C (ensemble + calibration) is now complete.
