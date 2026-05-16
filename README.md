@@ -7,15 +7,14 @@ counterfactual improvement actions, and evaluator analytics.
 
 ## Status
 
-Backend Tracks A–D are complete. The checked-in manifest-backed runtime bundle
-includes a logistic regression model, preprocessor, text PCA, SHAP and DICE
-explainers, and all governance reports (fairness, PSI, global importance,
-metrics, population percentiles). Offline training pipelines for classical
-models (RF, XGBoost, LightGBM), neural models (TabNet, MLP), and a calibrated
-stacking ensemble are implemented and tested. The scoring API (`/api/score`)
-returns real per-user SHAP factors, counterfactual actions, and loan eligibility
-from the manifest-backed bundle. The frontend borrower experience (Track E) is
-the next milestone.
+Backend Tracks A–D+ are complete. The checked-in manifest-backed runtime bundle
+serves a **calibrated stacking ensemble** (6 base models: Logistic, RF, XGBoost,
+LightGBM, TabNet, MLP) with a calibrated meta-learner. The bundle includes the
+preprocessor, text PCA, SHAP and DICE explainers, and all governance reports
+(fairness, PSI, global importance, metrics, population percentiles). The scoring
+API (`/api/score`) returns real per-user SHAP factors, counterfactual actions,
+and loan eligibility through the full ensemble inference path. The frontend
+borrower experience (Track E) is the next milestone.
 
 ## Quick Start
 
@@ -49,7 +48,7 @@ python -m pytest tests/ -v
 | `docs/` | Project memory, contracts, workflow rules, and roadmap |
 | `backend/` | FastAPI backend, ML pipelines, and runtime inference |
 | `frontend/` | React/Vite package scaffold for borrower and dashboard UI |
-| `tests/` | Unit, integration, and fixture files (93+ tests) |
+| `tests/` | Unit, integration, and fixture files (145 tests) |
 | `models/` | Checked-in runtime artifacts and production manifest |
 | `scripts/` | CLI entrypoints for offline training pipelines |
 | `data/` | Generated datasets (gitignored except `.gitkeep`) |
@@ -58,7 +57,7 @@ python -m pytest tests/ -v
 
 | Document | When To Read It |
 |---|---|
-| [BACKEND_RUNTIME_ARCHITECTURE.md](docs/BACKEND_RUNTIME_ARCHITECTURE.md) | **Read first** — explains why logistic regression is the active runtime model and what not to break |
+| [BACKEND_RUNTIME_ARCHITECTURE.md](docs/BACKEND_RUNTIME_ARCHITECTURE.md) | **Read first** — explains the ensemble serving architecture and what not to break |
 | [FRONTEND_INTEGRATION_GUIDE.md](docs/FRONTEND_INTEGRATION_GUIDE.md) | Before writing any frontend code — covers all API contracts, telemetry, rendering guidance |
 | [API_CONTRACTS.md](docs/API_CONTRACTS.md) | Reference for all request/response schemas |
 | [ROADMAP.md](docs/ROADMAP.md) | Track status and implementation order |
@@ -80,13 +79,13 @@ python -m pytest tests/ -v
 ## Branch Strategy
 
 - `main` — stable, merged only after full test suite passes
-- `antigravity/dev` — current development branch (backend complete, frontend next)
-- Frontend work should branch from `antigravity/dev` or `main` after merge
+- `feature/ensemble-serving-runtime` — current development branch (backend complete, frontend next)
+- Frontend work should branch from `main` after merge
 
 ## Test Suite
 
 ```powershell
-# Full suite (93+ tests, ~12 minutes)
+# Full suite (145 tests, ~12 minutes)
 python -m pytest tests/ -v
 
 # Fast feedback (unit + API smoke, ~2 minutes)

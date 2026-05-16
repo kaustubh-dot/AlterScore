@@ -170,10 +170,20 @@ Record every architecture-level decision here. Small implementation choices can 
 
 ## DEC-0016 - Runtime Reverted To Logistic Regression After Ensemble Promotion
 
-- Status: accepted
+- Status: superseded by DEC-0017
 - Date: 2026-05-16
 - Owner: Antigravity
 - Context: The calibrated stacking ensemble was successfully promoted to `production_manifest.json` as `stacking_ensemble` (v0.2.0). However, the runtime scoring service at `backend/app/services/scoring.py` sends 35 raw preprocessed features to `model.predict_proba()`, while the stacking meta-learner expects 6 meta-features (stacked base-model probabilities). Serving the ensemble caused a `ValueError` at inference time.
 - Decision: Revert the runtime manifest to `logistic_regression` (v0.1.0). Keep the stacking training and promotion pipelines intact. Defer ensemble serving until a scoring adapter is implemented that transforms raw features → base-model probabilities → meta-learner input.
 - Consequences: The backend continues to serve stable, tested logistic regression scoring. All explainability artifacts (SHAP, DICE), governance reports, and smoke tests remain valid against the logistic bundle. The stacking ensemble artifact (`calibrated_stacking.pkl`) exists on disk but is not tracked by the production manifest. The promotion pipeline (`promote_ensemble.py`) remains functional for when the adapter is ready.
 - Follow-ups: Implement `backend/ml/inference/ensemble_adapter.py` per `docs/BACKEND_RUNTIME_ARCHITECTURE.md`. Update `artifact_loader.py` to load base models for ensemble bundles. Update `scoring.py` to route between classical and ensemble inference paths. Regenerate manifest and checksums for the ensemble bundle.
+
+## DEC-0017 - Ensemble Serving Adapter Implemented And Ensemble Runtime Restored
+
+- Status: accepted
+- Date: 2026-05-16
+- Owner: Antigravity
+- Context: DEC-0016 reverted the runtime to logistic regression because the scoring service lacked an adapter to transform 35 preprocessed features into the 6 meta-features expected by the stacking meta-learner. This blocked the stacking ensemble from serving.
+- Decision: Implement the ensemble inference adapter (`backend/ml/inference/ensemble_adapter.py`) with `EnsembleInferenceBundle`, `predict_ensemble_proba()`, and `WrappedEnsembleModel`. Extend `artifact_loader.py` to load all 6 base models and stacking config when the manifest declares `runtime_model_type: "ensemble"`. Wire `scoring.py` to route through the adapter. Restore the production manifest to `stacking_ensemble` (v0.2.0) with all 18 artifact checksums.
+- Consequences: The backend now serves the calibrated stacking ensemble in production. All 6 base models are loaded at startup. The inference path is: preprocessed features → 6 base model probabilities → meta-feature stack → calibrated meta-learner → final probability. DICE receives `WrappedEnsembleModel` so counterfactual actions are computed through the full ensemble path. PyTorch and pytorch-tabnet are now required at startup (not just for offline training). 145 tests pass including 6 ensemble-specific smoke tests.
+- Follow-ups: Consider lazy-loading neural models to reduce cold start time. Monitor the individual fairness proxy flagged-pair rate under ensemble predictions.

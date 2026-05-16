@@ -54,6 +54,12 @@ models/artifacts/*
 !models/artifacts/.gitkeep
 !models/artifacts/logistic_best.pkl
 !models/artifacts/calibrated_stacking.pkl
+!models/artifacts/calibrated_stacking_config.json
+!models/artifacts/rf_best.pkl
+!models/artifacts/xgb_best.pkl
+!models/artifacts/lgbm_best.pkl
+!models/artifacts/tabnet_epoch_best.zip
+!models/artifacts/mlp_best.pt
 models/preprocessors/*
 !models/preprocessors/.gitkeep
 !models/preprocessors/preprocessor.pkl

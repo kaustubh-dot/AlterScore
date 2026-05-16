@@ -72,19 +72,32 @@ Generate data
 
 ## Artifact Bundle Checklist
 
-- [x] `models/artifacts/logistic_best.pkl` (active runtime model)
-- [ ] `models/artifacts/calibrated_stacking.pkl` (offline-only; see BACKEND_RUNTIME_ARCHITECTURE.md)
+### Core Runtime Artifacts
+- [x] `models/artifacts/calibrated_stacking.pkl` (active runtime model — stacking ensemble meta-learner)
 - [x] `models/preprocessors/preprocessor.pkl`
 - [x] `models/preprocessors/text_pca.pkl`
-- [x] `models/explainers/shap_explainer.pkl` loads successfully from repository source and passes runtime smoke verification
+- [x] `models/registry/production_manifest.json`
+
+### Base Models (loaded at startup for ensemble inference)
+- [x] `models/artifacts/logistic_best.pkl`
+- [x] `models/artifacts/rf_best.pkl`
+- [x] `models/artifacts/xgb_best.pkl`
+- [x] `models/artifacts/lgbm_best.pkl`
+- [x] `models/artifacts/tabnet_epoch_best.zip`
+- [x] `models/artifacts/mlp_best.pt`
+- [x] `models/artifacts/calibrated_stacking_config.json`
+
+### Explainability Artifacts
+- [x] `models/explainers/shap_explainer.pkl`
 - [x] `models/explainers/dice_explainer.pkl`
+
+### Report Artifacts
 - [x] `models/reports/metrics.json`
 - [x] `models/reports/baseline_metrics.json`
 - [x] `models/reports/fairness_report.json`
 - [x] `models/reports/psi_report.json`
 - [x] `models/reports/global_importance.json`
 - [x] `models/reports/population_percentiles.json`
-- [x] `models/registry/production_manifest.json`
 
 ## Backend Startup Requirements
 

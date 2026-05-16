@@ -1,250 +1,250 @@
 {
-  "model_name": "random_forest",
+  "model_name": "logistic_regression",
   "model_type": "classical",
   "items": [
     {
-      "feature": "psychological_credit_index",
-      "display_name": "Psychological Credit Index",
-      "mean_abs_shap": 0.0893,
-      "category": "derived",
+      "feature": "dropout_count",
+      "display_name": "Dropout Count",
+      "mean_abs_shap": 0.3147,
+      "category": "behavioral",
       "rank": 1
     },
     {
       "feature": "cognitive_load_index",
       "display_name": "Cognitive Load Index",
-      "mean_abs_shap": 0.085,
+      "mean_abs_shap": 0.3091,
       "category": "derived",
       "rank": 2
     },
     {
-      "feature": "engagement_score",
-      "display_name": "Engagement Score",
-      "mean_abs_shap": 0.0668,
-      "category": "derived",
+      "feature": "delay_discounting_rate",
+      "display_name": "Delay Discounting Rate",
+      "mean_abs_shap": 0.2706,
+      "category": "psychometric",
       "rank": 3
-    },
-    {
-      "feature": "avg_response_time_ms",
-      "display_name": "Average Response Time (ms)",
-      "mean_abs_shap": 0.0587,
-      "category": "behavioral",
-      "rank": 4
-    },
-    {
-      "feature": "behavioral_trust_score",
-      "display_name": "Behavioral Trust Score",
-      "mean_abs_shap": 0.0498,
-      "category": "derived",
-      "rank": 5
-    },
-    {
-      "feature": "scroll_hesitation_score",
-      "display_name": "Scroll Hesitation Score",
-      "mean_abs_shap": 0.0418,
-      "category": "behavioral",
-      "rank": 6
-    },
-    {
-      "feature": "session_duration_sec",
-      "display_name": "Session Duration (sec)",
-      "mean_abs_shap": 0.0386,
-      "category": "behavioral",
-      "rank": 7
-    },
-    {
-      "feature": "conscientiousness_score",
-      "display_name": "Conscientiousness Score",
-      "mean_abs_shap": 0.035,
-      "category": "psychometric",
-      "rank": 8
-    },
-    {
-      "feature": "repayment_intention_score",
-      "display_name": "Repayment Intention Score",
-      "mean_abs_shap": 0.0332,
-      "category": "derived",
-      "rank": 9
-    },
-    {
-      "feature": "answer_change_rate",
-      "display_name": "Answer Change Rate",
-      "mean_abs_shap": 0.0323,
-      "category": "behavioral",
-      "rank": 10
-    },
-    {
-      "feature": "numeracy_score",
-      "display_name": "Numeracy Score",
-      "mean_abs_shap": 0.0312,
-      "category": "psychometric",
-      "rank": 11
-    },
-    {
-      "feature": "impulsivity_index",
-      "display_name": "Impulsivity Index",
-      "mean_abs_shap": 0.0308,
-      "category": "derived",
-      "rank": 12
-    },
-    {
-      "feature": "CRT_score",
-      "display_name": "CRT Score",
-      "mean_abs_shap": 0.0298,
-      "category": "psychometric",
-      "rank": 13
-    },
-    {
-      "feature": "typing_speed_wpm",
-      "display_name": "Typing Speed (WPM)",
-      "mean_abs_shap": 0.0254,
-      "category": "behavioral",
-      "rank": 14
-    },
-    {
-      "feature": "locus_of_control",
-      "display_name": "Locus Of Control",
-      "mean_abs_shap": 0.0237,
-      "category": "psychometric",
-      "rank": 15
-    },
-    {
-      "feature": "financial_literacy_score",
-      "display_name": "Financial Literacy Score",
-      "mean_abs_shap": 0.0234,
-      "category": "psychometric",
-      "rank": 16
-    },
-    {
-      "feature": "future_orientation",
-      "display_name": "Future Orientation",
-      "mean_abs_shap": 0.0234,
-      "category": "psychometric",
-      "rank": 17
-    },
-    {
-      "feature": "risk_response_speed_ratio",
-      "display_name": "Risk Response Speed Ratio",
-      "mean_abs_shap": 0.0232,
-      "category": "behavioral",
-      "rank": 18
     },
     {
       "feature": "honesty_score",
       "display_name": "Honesty Score",
-      "mean_abs_shap": 0.023,
+      "mean_abs_shap": 0.2649,
       "category": "psychometric",
-      "rank": 19
-    },
-    {
-      "feature": "risk_attitude",
-      "display_name": "Risk Attitude",
-      "mean_abs_shap": 0.0217,
-      "category": "psychometric",
-      "rank": 20
-    },
-    {
-      "feature": "resilience_score",
-      "display_name": "Resilience Score",
-      "mean_abs_shap": 0.0215,
-      "category": "psychometric",
-      "rank": 21
-    },
-    {
-      "feature": "delay_discounting_rate",
-      "display_name": "Delay Discounting Rate",
-      "mean_abs_shap": 0.0212,
-      "category": "psychometric",
-      "rank": 22
-    },
-    {
-      "feature": "reciprocity_norm",
-      "display_name": "Reciprocity Norm",
-      "mean_abs_shap": 0.021,
-      "category": "psychometric",
-      "rank": 23
-    },
-    {
-      "feature": "text_sentiment_compound",
-      "display_name": "Text Sentiment Compound",
-      "mean_abs_shap": 0.021,
-      "category": "nlp",
-      "rank": 24
-    },
-    {
-      "feature": "social_capital_score",
-      "display_name": "Social Capital Score",
-      "mean_abs_shap": 0.0209,
-      "category": "psychometric",
-      "rank": 25
-    },
-    {
-      "feature": "text_semantic_dim2",
-      "display_name": "Text Semantic Dimension 2",
-      "mean_abs_shap": 0.0206,
-      "category": "nlp",
-      "rank": 26
-    },
-    {
-      "feature": "text_semantic_dim1",
-      "display_name": "Text Semantic Dimension 1",
-      "mean_abs_shap": 0.0197,
-      "category": "nlp",
-      "rank": 27
-    },
-    {
-      "feature": "cognitive_consistency_index",
-      "display_name": "Cognitive Consistency Index",
-      "mean_abs_shap": 0.0191,
-      "category": "derived",
-      "rank": 28
-    },
-    {
-      "feature": "loss_aversion_score",
-      "display_name": "Loss Aversion Score",
-      "mean_abs_shap": 0.0191,
-      "category": "psychometric",
-      "rank": 29
+      "rank": 4
     },
     {
       "feature": "text_agency_score",
       "display_name": "Text Agency Score",
-      "mean_abs_shap": 0.0134,
+      "mean_abs_shap": 0.2457,
       "category": "nlp",
-      "rank": 30
-    },
-    {
-      "feature": "time_of_day",
-      "display_name": "Time Of Day",
-      "mean_abs_shap": 0.0061,
-      "category": "behavioral",
-      "rank": 31
-    },
-    {
-      "feature": "dropout_count",
-      "display_name": "Dropout Count",
-      "mean_abs_shap": 0.0033,
-      "category": "behavioral",
-      "rank": 32
-    },
-    {
-      "feature": "text_problem_solving_flag",
-      "display_name": "Text Problem Solving Flag",
-      "mean_abs_shap": 0.0026,
-      "category": "nlp",
-      "rank": 33
-    },
-    {
-      "feature": "device_type",
-      "display_name": "Device Type",
-      "mean_abs_shap": 0.0023,
-      "category": "behavioral",
-      "rank": 34
+      "rank": 5
     },
     {
       "feature": "risk_consistency_flag",
       "display_name": "Risk Consistency Flag",
-      "mean_abs_shap": 0.0022,
+      "mean_abs_shap": 0.2268,
       "category": "psychometric",
+      "rank": 6
+    },
+    {
+      "feature": "financial_literacy_score",
+      "display_name": "Financial Literacy Score",
+      "mean_abs_shap": 0.2233,
+      "category": "psychometric",
+      "rank": 7
+    },
+    {
+      "feature": "scroll_hesitation_score",
+      "display_name": "Scroll Hesitation Score",
+      "mean_abs_shap": 0.214,
+      "category": "behavioral",
+      "rank": 8
+    },
+    {
+      "feature": "cognitive_consistency_index",
+      "display_name": "Cognitive Consistency Index",
+      "mean_abs_shap": 0.2123,
+      "category": "derived",
+      "rank": 9
+    },
+    {
+      "feature": "avg_response_time_ms",
+      "display_name": "Average Response Time (ms)",
+      "mean_abs_shap": 0.2117,
+      "category": "behavioral",
+      "rank": 10
+    },
+    {
+      "feature": "engagement_score",
+      "display_name": "Engagement Score",
+      "mean_abs_shap": 0.2081,
+      "category": "derived",
+      "rank": 11
+    },
+    {
+      "feature": "locus_of_control",
+      "display_name": "Locus Of Control",
+      "mean_abs_shap": 0.2054,
+      "category": "psychometric",
+      "rank": 12
+    },
+    {
+      "feature": "text_problem_solving_flag",
+      "display_name": "Text Problem Solving Flag",
+      "mean_abs_shap": 0.2029,
+      "category": "nlp",
+      "rank": 13
+    },
+    {
+      "feature": "social_capital_score",
+      "display_name": "Social Capital Score",
+      "mean_abs_shap": 0.1745,
+      "category": "psychometric",
+      "rank": 14
+    },
+    {
+      "feature": "future_orientation",
+      "display_name": "Future Orientation",
+      "mean_abs_shap": 0.1624,
+      "category": "psychometric",
+      "rank": 15
+    },
+    {
+      "feature": "risk_attitude",
+      "display_name": "Risk Attitude",
+      "mean_abs_shap": 0.1408,
+      "category": "psychometric",
+      "rank": 16
+    },
+    {
+      "feature": "psychological_credit_index",
+      "display_name": "Psychological Credit Index",
+      "mean_abs_shap": 0.1284,
+      "category": "derived",
+      "rank": 17
+    },
+    {
+      "feature": "session_duration_sec",
+      "display_name": "Session Duration (sec)",
+      "mean_abs_shap": 0.1216,
+      "category": "behavioral",
+      "rank": 18
+    },
+    {
+      "feature": "conscientiousness_score",
+      "display_name": "Conscientiousness Score",
+      "mean_abs_shap": 0.1148,
+      "category": "psychometric",
+      "rank": 19
+    },
+    {
+      "feature": "CRT_score",
+      "display_name": "CRT Score",
+      "mean_abs_shap": 0.1131,
+      "category": "psychometric",
+      "rank": 20
+    },
+    {
+      "feature": "time_of_day",
+      "display_name": "Time Of Day",
+      "mean_abs_shap": 0.1103,
+      "category": "behavioral",
+      "rank": 21
+    },
+    {
+      "feature": "impulsivity_index",
+      "display_name": "Impulsivity Index",
+      "mean_abs_shap": 0.1089,
+      "category": "derived",
+      "rank": 22
+    },
+    {
+      "feature": "resilience_score",
+      "display_name": "Resilience Score",
+      "mean_abs_shap": 0.0958,
+      "category": "psychometric",
+      "rank": 23
+    },
+    {
+      "feature": "numeracy_score",
+      "display_name": "Numeracy Score",
+      "mean_abs_shap": 0.0845,
+      "category": "psychometric",
+      "rank": 24
+    },
+    {
+      "feature": "reciprocity_norm",
+      "display_name": "Reciprocity Norm",
+      "mean_abs_shap": 0.0768,
+      "category": "psychometric",
+      "rank": 25
+    },
+    {
+      "feature": "answer_change_rate",
+      "display_name": "Answer Change Rate",
+      "mean_abs_shap": 0.0672,
+      "category": "behavioral",
+      "rank": 26
+    },
+    {
+      "feature": "typing_speed_wpm",
+      "display_name": "Typing Speed (WPM)",
+      "mean_abs_shap": 0.0544,
+      "category": "behavioral",
+      "rank": 27
+    },
+    {
+      "feature": "loss_aversion_score",
+      "display_name": "Loss Aversion Score",
+      "mean_abs_shap": 0.0507,
+      "category": "psychometric",
+      "rank": 28
+    },
+    {
+      "feature": "text_semantic_dim2",
+      "display_name": "Text Semantic Dimension 2",
+      "mean_abs_shap": 0.0339,
+      "category": "nlp",
+      "rank": 29
+    },
+    {
+      "feature": "text_sentiment_compound",
+      "display_name": "Text Sentiment Compound",
+      "mean_abs_shap": 0.0304,
+      "category": "nlp",
+      "rank": 30
+    },
+    {
+      "feature": "device_type",
+      "display_name": "Device Type",
+      "mean_abs_shap": 0.0291,
+      "category": "behavioral",
+      "rank": 31
+    },
+    {
+      "feature": "behavioral_trust_score",
+      "display_name": "Behavioral Trust Score",
+      "mean_abs_shap": 0.0284,
+      "category": "derived",
+      "rank": 32
+    },
+    {
+      "feature": "text_semantic_dim1",
+      "display_name": "Text Semantic Dimension 1",
+      "mean_abs_shap": 0.0265,
+      "category": "nlp",
+      "rank": 33
+    },
+    {
+      "feature": "risk_response_speed_ratio",
+      "display_name": "Risk Response Speed Ratio",
+      "mean_abs_shap": 0.0251,
+      "category": "behavioral",
+      "rank": 34
+    },
+    {
+      "feature": "repayment_intention_score",
+      "display_name": "Repayment Intention Score",
+      "mean_abs_shap": 0.0218,
+      "category": "derived",
       "rank": 35
     }
   ]
