@@ -26,6 +26,11 @@ from backend.ml.inference.score_mapper import (
     get_risk_band,
     probability_to_score,
 )
+from backend.ml.inference.ensemble_adapter import (
+    EnsembleInferenceBundle,
+    WrappedEnsembleModel,
+    predict_ensemble_proba,
+)
 from backend.ml.preprocessing.pipeline import transform_features
 
 _TIP_LIBRARY: dict[str, tuple[str, str]] = {
@@ -63,6 +68,16 @@ class ScoringService:
 
     def __init__(self, artifacts: LoadedArtifactBundle) -> None:
         self.artifacts = artifacts
+        self.ensemble_bundle: EnsembleInferenceBundle | None = None
+        
+        if artifacts.report.runtime_model_type == "ensemble" and artifacts.base_models and artifacts.stacking_config:
+            self.ensemble_bundle = EnsembleInferenceBundle(
+                stacking_model=artifacts.model,
+                base_models=artifacts.base_models,
+                base_model_order=tuple(artifacts.stacking_config.get("base_model_order", [])),
+                preprocessor=artifacts.preprocessor,
+                stacking_config=artifacts.stacking_config,
+            )
 
     def score_request(self, request: ScoreRequest | dict[str, Any]) -> ScoreResponse:
         if self.artifacts.model is None or self.artifacts.preprocessor is None:
@@ -85,6 +100,7 @@ class ScoringService:
         repayment_probability = _predict_repayment_probability(
             self.artifacts.model,
             processed_features,
+            ensemble_bundle=self.ensemble_bundle,
         )
         credit_score = probability_to_score(repayment_probability)
         risk_band = get_risk_band(credit_score)
@@ -100,10 +116,17 @@ class ScoringService:
             assembled.feature_row,
             shap_contributions,
         )
+        # Use WrappedEnsembleModel for DICE if ensemble is active
+        dice_model = (
+            WrappedEnsembleModel(self.ensemble_bundle)
+            if self.ensemble_bundle is not None
+            else self.artifacts.model
+        )
+        
         counterfactual_actions = _build_counterfactual_actions(
             dice_explainer=self.artifacts.dice_explainer,
             runtime_model_name=self.artifacts.report.runtime_model_name,
-            model=self.artifacts.model,
+            model=dice_model,
             preprocessor=self.artifacts.preprocessor,
             feature_row=assembled.feature_row,
             feature_frame=assembled.feature_frame,
@@ -144,8 +167,16 @@ def score_request_with_bundle(
     return ScoringService(artifacts).score_request(request)
 
 
-def _predict_repayment_probability(model: Any, processed_features: np.ndarray) -> float:
-    probabilities = np.asarray(model.predict_proba(processed_features), dtype=float)
+def _predict_repayment_probability(
+    model: Any,
+    processed_features: np.ndarray,
+    *,
+    ensemble_bundle: EnsembleInferenceBundle | None = None,
+) -> float:
+    if ensemble_bundle is not None:
+        probabilities = predict_ensemble_proba(ensemble_bundle, processed_features)
+    else:
+        probabilities = np.asarray(model.predict_proba(processed_features), dtype=float)
     if probabilities.ndim != 2 or probabilities.shape[1] < 2:
         raise ValueError("Runtime model predict_proba output must have at least two columns.")
 

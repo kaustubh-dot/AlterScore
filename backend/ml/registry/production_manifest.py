@@ -77,6 +77,8 @@ class ProductionManifest:
     promotion_status: str | None
     promotion_notes: str | None
     raw_payload: dict[str, Any]
+    base_models: dict[str, ManifestArtifactEntry] | None = None
+    stacking_config: ManifestArtifactEntry | None = None
 
     def artifact_path(self, artifact_key: str, repo_root: Path) -> Path:
         return self.artifacts[artifact_key].resolved_path(repo_root)
@@ -137,6 +139,18 @@ def load_production_manifest(path: str | Path) -> ProductionManifest:
             "production manifest 'promotion_notes' must be a string when present."
         )
 
+    base_models = None
+    if "base_models" in payload:
+        base_models_payload = _require_mapping(payload, "base_models")
+        base_models = {
+            k: _parse_artifact_entry(base_models_payload, k)
+            for k in base_models_payload
+        }
+
+    stacking_config = None
+    if "stacking_config" in payload:
+        stacking_config = _parse_artifact_entry(payload, "stacking_config")
+
     return ProductionManifest(
         manifest_schema_version=str(payload["manifest_schema_version"]),
         manifest_version=str(payload["manifest_version"]),
@@ -157,6 +171,8 @@ def load_production_manifest(path: str | Path) -> ProductionManifest:
         promotion_status=None if promotion_status is None else str(promotion_status),
         promotion_notes=None if promotion_notes is None else str(promotion_notes),
         raw_payload=payload,
+        base_models=base_models,
+        stacking_config=stacking_config,
     )
 
 
