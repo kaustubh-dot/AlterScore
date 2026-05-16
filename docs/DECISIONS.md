@@ -167,3 +167,13 @@ Record every architecture-level decision here. Small implementation choices can 
 - Decision: Freeze the checked-in local serving bundle behind `models/registry/production_manifest.json`, require an explicit manifest contract for the runtime model, preprocessor, text PCA, SHAP explainer, DICE explainer, metrics, baseline metrics, fairness report, PSI report, global-importance report, and population-percentiles artifact set, and verify SHA256 checksums for manifest-backed artifacts during startup loading.
 - Consequences: Default local backend startup is now deterministic and visibly manifest-backed in `/api/health`, copied or tampered bundles surface as invalid instead of silently drifting, and direct runtime-model loading remains available only as an explicit dev/test override rather than the repository default.
 - Follow-ups: Extend the governance reports with calibration parity and the individual-fairness proxy, then later replace the current logistic manifest bundle with a calibrated ensemble bundle once the offline model track is ready.
+
+## DEC-0016 - Runtime Reverted To Logistic Regression After Ensemble Promotion
+
+- Status: accepted
+- Date: 2026-05-16
+- Owner: Antigravity
+- Context: The calibrated stacking ensemble was successfully promoted to `production_manifest.json` as `stacking_ensemble` (v0.2.0). However, the runtime scoring service at `backend/app/services/scoring.py` sends 35 raw preprocessed features to `model.predict_proba()`, while the stacking meta-learner expects 6 meta-features (stacked base-model probabilities). Serving the ensemble caused a `ValueError` at inference time.
+- Decision: Revert the runtime manifest to `logistic_regression` (v0.1.0). Keep the stacking training and promotion pipelines intact. Defer ensemble serving until a scoring adapter is implemented that transforms raw features → base-model probabilities → meta-learner input.
+- Consequences: The backend continues to serve stable, tested logistic regression scoring. All explainability artifacts (SHAP, DICE), governance reports, and smoke tests remain valid against the logistic bundle. The stacking ensemble artifact (`calibrated_stacking.pkl`) exists on disk but is not tracked by the production manifest. The promotion pipeline (`promote_ensemble.py`) remains functional for when the adapter is ready.
+- Follow-ups: Implement `backend/ml/inference/ensemble_adapter.py` per `docs/BACKEND_RUNTIME_ARCHITECTURE.md`. Update `artifact_loader.py` to load base models for ensemble bundles. Update `scoring.py` to route between classical and ensemble inference paths. Regenerate manifest and checksums for the ensemble bundle.

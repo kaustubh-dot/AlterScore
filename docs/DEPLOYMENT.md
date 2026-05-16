@@ -72,7 +72,8 @@ Generate data
 
 ## Artifact Bundle Checklist
 
-- [ ] `models/artifacts/calibrated_stacking.pkl`
+- [x] `models/artifacts/logistic_best.pkl` (active runtime model)
+- [ ] `models/artifacts/calibrated_stacking.pkl` (offline-only; see BACKEND_RUNTIME_ARCHITECTURE.md)
 - [x] `models/preprocessors/preprocessor.pkl`
 - [x] `models/preprocessors/text_pca.pkl`
 - [x] `models/explainers/shap_explainer.pkl` loads successfully from repository source and passes runtime smoke verification

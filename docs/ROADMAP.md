@@ -9,247 +9,292 @@
 - Report-backed analytics before dashboard visuals.
 - Manifest-backed reproducibility before deployment packaging.
 
-## Reality Check
+## Current Status Summary
 
-The original PRD roadmap is ambitious and assumes a compressed end-to-end build. The repository has already completed a meaningful subset of that plan:
+| Track | Status | Notes |
+|---|---|---|
+| Track A — Governance | ✅ Complete | Fairness, calibration parity, individual-fairness proxy |
+| Track B — Neural Training | ✅ Complete | TabNet + MLP, offline artifacts, 12 smoke tests |
+| Track C — Ensemble & Calibration | ✅ Complete | Calibrated stacking ensemble, 6 smoke tests |
+| Track D — Explainability & Promotion | ✅ Complete (offline) | SHAP, DICE, global importance; runtime reverted to logistic (see below) |
+| Track E — Frontend Borrower Experience | 🔲 Not started | Next milestone |
+| Track F — Evaluator Dashboard | 🔲 Not started | After Track E |
+| Track G — Deployment & Demo | 🔲 Not started | After Track F |
 
-- Core backend/runtime foundation exists.
-- Canonical feature registry exists.
-- Synthetic data generation and validation exist.
-- Local NLP extraction and persisted text PCA exist.
-- Baseline and bounded classical training exist.
-- Evaluation, fairness, PSI, percentiles, and global-importance artifacts exist.
-- FastAPI score and analytics routes exist.
-- A checked-in manifest-backed local serving bundle exists.
-
-The remaining roadmap should therefore optimize for the actual dependency chain from the current codebase, not restart from the PRD's day-by-day classroom sequence.
+**Why runtime uses logistic regression:** See `docs/BACKEND_RUNTIME_ARCHITECTURE.md`. The stacking ensemble expects 6 meta-features but the scoring service sends 35 raw features. A serving adapter is needed before re-promotion.
 
 ## Program Tracks
 
-### Track A - Governance Completion On Current Bundle
+### Track A — Governance Completion (COMPLETE ✅)
 
-Goal:
-Close the most important missing PRD governance items on top of the current logistic manifest-backed local bundle.
+Closed. Calibration parity, individual-fairness proxy, and fairness report refresh are all in the checked-in bundle.
 
-Status:
+### Track B — Neural Offline Training (COMPLETE ✅)
 
-- Calibration-parity data is now included in the fairness artifact and `/api/fairness-report` contract.
-- The individual-fairness proxy is now included for demographically different but psychometrically similar applicants.
-- Fairness unit, artifact, and checked-in bundle smoke coverage now validate the richer payload.
-- The richer detail is intentionally exposed through the fairness endpoint because the saved report is the API payload validated by the analytics schema.
+Closed. TabNet and MLP training modules, CLI entrypoints, and 12 integration smoke tests are all merged.
 
-Exit criteria:
+### Track C — Ensemble And Calibration (COMPLETE ✅)
 
-- Fairness artifact includes demographic parity, equalized odds, calibration parity, and the individual-fairness proxy.
-- Protected attributes remain audit-only.
-- `/api/fairness-report` still serves a schema-valid payload from the startup-loaded bundle.
+Closed. `calibrated_stacking.pkl` exists with 6/6 smoke tests passing. Metrics and percentiles are merged.
 
-### Track B - Neural Offline Training
+### Track D — Production Explainability Refresh (COMPLETE ✅)
 
-Goal:
-Land the TabNet and MLP artifact paths as true offline jobs.
+Closed (offline). SHAP, DICE, and global importance artifacts are regenerated and validated. Runtime was promoted then reverted — the promotion pipeline works, but serving requires the ensemble adapter documented in `BACKEND_RUNTIME_ARCHITECTURE.md`.
 
-Status:
+---
 
-- TabNet training module (`backend/ml/training/neural/train_tabnet.py`) and CLI entrypoint (`scripts/training/train_tabnet.py`) are implemented.
-- `pytorch-tabnet==4.1.0` added to `backend/requirements.txt`.
-- `backend/ml/training/neural/__init__.py` package exists.
-- 6 integration/smoke tests in `tests/integration/pipeline/test_tabnet_training.py` pass (full pipeline roundtrip, metrics merge, `.zip` save/load, import guard, temporal split integrity, missing file error).
-- The module strictly reuses existing preprocessing, temporal-split, evaluation, and metrics infrastructure; no duplicate paths introduced.
-- TabNet metrics merge cleanly into `metrics.json` and `population_percentiles.json` without breaking existing classical entries.
+### Track E — Frontend Borrower Experience
 
-Remaining work:
+**Goal:** Implement the full assessment-to-results borrower flow described in the PRD.
 
-- Implement residual MLP training module and script.
-- ~~Implement residual MLP training module and script.~~ **Done.**
-- ~~Add smoke tests for MLP path.~~ **Done (6/6 passing).**
-- ~~Ensure MLP metrics also merge without breaking existing report consumers.~~ **Done.**
+**Required backend integrations:**
+- `POST /api/score` — core scoring endpoint (stable, tested)
+- `GET /api/health` — verify backend readiness before scoring
 
-**Track B is complete. Both neural artifacts (TabNet .zip, MLP .pt) are implemented and tested.**
+**Implementation phases:**
 
-Exit criteria:
+#### Phase E.1 — Foundation (Milestone M6.1)
 
-- Neural artifacts are saved reproducibly. ✅
-- Test metrics are persisted without breaking current analytics readers. ✅
-- Docs and experiment logs reflect the new artifact families. ✅
+| Task | Details |
+|---|---|
+| Design tokens | Colors, typography, spacing, border radii, shadows — define in `frontend/src/styles/tokens.css` |
+| Question data model | Create `frontend/src/data/questions.js` with all 27 PRD questions, types, options, validation rules |
+| Landing page | Hero section, CTA button, brief explanation of the assessment |
+| Router setup | React Router: `/` (Landing), `/assessment` (Assessment), `/results` (Results), `/dashboard` (Dashboard) |
 
-### Track C - Ensemble And Calibration
+**Definition of done:** Landing page renders, router navigates between empty page shells.
 
-Goal:
-Produce the first real production-candidate calibrated ensemble required by the PRD.
+#### Phase E.2 — Assessment Flow (Milestone M6.1)
 
-Remaining work:
+| Task | Details |
+|---|---|
+| Question renderer | Component that renders different question types (Likert, binary, numeric, text) |
+| Section progress | Group questions into PRD sections with a progress bar |
+| Answer state management | `useState` or context for all 27 answers + validation state |
+| Field validation | Required fields, range checks, Q27 length limit |
+| Telemetry capture | Track response times, answer changes, session duration, scroll hesitation, typing speed |
+| Submit handler | Build the `/api/score` request payload and POST it |
+| Error handling | Network failure → retry button (same payload), 422 → field errors, 503 → service unavailable |
 
-- ~~Build stacking features from approved base-model outputs only.~~ **Done.**
-- ~~Train the stacking ensemble without train/validation/test leakage.~~ **Done (meta-learner fitted on months 9-10 only).**
-- ~~Calibrate on months `9-10` only.~~ **Done (isotonic `CalibratedClassifierCV`).**
-- ~~Save uncalibrated and calibrated ensemble artifacts.~~ **Done (`.pkl` + config sidecar).**
-- ~~Refresh metrics and percentile artifacts for the calibrated candidate.~~ **Done.**
+**Suggested component structure:**
+```
+frontend/src/
+  components/assessment/
+    QuestionCard.jsx         — renders one question with type-appropriate input
+    SectionProgress.jsx      — progress indicator by section
+    AssessmentForm.jsx       — orchestrates questions, validation, telemetry
+    SubmitButton.jsx         — submit with loading state
+  pages/
+    AssessmentPage.jsx       — full assessment page layout
+  hooks/
+    useTelemetry.js          — captures behavioral signals during the session
+    useAssessmentState.js    — manages answer state and validation
+  data/
+    questions.js             — 27 questions with metadata, options, validation
+```
 
-**Track C is complete. 6/6 smoke tests pass. 93/93 total suite tests pass.**
+**Definition of done:** User completes all 27 questions, telemetry is captured, payload is submitted, results page receives the response.
 
-Exit criteria:
+#### Phase E.3 — Results Page (Milestone M6.2)
 
-- `calibrated_stacking.pkl` exists. ✅
-- Evaluation reports include calibrated validation/test metrics. ✅
-- The candidate is ready for explainability and manifest promotion review. ✅
+| Task | Details |
+|---|---|
+| Score gauge | Semicircular or arc gauge showing 300–850 score with risk band color |
+| Risk band display | Label + color badge |
+| Percentile indicator | "Better than X% of applicants" |
+| SHAP factor bars | Horizontal bars (positive=green, negative=red) with `display_name` labels |
+| Counterfactual actions | Cards with `plain_language` text and `+X points` badges |
+| Loan eligibility | Band, amount range, description |
+| Improvement tips | Cards with title and body text |
+| Share/export | Screenshot or PDF export of results |
 
-### Track D - Production Explainability Refresh
+**Definition of done:** Results page renders all score response fields correctly on desktop and mobile (375px).
 
-Goal:
-Refresh SHAP and counterfactual artifacts for the actual promoted model path rather than the current local logistic candidate.
+#### Phase E.4 — Polish & Testing
 
-Remaining work:
+| Task | Details |
+|---|---|
+| Mobile responsive QA | 375px, 768px, 1024px breakpoints |
+| Loading states | Skeleton screens during API call |
+| Error boundaries | Graceful fallback for rendering failures |
+| Unit tests | Question data, telemetry, payload construction |
+| Integration tests | Assessment flow with mock API, results rendering |
+| E2E test | Full flow against real backend |
 
-- ~~Choose the production explainability path.~~ **Done (Surrogate LR SHAP on train features).**
-- ~~Generate the refreshed persisted SHAP explainer.~~ **Done.**
-- ~~Generate SHAP summary output for inspection.~~ **Done (metrics merged).**
-- ~~Reconfirm counterfactual serving strategy for the calibrated candidate.~~ **Done (DICE updated).**
-- ~~Refresh global-importance outputs if the active serving model changes.~~ **Done.**
+**Definition of done:** All tests pass, mobile works, error states are handled.
 
-**Track D is complete. 5/5 promotion tests pass, serving bundle loads cleanly.**
+---
 
-Exit criteria:
+### Track F — Evaluator Dashboard
 
-- Saved explainability artifacts deserialize from repo source. ✅
-- `/api/score` still returns meaningful explanation and action fields. ✅
-- Dashboard importance output matches the active serving model. ✅
+**Goal:** Implement the evaluator-facing analytics dashboard using existing report-backed endpoints.
 
-### Track E - Frontend Borrower Experience
+**Required backend integrations:**
+- All `GET /api/*` analytics endpoints (12 endpoints, all stable and tested)
 
-Goal:
-Implement the assessment-to-results borrower flow described in the PRD.
+**Implementation phases:**
 
-Remaining work:
+#### Phase F.1 — Dashboard Foundation (Milestone M6.3)
 
-- Add design tokens and visual direction.
-- Add the full 27-question data model.
-- Build landing page.
-- Build assessment flow with telemetry capture.
-- Build results page with score, SHAP factors, actions, eligibility, and tips.
-- Build share/export flow.
+| Task | Details |
+|---|---|
+| Dashboard layout | Sidebar or tab navigation between panels |
+| Data hooks | Custom hooks for each endpoint with loading/error/data states |
+| Panel loading states | Skeleton loaders per panel |
+| Error isolation | One failed endpoint doesn't crash the dashboard |
 
-Exit criteria:
+**Suggested component structure:**
+```
+frontend/src/
+  components/dashboard/
+    ModelStatsPanel.jsx         — table of model metrics
+    BaselineComparisonPanel.jsx — comparison table
+    FairnessPanel.jsx           — subgroup audit visualization
+    DriftPanel.jsx              — PSI feature drift table/chart
+    ImportancePanel.jsx         — feature importance bar chart
+    ScoreDistributionPanel.jsx  — score histogram
+    ROCPanel.jsx                — ROC curve chart
+    PRCurvePanel.jsx            — PR curve chart
+    CalibrationPanel.jsx        — calibration curve chart
+    ConfusionMatrixPanel.jsx    — confusion matrix heatmap
+  hooks/
+    useAnalytics.js             — generic fetcher with loading/error/data
+  pages/
+    DashboardPage.jsx           — dashboard layout with panels
+```
 
-- Full borrower flow works against the backend.
-- Assessment submission generates a schema-valid score request.
-- Results page renders the real API response cleanly on desktop and mobile.
+#### Phase F.2 — Charts & Visualizations
 
-### Track F - Frontend Evaluator Dashboard
+| Endpoint | Chart Type | Library Suggestion |
+|---|---|---|
+| `/api/model-stats` | Data table | HTML table or simple grid |
+| `/api/baseline-comparison` | Data table | HTML table |
+| `/api/fairness-report` | Grouped bar chart + data table | Recharts or Chart.js |
+| `/api/drift-report` | Horizontal bar chart (PSI values) | Recharts |
+| `/api/global-importance` | Horizontal bar chart (SHAP importance) | Recharts |
+| `/api/score-distribution` | Histogram | Recharts |
+| `/api/roc-data` | Line chart (FPR vs TPR) | Recharts |
+| `/api/pr-curve` | Line chart (Recall vs Precision) | Recharts |
+| `/api/calibration-curve` | Line chart (predicted vs observed) | Recharts |
+| `/api/confusion-matrix` | 2×2 heatmap grid | Custom CSS grid |
 
-Goal:
-Implement the evaluator-facing analytics dashboard using the existing report-backed endpoints.
+#### Phase F.3 — Polish & Responsive
 
-Remaining work:
+| Task | Details |
+|---|---|
+| Mobile tables | Horizontal scroll containers |
+| Chart responsive | Charts scale to container width |
+| 375px QA | All panels usable at mobile width |
+| Tests | Mock API responses for each panel |
 
-- Build dashboard data hooks and panel loading/error handling.
-- Build model comparison, fairness, drift, and importance sections.
-- Build score-distribution and curve panels.
-- Add responsive/mobile behavior.
+**Definition of done:** Dashboard loads all panels, each panel handles loading/error/data independently, mobile is usable.
 
-Exit criteria:
+---
 
-- Dashboard loads all existing analytics endpoints.
-- One failing endpoint does not collapse the full dashboard.
-- Charts and tables remain usable at mobile widths.
+### Track G — Deployment & Demo Readiness
 
-### Track G - Deployment And Demo Readiness
+**Goal:** Package the application for local demo and document the deployment path.
 
-Goal:
-Package the application cleanly for local demo and later cloud deployment.
+**Implementation phases:**
 
-Remaining work:
+#### Phase G.1 — Docker
 
-- Add Docker assets.
-- Document container startup for the manifest-backed bundle.
-- Add release/rollback guidance for manifest changes.
-- Run final smoke checks for backend, frontend, and bundle health.
+| Task | Details |
+|---|---|
+| `deploy/docker/backend.Dockerfile` | Python image + runtime deps + artifact bundle |
+| `deploy/docker/frontend.Dockerfile` | Node build stage + nginx serve |
+| `deploy/docker/docker-compose.yml` | Backend + frontend + network |
+| Health check | Docker HEALTHCHECK against `/api/health` |
 
-Exit criteria:
+#### Phase G.2 — Release Documentation
 
-- Local container run path is documented and repeatable.
-- Manifest rollback steps are explicit.
-- Demo checklist is complete.
+| Task | Details |
+|---|---|
+| Startup guide | Full local Docker startup with `docker compose up` |
+| Environment variables | All variables documented with defaults |
+| Manifest verification | How to verify artifact checksums after deployment |
+| Rollback checklist | Step-by-step to revert a manifest change |
+| Smoke test checklist | Health, score, analytics spot checks |
+
+#### Phase G.3 — Demo Polish
+
+| Task | Details |
+|---|---|
+| Demo data | Pre-filled assessment for quick demo |
+| Demo walkthrough | Step-by-step demo script |
+| Release checklist | Final pre-merge verification |
+
+**Definition of done:** `docker compose up` starts both services, health passes, scoring works, dashboard loads.
+
+---
 
 ## Recommended Execution Order
 
-The most efficient order from the current repository state is:
+```
+E.1 Foundation → E.2 Assessment → E.3 Results → E.4 Polish
+    → F.1 Dashboard Foundation → F.2 Charts → F.3 Polish
+        → G.1 Docker → G.2 Docs → G.3 Demo
+```
 
-1. Neural training foundation.
-2. Ensemble and calibration.
-3. Explainability refresh for the final candidate.
-4. Manifest promotion review for the calibrated candidate.
-5. Borrower frontend flow.
-6. Evaluator dashboard.
-7. Deployment packaging and demo polish.
+## Milestones
 
-## Detailed Next Milestones
+| Milestone | Theme | Main Deliverables | Dependencies |
+|---|---|---|---|
+| M6.1 | Borrower UI foundation | Design tokens, question data, landing page, assessment flow | Stable `/api/score` contract |
+| M6.2 | Borrower results flow | Results page, SHAP bars, actions, eligibility, share | M6.1 |
+| M6.3 | Evaluator dashboard | All analytics panels with loading/error states | Stable analytics endpoints |
+| M7.1 | Deployment packaging | Docker, startup docs, rollback guide | M6.2 + M6.3 |
+| M7.2 | Demo readiness | Demo script, release checklist | M7.1 |
 
-| Milestone | Theme | Main Deliverables | Dependencies | Verification |
-|---|---|---|---|---|
-| M5.1 | Governance completion | Calibration-parity detail, individual-fairness proxy, refreshed fairness tests | Current fairness artifact foundation | Fairness artifact loads, tests pass, protected fields stay out of model inputs |
-| M5.2 | Neural foundation | TabNet artifact, MLP artifact, metrics integration, experiment logs | Current preprocessing/training/report structure | Neural smoke tests pass and reports stay readable |
-| M5.3 | Ensemble candidate | Stacking artifact, calibrated ensemble artifact, refreshed metrics and percentiles | M5.2 plus classical suite | Ensemble/calibration smoke tests pass and metrics are persisted |
-| M5.4 | Explainability refresh | Refreshed SHAP explainer, SHAP summary output, production-candidate counterfactual decision | M5.3 | Score-time explainability stays schema-valid and non-trivial |
-| M5.5 | Bundle promotion review | Candidate-vs-current comparison, manifest update decision, registry/docs refresh | M5.4 | Manifest-backed startup succeeds for the chosen candidate |
-| M6.1 | Borrower UI foundation | Design tokens, question data, landing page, assessment shell | Stable score API contract | Frontend tests pass for navigation and payload construction |
-| M6.2 | Borrower results flow | Results page, factor bars, actions, eligibility, share/export | M6.1 | Assessment-to-results flow passes locally |
-| M6.3 | Evaluator dashboard | Dashboard panels for model stats, fairness, drift, importance, and curves | Stable analytics endpoints | Dashboard loads all major panels with loading/error states |
-| M7.1 | Deployment packaging | Docker assets, startup docs, manifest rollback guidance | Backend and frontend stability | Health and scoring smoke checks pass in packaged flow |
+## Known Technical Debt / Future Enhancements
 
-## Detailed Task Map By Area
+### Ensemble Serving Adapter
 
-### Backend / Serving
+The calibrated stacking ensemble is training-complete but cannot serve in production until a scoring adapter transforms raw features → base-model probabilities → meta-learner input. See `docs/BACKEND_RUNTIME_ARCHITECTURE.md` for the implementation plan.
 
-- Keep the manifest-backed loader as the default startup path.
-- Use direct runtime-model loading only for intentional dev/test overrides.
-- Add hardening tests around manifest tamper and checksum mismatch behavior.
-- Revisit health payload fields only when frontend needs more operational detail.
+### Future Runtime Promotion Strategy
 
-### ML / Offline
+1. Implement the ensemble serving adapter
+2. Regenerate SHAP/DICE artifacts against the ensemble
+3. Update manifest to point to `calibrated_stacking.pkl` with all base models
+4. Update smoke test expectations for `stacking_ensemble` model name
+5. Run full test suite
+6. Promote
 
-- Finish fairness detail first because it improves governance without changing the active serving model.
-- Move next to TabNet and MLP so the ensemble track has real inputs.
-- Do not start ensemble promotion until neural artifacts and their reports exist.
-- Treat every meaningful training run as an experiment that updates both registry and log docs.
+### Remaining Backend Hardening
 
-### Frontend
+- Add a focused test proving manifest checksum failures surface clearly on tampered bundles
+- Add a focused test proving manifest-backed health remains correct after future promotions
+- Review `/api/health` for additional fields needed by the frontend dashboard
 
-- Keep borrower flow ahead of dashboard polish.
-- Tie question data directly to the PRD and score contract.
-- Build charts only after the corresponding analytics payload is stable and tested.
+### Deployment Gaps
 
-### Testing
+- No Docker assets exist yet
+- No CI/CD pipeline defined
+- No production logging/monitoring infrastructure
+- No secrets management for cloud deployment
 
-- Expand along the same dependency path as implementation.
-- Prefer smoke coverage for new offline jobs first, then richer integration tests.
-- Keep checked-in bundle smoke tests healthy after every artifact/manifest change.
+### Scalability Considerations
 
-### Docs
+- Scoring latency is currently 200–800ms per request (single process)
+- For higher throughput, consider uvicorn workers, async preprocessing, or model caching
+- The manifest loader is startup-only (models are cached in memory)
+- Analytics endpoints are read-only from pre-computed JSON files — very fast
 
-- Update `CURRENT_STATE`, `TODO`, and `ROADMAP` after milestone movement.
-- Update contracts when response shapes change.
-- Update model/deployment docs whenever the serving bundle changes.
+## Remaining Risks / Open Questions
+
+1. **Chart library choice** — Recharts is suggested but not mandated. The dashboard should use whatever integrates best with the React scaffold.
+2. **Q27 text input UX** — The PRD requires a text area for resilience text. Consider character count, placeholder text, and accessibility.
+3. **Share/export mechanism** — The PRD mentions a share card. Implementation options: html2canvas screenshot, server-side PDF, or clipboard copy. Decision needed during Track E.
+4. **Authentication** — Not in current scope. If needed later, add middleware in FastAPI and protected routes in React.
+5. **Internationalization** — Not in current scope. Question text and UI labels are English-only.
 
 ## PRD Mapping
 
-This roadmap maps back to the PRD sections as follows:
-
-- PRD Sections 8 and 13.1:
-  Governance completion and fairness/drift test expansion.
-- PRD Section 7:
-  Neural training, stacking, calibration, SHAP, DICE, metrics, and PSI.
-- PRD Section 9:
-  Backend hardening and serving behavior.
-- PRD Section 10:
-  Borrower assessment/results pages and evaluator dashboard.
-- PRD Section 12:
-  Overall build order, now translated into the repository's actual current state.
-
-## Recommended Next Session
-
-The most valuable bounded next session is:
-
-1. Start the Frontend Borrower Experience (Track E).
-2. Create React pages, forms, and assessment shell.
-3. Integrate API to fetch scores.
+| PRD Section | Track |
+|---|---|
+| Sections 8, 13.1 | Track A (governance) — Complete |
+| Section 7 | Tracks B, C, D (ML pipeline) — Complete |
+| Section 9 | Backend hardening — Mostly complete |
+| Section 10 | Tracks E, F (frontend) — Not started |
+| Section 12 | Track G (deployment) — Not started |
