@@ -76,6 +76,7 @@ models/reports/*
 !models/reports/metrics.json
 !models/reports/population_percentiles.json
 !models/reports/psi_report.json
+!models/reports/shap_summary.png
 models/registry/*
 !models/registry/.gitkeep
 !models/registry/production_manifest.json
