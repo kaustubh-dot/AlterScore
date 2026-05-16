@@ -34,6 +34,7 @@ backend/runtime/logs/*
 runtime/logs/*
 !runtime/logs/.gitkeep
 runtime/pytest-cache/*
+runtime/pytest-temp/*
 runtime/pytest-workspace/*
 
 # Generated data and validation artifacts

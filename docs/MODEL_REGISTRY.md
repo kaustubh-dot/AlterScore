@@ -324,16 +324,16 @@ Current local runtime-artifact status:
 - CLI: `scripts/training/train_stacking.py`
 - Base models: logistic_regression, random_forest, xgboost, lightgbm, tabnet, residual_mlp (all 6)
 - Meta-learner: `LogisticRegression(C=1.0, solver=lbfgs)` fitted on stacked validation-month probabilities
-- Calibration: `CalibratedClassifierCV(method='isotonic', cv='prefit')` on validation months 9-10
+- Calibration: `CalibratedClassifierCV(FrozenEstimator(meta_learner), method='isotonic')` on validation months 9-10
 - Artifact path: `models/artifacts/calibrated_stacking.pkl` (not checked in; offline-only until manifest promotion)
 - Config sidecar: `models/artifacts/calibrated_stacking_config.json`
 - Smoke test suite: `tests/integration/pipeline/test_stacking_training.py` (6/6 passing)
 - AUC target: above best base-model test AUC on months `11-12` (calibration + ensemble should improve over logistic ~0.81)
 - Notes: the stacking module accepts `StackingInputs` (pre-computed base model probability arrays) or re-trains all six base models automatically. The meta-learner and isotonic calibrator are fitted on months 9-10 only (no test contamination). The `.pkl` round-trip is validated: loaded model produces bit-identical probabilities. Stacking metrics merge cleanly into `metrics.json` and `population_percentiles.json`. The `default_model_name` in the percentile report is updated to the model with the highest test AUC. Track C (ensemble + calibration) is now complete.
 
-### Calibrated Stacking Promotion Run: `EXP-20260515-011` (promoted)
+### Calibrated Stacking Promotion Run: `EXP-20260515-011` (promoted → reverted)
 
-- Status: Promoted to `production_manifest.json` as `stacking_ensemble`
+- Status: Promotion completed on 2026-05-15, then reverted on 2026-05-16.
 - Date: 2026-05-15
 - Branch: `antigravity/dev`
 - Dataset: `data/raw/synthetic_dataset.csv` with months `1-8 / 9-10 / 11-12`
@@ -348,4 +348,4 @@ Current local runtime-artifact status:
   - `models/reports/psi_report.json`
   - `models/registry/production_manifest.json`
 - Test AUC: `0.8051`
-- Notes: The `calibrated_stacking` ensemble has now officially been promoted. The local runtime uses this model. A surrogate LR is fitted on training features against ensemble outputs to give accurate and fast SHAP approximations. DICE explainer leverages predict_proba. Global importance, PSI, and fairness reporting point to this ensemble. Track D is complete.
+- Notes: The `calibrated_stacking` ensemble was promoted to `production_manifest.json` as `stacking_ensemble` (v0.2.0). However, the runtime was subsequently reverted to `logistic_regression` (v0.1.0) because the stacking ensemble expects 6 meta-features (stacked base-model probabilities) while the scoring service sends 35 raw features — promoting it would break `/api/score` at inference time. A scoring adapter that transforms raw features → base-model probabilities → meta-learner input is required before re-promotion. The stacking training and promotion pipelines remain functional. Track D is complete (offline). Runtime promotion is blocked on the scoring adapter.
