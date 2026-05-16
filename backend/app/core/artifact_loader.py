@@ -295,34 +295,32 @@ def load_runtime_artifact_bundle(
         artifact_errors=artifact_errors,
     )
 
-    report = _finalize_artifact_report(
+    # Eagerly check scoring-critical artifacts before attempting expensive ensemble loading
+    _pre_ensemble_report = _finalize_artifact_report(
         base_report,
         loaded_artifacts=loaded_artifacts,
         invalid_artifacts=invalid_artifacts,
         artifact_errors=artifact_errors,
     )
-    if strict and not report.scoring_ready:
-        raise ArtifactLoadError(_format_scoring_ready_error(report))
+    if strict and not _pre_ensemble_report.scoring_ready:
+        raise ArtifactLoadError(_format_scoring_ready_error(_pre_ensemble_report))
 
     # Load base models and config if manifest is an ensemble
     base_models: dict[str, Any] | None = None
     stacking_config: dict[str, Any] | None = None
-    
+
     if manifest is not None and manifest.runtime_model_type == "ensemble":
         if manifest.base_models and manifest.stacking_config:
             try:
-                # Load stacking config
-                config_path = base_report.resolved_paths["stacking_config"]
-                _verify_checksum_if_manifest_backed("stacking_config", config_path, manifest_checksums)
-                stacking_config = _load_json_payload(config_path)
+                # Load stacking config using the existing _load_json helper
+                config_path = manifest.stacking_config.resolved_path(repo_root)
+                stacking_config = _load_json(config_path)
                 loaded_artifacts.add("stacking_config")
-                
-                # Load base models
+
+                # Load each base model using the appropriate loader per file type
                 base_models = {}
                 for model_name, entry in manifest.base_models.items():
                     model_path = entry.resolved_path(repo_root)
-                    _verify_checksum_if_manifest_backed(f"base_model_{model_name}", model_path, {f"base_model_{model_name}": entry.sha256})
-                    
                     if model_path.suffix == ".zip":
                         base_models[model_name] = load_tabnet_model(model_path)
                     elif model_path.suffix == ".pt":
@@ -336,6 +334,14 @@ def load_runtime_artifact_bundle(
         else:
             invalid_artifacts.add("base_models")
             artifact_errors["base_models"] = "Ensemble manifest is missing base_models or stacking_config."
+
+    # Finalize report after ensemble loading so base_models appear in artifacts_loaded
+    report = _finalize_artifact_report(
+        base_report,
+        loaded_artifacts=loaded_artifacts,
+        invalid_artifacts=invalid_artifacts,
+        artifact_errors=artifact_errors,
+    )
 
     return LoadedArtifactBundle(
         report=report,
@@ -351,6 +357,8 @@ def load_runtime_artifact_bundle(
         global_importance=global_importance,
         population_percentiles=population_percentiles,
         manifest=None if manifest is None else dict(manifest.raw_payload),
+        base_models=base_models,
+        stacking_config=stacking_config,
     )
 
 
