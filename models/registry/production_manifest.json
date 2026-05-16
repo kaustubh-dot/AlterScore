@@ -46,15 +46,15 @@
     },
     "fairness_report": {
       "path": "models/reports/fairness_report.json",
-      "sha256": "55e9049603c545a77c49376160238c5e151e12825804c83e9461bf96466dcb68"
+      "sha256": "e6fa92a34e972fec8221788bfd2e6e45a51755216816a0b56044d32af05eddcb"
     },
     "psi_report": {
       "path": "models/reports/psi_report.json",
-      "sha256": "e327cc1fba116dbf4582e49a5b47a5c1e05c6ac63af5249bee8e19aad3107070"
+      "sha256": "a39a7835e5da6cfb7ac80e58e8a647d3b571e9263a55d1408b9865ccc2f4b1eb"
     },
     "global_importance": {
       "path": "models/reports/global_importance.json",
-      "sha256": "79903c9ddcbbc20e395ea5147439ecd29cc37e3d7ce0938650ca2020af081232"
+      "sha256": "191f192e733e2ce6b7e19de6e851c5c67968f483ebe0b4c6eebe034c67cf2f9d"
     },
     "population_percentiles": {
       "path": "models/reports/population_percentiles.json",
