@@ -7,19 +7,15 @@ counterfactual improvement actions, and evaluator analytics.
 
 ## Status
 
-The repository is still in foundation mode, but the checked-in runtime-bundle
-integrity pass is now in place. Backend feature contracts, runtime helpers, API
-schemas, offline baseline/classical training, runtime artifact loading, FastAPI
-health/score route stubs, and the current analytics route surface all work
-against the saved local bundle. The restored SHAP compatibility module now lets
-the checked-in explainer deserialize, the saved global-importance artifact now
-matches the active API contract, score-request logging now defaults to the
-repo-root `runtime/logs/requests.jsonl` path, and `/api/score` now returns
-real per-user SHAP factors plus persisted counterfactual actions from the
-checked-in `models/explainers/dice_explainer.pkl` artifact. The repository also
-now tracks a small local runtime bundle so smoke tests can validate the real
-serving assets directly. Broader product flows are still pending, especially
-manifest-backed serving and the full production ensemble path.
+Backend tracks A–D are complete. The checked-in manifest-backed runtime bundle
+includes a logistic regression model, preprocessor, text PCA, SHAP and DICE
+explainers, and all governance reports (fairness, PSI, global importance,
+metrics, population percentiles). Offline training pipelines for classical
+models (RF, XGBoost, LightGBM), neural models (TabNet, MLP), and a calibrated
+stacking ensemble are implemented and tested. The scoring API (`/api/score`)
+returns real per-user SHAP factors, counterfactual actions, and loan eligibility
+from the manifest-backed bundle. The frontend borrower experience (Track E) is
+the next milestone.
 
 ## Repository Guide
 
@@ -34,7 +30,9 @@ Backend and frontend are intended to run independently during development.
 Current commands and environment variables are documented in
 `docs/DEPLOYMENT.md`.
 
-**Note:** Python `>=3.10,<3.14` is required. The `scikit-learn` 1.5.x versions used to serialize the checked-in artifacts do not have pre-built wheels for Python 3.14, leading to unpickle failures if newer sklearn versions are installed.
+**Note:** Python `>=3.10` is required. The checked-in artifacts are serialized
+with `scikit-learn >=1.8.0`. See `backend/requirements.txt` for pinned
+dependency versions.
 
 ## Workflow
 
