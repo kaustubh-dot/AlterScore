@@ -33,11 +33,6 @@
       "status": "stable"
     },
     {
-      "feature": "text_semantic_dim2",
-      "psi": 0.013,
-      "status": "stable"
-    },
-    {
       "feature": "reciprocity_norm",
       "psi": 0.0122,
       "status": "stable"
@@ -54,6 +49,11 @@
     },
     {
       "feature": "future_orientation",
+      "psi": 0.0083,
+      "status": "stable"
+    },
+    {
+      "feature": "social_capital_score",
       "psi": 0.0083,
       "status": "stable"
     }
@@ -85,11 +85,6 @@
       "status": "stable"
     },
     {
-      "feature": "text_semantic_dim2",
-      "psi": 0.013,
-      "status": "stable"
-    },
-    {
       "feature": "reciprocity_norm",
       "psi": 0.0122,
       "status": "stable"
@@ -112,11 +107,6 @@
     {
       "feature": "social_capital_score",
       "psi": 0.0083,
-      "status": "stable"
-    },
-    {
-      "feature": "text_agency_score",
-      "psi": 0.0082,
       "status": "stable"
     },
     {
@@ -145,11 +135,6 @@
       "status": "stable"
     },
     {
-      "feature": "text_sentiment_compound",
-      "psi": 0.0062,
-      "status": "stable"
-    },
-    {
       "feature": "conscientiousness_score",
       "psi": 0.0058,
       "status": "stable"
@@ -170,8 +155,18 @@
       "status": "stable"
     },
     {
+      "feature": "text_sentiment_compound",
+      "psi": 0.0047,
+      "status": "stable"
+    },
+    {
       "feature": "psychological_credit_index",
       "psi": 0.0045,
+      "status": "stable"
+    },
+    {
+      "feature": "text_semantic_dim1",
+      "psi": 0.0044,
       "status": "stable"
     },
     {
@@ -190,8 +185,8 @@
       "status": "stable"
     },
     {
-      "feature": "text_semantic_dim1",
-      "psi": 0.0032,
+      "feature": "text_semantic_dim2",
+      "psi": 0.0033,
       "status": "stable"
     },
     {
@@ -210,8 +205,18 @@
       "status": "stable"
     },
     {
+      "feature": "text_agency_score",
+      "psi": 0.0015,
+      "status": "stable"
+    },
+    {
       "feature": "time_of_day",
       "psi": 0.0005,
+      "status": "stable"
+    },
+    {
+      "feature": "text_problem_solving_flag",
+      "psi": 0.0002,
       "status": "stable"
     },
     {
@@ -226,11 +231,6 @@
     },
     {
       "feature": "risk_consistency_flag",
-      "psi": 0.0,
-      "status": "stable"
-    },
-    {
-      "feature": "text_problem_solving_flag",
       "psi": 0.0,
       "status": "stable"
     }

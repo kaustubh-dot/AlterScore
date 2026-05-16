@@ -406,6 +406,28 @@ def promote_ensemble(
     fairness_payload = json.loads(Path(fairness_report_path).read_text(encoding="utf-8"))
     run_id = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_ensemble_promotion")
 
+
+    # Build base_models section
+    base_model_specs = {
+        "logistic_regression": (logi_path, "models/artifacts/logistic_best.pkl"),
+        "random_forest": (rf_path, "models/artifacts/rf_best.pkl"),
+        "xgboost": (xgb_path, "models/artifacts/xgb_best.pkl"),
+        "lightgbm": (lgbm_path, "models/artifacts/lgbm_best.pkl"),
+        "tabnet": (tabnet_path, "models/artifacts/tabnet_epoch_best.zip"),
+        "residual_mlp": (mlp_path, "models/artifacts/mlp_best.pt"),
+    }
+    base_models_block = {
+        name: {"path": rel, "sha256": compute_file_sha256(p)}
+        for name, (p, rel) in base_model_specs.items()
+        if p.is_file()
+    }
+    
+    stacking_config_p = Path(stacking_config_path)
+    stacking_config_block = {
+        "path": "models/artifacts/calibrated_stacking_config.json",
+        "sha256": compute_file_sha256(stacking_config_p)
+    } if stacking_config_p.is_file() else None
+
     manifest: dict[str, Any] = {
         "manifest_schema_version": MANIFEST_SCHEMA_VERSION,
         "manifest_version": manifest_version,
@@ -424,6 +446,9 @@ def promote_ensemble(
             "test": "cohort_month 11-12",
         },
         "artifacts": artifacts_block,
+        "base_models": base_models_block,
+        "stacking_config": stacking_config_block,
+
         "metrics_summary": {
             "test_split": "test_months_11_12",
             "test_auc_roc": round(float(test_auc), 4),

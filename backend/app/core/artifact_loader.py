@@ -30,6 +30,8 @@ from backend.ml.registry.production_manifest import (
     compute_file_sha256,
     load_production_manifest,
 )
+from backend.ml.training.neural.train_tabnet import load_tabnet_model
+from backend.ml.training.neural.train_mlp import load_mlp_model
 
 
 @dataclass(frozen=True)
@@ -125,6 +127,8 @@ class LoadedArtifactBundle:
     global_importance: Any | None
     population_percentiles: dict[str, Any] | None
     manifest: dict[str, Any] | None
+    base_models: dict[str, Any] | None = None
+    stacking_config: dict[str, Any] | None = None
 
 
 def inspect_runtime_artifacts(settings: Settings | None = None) -> ArtifactLoadReport:
@@ -140,7 +144,9 @@ def load_runtime_artifact_bundle(
 ) -> LoadedArtifactBundle:
     """Load the current runtime artifact bundle for backend scoring."""
 
-    base_report, manifest = _resolve_artifact_state(settings)
+    resolved_settings = settings or get_settings()
+    repo_root = resolved_settings.repo_root
+    base_report, manifest = _resolve_artifact_state(resolved_settings)
     loaded_artifacts: set[str] = set()
     invalid_artifacts: set[str] = set()
     artifact_errors: dict[str, str] = {}
@@ -297,6 +303,39 @@ def load_runtime_artifact_bundle(
     )
     if strict and not report.scoring_ready:
         raise ArtifactLoadError(_format_scoring_ready_error(report))
+
+    # Load base models and config if manifest is an ensemble
+    base_models: dict[str, Any] | None = None
+    stacking_config: dict[str, Any] | None = None
+    
+    if manifest is not None and manifest.runtime_model_type == "ensemble":
+        if manifest.base_models and manifest.stacking_config:
+            try:
+                # Load stacking config
+                config_path = base_report.resolved_paths["stacking_config"]
+                _verify_checksum_if_manifest_backed("stacking_config", config_path, manifest_checksums)
+                stacking_config = _load_json_payload(config_path)
+                loaded_artifacts.add("stacking_config")
+                
+                # Load base models
+                base_models = {}
+                for model_name, entry in manifest.base_models.items():
+                    model_path = entry.resolved_path(repo_root)
+                    _verify_checksum_if_manifest_backed(f"base_model_{model_name}", model_path, {f"base_model_{model_name}": entry.sha256})
+                    
+                    if model_path.suffix == ".zip":
+                        base_models[model_name] = load_tabnet_model(model_path)
+                    elif model_path.suffix == ".pt":
+                        base_models[model_name] = load_mlp_model(model_path)
+                    else:
+                        base_models[model_name] = joblib.load(model_path)
+                loaded_artifacts.add("base_models")
+            except Exception as e:
+                invalid_artifacts.add("base_models")
+                artifact_errors["base_models"] = f"Failed to load ensemble base models: {e}"
+        else:
+            invalid_artifacts.add("base_models")
+            artifact_errors["base_models"] = "Ensemble manifest is missing base_models or stacking_config."
 
     return LoadedArtifactBundle(
         report=report,

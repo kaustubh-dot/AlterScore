@@ -11,11 +11,11 @@
   {
     "model_name": "logistic_regression",
     "model_type": "baseline",
-    "auc_roc": 0.8098,
-    "ks_statistic": 0.4837,
-    "brier_score": 0.1665,
-    "expected_calibration_error": 0.1227,
-    "lift_vs_loan_officer": 0.0484
+    "auc_roc": 0.8071,
+    "ks_statistic": 0.4657,
+    "brier_score": 0.1677,
+    "expected_calibration_error": 0.124,
+    "lift_vs_loan_officer": 0.0457
   },
   {
     "model_name": "simulated_loan_officer",
