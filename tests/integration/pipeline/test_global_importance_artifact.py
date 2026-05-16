@@ -126,7 +126,7 @@ def test_train_classical_models_persists_global_importance_and_runtime_loading_s
         baseline_metrics_path=baseline_artifacts.baseline_metrics_path,
         metrics_path=baseline_artifacts.metrics_path,
         population_percentiles_path=baseline_artifacts.population_percentiles_path,
-        global_importance_path=baseline_artifacts.global_importance_path,
+        global_importance_path=baseline_artifacts.global_importance_path, psi_report_path=None, fairness_report_path=None, dice_explainer_path=None,
         random_state=17,
     )
 

@@ -128,6 +128,12 @@ def promote_ensemble(
     manifest_path: str | Path = DEFAULT_MANIFEST_PATH,
     manifest_version: str = "calibrated_stacking_ensemble_v1",
     code_ref: str = "antigravity/dev",
+    logistic_artifact_path: str | Path | None = None,
+    random_forest_artifact_path: str | Path | None = None,
+    xgboost_artifact_path: str | Path | None = None,
+    lightgbm_artifact_path: str | Path | None = None,
+    tabnet_artifact_path: str | Path | None = None,
+    mlp_artifact_path: str | Path | None = None,
 ) -> PromotionArtifacts:
     """Full offline pipeline → promotion.
 
@@ -156,12 +162,12 @@ def promote_ensemble(
         minimum_test_rows=minimum_test_rows,
     )
 
-    logi_path = MODEL_ARTIFACTS_DIR / "logistic_best.pkl"
-    rf_path = MODEL_ARTIFACTS_DIR / "rf_best.pkl"
-    xgb_path = MODEL_ARTIFACTS_DIR / "xgb_best.pkl"
-    lgbm_path = MODEL_ARTIFACTS_DIR / "lgbm_best.pkl"
-    tabnet_path = MODEL_ARTIFACTS_DIR / "tabnet_epoch_best.zip"
-    mlp_path = MODEL_ARTIFACTS_DIR / "mlp_best.pt"
+    logi_path = Path(logistic_artifact_path) if logistic_artifact_path else MODEL_ARTIFACTS_DIR / "logistic_best.pkl"
+    rf_path = Path(random_forest_artifact_path) if random_forest_artifact_path else MODEL_ARTIFACTS_DIR / "rf_best.pkl"
+    xgb_path = Path(xgboost_artifact_path) if xgboost_artifact_path else MODEL_ARTIFACTS_DIR / "xgb_best.pkl"
+    lgbm_path = Path(lightgbm_artifact_path) if lightgbm_artifact_path else MODEL_ARTIFACTS_DIR / "lgbm_best.pkl"
+    tabnet_path = Path(tabnet_artifact_path) if tabnet_artifact_path else MODEL_ARTIFACTS_DIR / "tabnet_epoch_best.zip"
+    mlp_path = Path(mlp_artifact_path) if mlp_artifact_path else MODEL_ARTIFACTS_DIR / "mlp_best.pt"
     baseline_metrics_path = MODEL_REPORTS_DIR / "baseline_metrics.json"
 
     # ------------------------------------------------------------------

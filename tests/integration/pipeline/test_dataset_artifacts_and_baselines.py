@@ -44,6 +44,10 @@ def test_train_baselines_saves_preprocessor_model_and_metrics_artifacts(tmp_path
         baseline_metrics_path=tmp_path / "baseline_metrics.json",
         metrics_path=tmp_path / "metrics.json",
         population_percentiles_path=tmp_path / "population_percentiles.json",
+        psi_report_path=None,
+        fairness_report_path=None,
+        global_importance_path=None,
+        dice_explainer_path=None,
     )
 
     baseline_metrics = json.loads(artifacts.baseline_metrics_path.read_text(encoding="utf-8"))
@@ -102,6 +106,10 @@ def test_train_baselines_supports_persisted_dataset_path_without_raw_text_column
         baseline_metrics_path=tmp_path / "baseline_metrics.json",
         metrics_path=tmp_path / "metrics.json",
         population_percentiles_path=tmp_path / "population_percentiles.json",
+        psi_report_path=None,
+        fairness_report_path=None,
+        global_importance_path=None,
+        dice_explainer_path=None,
     )
 
     assert artifacts.dataset_path == dataset_path
