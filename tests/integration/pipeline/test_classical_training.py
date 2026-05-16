@@ -38,6 +38,7 @@ def test_train_classical_models_saves_artifacts_and_merges_metrics(tmp_path) -> 
         baseline_metrics_path=baseline_artifacts.baseline_metrics_path,
         metrics_path=baseline_artifacts.metrics_path,
         population_percentiles_path=baseline_artifacts.population_percentiles_path,
+        psi_report_path=None, fairness_report_path=None, global_importance_path=None, dice_explainer_path=None,
         random_state=17,
     )
 

@@ -118,7 +118,7 @@ def test_runtime_bundle_loading_still_succeeds_when_psi_report_is_present(
         baseline_metrics_path=baseline_artifacts.baseline_metrics_path,
         metrics_path=baseline_artifacts.metrics_path,
         population_percentiles_path=baseline_artifacts.population_percentiles_path,
-        psi_report_path=baseline_artifacts.psi_report_path,
+        psi_report_path=baseline_artifacts.psi_report_path, fairness_report_path=None, global_importance_path=None, dice_explainer_path=None,
         random_state=17,
     )
 

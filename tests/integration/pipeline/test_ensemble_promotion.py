@@ -56,6 +56,12 @@ def _fast_promote(tmp_path, monkeypatch) -> PromotionArtifacts:
         metrics_path=tmp_path / "metrics.json",
         population_percentiles_path=tmp_path / "population_percentiles.json",
         manifest_path=tmp_path / "production_manifest.json",
+        logistic_artifact_path=tmp_path / "logistic_best.pkl",
+        random_forest_artifact_path=tmp_path / "rf_best.pkl",
+        xgboost_artifact_path=tmp_path / "xgb_best.pkl",
+        lightgbm_artifact_path=tmp_path / "lgbm_best.pkl",
+        tabnet_artifact_path=tmp_path / "tabnet_epoch_best.zip",
+        mlp_artifact_path=tmp_path / "mlp_best.pt",
     )
 
 
