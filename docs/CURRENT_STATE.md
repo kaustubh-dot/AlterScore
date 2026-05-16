@@ -5,7 +5,7 @@
 - Date: 2026-05-15
 - Workspace: `C:\Kaustubh\Projects\AlterScore`
 - PRD source: `docs/AlterScore_PRD_v2.md`
-- Current phase: Track D (explainability refresh + manifest promotion) complete on branch `antigravity/dev`. The calibrated stacking ensemble is now the promoted production candidate. A surrogate-LR SHAP explainer was generated mapping base features to the ensemble predictions. A model-agnostic DICE counterfactual explainer was generated. Global importance, PSI, and fairness reports were refreshed against the new ensemble. The `models/registry/production_manifest.json` now points to `calibrated_stacking.pkl` (served as `stacking_ensemble`). The checked-in local bundle loads cleanly end-to-end, serving health, score, and analytics requests correctly.
+- Current phase: Track D+ (ensemble serving runtime) in progress on branch `feature/ensemble-serving-runtime`. Tracks A-D are complete offline. The calibrated stacking ensemble has been trained, calibrated, and promoted to manifest offline, but the runtime scoring service still uses `logistic_regression` because no ensemble inference adapter exists yet. Track D+ bridges the gap between training-complete and serving-complete. The calibrated stacking ensemble is now the promoted production candidate. A surrogate-LR SHAP explainer was generated mapping base features to the ensemble predictions. A model-agnostic DICE counterfactual explainer was generated. Global importance, PSI, and fairness reports were refreshed against the new ensemble. The `models/registry/production_manifest.json` now points to `calibrated_stacking.pkl` (served as `stacking_ensemble`). The checked-in local bundle loads cleanly end-to-end, serving health, score, and analytics requests correctly.
 - Application implementation status: feature registry, runtime foundation helpers, API schemas, the frontend package skeleton, the synthetic data generation/validation foundation, the local NLP extraction foundation, the preprocessing/split-integrity foundation, the answer-parsing/derived-feature foundation, the behavioral/request-assembly foundation, the dataset materialization command, the baseline training loop, the bounded classical training loop for random forest, XGBoost, and LightGBM, the persisted text PCA artifact foundation, the runtime artifact-loading plus scoring-service stubs, the FastAPI app startup with `/api/health`, `/api/score`, the full analytics route surface, the persisted evaluation-artifact plus fairness/drift/global-importance artifact foundations, the TabNet neural training module (`.zip` + 6 smoke tests), the residual MLP training module (`.pt` + 6 smoke tests), the calibrated stacking ensemble training module (`.pkl` + config sidecar + 6 smoke tests), and the full ensemble promotion pipeline (`promote_ensemble.py` + 5 smoke tests) are all implemented. The checked-in local bundle loads cleanly and runs smoothly.
 
 ## What Exists
@@ -125,11 +125,16 @@ The earlier PRD narrative referenced 39 features, but the project will not inven
 
 ## Immediate Next Step
 
-Continue the implementation foundation in this order:
+Complete Track D+ (ensemble serving runtime) before any frontend work:
 
-1. Move to Track E - Frontend Borrower Experience.
-2. Build design tokens, PRD-faithful question data, and landing page.
-3. Build the assessment flow, telemetry capture, and results page with APIs integrated.
+1. Create `backend/ml/inference/ensemble_adapter.py` — orchestrate raw features → base model probabilities → meta-learner prediction.
+2. Extend `artifact_loader.py` — load 6 base models when manifest declares an ensemble.
+3. Extend `scoring.py` — route through ensemble adapter when bundle contains base models.
+4. Refresh DICE explainer against the wrapped ensemble model.
+5. Promote ensemble to production manifest with checksums.
+6. Run full test suite and verify serving works end-to-end.
+
+Frontend work (Track E) is blocked until the ensemble is the active production runtime model.
 
 ## Session Update Protocol
 

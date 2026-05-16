@@ -102,6 +102,17 @@ Before any AI agent edits the repository, it must read and follow `docs/AI_WORKF
 - Counterfactual actions: the checked-in local runtime bundle now uses a persisted `dice_explainer.pkl` artifact that emits 2-3 bounded actionable suggestions for the current logistic model, while future production bundles may decide whether to keep this lightweight contract or migrate to a fuller `dice_ml` object.
 - Plain-language tip generation mapped from negative or weak factors.
 
+### Ensemble Serving Architecture (Track D+)
+
+- The calibrated stacking ensemble is training-complete but not yet serving-complete.
+- The scoring service currently sends 35 preprocessed features to `model.predict_proba()`. The stacking meta-learner expects 6 base-model probability columns.
+- An ensemble inference adapter (`backend/ml/inference/ensemble_adapter.py`) must bridge this gap by: loading 6 base models at startup, running each base model on the preprocessed features, stacking the 6 probability outputs, and passing them to the calibrated meta-learner.
+- The adapter must handle three inference APIs: sklearn `.predict_proba()`, TabNet `.predict_proba()`, and PyTorch forward pass.
+- The artifact loader must extend the manifest schema with `base_models` and `stacking_config` sections.
+- A `WrappedEnsembleModel` must expose `predict_proba(preprocessed_35)` so the DICE counterfactual explainer can call the full ensemble path without knowing about the internal architecture.
+- The SHAP explainer (surrogate LR on processed features) requires no changes because it operates on the same 35-feature preprocessed space regardless of the downstream model.
+- See `docs/BACKEND_RUNTIME_ARCHITECTURE.md` and `docs/ROADMAP.md` Track D+ for the full implementation plan.
+
 ### Fairness Modules
 
 - Demographic parity by protected group.

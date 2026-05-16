@@ -8,6 +8,7 @@
 - Backend contract stability before frontend feature coupling.
 - Report-backed analytics before dashboard visuals.
 - Manifest-backed reproducibility before deployment packaging.
+- **Complete ALL backend serving work before frontend development begins.**
 
 ## Current Status Summary
 
@@ -16,12 +17,11 @@
 | Track A — Governance | ✅ Complete | Fairness, calibration parity, individual-fairness proxy |
 | Track B — Neural Training | ✅ Complete | TabNet + MLP, offline artifacts, 12 smoke tests |
 | Track C — Ensemble & Calibration | ✅ Complete | Calibrated stacking ensemble, 6 smoke tests |
-| Track D — Explainability & Promotion | ✅ Complete (offline) | SHAP, DICE, global importance; runtime reverted to logistic (see below) |
-| Track E — Frontend Borrower Experience | 🔲 Not started | Next milestone |
-| Track F — Evaluator Dashboard | 🔲 Not started | After Track E |
-| Track G — Deployment & Demo | 🔲 Not started | After Track F |
-
-**Why runtime uses logistic regression:** See `docs/BACKEND_RUNTIME_ARCHITECTURE.md`. The stacking ensemble expects 6 meta-features but the scoring service sends 35 raw features. A serving adapter is needed before re-promotion.
+| Track D — Explainability & Promotion | ✅ Complete (offline) | SHAP, DICE, global importance; runtime reverted to logistic |
+| **Track D+ — Ensemble Serving Runtime** | **🔧 In progress** | **Bridge training-complete → serving-complete** |
+| Track E — Frontend Borrower Experience | 🔲 Blocked on D+ | After backend is fully complete |
+| Track F — Evaluator Dashboard | 🔲 Blocked on D+ | After Track E |
+| Track G — Deployment & Demo | 🔲 Blocked on D+ | After Track F |
 
 ## Program Tracks
 
@@ -35,266 +35,136 @@ Closed. TabNet and MLP training modules, CLI entrypoints, and 12 integration smo
 
 ### Track C — Ensemble And Calibration (COMPLETE ✅)
 
-Closed. `calibrated_stacking.pkl` exists with 6/6 smoke tests passing. Metrics and percentiles are merged.
+Closed. `calibrated_stacking.pkl` exists with 6/6 smoke tests passing.
 
-### Track D — Production Explainability Refresh (COMPLETE ✅)
+### Track D — Production Explainability Refresh (COMPLETE ✅ offline)
 
-Closed (offline). SHAP, DICE, and global importance artifacts are regenerated and validated. Runtime was promoted then reverted — the promotion pipeline works, but serving requires the ensemble adapter documented in `BACKEND_RUNTIME_ARCHITECTURE.md`.
-
----
-
-### Track E — Frontend Borrower Experience
-
-**Goal:** Implement the full assessment-to-results borrower flow described in the PRD.
-
-**Required backend integrations:**
-- `POST /api/score` — core scoring endpoint (stable, tested)
-- `GET /api/health` — verify backend readiness before scoring
-
-**Implementation phases:**
-
-#### Phase E.1 — Foundation (Milestone M6.1)
-
-| Task | Details |
-|---|---|
-| Design tokens | Colors, typography, spacing, border radii, shadows — define in `frontend/src/styles/tokens.css` |
-| Question data model | Create `frontend/src/data/questions.js` with all 27 PRD questions, types, options, validation rules |
-| Landing page | Hero section, CTA button, brief explanation of the assessment |
-| Router setup | React Router: `/` (Landing), `/assessment` (Assessment), `/results` (Results), `/dashboard` (Dashboard) |
-
-**Definition of done:** Landing page renders, router navigates between empty page shells.
-
-#### Phase E.2 — Assessment Flow (Milestone M6.1)
-
-| Task | Details |
-|---|---|
-| Question renderer | Component that renders different question types (Likert, binary, numeric, text) |
-| Section progress | Group questions into PRD sections with a progress bar |
-| Answer state management | `useState` or context for all 27 answers + validation state |
-| Field validation | Required fields, range checks, Q27 length limit |
-| Telemetry capture | Track response times, answer changes, session duration, scroll hesitation, typing speed |
-| Submit handler | Build the `/api/score` request payload and POST it |
-| Error handling | Network failure → retry button (same payload), 422 → field errors, 503 → service unavailable |
-
-**Suggested component structure:**
-```
-frontend/src/
-  components/assessment/
-    QuestionCard.jsx         — renders one question with type-appropriate input
-    SectionProgress.jsx      — progress indicator by section
-    AssessmentForm.jsx       — orchestrates questions, validation, telemetry
-    SubmitButton.jsx         — submit with loading state
-  pages/
-    AssessmentPage.jsx       — full assessment page layout
-  hooks/
-    useTelemetry.js          — captures behavioral signals during the session
-    useAssessmentState.js    — manages answer state and validation
-  data/
-    questions.js             — 27 questions with metadata, options, validation
-```
-
-**Definition of done:** User completes all 27 questions, telemetry is captured, payload is submitted, results page receives the response.
-
-#### Phase E.3 — Results Page (Milestone M6.2)
-
-| Task | Details |
-|---|---|
-| Score gauge | Semicircular or arc gauge showing 300–850 score with risk band color |
-| Risk band display | Label + color badge |
-| Percentile indicator | "Better than X% of applicants" |
-| SHAP factor bars | Horizontal bars (positive=green, negative=red) with `display_name` labels |
-| Counterfactual actions | Cards with `plain_language` text and `+X points` badges |
-| Loan eligibility | Band, amount range, description |
-| Improvement tips | Cards with title and body text |
-| Share/export | Screenshot or PDF export of results |
-
-**Definition of done:** Results page renders all score response fields correctly on desktop and mobile (375px).
-
-#### Phase E.4 — Polish & Testing
-
-| Task | Details |
-|---|---|
-| Mobile responsive QA | 375px, 768px, 1024px breakpoints |
-| Loading states | Skeleton screens during API call |
-| Error boundaries | Graceful fallback for rendering failures |
-| Unit tests | Question data, telemetry, payload construction |
-| Integration tests | Assessment flow with mock API, results rendering |
-| E2E test | Full flow against real backend |
-
-**Definition of done:** All tests pass, mobile works, error states are handled.
+Closed offline. SHAP, DICE, and global importance artifacts exist. The promotion pipeline (`promote_ensemble.py`) works. Runtime was promoted then reverted because the scoring service has no ensemble inference adapter.
 
 ---
 
-### Track F — Evaluator Dashboard
+### Track D+ — Ensemble Serving Runtime (IN PROGRESS 🔧)
 
-**Goal:** Implement the evaluator-facing analytics dashboard using existing report-backed endpoints.
+**Goal:** Make the calibrated stacking ensemble the active production runtime model with full explainability, manifest verification, and test coverage.
 
-**Required backend integrations:**
-- All `GET /api/*` analytics endpoints (12 endpoints, all stable and tested)
+**Branch:** `feature/ensemble-serving-runtime`
 
-**Implementation phases:**
+**The core problem:** The scoring service calls `model.predict_proba(preprocessed_35_features)` directly. The stacking meta-learner expects 6 base-model probability columns, not 35 preprocessed features. An inference adapter is required to bridge this gap.
 
-#### Phase F.1 — Dashboard Foundation (Milestone M6.3)
-
-| Task | Details |
-|---|---|
-| Dashboard layout | Sidebar or tab navigation between panels |
-| Data hooks | Custom hooks for each endpoint with loading/error/data states |
-| Panel loading states | Skeleton loaders per panel |
-| Error isolation | One failed endpoint doesn't crash the dashboard |
-
-**Suggested component structure:**
-```
-frontend/src/
-  components/dashboard/
-    ModelStatsPanel.jsx         — table of model metrics
-    BaselineComparisonPanel.jsx — comparison table
-    FairnessPanel.jsx           — subgroup audit visualization
-    DriftPanel.jsx              — PSI feature drift table/chart
-    ImportancePanel.jsx         — feature importance bar chart
-    ScoreDistributionPanel.jsx  — score histogram
-    ROCPanel.jsx                — ROC curve chart
-    PRCurvePanel.jsx            — PR curve chart
-    CalibrationPanel.jsx        — calibration curve chart
-    ConfusionMatrixPanel.jsx    — confusion matrix heatmap
-  hooks/
-    useAnalytics.js             — generic fetcher with loading/error/data
-  pages/
-    DashboardPage.jsx           — dashboard layout with panels
-```
-
-#### Phase F.2 — Charts & Visualizations
-
-| Endpoint | Chart Type | Library Suggestion |
-|---|---|---|
-| `/api/model-stats` | Data table | HTML table or simple grid |
-| `/api/baseline-comparison` | Data table | HTML table |
-| `/api/fairness-report` | Grouped bar chart + data table | Recharts or Chart.js |
-| `/api/drift-report` | Horizontal bar chart (PSI values) | Recharts |
-| `/api/global-importance` | Horizontal bar chart (SHAP importance) | Recharts |
-| `/api/score-distribution` | Histogram | Recharts |
-| `/api/roc-data` | Line chart (FPR vs TPR) | Recharts |
-| `/api/pr-curve` | Line chart (Recall vs Precision) | Recharts |
-| `/api/calibration-curve` | Line chart (predicted vs observed) | Recharts |
-| `/api/confusion-matrix` | 2×2 heatmap grid | Custom CSS grid |
-
-#### Phase F.3 — Polish & Responsive
+#### Phase D+.1 — Ensemble Inference Adapter
 
 | Task | Details |
 |---|---|
-| Mobile tables | Horizontal scroll containers |
-| Chart responsive | Charts scale to container width |
-| 375px QA | All panels usable at mobile width |
-| Tests | Mock API responses for each panel |
+| Create `backend/ml/inference/ensemble_adapter.py` | Orchestrate raw features → base model probabilities → meta-learner prediction |
+| Handle 3 inference paths | sklearn (logistic/RF/XGB/LGBM), TabNet (`.predict_proba`), MLP (torch forward) |
+| Create `WrappedEnsembleModel` | Expose `predict_proba(preprocessed_35)` for DICE compatibility |
+| Unit tests | `tests/unit/ml/test_ensemble_adapter.py` — shape, correctness, determinism |
 
-**Definition of done:** Dashboard loads all panels, each panel handles loading/error/data independently, mobile is usable.
+#### Phase D+.2 — Artifact Loader Extension
+
+| Task | Details |
+|---|---|
+| Extend `LoadedArtifactBundle` | Add `base_models` and `stacking_config` fields |
+| Extend manifest schema | Add optional `base_models` and `stacking_config` sections to `production_manifest.py` |
+| Load base models when ensemble | When `runtime_model_type == "ensemble"`, load 6 base models with checksum verification |
+| Load stacking config | Read `calibrated_stacking_config.json` and validate base model order |
+
+#### Phase D+.3 — Scoring Service Integration
+
+| Task | Details |
+|---|---|
+| Modify `_predict_repayment_probability` | Accept optional ensemble bundle; route through adapter |
+| Modify `ScoringService.__init__` | Construct `EnsembleInferenceBundle` when base models are loaded |
+| Verify SHAP compatibility | Surrogate LR on processed features — should work identically |
+| Verify DICE via wrapped model | Pass `WrappedEnsembleModel` to DICE explainer |
+
+#### Phase D+.4 — Explainability Refresh
+
+| Task | Details |
+|---|---|
+| Verify SHAP explainer | Surrogate was trained on ensemble predictions → should be correct |
+| Regenerate DICE explainer | Use `WrappedEnsembleModel` so DICE calls the full ensemble path |
+| Verify global importance | Confirm ranking still matches active model |
+| Verify fairness report | Confirm predictions match ensemble output |
+
+#### Phase D+.5 — Manifest Promotion
+
+| Task | Details |
+|---|---|
+| Run full artifact pipeline | If needed, regenerate all artifacts with current sklearn environment |
+| Compute checksums | SHA256 for all 18+ artifacts (model + 6 base models + config + reports) |
+| Write production manifest | `runtime_model_name: "stacking_ensemble"`, `base_models` section |
+| Check-in artifacts | Commit the updated manifest and all artifact changes |
+
+#### Phase D+.6 — Testing & Validation
+
+| Task | Details |
+|---|---|
+| Ensemble adapter unit tests | Shape, correctness, error handling |
+| Ensemble serving integration tests | Full request → ensemble → response path |
+| Update smoke tests | Change assertions from `logistic_regression` to `stacking_ensemble` |
+| Run full test suite | All 93+ existing tests must pass |
+| Fresh-clone verification | Verify checksums and serving on clean state |
+
+**Definition of done:**
+- `production_manifest.json` declares `stacking_ensemble` with 6 base models
+- `/api/health` reports `stacking_ensemble` as model name
+- `/api/score` returns valid score, SHAP factors, and DICE actions through the ensemble path
+- All existing + new tests pass
+- All docs updated
 
 ---
 
-### Track G — Deployment & Demo Readiness
+### Track E — Frontend Borrower Experience (BLOCKED)
 
-**Goal:** Package the application for local demo and document the deployment path.
+Blocked until Track D+ is complete. See `docs/FRONTEND_INTEGRATION_GUIDE.md` for API contracts.
 
-**Implementation phases:**
+**Phases:** E.1 Foundation → E.2 Assessment → E.3 Results → E.4 Polish
 
-#### Phase G.1 — Docker
+### Track F — Evaluator Dashboard (BLOCKED)
 
-| Task | Details |
-|---|---|
-| `deploy/docker/backend.Dockerfile` | Python image + runtime deps + artifact bundle |
-| `deploy/docker/frontend.Dockerfile` | Node build stage + nginx serve |
-| `deploy/docker/docker-compose.yml` | Backend + frontend + network |
-| Health check | Docker HEALTHCHECK against `/api/health` |
+Blocked until Track E is complete. Analytics endpoints are stable and tested.
 
-#### Phase G.2 — Release Documentation
+### Track G — Deployment & Demo (BLOCKED)
 
-| Task | Details |
-|---|---|
-| Startup guide | Full local Docker startup with `docker compose up` |
-| Environment variables | All variables documented with defaults |
-| Manifest verification | How to verify artifact checksums after deployment |
-| Rollback checklist | Step-by-step to revert a manifest change |
-| Smoke test checklist | Health, score, analytics spot checks |
-
-#### Phase G.3 — Demo Polish
-
-| Task | Details |
-|---|---|
-| Demo data | Pre-filled assessment for quick demo |
-| Demo walkthrough | Step-by-step demo script |
-| Release checklist | Final pre-merge verification |
-
-**Definition of done:** `docker compose up` starts both services, health passes, scoring works, dashboard loads.
+Blocked until Tracks E and F are complete.
 
 ---
 
 ## Recommended Execution Order
 
 ```
-E.1 Foundation → E.2 Assessment → E.3 Results → E.4 Polish
-    → F.1 Dashboard Foundation → F.2 Charts → F.3 Polish
+D+.1 Ensemble adapter → D+.2 Loader extension → D+.3 Scoring integration
+  → D+.4 Explainability refresh → D+.5 Manifest promotion → D+.6 Testing
+    → E.1 Foundation → E.2 Assessment → E.3 Results → E.4 Polish
+      → F.1 Dashboard → F.2 Charts → F.3 Polish
         → G.1 Docker → G.2 Docs → G.3 Demo
 ```
 
 ## Milestones
 
-| Milestone | Theme | Main Deliverables | Dependencies |
-|---|---|---|---|
-| M6.1 | Borrower UI foundation | Design tokens, question data, landing page, assessment flow | Stable `/api/score` contract |
-| M6.2 | Borrower results flow | Results page, SHAP bars, actions, eligibility, share | M6.1 |
-| M6.3 | Evaluator dashboard | All analytics panels with loading/error states | Stable analytics endpoints |
-| M7.1 | Deployment packaging | Docker, startup docs, rollback guide | M6.2 + M6.3 |
-| M7.2 | Demo readiness | Demo script, release checklist | M7.1 |
+| Milestone | Theme | Dependencies |
+|---|---|---|
+| M5.5 | Ensemble serving adapter + integration | Training artifacts, stacking config |
+| M5.6 | Ensemble manifest promotion + validation | M5.5, explainability refresh |
+| M6.1 | Borrower UI foundation | M5.6 (backend fully complete) |
+| M6.2 | Borrower results flow | M6.1 |
+| M6.3 | Evaluator dashboard | M6.2 |
+| M7.1 | Deployment packaging | M6.3 |
 
-## Known Technical Debt / Future Enhancements
+## Known Technical Debt
 
-### Ensemble Serving Adapter
-
-The calibrated stacking ensemble is training-complete but cannot serve in production until a scoring adapter transforms raw features → base-model probabilities → meta-learner input. See `docs/BACKEND_RUNTIME_ARCHITECTURE.md` for the implementation plan.
-
-### Future Runtime Promotion Strategy
-
-1. Implement the ensemble serving adapter
-2. Regenerate SHAP/DICE artifacts against the ensemble
-3. Update manifest to point to `calibrated_stacking.pkl` with all base models
-4. Update smoke test expectations for `stacking_ensemble` model name
-5. Run full test suite
-6. Promote
-
-### Remaining Backend Hardening
-
-- Add a focused test proving manifest checksum failures surface clearly on tampered bundles
-- Add a focused test proving manifest-backed health remains correct after future promotions
-- Review `/api/health` for additional fields needed by the frontend dashboard
-
-### Deployment Gaps
-
-- No Docker assets exist yet
-- No CI/CD pipeline defined
-- No production logging/monitoring infrastructure
-- No secrets management for cloud deployment
-
-### Scalability Considerations
-
-- Scoring latency is currently 200–800ms per request (single process)
-- For higher throughput, consider uvicorn workers, async preprocessing, or model caching
-- The manifest loader is startup-only (models are cached in memory)
-- Analytics endpoints are read-only from pre-computed JSON files — very fast
-
-## Remaining Risks / Open Questions
-
-1. **Chart library choice** — Recharts is suggested but not mandated. The dashboard should use whatever integrates best with the React scaffold.
-2. **Q27 text input UX** — The PRD requires a text area for resilience text. Consider character count, placeholder text, and accessibility.
-3. **Share/export mechanism** — The PRD mentions a share card. Implementation options: html2canvas screenshot, server-side PDF, or clipboard copy. Decision needed during Track E.
-4. **Authentication** — Not in current scope. If needed later, add middleware in FastAPI and protected routes in React.
-5. **Internationalization** — Not in current scope. Question text and UI labels are English-only.
+- Stacking config sidecar still says `cv: "prefit"` — should say `FrozenEstimator` (cosmetic)
+- `promote_ensemble.py` `code_ref` defaults to `"antigravity/dev"` — should use current branch
+- Individual fairness proxy has a high flagged pair share (73%) — investigate if this is a scoring calibration issue after ensemble serving is live
+- Docker assets do not exist yet — Track G
 
 ## PRD Mapping
 
 | PRD Section | Track |
 |---|---|
 | Sections 8, 13.1 | Track A (governance) — Complete |
-| Section 7 | Tracks B, C, D (ML pipeline) — Complete |
-| Section 9 | Backend hardening — Mostly complete |
-| Section 10 | Tracks E, F (frontend) — Not started |
-| Section 12 | Track G (deployment) — Not started |
+| Section 7 | Tracks B, C, D (ML pipeline) — Complete offline |
+| Section 9 | Track D+ (serving runtime) — In progress |
+| Section 10 | Tracks E, F (frontend) — Blocked |
+| Section 12 | Track G (deployment) — Blocked |
