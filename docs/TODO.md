@@ -58,12 +58,14 @@ Branch: `feature/ensemble-serving-runtime`
 - [x] Calibrated stacking ensemble training (6 smoke tests)
 - [x] SHAP + DICE + global importance + fairness + PSI artifacts
 - [x] Full promotion pipeline (`promote_ensemble.py`)
-- [x] Manifest-backed startup with SHA256 verification
-- [x] All analytics endpoints (12 tested)
-- [x] Test isolation for parallel execution
-- [x] scikit-learn 1.8.0 compatibility
-- [x] Ensemble serving adapter and runtime integration
-- [x] Repository hygiene cleanup
+- [x] Phase 7: Model Training (Classical & TabNet/MLP)
+- [x] Phase 8: Fairness & Metrics
+- [x] Phase 9.1-9.2: API Endpoints (Health, Analytics)
+- [x] Phase 9.3: Score Endpoint
+- [x] **Track D+: Ensemble Serving Runtime & Explainability** (Completed)
+- [x] Implement SHAP and DICE for Ensemble
+- [x] Finalize backend architecture
+- [x] Backend Feature Complete & Freeze
 
 ### Open Backend Items (Future Enhancements)
 - [ ] Focused test for manifest checksum tamper detection
