@@ -27,10 +27,10 @@ This file tracks expected model artifacts, promotion criteria, and the registry 
 | Stacking model | `models/artifacts/stacking_uncalibrated.pkl` | Ensemble training | No | Calibration input |
 | Calibrated stacking model | `models/artifacts/calibrated_stacking.pkl` | Calibration job | Yes | Production scoring artifact |
 | SHAP explainer | `models/explainers/shap_explainer.pkl` | Explainability job | Yes | Used by score endpoint; the checked-in file now deserializes and validates from repo source, and the current runtime formats per-user SHAP factors from it |
-| DICE explainer | `models/explainers/dice_explainer.pkl` | Counterfactual job | Yes | Used by score endpoint; the checked-in file is a validated persisted actionable-counterfactual contract for the current logistic runtime bundle |
+| DICE explainer | `models/explainers/dice_explainer.pkl` | Counterfactual job | Yes | Used by score endpoint; counterfactuals computed through the `WrappedEnsembleModel` facade over the full stacking ensemble |
 | Metrics report | `models/reports/metrics.json` | Evaluation job | Yes for dashboard | All model metrics and curves |
 | Baseline metrics | `models/reports/baseline_metrics.json` | Baselines job | Yes for dashboard | Majority, logistic, loan officer, ensemble |
-| Global importance | `models/reports/global_importance.json` | Explainability job | Yes for dashboard | Dashboard-ready feature ranking; current foundation prefers exact linear contribution magnitudes from the saved logistic explainability source and keeps the contract field name `mean_abs_shap` for backend compatibility with the existing analytics schema. The checked-in saved payload now matches the active backend response contract. |
+| Global importance | `models/reports/global_importance.json` | Explainability job | Yes for dashboard | Dashboard-ready feature ranking; based on surrogate SHAP contributions from the active ensemble model. The contract field name `mean_abs_shap` is preserved for backend compatibility with the existing analytics schema. |
 | SHAP summary image | `models/reports/shap_summary.png` | SHAP job | No | Human inspection |
 | Fairness report | `models/reports/fairness_report.json` | Fairness job | Yes for dashboard | Group metrics and verdict across protected audit attributes, plus calibration-parity curves/ECE gaps and the individual-fairness proxy |
 | PSI report | `models/reports/psi_report.json` | Drift job | Yes for dashboard | Train months `1-8` vs test months `11-12` on the canonical 35 inputs only |

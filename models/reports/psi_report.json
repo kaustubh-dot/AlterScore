@@ -1,6 +1,6 @@
 {
-  "max_psi": 0.2007,
-  "verdict": "watch",
+  "max_psi": 0.1577,
+  "verdict": "stable",
   "thresholds": {
     "stable_below": 0.2,
     "watch_below": 0.3,
@@ -8,210 +8,220 @@
   },
   "top_drifted_features": [
     {
+      "feature": "typing_speed_wpm",
+      "psi": 0.1577,
+      "status": "stable"
+    },
+    {
       "feature": "avg_response_time_ms",
-      "psi": 0.2007,
-      "status": "watch"
+      "psi": 0.1417,
+      "status": "stable"
+    },
+    {
+      "feature": "behavioral_trust_score",
+      "psi": 0.1306,
+      "status": "stable"
     },
     {
       "feature": "session_duration_sec",
-      "psi": 0.1726,
+      "psi": 0.1101,
+      "status": "stable"
+    },
+    {
+      "feature": "resilience_score",
+      "psi": 0.1099,
+      "status": "stable"
+    },
+    {
+      "feature": "conscientiousness_score",
+      "psi": 0.0995,
       "status": "stable"
     },
     {
       "feature": "cognitive_load_index",
-      "psi": 0.1319,
-      "status": "stable"
-    },
-    {
-      "feature": "typing_speed_wpm",
-      "psi": 0.0843,
-      "status": "stable"
-    },
-    {
-      "feature": "risk_response_speed_ratio",
-      "psi": 0.0343,
-      "status": "stable"
-    },
-    {
-      "feature": "reciprocity_norm",
-      "psi": 0.0122,
+      "psi": 0.0928,
       "status": "stable"
     },
     {
       "feature": "answer_change_rate",
-      "psi": 0.0104,
+      "psi": 0.0818,
       "status": "stable"
     },
     {
-      "feature": "CRT_score",
-      "psi": 0.0097,
+      "feature": "psychological_credit_index",
+      "psi": 0.077,
       "status": "stable"
     },
     {
       "feature": "future_orientation",
-      "psi": 0.0083,
-      "status": "stable"
-    },
-    {
-      "feature": "social_capital_score",
-      "psi": 0.0083,
+      "psi": 0.0715,
       "status": "stable"
     }
   ],
   "all_features": [
     {
-      "feature": "avg_response_time_ms",
-      "psi": 0.2007,
-      "status": "watch"
-    },
-    {
-      "feature": "session_duration_sec",
-      "psi": 0.1726,
-      "status": "stable"
-    },
-    {
-      "feature": "cognitive_load_index",
-      "psi": 0.1319,
-      "status": "stable"
-    },
-    {
       "feature": "typing_speed_wpm",
-      "psi": 0.0843,
+      "psi": 0.1577,
       "status": "stable"
     },
     {
-      "feature": "risk_response_speed_ratio",
-      "psi": 0.0343,
-      "status": "stable"
-    },
-    {
-      "feature": "reciprocity_norm",
-      "psi": 0.0122,
-      "status": "stable"
-    },
-    {
-      "feature": "answer_change_rate",
-      "psi": 0.0104,
-      "status": "stable"
-    },
-    {
-      "feature": "CRT_score",
-      "psi": 0.0097,
-      "status": "stable"
-    },
-    {
-      "feature": "future_orientation",
-      "psi": 0.0083,
-      "status": "stable"
-    },
-    {
-      "feature": "social_capital_score",
-      "psi": 0.0083,
-      "status": "stable"
-    },
-    {
-      "feature": "delay_discounting_rate",
-      "psi": 0.0078,
-      "status": "stable"
-    },
-    {
-      "feature": "resilience_score",
-      "psi": 0.0075,
+      "feature": "avg_response_time_ms",
+      "psi": 0.1417,
       "status": "stable"
     },
     {
       "feature": "behavioral_trust_score",
-      "psi": 0.007,
+      "psi": 0.1306,
       "status": "stable"
     },
     {
-      "feature": "impulsivity_index",
-      "psi": 0.0066,
+      "feature": "session_duration_sec",
+      "psi": 0.1101,
       "status": "stable"
     },
     {
-      "feature": "locus_of_control",
-      "psi": 0.0066,
+      "feature": "resilience_score",
+      "psi": 0.1099,
       "status": "stable"
     },
     {
       "feature": "conscientiousness_score",
-      "psi": 0.0058,
+      "psi": 0.0995,
       "status": "stable"
     },
     {
-      "feature": "repayment_intention_score",
-      "psi": 0.0058,
+      "feature": "cognitive_load_index",
+      "psi": 0.0928,
       "status": "stable"
     },
     {
-      "feature": "loss_aversion_score",
-      "psi": 0.0052,
-      "status": "stable"
-    },
-    {
-      "feature": "scroll_hesitation_score",
-      "psi": 0.005,
-      "status": "stable"
-    },
-    {
-      "feature": "text_sentiment_compound",
-      "psi": 0.0047,
+      "feature": "answer_change_rate",
+      "psi": 0.0818,
       "status": "stable"
     },
     {
       "feature": "psychological_credit_index",
-      "psi": 0.0045,
+      "psi": 0.077,
       "status": "stable"
     },
     {
-      "feature": "text_semantic_dim1",
-      "psi": 0.0044,
+      "feature": "future_orientation",
+      "psi": 0.0715,
       "status": "stable"
     },
     {
-      "feature": "engagement_score",
-      "psi": 0.0037,
+      "feature": "impulsivity_index",
+      "psi": 0.0693,
       "status": "stable"
     },
     {
-      "feature": "financial_literacy_score",
-      "psi": 0.0034,
+      "feature": "scroll_hesitation_score",
+      "psi": 0.0681,
       "status": "stable"
     },
     {
-      "feature": "risk_attitude",
-      "psi": 0.0033,
-      "status": "stable"
-    },
-    {
-      "feature": "text_semantic_dim2",
-      "psi": 0.0033,
-      "status": "stable"
-    },
-    {
-      "feature": "cognitive_consistency_index",
-      "psi": 0.0026,
-      "status": "stable"
-    },
-    {
-      "feature": "honesty_score",
-      "psi": 0.0017,
-      "status": "stable"
-    },
-    {
-      "feature": "numeracy_score",
-      "psi": 0.0017,
+      "feature": "risk_response_speed_ratio",
+      "psi": 0.0653,
       "status": "stable"
     },
     {
       "feature": "text_agency_score",
-      "psi": 0.0015,
+      "psi": 0.064,
+      "status": "stable"
+    },
+    {
+      "feature": "delay_discounting_rate",
+      "psi": 0.0627,
+      "status": "stable"
+    },
+    {
+      "feature": "engagement_score",
+      "psi": 0.0616,
+      "status": "stable"
+    },
+    {
+      "feature": "risk_attitude",
+      "psi": 0.0549,
+      "status": "stable"
+    },
+    {
+      "feature": "locus_of_control",
+      "psi": 0.0534,
+      "status": "stable"
+    },
+    {
+      "feature": "honesty_score",
+      "psi": 0.0518,
+      "status": "stable"
+    },
+    {
+      "feature": "reciprocity_norm",
+      "psi": 0.0373,
+      "status": "stable"
+    },
+    {
+      "feature": "text_sentiment_compound",
+      "psi": 0.0353,
+      "status": "stable"
+    },
+    {
+      "feature": "numeracy_score",
+      "psi": 0.0347,
+      "status": "stable"
+    },
+    {
+      "feature": "loss_aversion_score",
+      "psi": 0.0344,
+      "status": "stable"
+    },
+    {
+      "feature": "social_capital_score",
+      "psi": 0.0308,
+      "status": "stable"
+    },
+    {
+      "feature": "text_semantic_dim1",
+      "psi": 0.0291,
       "status": "stable"
     },
     {
       "feature": "time_of_day",
-      "psi": 0.0005,
+      "psi": 0.0284,
+      "status": "stable"
+    },
+    {
+      "feature": "CRT_score",
+      "psi": 0.0277,
+      "status": "stable"
+    },
+    {
+      "feature": "text_semantic_dim2",
+      "psi": 0.0275,
+      "status": "stable"
+    },
+    {
+      "feature": "financial_literacy_score",
+      "psi": 0.026,
+      "status": "stable"
+    },
+    {
+      "feature": "dropout_count",
+      "psi": 0.0258,
+      "status": "stable"
+    },
+    {
+      "feature": "repayment_intention_score",
+      "psi": 0.0244,
+      "status": "stable"
+    },
+    {
+      "feature": "cognitive_consistency_index",
+      "psi": 0.0231,
+      "status": "stable"
+    },
+    {
+      "feature": "risk_consistency_flag",
+      "psi": 0.0109,
       "status": "stable"
     },
     {
@@ -222,16 +232,6 @@
     {
       "feature": "device_type",
       "psi": 0.0001,
-      "status": "stable"
-    },
-    {
-      "feature": "dropout_count",
-      "psi": 0.0001,
-      "status": "stable"
-    },
-    {
-      "feature": "risk_consistency_flag",
-      "psi": 0.0,
       "status": "stable"
     }
   ]
