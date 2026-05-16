@@ -34,6 +34,8 @@ Backend and frontend are intended to run independently during development.
 Current commands and environment variables are documented in
 `docs/DEPLOYMENT.md`.
 
+**Note:** Python `>=3.10,<3.14` is required. The `scikit-learn` 1.5.x versions used to serialize the checked-in artifacts do not have pre-built wheels for Python 3.14, leading to unpickle failures if newer sklearn versions are installed.
+
 ## Workflow
 
 Follow `docs/AI_WORKFLOW_RULES.md` before making changes. It defines the
