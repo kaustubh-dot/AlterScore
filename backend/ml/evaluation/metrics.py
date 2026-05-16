@@ -236,6 +236,12 @@ def compute_confusion_matrix(
     positive_total = true_positive + false_negative
     negative_total = false_positive + true_negative
 
+    precision = float(true_positive / (true_positive + false_positive)) if (true_positive + false_positive) else 0.0
+    recall = float(true_positive / positive_total) if positive_total else 0.0
+    specificity = float(true_negative / negative_total) if negative_total else 0.0
+    accuracy = float((true_positive + true_negative) / (positive_total + negative_total)) if (positive_total + negative_total) else 0.0
+    f1 = float(2 * precision * recall / (precision + recall)) if (precision + recall) else 0.0
+
     return {
         "threshold": round(resolved_threshold, 4),
         "tp": true_positive,
@@ -254,6 +260,11 @@ def compute_confusion_matrix(
             float(false_negative / positive_total) if positive_total else 0.0,
             4,
         ),
+        "precision": round(precision, 4),
+        "recall": round(recall, 4),
+        "specificity": round(specificity, 4),
+        "accuracy": round(accuracy, 4),
+        "f1": round(f1, 4),
     }
 
 

@@ -145,6 +145,11 @@ class ConfusionMatrixItem(SchemaModel):
     tpr: float = Field(..., ge=0, le=1)
     fpr: float = Field(..., ge=0, le=1)
     fnr: float = Field(..., ge=0, le=1)
+    precision: float = Field(..., ge=0, le=1)
+    recall: float = Field(..., ge=0, le=1)
+    specificity: float = Field(..., ge=0, le=1)
+    accuracy: float = Field(..., ge=0, le=1)
+    f1: float = Field(..., ge=0, le=1)
 
 
 class ConfusionMatrixResponse(RootModel[list[ConfusionMatrixItem]]):

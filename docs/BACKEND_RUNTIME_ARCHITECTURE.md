@@ -19,23 +19,34 @@ The meta-learner is a `LogisticRegression(C=1.0)` wrapped in `CalibratedClassifi
 
 ## Ensemble Inference Path
 
-```
-ScoreRequest
-  → feature_assembly.py (27 answers → 35 features)
-  → preprocessing/pipeline.py (ColumnTransformer → processed features)
-  → ensemble_adapter.py:
-      ├── logistic_best.pkl.predict_proba(processed) → P(logistic)
-      ├── rf_best.pkl.predict_proba(processed) → P(rf)
-      ├── xgb_best.pkl.predict_proba(processed) → P(xgb)
-      ├── lgbm_best.pkl.predict_proba(processed) → P(lgbm)
-      ├── tabnet.predict_proba(processed) → P(tabnet)
-      └── mlp.forward(processed) → P(mlp)
-      → stack [P(logistic), P(rf), P(xgb), P(lgbm), P(tabnet), P(mlp)]
-      → calibrated_stacking.predict_proba(meta_features)
-  → score_mapper.py (probability → credit score 300–850)
-  → SHAP explanation (surrogate LR on processed features)
-  → DICE counterfactual (via WrappedEnsembleModel)
-  → ScoreResponse
+```mermaid
+flowchart TD
+    A[ScoreRequest] --> B(feature_assembly.py)
+    B -->|27 answers → 35 features| C(preprocessing/pipeline.py)
+    C -->|processed features| D{ensemble_adapter.py}
+    
+    D -->|sklearn predict_proba| E1(logistic_best.pkl)
+    D -->|sklearn predict_proba| E2(rf_best.pkl)
+    D -->|sklearn predict_proba| E3(xgb_best.pkl)
+    D -->|sklearn predict_proba| E4(lgbm_best.pkl)
+    D -->|tabnet predict_proba| E5(tabnet_epoch_best.zip)
+    D -->|PyTorch forward pass| E6(mlp_best.pt)
+    
+    E1 -->|P_logistic| F(Stack Meta-Features)
+    E2 -->|P_rf| F
+    E3 -->|P_xgb| F
+    E4 -->|P_lgbm| F
+    E5 -->|P_tabnet| F
+    E6 -->|P_mlp| F
+    
+    F --> G[CalibratedClassifierCV Meta-Learner]
+    G -->|Probability| H(score_mapper.py)
+    H -->|Credit Score 300-850| I[ScoreResponse]
+    
+    C -.-> J[SHAP Explainer]
+    J -.->|surrogate LR on processed features| I
+    C -.-> K[DICE Counterfactual]
+    K -.->|via WrappedEnsembleModel| I
 ```
 
 ### Key Components
