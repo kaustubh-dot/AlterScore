@@ -1,134 +1,146 @@
 # AlterScore TODO
 
-## Current Phase
+## Backend Status
 
-The repository now has a stable backend foundation plus a checked-in manifest-backed local serving bundle for the current logistic runtime candidate. The immediate goal is no longer "make the backend run at all"; it is to close the largest PRD-to-implementation gaps in a deliberate order:
+All backend ML tracks (A–D) are complete. The runtime bundle is stable on `logistic_regression` v0.1.0 with `scikit-learn >=1.8.0`. All 93+ tests pass. The manifest, checksums, explainers, and reports are synchronized.
 
-1. Resume the offline production-model track: neural models, stacking, calibration, and refreshed evaluation artifacts.
-2. Build the borrower-facing frontend flow against the now-stable backend contracts.
-3. Build the evaluator dashboard against the saved analytics endpoints and artifacts.
-4. Add deployment packaging and final demo-readiness checks.
+### Completed Backend Items
 
-## Active Planning Assumptions
+- [x] Implement calibration-parity computation in `backend/ml/evaluation/fairness.py`.
+- [x] Implement the individual-fairness proxy for psychometrically similar but demographically different pairs.
+- [x] Expand `models/reports/fairness_report.json` with calibration parity and individual-fairness proxy sections.
+- [x] Update analytics schemas for the richer `/api/fairness-report` payload.
+- [x] Add fairness unit, artifact, and smoke test coverage.
+- [x] Create offline TabNet training module and CLI script.
+- [x] Create offline MLP training module and CLI script.
+- [x] Add smoke tests for both neural paths (12 tests total).
+- [x] Implement stacking ensemble with temporal split integrity.
+- [x] Add isotonic calibration (`FrozenEstimator` + `CalibratedClassifierCV`).
+- [x] Save calibrated stacking artifact and config sidecar.
+- [x] Refresh SHAP, DICE, and global importance for production candidate.
+- [x] Promote ensemble to manifest (offline complete; runtime reverted to logistic).
+- [x] Fix test isolation for parallel execution (explicit `None` for unused paths).
+- [x] Regenerate all artifacts for `scikit-learn >=1.8.0` compatibility.
+- [x] Verify all 11 manifest checksums match on-disk artifacts.
+- [x] Repository hygiene cleanup (README, docs, .gitignore, temp files).
 
-- Preserve the canonical 35 model inputs.
-- Keep protected attributes audit-only.
-- Keep `cohort_month` and `application_date` out of model inputs.
-- Keep all heavy ML training offline-only.
-- Treat the checked-in logistic bundle as the current validated local serving bundle, not the final promoted production model.
-- Prefer small, test-backed increments that keep the manifest-backed startup path healthy.
+### Open Backend Items
 
-## Immediate Priority Queue
+- [ ] Implement ensemble serving adapter (see `docs/BACKEND_RUNTIME_ARCHITECTURE.md`).
+- [ ] Switch checked-in manifest to calibrated ensemble once the serving adapter exists.
+- [ ] Add focused test for manifest checksum tamper detection.
+- [ ] Add focused test for manifest-backed health after future ensemble promotion.
+- [ ] Review `/api/health` for additional fields needed by frontend dashboard.
+- [ ] Decide whether the lightweight persisted counterfactual contract remains long-term or migrates to full `dice_ml`.
 
-- [x] Extend the persisted fairness artifact with calibration-parity detail.
-- [x] Implement the individual-fairness proxy described in the PRD for psychometrically similar but demographically different pairs.
-- [x] Refresh fairness tests and API contract coverage for the richer fairness payload.
-- [ ] Decide whether the current lightweight persisted counterfactual contract remains the long-term serving interface or becomes a bridge to a fuller `dice_ml` artifact.
-- [ ] Add a short design note or ADR if the future counterfactual direction changes materially from the current manifest-backed bundle.
+---
 
-## Detailed Execution Queue
+## Frontend TODO
 
-### 1. Governance Completion On Current Bundle
+### Track E — Frontend Borrower Experience
 
-- [x] Add calibration-parity computation to `backend/ml/evaluation/fairness.py`.
-- [x] Add the individual-fairness proxy to `backend/ml/evaluation/fairness.py`.
-- [x] Expand `models/reports/fairness_report.json` generation to carry the additional sections needed by the PRD.
-- [x] Update analytics schemas and docs for the richer `/api/fairness-report` payload.
-- [x] Add unit coverage for the new fairness calculations.
-- [x] Add integration coverage proving the refreshed fairness artifact still loads cleanly through the manifest-backed bundle.
+#### E.1 Foundation
+- [ ] Create design tokens (`frontend/src/styles/tokens.css`): colors, typography, spacing, shadows.
+- [ ] Create question data model (`frontend/src/data/questions.js`): all 27 PRD questions with types, options, validation.
+- [ ] Set up React Router: `/`, `/assessment`, `/results`, `/dashboard`.
+- [ ] Build landing page with hero section and CTA.
 
-### 2. Neural Model Track
+#### E.2 Assessment Flow
+- [ ] Build `QuestionCard` component for all question types (Likert, binary, numeric, text).
+- [ ] Build `SectionProgress` component with PRD-defined question sections.
+- [ ] Implement answer state management with validation.
+- [ ] Implement behavioral telemetry capture (`useTelemetry` hook).
+- [ ] Build submit handler that constructs the `/api/score` payload.
+- [ ] Implement retry-safe submission (same payload on retry, no answer clearing).
+- [ ] Implement error handling (422 field errors, 500 retry, 503 unavailable).
 
-- [x] Create the offline residual MLP training module and script path.
-- [x] Ensure deterministic seed handling for both neural paths (TabNet done; MLP done).
-- [x] Add smoke tests that prove TabNet artifacts can be trained on the documented temporal split without leaking validation/test data.
-- [x] Add smoke tests for the MLP path.
-- [x] Merge TabNet neural metrics into the existing report structure without breaking current analytics consumers.
-- [x] Merge MLP metrics the same way.
-- [ ] Update `docs/MODEL_REGISTRY.md` and `docs/EXPERIMENT_LOG.md` when the first neural runs exist (TabNet EXP-20260515-008 and MLP EXP-20260515-009 logged).
+#### E.3 Results Page
+- [ ] Build score gauge component (semicircular arc, 300–850 range, risk band colors).
+- [ ] Build risk band display with color badge.
+- [ ] Build percentile indicator ("Better than X% of applicants").
+- [ ] Build SHAP factor bars (horizontal, positive=green/right, negative=red/left).
+- [ ] Build counterfactual action cards with `plain_language` and `+X points` badge.
+- [ ] Build loan eligibility section (band, amount range, description).
+- [ ] Build improvement tips section.
+- [ ] Build share/export flow (screenshot, PDF, or clipboard).
 
-### 3. Ensemble And Calibration Track
+#### E.4 Polish
+- [ ] Mobile responsive QA at 375px, 768px, 1024px.
+- [ ] Loading states (skeleton screens during API call).
+- [ ] Error boundaries for rendering failures.
+- [ ] Unit tests for question data, telemetry, payload construction.
+- [ ] Integration tests for assessment flow and results rendering.
+- [ ] E2E test: complete assessment → results with real backend.
 
-- [x] Implement stacking feature generation from the approved base-model set only.
-- [x] Prevent split leakage (meta-learner fitted on validation months 9-10 only; test months never touched during training).
-- [x] Add the calibration job for months `9-10` only (isotonic `CalibratedClassifierCV`).
-- [x] Save `models/artifacts/calibrated_stacking.pkl` (`.pkl` via joblib) and `calibrated_stacking_config.json` sidecar.
-- [x] Refresh `models/reports/metrics.json` with ensemble validation/test metrics, thresholds, and calibration details.
-- [x] Update `models/reports/population_percentiles.json` for the calibrated production candidate.
-- [x] Update the manifest to switch from the logistic local candidate to the calibrated ensemble bundle (Track D).
+### Track F — Evaluator Dashboard
 
-### 4. Explainability Refresh For Final Production Candidate
+#### F.1 Foundation
+- [ ] Build dashboard page layout with panel navigation.
+- [ ] Create `useAnalytics` hook for endpoint fetching with loading/error/data states.
+- [ ] Implement per-panel error isolation.
 
-- [x] Decide which production-facing model path owns SHAP for the final promoted bundle.
-- [x] Build the refreshed persisted SHAP explainer artifact for that path.
-- [x] Generate the SHAP summary plot artifact for human review.
-- [x] Revisit the DICE/persisted-counterfactual strategy after the calibrated ensemble exists.
-- [x] Regenerate `models/reports/global_importance.json` if the active serving model changes.
-- [x] Add regression tests proving the refreshed explainability artifacts still deserialize from repository source.
+#### F.2 Panels
+- [ ] Model stats table (`/api/model-stats`).
+- [ ] Baseline comparison table (`/api/baseline-comparison`).
+- [ ] Fairness audit panel (`/api/fairness-report`).
+- [ ] Feature drift panel (`/api/drift-report`).
+- [ ] Feature importance chart (`/api/global-importance`).
+- [ ] Score distribution histogram (`/api/score-distribution`).
+- [ ] ROC curve chart (`/api/roc-data`).
+- [ ] PR curve chart (`/api/pr-curve`).
+- [ ] Calibration curve chart (`/api/calibration-curve`).
+- [ ] Confusion matrix visualization (`/api/confusion-matrix`).
 
-### 5. Backend Hardening After Model Refresh
+#### F.3 Polish
+- [ ] Mobile responsive QA for all panels.
+- [ ] Horizontal scroll for tables at mobile widths.
+- [ ] Chart resizing for narrow viewports.
+- [ ] Unit tests for each panel with mock data.
 
-- [ ] Switch the checked-in manifest to the calibrated production candidate once that bundle is genuinely better and fully validated.
-- [ ] Add one focused test proving manifest checksum failures surface clearly on copied or tampered bundles.
-- [ ] Add one focused test proving manifest-backed health remains correct after the future ensemble promotion.
-- [ ] Review `/api/health` and analytics payloads for any additional fields needed by the frontend dashboard.
-- [ ] Add any missing backend contract tests before frontend implementation depends on new payload shapes.
+---
 
-### 6. Frontend Borrower Flow
+## Deployment TODO
 
-- [ ] Add design tokens and lock the visual system for borrower-facing pages.
-- [ ] Add PRD-faithful question data for the full 27-question assessment.
-- [ ] Build the landing page.
-- [ ] Build the assessment flow with sectioning, progress, validation, and retry-safe submission.
-- [ ] Implement behavioral telemetry capture so it matches backend request expectations.
-- [ ] Build the results page shell.
-- [ ] Build the score gauge.
-- [ ] Build SHAP factor bars and plain-language explanation rendering.
-- [ ] Build counterfactual action rendering.
-- [ ] Build loan-eligibility and improvement-tip presentation.
-- [ ] Build the share-card / export path.
+### Track G — Deployment & Demo Readiness
 
-### 7. Frontend Evaluator Dashboard
+- [ ] Create `deploy/docker/backend.Dockerfile`.
+- [ ] Create `deploy/docker/frontend.Dockerfile`.
+- [ ] Create `deploy/docker/docker-compose.yml`.
+- [ ] Add Docker HEALTHCHECK against `/api/health`.
+- [ ] Document local container startup path.
+- [ ] Document environment variables with defaults.
+- [ ] Document manifest verification steps.
+- [ ] Write rollback checklist for manifest changes.
+- [ ] Write smoke test checklist (health, score, analytics).
+- [ ] Add demo walkthrough script.
+- [ ] Run final release-readiness pass.
 
-- [ ] Build dashboard data hooks against the current analytics endpoints.
-- [ ] Add loading and error states per panel so one failing endpoint does not break the whole page.
-- [ ] Build model stats and baseline comparison tables.
-- [ ] Build fairness, drift, and global-importance panels.
-- [ ] Build score-distribution, ROC, PR, calibration, and confusion-matrix panels.
-- [ ] Add responsive/mobile QA for dashboard tables and charts.
+---
 
-### 8. Testing Expansion
+## Testing TODO
 
-- [ ] Add broader integration coverage for the full data pipeline beyond generator validation and preprocessing split integrity.
-- [ ] Add dedicated fairness artifact tests for calibration parity and the individual-fairness proxy.
-- [ ] Add neural-model smoke tests.
-- [ ] Add ensemble and calibration smoke tests.
-- [ ] Add frontend unit/integration tests for assessment, results, and dashboard flows.
+- [ ] Add frontend unit tests for assessment, results, and dashboard flows.
 - [ ] Add E2E tests for assessment-to-results and dashboard loading.
-- [ ] Add one local restart smoke test that proves the manifest-backed backend still reloads artifacts cleanly.
+- [ ] Add one local restart smoke test proving manifest-backed backend reloads cleanly.
+- [ ] Add broader integration coverage for the full data pipeline.
 
-### 9. Deployment And Demo Readiness
+---
 
-- [ ] Add Docker files for backend and frontend.
-- [ ] Define the local container startup path for the manifest-backed bundle.
-- [ ] Document any model/runtime dependency constraints for the future ensemble bundle.
-- [ ] Add a short release checklist for switching manifest versions safely.
-- [ ] Run a final demo-readiness pass covering backend health, borrower flow, dashboard flow, and rollback guidance.
+## Documentation TODO
 
-## Documentation Queue
+- [ ] Update `docs/API_CONTRACTS.md` if fairness or analytics response shapes change.
+- [ ] Update `docs/DATA_SCHEMA.md` only if feature definitions change.
+- [ ] Update `docs/MODEL_REGISTRY.md` after any new artifact promotion.
+- [ ] Update `docs/EXPERIMENT_LOG.md` after any meaningful training run.
+- [ ] Update `docs/DEPLOYMENT.md` when Docker assets land.
+- [ ] Update `docs/CURRENT_STATE.md` after any milestone-level change.
+- [ ] Add ADRs under `docs/adr/` if ensemble promotion or counterfactual strategy changes materially.
 
-- [ ] Update `docs/API_CONTRACTS.md` whenever fairness or analytics response shapes change.
-- [ ] Update `docs/DATA_SCHEMA.md` only if feature definitions or exclusions change.
-- [ ] Update `docs/MODEL_REGISTRY.md` after any new artifact family or serving-bundle promotion.
-- [ ] Update `docs/EXPERIMENT_LOG.md` after every meaningful training run.
-- [ ] Update `docs/DEPLOYMENT.md` when Docker or release steps land.
-- [ ] Update `docs/CURRENT_STATE.md` after any milestone-level change in implementation status.
-- [ ] Add ADRs under `docs/adr/` if the ensemble promotion path, fairness payload shape, or counterfactual strategy becomes materially more complex.
+---
 
-## Recommended Next Session Scope
+## Recommended Next Session
 
-If a future session wants the highest-value bounded task, start here:
-
-1. Start Track E - Frontend Borrower Experience.
-2. Build the PRD-faithful assessment flow, question data, and landing page.
-3. Hook the assessment up to the backend API and build the results page.
+1. Start Track E — Frontend Borrower Experience.
+2. Create design tokens, question data, and landing page (Phase E.1).
+3. Build the assessment flow with telemetry capture (Phase E.2).
+4. Hook the assessment to the backend API and build the results page (Phase E.3).

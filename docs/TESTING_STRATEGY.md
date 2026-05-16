@@ -13,6 +13,7 @@
 
 ```text
 tests/
+  conftest.py                                    # tmp_path override -> runtime/pytest-workspace
   unit/
     backend/
       test_score_schema.py
@@ -27,8 +28,11 @@ tests/
       test_derived_features.py
       test_score_mapper.py
       test_nlp_features.py
+      test_fairness.py
+      test_global_importance.py
   integration/
     api/
+      _support.py                                # shared test helpers
       test_health_endpoint.py
       test_score_endpoint.py
       test_analytics_endpoints.py
@@ -39,9 +43,19 @@ tests/
       test_feature_assembly.py
       test_preprocessing_split_integrity.py
       test_artifact_loading.py
+      test_classical_training.py
+      test_evaluation_artifacts.py
+      test_fairness_report_artifact.py
+      test_psi_report_artifact.py
+      test_global_importance_artifact.py
+      test_text_pca_artifact.py
+      test_tabnet_training.py
+      test_mlp_training.py
+      test_stacking_training.py
+      test_ensemble_promotion.py
   e2e/
-    test_assessment_to_results.py
-    test_dashboard_loads.py
+    test_assessment_to_results.py                # placeholder
+    test_dashboard_loads.py                      # placeholder
   fixtures/
     score_request_valid.json
     score_request_low_signal.json
