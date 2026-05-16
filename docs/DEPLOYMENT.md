@@ -30,7 +30,7 @@ AlterScore should be reproducible locally before it is deployed anywhere. Deploy
 | `ALTERSCORE_API_VERSION` | `0.1.0` | Health/version reporting |
 | `ALTERSCORE_REPO_ROOT` | repository root | Optional path override |
 | `ALTERSCORE_MODEL_MANIFEST` | `models/registry/production_manifest.json` | Serving manifest |
-| `ALTERSCORE_RUNTIME_MODEL_PATH` | `models/artifacts/logistic_best.pkl` | Explicit local runtime-model override for tests or intentional non-manifest runs |
+| `ALTERSCORE_RUNTIME_MODEL_PATH` | `models/artifacts/calibrated_stacking.pkl` | Explicit local runtime-model override for tests or intentional non-manifest runs |
 | `ALTERSCORE_REQUEST_LOG_PATH` | `runtime/logs/requests.jsonl` | Append-only score-request JSONL path |
 | `ALTERSCORE_LOG_LEVEL` | `INFO` | Backend log level |
 | `ALTERSCORE_CORS_ORIGINS` | `http://localhost:5173` | Frontend origins |
@@ -122,14 +122,14 @@ At startup the backend must:
 - The same offline training commands now also persist `models/reports/fairness_report.json`, using held-out months `11-12` predictions plus the protected audit columns only for subgroup evaluation with sample-size guards, saved green/yellow/red flags, calibration-parity detail, and the individual-fairness proxy.
 - The same offline training commands now also persist `models/reports/psi_report.json`, comparing train months `1-8` to test months `11-12` only across the canonical 35 model inputs with deterministic thresholds and saved per-feature statuses.
 - The same offline training commands now also persist `models/reports/global_importance.json`, using the current saved explainability source to produce a deterministic dashboard-ready ranking over the canonical 35 model inputs.
-- The same offline training commands now also persist `models/explainers/dice_explainer.pkl` for the current logistic runtime bundle, using the validated persisted actionable-counterfactual contract defined in repository source.
+- The same offline training commands now also persist `models/explainers/dice_explainer.pkl` for the current ensemble runtime bundle, using the validated persisted actionable-counterfactual contract defined in repository source.
 - `backend/app/main.py` now loads the runtime artifact bundle at startup and exposes `/api/health` plus `/api/score`.
 - `backend/app/services/analytics.py` now serves `/api/model-stats` from `metrics.json` and `/api/baseline-comparison` from `baseline_metrics.json` without runtime retraining or ad hoc route-level file parsing.
 - `backend/app/main.py` now also initializes the append-only request logging service for `/api/score`.
 - The checked-in local runtime bundle now loads cleanly for the current stub route surface: `models/explainers/shap_explainer.pkl` deserializes from restored repo source, `models/explainers/dice_explainer.pkl` also validates, `models/reports/global_importance.json` matches the active API contract, and the default request-log path is now writable at repo-root `runtime/logs/requests.jsonl`.
 - `/api/health` now returns `ok` for the checked-in manifest-backed bundle and explicitly reports `artifact_source`, `manifest_backed`, `manifest_version`, and `model_version` alongside loaded, missing, and invalid artifact lists.
 - When `models/preprocessors/text_pca.pkl` is present, request-time semantic dimensions now use the persisted PCA artifact; zero-filled semantic fallback remains only for intentionally PCA-less bundles and tests.
-- When `population_percentiles.json` contains multiple model-specific tables, the runtime artifact loader now resolves the table for the active serving model so logistic fallback, classical fallback, and later manifest-backed ensemble serving can reuse one artifact format.
+- When `population_percentiles.json` contains multiple model-specific tables, the runtime artifact loader now resolves the table for the active serving model so manifest-backed ensemble serving can reuse one artifact format.
 - Runtime artifact loading still succeeds when `fairness_report.json` is present alongside the current local scoring bundle; the fairness report remains optional for strict scoring readiness until the fairness API route is added.
 - Runtime artifact loading still succeeds when `psi_report.json` is present alongside the current local scoring bundle; the drift report remains optional for strict scoring readiness until the drift API route is added.
 - Runtime artifact loading still succeeds when `global_importance.json` is present alongside the current local scoring bundle; the report remains optional for strict scoring readiness even though the global-importance analytics route now serves it when available. The loader also normalizes legacy list-shaped payloads defensively if an older saved bundle is encountered.

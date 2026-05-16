@@ -61,8 +61,8 @@ Current runtime note:
   "model_loaded": true,
   "artifact_source": "manifest",
   "manifest_backed": true,
-  "manifest_version": "local_logistic_runtime_bundle_v1",
-  "model_version": "0.1.0",
+  "manifest_version": "calibrated_stacking_ensemble_v1",
+  "model_version": "0.2.0",
   "artifacts_loaded": [
     "production_manifest",
     "runtime_model",

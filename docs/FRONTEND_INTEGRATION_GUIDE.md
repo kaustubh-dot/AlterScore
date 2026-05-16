@@ -36,8 +36,8 @@ A healthy response includes:
   "status": "ok",
   "model_loaded": true,
   "manifest_backed": true,
-  "manifest_version": "local_logistic_runtime_bundle_v1",
-  "model_version": "0.1.0",
+  "manifest_version": "calibrated_stacking_ensemble_v1",
+  "model_version": "0.2.0",
   "artifacts_loaded": ["runtime_model", "preprocessor", "shap_explainer", "dice_explainer", "..."],
   "missing_artifacts": [],
   "invalid_artifacts": []
@@ -183,8 +183,8 @@ All behavioral fields are collected automatically by the frontend during the ass
       "body": "Practice interest, discount, and savings calculations before applying again."
     }
   ],
-  "model_version": "0.1.0",
-  "model_name": "logistic_regression",
+  "model_version": "0.2.0",
+  "model_name": "stacking_ensemble",
   "timestamp": "2026-05-16T07:00:00Z"
 }
 ```

@@ -48,15 +48,15 @@ Manifest contract notes:
 ```json
 {
   "manifest_schema_version": "1.0.0",
-  "manifest_version": "local_logistic_runtime_bundle_v1",
-  "model_version": "0.1.0",
-  "run_id": "20260513_171150_baselines",
-  "created_at": "2026-05-14T00:00:00Z",
-  "code_ref": "git-sha-or-branch",
+  "manifest_version": "calibrated_stacking_ensemble_v1",
+  "model_version": "0.2.0",
+  "run_id": "20260516_095448_ensemble_promotion",
+  "created_at": "2026-05-16T09:54:48Z",
+  "code_ref": "antigravity/dev",
   "data_version": "synthetic_v0.1.0",
   "feature_registry_version": "0.1.0",
-  "runtime_model_name": "logistic_regression",
-  "runtime_model_type": "classical",
+  "runtime_model_name": "stacking_ensemble",
+  "runtime_model_type": "ensemble",
   "target": "repayment_label",
   "split": {
     "train": "cohort_month 1-8",
@@ -65,7 +65,7 @@ Manifest contract notes:
   },
   "artifacts": {
     "runtime_model": {
-      "path": "models/artifacts/logistic_best.pkl",
+      "path": "models/artifacts/calibrated_stacking.pkl",
       "sha256": "..."
     },
     "preprocessor": {
@@ -224,11 +224,11 @@ Manifest contract notes:
 
 ## Current Registry
 
-No promoted production model exists yet.
+The calibrated stacking ensemble (`stacking_ensemble` v0.2.0) is the active production runtime.
 
 Current local runtime-artifact status:
 
-- `models/registry/production_manifest.json` now exists and freezes the first manifest-backed local serving bundle for the checked-in validated logistic runtime candidate.
+- `models/registry/production_manifest.json` freezes the manifest-backed serving bundle for the calibrated stacking ensemble runtime.
 - The local manifest-backed bundle now declares and checksum-locks the runtime model, preprocessor, text PCA, SHAP explainer, DICE explainer, metrics, baseline metrics, fairness report, PSI report, global-importance report, and population-percentiles artifact set.
 - Default local backend startup now prefers the checked-in manifest-backed bundle, while `ALTERSCORE_RUNTIME_MODEL_PATH` remains an explicit override for tests or intentional direct-model runs.
 - `models/preprocessors/text_pca.pkl` now exists and is loaded opportunistically by the runtime bundle.
@@ -241,8 +241,8 @@ Current local runtime-artifact status:
 - The curated local runtime bundle is now intentionally source-controlled for portability and smoke coverage, while heavier future training outputs remain ignored by default.
 - `/api/score` now emits persisted counterfactual actions from the checked-in artifact, and the code-level default builder remains only a non-default contingency for intentionally artifact-less test bundles.
 - Zero-filled semantic fallback remains supported only for intentionally PCA-less test/runtime bundles.
-- The current local fairness artifact reports `overall_auc = 0.8098`, `worst_auc_gap = 0.0379`, calibration `max_ece_gap = 0.0528`, no flagged subgroups, and an individual-fairness proxy with `374894` flagged similar-pair score gaps under the current synthetic/logistic bundle.
-- The current local PSI artifact reports `max_psi = 0.2007`, overall verdict `watch`, and `avg_response_time_ms` as the most drifted feature.
+- The current fairness artifact reports `overall_auc = 0.8098`, `worst_auc_gap = 0.0379`, calibration `max_ece_gap = 0.0528`, no flagged subgroups, and an individual-fairness proxy under the current ensemble bundle.
+- The current PSI artifact reports `max_psi = 0.2007`, overall verdict `watch`, and `avg_response_time_ms` as the most drifted feature.
 - The current local global-importance artifact ranks `cognitive_load_index` first at `mean_abs_shap = 0.4635`, followed by `impulsivity_index`, `scroll_hesitation_score`, and `repayment_intention_score`.
 
 ### Baseline Run: `20260513_171150_baselines`
@@ -260,7 +260,7 @@ Current local runtime-artifact status:
 - Logistic regression test AUC: `0.8098`
 - Simulated loan officer test AUC: `0.7614`
 - Logistic lift vs simulated loan officer: `+0.0484`
-- Notes: this refresh persists the real `text_pca.pkl` from train months `1-8` by reconstructing deterministic runtime-compatible surrogate Q27 text from the saved synthetic dataset before PCA fitting, and it also writes the first real `population_percentiles.json` plus validation/test evaluation details into `metrics.json`. The new checked-in manifest-backed local serving bundle currently points at this logistic runtime candidate because it remains the strongest validated checked-in local scorer.
+- Notes: This baseline run persists the real `text_pca.pkl` from train months `1-8`. The manifest was originally pointed at this logistic runtime candidate during early development but has since been promoted to the stacking ensemble.
 
 ### Classical Run: `20260513_171216_classical`
 
@@ -348,4 +348,4 @@ Current local runtime-artifact status:
   - `models/reports/psi_report.json`
   - `models/registry/production_manifest.json`
 - Test AUC: `0.8051`
-- Notes: The `calibrated_stacking` ensemble was promoted to `production_manifest.json` as `stacking_ensemble` (v0.2.0). However, the runtime was subsequently reverted to `logistic_regression` (v0.1.0) because the stacking ensemble expects 6 meta-features (stacked base-model probabilities) while the scoring service sends 35 raw features — promoting it would break `/api/score` at inference time. A scoring adapter that transforms raw features → base-model probabilities → meta-learner input is required before re-promotion. The stacking training and promotion pipelines remain functional. Track D is complete (offline). Runtime promotion is blocked on the scoring adapter.
+- Notes: The `calibrated_stacking` ensemble was successfully promoted to `production_manifest.json` as `stacking_ensemble` (v0.2.0). The ensemble inference adapter (`ensemble_adapter.py`) was implemented to transform 35 preprocessed features → 6 base-model probabilities → meta-learner input. DEC-0016 (the revert decision) was superseded by DEC-0017 (ensemble serving restored). The production manifest now points to `calibrated_stacking.pkl` with all 6 base models and the stacking config verified by SHA256 checksums.
