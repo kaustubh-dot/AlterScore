@@ -79,13 +79,28 @@ Branch: `feature/ensemble-serving-runtime`
 ## Frontend TODO (Unblocked)
 
 ### Track E — Frontend Borrower Experience
-- [ ] E.1 Foundation (design tokens, question data, router, landing page)
-- [ ] E.2 Assessment flow (question renderer, telemetry, submit handler)
-- [ ] E.3 Results page (score gauge, SHAP bars, actions, eligibility)
+- [x] E.1 Foundation (design tokens, question data, router, landing page)
+  - [x] Added Vite/React routes for `/`, `/assessment`, `/results`, `/dashboard`
+  - [x] Added premium dark design system, responsive layout, GSAP motion, WebGL layers, and Web3/fintech art direction
+  - [x] Added persistent R3F particle lattice, WebGL grid, split boot loader, custom cursor, film grain, pinned manifesto, and pillar cards
+  - [x] Added assessment question data aligned to PRD core questions plus backend-required score-contract fields
+- [x] E.2 Assessment flow (question renderer, telemetry, submit handler)
+  - [x] Added renderers for number, MCQ, binary choice, Likert, and open text
+  - [x] Added section progress, persisted answers, behavioral telemetry, session IDs, and retry-safe submit
+  - [x] Built `POST /api/score` payloads using the documented answer and behavioral contracts
+- [x] E.3 Results page (score gauge, SHAP bars, actions, eligibility)
+  - [x] Added animated score gauge, percentile callout, eligibility card, SHAP factor bars, counterfactual actions, tips, and PNG/WhatsApp share flow
 - [ ] E.4 Polish (mobile, loading states, error handling, tests)
+  - [x] Added mobile-responsive layouts and 44px+ controls for the borrower flow
+  - [x] Added assessment network-error retry without clearing answers
+  - [x] Reworked borrower UI into the current Web3/WebGL credit-intelligence direction with processing and cinematic results reveal
+  - [ ] Add browser screenshot QA once local Chrome/Playwright permissions are available
+  - [ ] Add focused frontend unit/E2E tests for payload construction, telemetry, and full assessment-to-results flow
 
 ### Track F — Evaluator Dashboard
 - [ ] F.1 Foundation (layout, data hooks, error isolation)
+  - [x] Added first dashboard shell and backend health panel
+  - [ ] Build independent fetch/data-state hooks for all analytics panels
 - [ ] F.2 Panels (10 analytics panels)
 - [ ] F.3 Polish (mobile, responsive charts)
 
