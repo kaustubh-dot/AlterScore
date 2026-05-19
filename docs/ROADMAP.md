@@ -19,8 +19,8 @@
 | Track C — Ensemble & Calibration | ✅ Complete | Calibrated stacking ensemble, 6 smoke tests |
 | Track D — Explainability & Promotion | ✅ Complete | SHAP, DICE, global importance, manifest promotion |
 | Track D+ — Ensemble Serving Runtime | ✅ Complete | Adapter, loader, scoring, manifest, full validation |
-| **Track E — Frontend Borrower Experience** | **🔲 Next** | Backend is fully complete; frontend can begin |
-| Track F — Evaluator Dashboard | 🔲 Blocked on E | After Track E |
+| **Track E — Frontend Borrower Experience** | **🟡 In Progress** | Web3/WebGL borrower landing, assessment, and results flow implemented; QA/tests remain |
+| Track F — Evaluator Dashboard | 🔲 Blocked on E | Shell exists; full analytics panels after Track E QA |
 | Track G — Deployment & Demo | 🔲 Blocked on F | After Track F |
 
 ## Program Tracks
@@ -55,11 +55,11 @@ Closed. The calibrated stacking ensemble is now the active production runtime mo
 
 ---
 
-### Track E — Frontend Borrower Experience (NEXT)
+### Track E — Frontend Borrower Experience (IN PROGRESS)
 
 Backend is unblocked. See `docs/FRONTEND_INTEGRATION_GUIDE.md` for API contracts.
 
-**Phases:** E.1 Foundation → E.2 Assessment → E.3 Results → E.4 Polish
+**Current status:** E.1 foundation, E.2 assessment flow, and E.3 results page are implemented in `frontend/`. The borrower UI has been reworked into an immersive Web3/WebGL credit-intelligence direction with persistent R3F particles, grid scene, split boot loader, custom cursor, film grain, pinned manifesto, pillar cards, processing screen, and animated results reveal. E.4 polish remains open for browser screenshot QA, focused frontend tests, and further bundle/performance optimization.
 
 ### Track F — Evaluator Dashboard (BLOCKED on E)
 
