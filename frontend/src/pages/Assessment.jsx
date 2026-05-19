@@ -1,0 +1,294 @@
+import { gsap } from "gsap";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+import OptionCard from "../components/assessment/OptionCard.jsx";
+import ProgressDots from "../components/assessment/ProgressDots.jsx";
+import ProcessingScreen from "../components/processing/ProcessingScreen.jsx";
+import { QUESTIONS, getSectionById } from "../data/questions.js";
+import { submitScore } from "../services/api.js";
+import {
+  buildAnswersPayload,
+  buildBehavioralPayload,
+  createSessionId,
+  coerceAnswerValue,
+} from "../services/scorePayload.js";
+
+const storedSessionId = window.sessionStorage.getItem("alterscore_session_id") || createSessionId();
+window.sessionStorage.setItem("alterscore_session_id", storedSessionId);
+
+const choiceTypes = new Set(["mcq", "binary_choice", "likert"]);
+
+function wait(ms) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+export default function Assessment() {
+  const navigate = useNavigate();
+  const questionRef = useRef(null);
+  const autoTimerRef = useRef(0);
+  const pendingPayloadRef = useRef(null);
+  const lastScrollY = useRef(window.scrollY);
+  const scrollDirection = useRef(0);
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [answers, setAnswers] = useState(() => {
+    try {
+      return JSON.parse(window.sessionStorage.getItem("alterscore_answers") || "{}");
+    } catch {
+      return {};
+    }
+  });
+  const [telemetry, setTelemetry] = useState({
+    responseTimes: {},
+    changeCounts: {},
+    dropoutCount: 0,
+    scrollHesitations: {},
+  });
+  const [questionStartTime, setQuestionStartTime] = useState(Date.now());
+  const [sessionStartTime] = useState(Date.now());
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+  const [halfwayPulse, setHalfwayPulse] = useState(false);
+
+  const question = QUESTIONS[currentIndex];
+  const currentSection = getSectionById(question.section);
+  const isFirst = currentIndex === 0;
+  const isLast = currentIndex === QUESTIONS.length - 1;
+  const progressLabel = `${currentSection.title.toUpperCase()} · Q${currentIndex + 1} OF ${QUESTIONS.length}`;
+
+  const hasAnswer = useMemo(() => {
+    const value = answers[question.id];
+    if (question.type === "text") {
+      return String(value || "").trim().split(/\s+/).filter(Boolean).length >= (question.minWords || 1);
+    }
+    return value !== undefined && value !== null && value !== "";
+  }, [answers, question]);
+
+  useEffect(() => {
+    setQuestionStartTime(Date.now());
+    window.clearTimeout(autoTimerRef.current);
+    gsap.fromTo(
+      questionRef.current,
+      { autoAlpha: 0, x: 80, filter: "blur(8px)" },
+      { autoAlpha: 1, x: 0, filter: "blur(0px)", duration: 0.55, ease: "power3.out" },
+    );
+
+    if (currentIndex === Math.floor(QUESTIONS.length / 2)) {
+      setHalfwayPulse(true);
+      const timer = window.setTimeout(() => setHalfwayPulse(false), 1500);
+      return () => window.clearTimeout(timer);
+    }
+    return undefined;
+  }, [currentIndex]);
+
+  useEffect(() => {
+    window.sessionStorage.setItem("alterscore_answers", JSON.stringify(answers));
+  }, [answers]);
+
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.hidden) {
+        setTelemetry((state) => ({ ...state, dropoutCount: Math.min(state.dropoutCount + 1, 20) }));
+      }
+    };
+
+    const handleScroll = () => {
+      const y = window.scrollY;
+      const nextDirection = Math.sign(y - lastScrollY.current);
+      if (scrollDirection.current && nextDirection && scrollDirection.current !== nextDirection) {
+        setTelemetry((state) => ({
+          ...state,
+          scrollHesitations: { ...state.scrollHesitations, [question.id]: true },
+        }));
+      }
+      scrollDirection.current = nextDirection || scrollDirection.current;
+      lastScrollY.current = y;
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [question.id]);
+
+  function recordAnswer(rawValue) {
+    const value = coerceAnswerValue(question, rawValue);
+    const responseTime = Date.now() - questionStartTime;
+
+    setAnswers((state) => ({ ...state, [question.id]: value }));
+    setTelemetry((state) => ({
+      ...state,
+      responseTimes: { ...state.responseTimes, [question.id]: responseTime },
+      changeCounts: {
+        ...state.changeCounts,
+        [question.id]:
+          answers[question.id] !== undefined && answers[question.id] !== value
+            ? (state.changeCounts[question.id] || 0) + 1
+            : state.changeCounts[question.id] || 0,
+      },
+    }));
+
+    if (choiceTypes.has(question.type)) {
+      window.clearTimeout(autoTimerRef.current);
+      autoTimerRef.current = window.setTimeout(() => {
+        if (isLast) {
+          handleSubmit({ ...answers, [question.id]: value });
+        } else {
+          goForward(true);
+        }
+      }, 600);
+    }
+  }
+
+  function goForward(fromAuto = false) {
+    if (!fromAuto && !hasAnswer) return;
+    if (isLast) {
+      handleSubmit(answers);
+      return;
+    }
+
+    gsap.to(questionRef.current, {
+      autoAlpha: 0,
+      x: -60,
+      filter: "blur(8px)",
+      duration: 0.4,
+      ease: "power2.inOut",
+      onComplete: () => setCurrentIndex((value) => value + 1),
+    });
+  }
+
+  function goBack() {
+    if (isFirst || isSubmitting) return;
+    window.clearTimeout(autoTimerRef.current);
+    gsap.to(questionRef.current, {
+      autoAlpha: 0,
+      x: 70,
+      filter: "blur(8px)",
+      duration: 0.35,
+      ease: "power2.inOut",
+      onComplete: () => setCurrentIndex((value) => value - 1),
+    });
+  }
+
+  async function handleSubmit(nextAnswers = answers) {
+    const payload = pendingPayloadRef.current || {
+      session_id: storedSessionId,
+      answers: buildAnswersPayload(nextAnswers),
+      behavioral: buildBehavioralPayload({ telemetry, answers: nextAnswers, sessionStartTime }),
+    };
+
+    pendingPayloadRef.current = payload;
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const startedAt = Date.now();
+      const result = await submitScore(payload);
+      await wait(Math.max(0, 5000 - (Date.now() - startedAt)));
+      window.sessionStorage.setItem("alterscore_score_result", JSON.stringify(result));
+      pendingPayloadRef.current = null;
+      navigate("/results", { state: result });
+    } catch (err) {
+      setError(err.status === 422 ? "The score contract rejected one field. Your answers are still saved." : "Network failed. Retry will reuse the same payload.");
+      setIsSubmitting(false);
+    }
+  }
+
+  function renderAnswerControl() {
+    if (question.type === "number") {
+      return (
+        <div className="number-answer">
+          {question.prefix && <span>{question.prefix}</span>}
+          <input
+            type="number"
+            inputMode="decimal"
+            min="0"
+            value={answers[question.id] ?? ""}
+            onChange={(event) => recordAnswer(event.target.value)}
+            placeholder="0"
+            autoFocus
+          />
+          {question.suffix && <span>{question.suffix}</span>}
+        </div>
+      );
+    }
+
+    if (question.type === "text") {
+      return (
+        <div className="open-answer">
+          <textarea
+            rows={5}
+            maxLength={question.maxLength || 1000}
+            value={answers[question.id] ?? ""}
+            onChange={(event) => recordAnswer(event.target.value)}
+            placeholder="Write the moment, the action, and what changed after it."
+          />
+          <span>
+            {String(answers[question.id] || "").trim().split(/\s+/).filter(Boolean).length} words · min {question.minWords || 1}
+          </span>
+        </div>
+      );
+    }
+
+    const options = question.type === "likert" ? question.scale : question.options;
+    return (
+      <div className="answer-options">
+        {options.map((option, index) => {
+          const value = question.type === "likert" ? index + 1 : index;
+          return (
+            <OptionCard
+              key={`${option}-${index}`}
+              selected={Number(answers[question.id]) === value}
+              onClick={() => recordAnswer(value)}
+            >
+              {option}
+            </OptionCard>
+          );
+        })}
+      </div>
+    );
+  }
+
+  if (isSubmitting) return <ProcessingScreen />;
+
+  return (
+    <main className="assessment-experience" data-section>
+      <ProgressDots total={QUESTIONS.length} current={currentIndex} />
+
+      {halfwayPulse && (
+        <div className="halfway-pulse">
+          Halfway there. Your profile is taking shape.
+        </div>
+      )}
+
+      <section ref={questionRef} className="assessment-question">
+        <p className="question-category">{progressLabel}</p>
+        <h1>{question.question}</h1>
+        {question.hint && <p className="question-hint">{question.hint}</p>}
+        {renderAnswerControl()}
+        {error && (
+          <div className="assessment-error">
+            <p>{error}</p>
+            <button type="button" onClick={() => handleSubmit(answers)} data-magnetic>
+              Retry submission
+            </button>
+          </div>
+        )}
+      </section>
+
+      <div className="assessment-controls">
+        <button type="button" onClick={goBack} disabled={isFirst} data-magnetic>
+          Back
+        </button>
+        {!choiceTypes.has(question.type) && (
+          <button type="button" onClick={() => goForward(false)} disabled={!hasAnswer} data-magnetic>
+            {isLast ? "Submit profile" : "Continue"}
+          </button>
+        )}
+      </div>
+    </main>
+  );
+}
