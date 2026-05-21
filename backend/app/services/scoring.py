@@ -1,4 +1,4 @@
-"""Backend scoring service stubs for AlterScore runtime inference."""
+"""Backend scoring service for AlterScore runtime inference."""
 
 from __future__ import annotations
 
@@ -151,7 +151,7 @@ class ScoringService:
                 "loan_eligibility": get_loan_eligibility(credit_score),
                 "improvement_tips": [
                     tip.model_dump(mode="json")
-                    for tip in _build_stub_improvement_tips(assembled.feature_row)
+                    for tip in _build_improvement_tips(assembled.feature_row)
                 ],
                 "timestamp": datetime.now(timezone.utc),
             }
@@ -300,7 +300,7 @@ def _build_explanation_plain_language(*, display_name: str, direction: str) -> s
     return f"{display_name} is pulling the current score down."
 
 
-def _build_stub_improvement_tips(feature_row: dict[str, Any]) -> list[ImprovementTip]:
+def _build_improvement_tips(feature_row: dict[str, Any]) -> list[ImprovementTip]:
     tips: list[ImprovementTip] = []
     for feature_name, (title, body) in _TIP_LIBRARY.items():
         feature_value = float(feature_row.get(feature_name, 0.0))

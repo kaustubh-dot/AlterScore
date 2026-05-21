@@ -4,106 +4,121 @@
 
 - Contracts before implementation.
 - Offline artifacts before online serving changes.
-- Temporal-split validation before any promotion claims.
+- Temporal-split validation before promotion claims.
 - Backend contract stability before frontend feature coupling.
 - Report-backed analytics before dashboard visuals.
 - Manifest-backed reproducibility before deployment packaging.
-- **Complete ALL backend serving work before frontend development begins.**
 
 ## Current Status Summary
 
 | Track | Status | Notes |
 |---|---|---|
-| Track A — Governance | ✅ Complete | Fairness, calibration parity, individual-fairness proxy |
-| Track B — Neural Training | ✅ Complete | TabNet + MLP, offline artifacts, 12 smoke tests |
-| Track C — Ensemble & Calibration | ✅ Complete | Calibrated stacking ensemble, 6 smoke tests |
-| Track D — Explainability & Promotion | ✅ Complete | SHAP, DICE, global importance, manifest promotion |
-| Track D+ — Ensemble Serving Runtime | ✅ Complete | Adapter, loader, scoring, manifest, full validation |
-| **Track E — Frontend Borrower Experience** | **🟡 In Progress** | Web3/WebGL borrower landing, assessment, and results flow implemented; QA/tests remain |
-| Track F — Evaluator Dashboard | 🔲 Blocked on E | Shell exists; full analytics panels after Track E QA |
-| Track G — Deployment & Demo | 🔲 Blocked on F | After Track F |
+| Track A - Governance | Complete | Fairness, calibration parity, individual-fairness proxy |
+| Track B - Neural Training | Complete | TabNet + MLP, offline artifacts, smoke tests |
+| Track C - Ensemble & Calibration | Complete | Calibrated stacking ensemble |
+| Track D - Explainability & Promotion | Complete | SHAP, DICE, global importance, manifest promotion |
+| Track D+ - Ensemble Serving Runtime | Complete | Adapter, loader, scoring, manifest-backed validation |
+| Track E - Borrower Frontend | Implemented, QA pending | Landing, assessment, submission, processing, results, sharing |
+| Track F - Evaluator Dashboard | Pending | Dashboard shell exists; analytics panel wiring remains |
+| Track G - Deployment & Demo | Pending | Docker/release assets after Track F |
 
 ## Program Tracks
 
-### Track A — Governance Completion (COMPLETE ✅)
+### Track A - Governance Completion
 
-Closed. Calibration parity, individual-fairness proxy, and fairness report refresh are all in the checked-in bundle.
+Closed. Calibration parity, individual-fairness proxy, and fairness report
+refresh are in the checked-in bundle.
 
-### Track B — Neural Offline Training (COMPLETE ✅)
+### Track B - Neural Offline Training
 
-Closed. TabNet and MLP training modules, CLI entrypoints, and 12 integration smoke tests are all merged.
+Closed. TabNet and MLP training modules, CLI entrypoints, artifacts, and smoke
+tests are merged.
 
-### Track C — Ensemble And Calibration (COMPLETE ✅)
+### Track C - Ensemble And Calibration
 
-Closed. `calibrated_stacking.pkl` exists with 6/6 smoke tests passing.
+Closed. `calibrated_stacking.pkl` exists and is promoted as the active runtime
+meta-learner.
 
-### Track D — Production Explainability Refresh (COMPLETE ✅)
+### Track D - Production Explainability Refresh
 
-Closed. SHAP, DICE, and global importance artifacts regenerated for the ensemble. Promotion pipeline (`promote_ensemble.py`) works end-to-end.
+Closed. SHAP, DICE, and global importance artifacts were regenerated for the
+ensemble. The promotion pipeline works end to end.
 
-### Track D+ — Ensemble Serving Runtime (COMPLETE ✅)
+### Track D+ - Ensemble Serving Runtime
 
-Closed. The calibrated stacking ensemble is now the active production runtime model. All 6 base models load at startup, the ensemble adapter orchestrates the inference path, and all smoke tests pass with `stacking_ensemble` / `v0.2.0`.
+Closed. The backend loads the calibrated stacking ensemble, all six base models,
+stacking config, preprocessor, text PCA, explainers, reports, and manifest
+checksums at startup. `/api/score` routes through `predict_ensemble_proba()`.
 
-**Key deliverables:**
-- `backend/ml/inference/ensemble_adapter.py` — orchestrates base models → meta-features → meta-learner
-- `WrappedEnsembleModel` — standard `predict_proba()` facade for DICE compatibility
-- `artifact_loader.py` extended with `base_models` / `stacking_config` loading
-- `scoring.py` routes through `predict_ensemble_proba()` when ensemble is active
-- `production_manifest.json` declares `stacking_ensemble` with 6 base model checksums
-- All 145 tests pass (unit + integration)
+### Track E - Borrower Frontend
 
----
+Implementation is present. Remaining work is QA and test coverage:
 
-### Track E — Frontend Borrower Experience (IN PROGRESS)
+- Browser screenshot QA for landing, assessment, processing, and results.
+- Mobile checks at 375px and common desktop widths.
+- Focused tests for question data, telemetry, score payloads, retry behavior,
+  missing results state, and rendering of SHAP/action/eligibility blocks.
+- Optional bundle optimization for the R3F vendor chunk if demo performance
+  requires it.
 
-Backend is unblocked. See `docs/FRONTEND_INTEGRATION_GUIDE.md` for API contracts.
+### Track F - Evaluator Dashboard
 
-**Current status:** E.1 foundation, E.2 assessment flow, and E.3 results page are implemented in `frontend/`. The borrower UI has been reworked into an immersive Web3/WebGL credit-intelligence direction with persistent R3F particles, grid scene, split boot loader, custom cursor, film grain, pinned manifesto, pillar cards, processing screen, and animated results reveal. E.4 polish remains open for browser screenshot QA, focused frontend tests, and further bundle/performance optimization.
+Pending. The current dashboard shell checks backend health but still needs:
 
-### Track F — Evaluator Dashboard (BLOCKED on E)
+- Independent data hooks for all analytics endpoints.
+- Loading, error, empty, and success states per panel.
+- Model metrics, baseline, fairness, drift, global importance, score
+  distribution, ROC, PR, calibration, and confusion-matrix views.
+- Mobile table/chart overflow handling.
 
-Blocked until Track E is complete. Analytics endpoints are stable and tested.
+### Track G - Deployment & Demo
 
-### Track G — Deployment & Demo (BLOCKED on F)
+Pending until Track F is usable. Required deliverables:
 
-Blocked until Tracks E and F are complete.
-
----
+- Backend Dockerfile.
+- Frontend Dockerfile.
+- `docker-compose.yml`.
+- Release smoke-test checklist.
+- Demo walkthrough script and rollback notes.
 
 ## Recommended Execution Order
 
-```
-E.1 Foundation → E.2 Assessment → E.3 Results → E.4 Polish
-  → F.1 Dashboard → F.2 Charts → F.3 Polish
-    → G.1 Docker → G.2 Docs → G.3 Demo
+```text
+E.4 QA/tests
+  -> F.1 dashboard data hooks
+  -> F.2 dashboard panels
+  -> F.3 dashboard responsive polish
+  -> G.1 Docker packaging
+  -> G.2 release docs
+  -> G.3 demo script
 ```
 
 ## Milestones
 
 | Milestone | Theme | Dependencies |
 |---|---|---|
-| M5.5 | Ensemble serving adapter + integration | ✅ Complete |
-| M5.6 | Ensemble manifest promotion + validation | ✅ Complete |
-| M6.1 | Borrower UI foundation | Backend complete |
-| M6.2 | Borrower results flow | M6.1 |
-| M6.3 | Evaluator dashboard | M6.2 |
-| M7.1 | Deployment packaging | M6.3 |
+| M5.5 | Ensemble serving adapter + integration | Complete |
+| M5.6 | Ensemble manifest promotion + validation | Complete |
+| M6.1 | Borrower UI foundation | Complete |
+| M6.2 | Borrower assessment/results flow | Complete, QA pending |
+| M6.3 | Evaluator dashboard | Track E QA and frontend test harness |
+| M7.1 | Deployment packaging | Dashboard usable |
 
 ## Known Technical Debt
 
-- Stacking config sidecar still says `cv: "prefit"` — should say `FrozenEstimator` (cosmetic)
-- `promote_ensemble.py` `code_ref` defaults to `"antigravity/dev"` — should use current branch
-- Individual fairness proxy has a high flagged pair share (73%) — investigate if this is a scoring calibration issue
-- Docker assets do not exist yet — Track G
-- PyTorch/TabNet are currently required at startup for base model loading — consider lazy loading
+- Stacking config sidecar still says `cv: "prefit"`; scikit-learn now represents this with `FrozenEstimator` semantics.
+- `promote_ensemble.py` `code_ref` defaults to `"antigravity/dev"`; it should use the current branch or explicit release identifier.
+- Individual fairness proxy has a high flagged-pair share; investigate before pilot claims.
+- Docker assets do not exist yet.
+- PyTorch/TabNet are currently required at startup for base-model loading; lazy loading may reduce cold start time.
+- Frontend unit/E2E coverage is still thin for the borrower flow and dashboard.
 
 ## PRD Mapping
 
 | PRD Section | Track |
 |---|---|
-| Sections 8, 13.1 | Track A (governance) — Complete |
-| Section 7 | Tracks B, C, D (ML pipeline) — Complete |
-| Section 9 | Track D+ (serving runtime) — Complete |
-| Section 10 | Tracks E, F (frontend) — Next |
-| Section 12 | Track G (deployment) — Blocked |
+| Sections 8, 13.1 | Track A governance - complete |
+| Section 7 | Tracks B, C, D ML pipeline - complete |
+| Section 9 | Track D+ serving runtime - complete |
+| Section 10 | Track E borrower frontend implemented; Track F dashboard pending |
+| Section 12 | Track G deployment - pending |

@@ -1,4 +1,4 @@
-"""Health route stubs for AlterScore backend."""
+"""Health routes for AlterScore backend."""
 
 from __future__ import annotations
 

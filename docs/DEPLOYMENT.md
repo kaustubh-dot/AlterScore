@@ -2,25 +2,19 @@
 
 ## Deployment Philosophy
 
-AlterScore should be reproducible locally before it is deployed anywhere. Deployment must package a backend service, frontend build, and a complete production model artifact bundle.
+AlterScore should be reproducible locally before it is deployed anywhere.
+Deployment must package three things together:
 
-## Deployment Stages
+- the FastAPI backend
+- the React frontend build
+- the checked-in manifest-backed model bundle
 
-| Stage | Goal | Required Before Moving On |
-|---|---|---|
-| Local development | Fast iteration | Backend, frontend, and tests run locally |
-| Local artifact serving | Validate model loading | Checked-in production manifest bundle loads in FastAPI, with direct runtime-model override kept only for explicit dev/test use |
-| Local Docker | Package service | Health check passes in containers |
-| Cloud demo | Public demo or evaluator deployment | Secrets, artifacts, logging, and rollback documented |
-| Production pilot | Shadow-mode lender use | Real monitoring, audit, and retraining process |
+## Current Deployment Readiness
 
-## Runtime Components
-
-- FastAPI backend.
-- React frontend static build.
-- Model artifact bundle.
-- Generated analytics reports.
-- Runtime logs.
+- Local backend serving is implemented.
+- Local frontend serving is implemented.
+- Manifest-backed artifact loading is implemented.
+- Docker and cloud deployment assets are not complete yet.
 
 ## Environment Variables
 
@@ -30,55 +24,49 @@ AlterScore should be reproducible locally before it is deployed anywhere. Deploy
 | `ALTERSCORE_API_VERSION` | `0.1.0` | Health/version reporting |
 | `ALTERSCORE_REPO_ROOT` | repository root | Optional path override |
 | `ALTERSCORE_MODEL_MANIFEST` | `models/registry/production_manifest.json` | Serving manifest |
-| `ALTERSCORE_RUNTIME_MODEL_PATH` | `models/artifacts/calibrated_stacking.pkl` | Explicit local runtime-model override for tests or intentional non-manifest runs |
-| `ALTERSCORE_REQUEST_LOG_PATH` | `runtime/logs/requests.jsonl` | Append-only score-request JSONL path |
+| `ALTERSCORE_RUNTIME_MODEL_PATH` | `models/artifacts/calibrated_stacking.pkl` | Explicit dev/test override path |
+| `ALTERSCORE_REQUEST_LOG_PATH` | `runtime/logs/requests.jsonl` | Append-only request log path |
 | `ALTERSCORE_LOG_LEVEL` | `INFO` | Backend log level |
-| `ALTERSCORE_CORS_ORIGINS` | `http://localhost:5173` | Frontend origins |
-| `VITE_API_BASE_URL` | `http://localhost:8000/api` | Frontend API base URL |
+| `ALTERSCORE_CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Allowed frontend origins |
+| `VITE_API_BASE_URL` | `http://127.0.0.1:8000/api` | Frontend API base URL |
 
 ## Local Development Commands
 
-The backend app entrypoint now exists at `backend/app/main.py`, and the health plus score route stubs can run locally against saved artifacts.
+Run from the repository root:
 
 ```powershell
 # Backend
-cd backend
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+& 'C:\Users\Kaustubh\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe' scripts\setup\check_environment.py
+& 'C:\Users\Kaustubh\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe' -m venv backend\.venv-cleanup
+backend\.venv-cleanup\Scripts\python.exe -m pip install -r backend\requirements.txt
+backend\.venv-cleanup\Scripts\python.exe -m uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000
 
 # Frontend
 cd frontend
-npm install
-npm run dev -- --host 127.0.0.1 --port 5173
+& 'C:\Program Files\nodejs\npm.cmd' install
+& 'C:\Program Files\nodejs\npm.cmd' run dev -- --host 127.0.0.1 --port 5173
 ```
 
-## Training And Artifact Promotion Flow
+## Validation Notes
 
-```text
-Generate data
-  -> Validate data
-  -> Fit preprocessing and text PCA
-  -> Train baselines
-  -> Train classical models
-  -> Train neural models
-  -> Train stacking ensemble
-  -> Calibrate ensemble
-  -> Generate metrics, SHAP, DICE, fairness, PSI
-  -> Create production manifest
-  -> Run artifact loading smoke test
-  -> Promote manifest
-```
+- Python `3.12.x` is the recommended local backend interpreter family.
+- Python `3.14.x` is not the recommended local setup path for this repository.
+- During cleanup validation on May 22, 2026, backend dependency resolution
+  succeeded in a fresh Python 3.12 environment, but the install in this synced
+  Windows workspace hit a local file-lock error inside `site-packages` before a
+  full clean-room startup could be completed.
 
 ## Artifact Bundle Checklist
 
 ### Core Runtime Artifacts
-- [x] `models/artifacts/calibrated_stacking.pkl` (active runtime model — stacking ensemble meta-learner)
+
+- [x] `models/artifacts/calibrated_stacking.pkl`
 - [x] `models/preprocessors/preprocessor.pkl`
 - [x] `models/preprocessors/text_pca.pkl`
 - [x] `models/registry/production_manifest.json`
 
-### Base Models (loaded at startup for ensemble inference)
+### Base Models
+
 - [x] `models/artifacts/logistic_best.pkl`
 - [x] `models/artifacts/rf_best.pkl`
 - [x] `models/artifacts/xgb_best.pkl`
@@ -88,10 +76,12 @@ Generate data
 - [x] `models/artifacts/calibrated_stacking_config.json`
 
 ### Explainability Artifacts
+
 - [x] `models/explainers/shap_explainer.pkl`
 - [x] `models/explainers/dice_explainer.pkl`
 
 ### Report Artifacts
+
 - [x] `models/reports/metrics.json`
 - [x] `models/reports/baseline_metrics.json`
 - [x] `models/reports/fairness_report.json`
@@ -104,111 +94,31 @@ Generate data
 At startup the backend must:
 
 1. Load settings.
-2. Resolve repository and artifact paths.
-3. Prefer the production manifest when it exists, allow `ALTERSCORE_RUNTIME_MODEL_PATH` only as an explicit override, and use candidate fallback only when neither source is available.
-4. Validate the manifest contract, verify manifest-backed SHA256 checksums, and detect missing scoring-critical files clearly.
-5. Load model, preprocessor, and any available text PCA, explainers, and reports.
-6. Expose `/api/health` with loaded, missing, and invalid artifact status.
-7. Fail clearly if scoring-critical artifacts such as the runtime model or preprocessor are missing.
+2. Resolve repository-relative paths.
+3. Prefer the production manifest for the default local runtime.
+4. Validate manifest-declared checksums.
+5. Load scoring-critical artifacts before serving `/api/score`.
+6. Report loaded, missing, and invalid artifacts through `/api/health`.
 
-## Current Stub Runtime Notes
+## Health And Rollback
 
-- `backend/app/core/artifact_loader.py` now prefers the checked-in manifest-backed local serving bundle at `models/registry/production_manifest.json`.
-- `ALTERSCORE_RUNTIME_MODEL_PATH` remains available as an explicit test/dev override, and candidate selection remains only a final fallback when neither a manifest nor an override is present.
-- Manifest-backed startup now validates a stricter serving-bundle contract and verifies SHA256 checksums for the runtime model, preprocessor, text PCA, SHAP explainer, DICE explainer, metrics, baseline metrics, fairness report, PSI report, global-importance report, and population-percentiles artifact set.
-- The current scoring stub can run with saved logistic or classical artifacts plus the shared preprocessor.
-- The current offline baseline and classical training commands now also persist `models/preprocessors/text_pca.pkl` from train months `1-8` only, using runtime-compatible raw embeddings derived from the saved synthetic dataset.
-- The same offline training commands now persist `models/reports/population_percentiles.json` and expand `models/reports/metrics.json` with saved validation/test ROC, PR, calibration, and confusion payloads.
-- The same offline training commands now also persist `models/reports/fairness_report.json`, using held-out months `11-12` predictions plus the protected audit columns only for subgroup evaluation with sample-size guards, saved green/yellow/red flags, calibration-parity detail, and the individual-fairness proxy.
-- The same offline training commands now also persist `models/reports/psi_report.json`, comparing train months `1-8` to test months `11-12` only across the canonical 35 model inputs with deterministic thresholds and saved per-feature statuses.
-- The same offline training commands now also persist `models/reports/global_importance.json`, using the current saved explainability source to produce a deterministic dashboard-ready ranking over the canonical 35 model inputs.
-- The same offline training commands now also persist `models/explainers/dice_explainer.pkl` for the current ensemble runtime bundle, using the validated persisted actionable-counterfactual contract defined in repository source.
-- `backend/app/main.py` now loads the runtime artifact bundle at startup and exposes `/api/health` plus `/api/score`.
-- `backend/app/services/analytics.py` now serves `/api/model-stats` from `metrics.json` and `/api/baseline-comparison` from `baseline_metrics.json` without runtime retraining or ad hoc route-level file parsing.
-- `backend/app/main.py` now also initializes the append-only request logging service for `/api/score`.
-- The checked-in local runtime bundle now loads cleanly for the current stub route surface: `models/explainers/shap_explainer.pkl` deserializes from restored repo source, `models/explainers/dice_explainer.pkl` also validates, `models/reports/global_importance.json` matches the active API contract, and the default request-log path is now writable at repo-root `runtime/logs/requests.jsonl`.
-- `/api/health` now returns `ok` for the checked-in manifest-backed bundle and explicitly reports `artifact_source`, `manifest_backed`, `manifest_version`, and `model_version` alongside loaded, missing, and invalid artifact lists.
-- When `models/preprocessors/text_pca.pkl` is present, request-time semantic dimensions now use the persisted PCA artifact; zero-filled semantic fallback remains only for intentionally PCA-less bundles and tests.
-- When `population_percentiles.json` contains multiple model-specific tables, the runtime artifact loader now resolves the table for the active serving model so manifest-backed ensemble serving can reuse one artifact format.
-- Runtime artifact loading still succeeds when `fairness_report.json` is present alongside the current local scoring bundle; the fairness report remains optional for strict scoring readiness until the fairness API route is added.
-- Runtime artifact loading still succeeds when `psi_report.json` is present alongside the current local scoring bundle; the drift report remains optional for strict scoring readiness until the drift API route is added.
-- Runtime artifact loading still succeeds when `global_importance.json` is present alongside the current local scoring bundle; the report remains optional for strict scoring readiness even though the global-importance analytics route now serves it when available. The loader also normalizes legacy list-shaped payloads defensively if an older saved bundle is encountered.
-- If `metrics.json` or `baseline_metrics.json` is missing, the corresponding analytics endpoint now returns a structured `503` rather than recomputing reports inside the API process.
-- If `fairness_report.json`, `psi_report.json`, or `global_importance.json` is missing, the corresponding analytics endpoint now returns a structured `503` rather than recomputing reports inside the API process.
-- The current stub scoring response now returns per-user SHAP explanations when a valid persisted explainer is present, and it uses the persisted checked-in `dice_explainer.pkl` artifact for counterfactual actions.
+Minimum health checks:
 
-## Runtime Foundation Files
+- `GET /api/health` returns 200.
+- `manifest_backed` is `true` for the checked-in bundle.
+- `model_loaded` is `true`.
 
-- `.env.example` documents local environment variables.
-- `backend/requirements.txt` pins the initial backend, ML, and test dependencies.
-- `backend/app/core/settings.py` loads runtime settings from environment variables.
-- `backend/app/core/paths.py` centralizes repository, data, model, report, and artifact paths.
-- `frontend/package.json` and the Vite entry files provide the initial frontend package scaffold.
+Rollback expectation for future deployments:
 
-## Health Checks
+1. Restore the prior manifest-backed bundle.
+2. Restart the backend.
+3. Verify `/api/health`.
+4. Run a score smoke test with `tests/fixtures/score_request_valid.json`.
+5. Record the rollback in the handoff and state documents.
 
-### Liveness
+## Current Gaps Before Real Deployment
 
-- Endpoint: `GET /api/health`
-- Pass condition: service process is running and returns JSON.
-
-### Readiness
-
-- Endpoint: `GET /api/health`
-- Pass condition: `model_loaded` is true, scoring-critical artifacts are loaded successfully, and `invalid_artifacts` does not contain any scoring-critical bundle entry.
-- Default checked-in local readiness should also report `artifact_source = "manifest"` and `manifest_backed = true`.
-
-### Scoring Smoke Test
-
-- Endpoint: `POST /api/score`
-- Payload: known valid fixture from `tests/fixtures/score_request_valid.json`.
-- Pass condition: status 200, score in 300-850, probability in 0-1, and the response includes explanation/counterfactual fields with checked-in bundle behavior matching the current runtime contract.
-
-## Docker Plan
-
-Expected structure:
-
-```text
-deploy/docker/
-  backend.Dockerfile
-  frontend.Dockerfile
-  docker-compose.yml
-```
-
-Backend image must include only runtime dependencies and the artifact bundle path. Training dependencies may be separated later if image size becomes painful.
-
-## Logging
-
-Backend logs should include:
-
-- Request ID.
-- Endpoint.
-- Status code.
-- Latency.
-- Model version.
-- Artifact manifest version.
-- Scoring failures with stack trace in server logs but sanitized client error.
-
-Prediction logs should be append-only JSONL and must not store raw protected attributes as model inputs.
-The current default path is `runtime/logs/requests.jsonl`, overridable through `ALTERSCORE_REQUEST_LOG_PATH`.
-
-## Rollback Plan
-
-To roll back a model:
-
-1. Keep previous `production_manifest.json` available.
-2. Switch manifest pointer or redeploy previous artifact bundle.
-3. Restart backend.
-4. Verify `/api/health`.
-5. Run scoring smoke test.
-6. Record rollback in `docs/CURRENT_STATE.md` and `docs/MODEL_REGISTRY.md`.
-
-## Production Pilot Notes
-
-For a real MFI pilot, deployment should proceed in stages:
-
-1. Shadow mode beside loan officer decisions.
-2. Collect actual repayment outcomes for 6-12 months.
-3. Retrain on real repayment labels.
-4. Use model as recommendation with human final decision.
-5. Consider autonomous decisions only for defined low-ticket loan thresholds after monitoring proves stability.
+- `deploy/docker/` is still scaffolding only.
+- `deploy/cloud/` is still scaffolding only.
+- `deploy/monitoring/` is still scaffolding only.
+- Release smoke docs need to be finalized after the dashboard work is complete.

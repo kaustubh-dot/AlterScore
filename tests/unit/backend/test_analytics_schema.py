@@ -237,6 +237,11 @@ def test_curve_and_confusion_shapes_match_documented_contracts() -> None:
                 "tpr": 0.9584,
                 "fpr": 0.6607,
                 "fnr": 0.0416,
+                "precision": 0.79,
+                "recall": 0.9584,
+                "specificity": 0.3393,
+                "accuracy": 0.785,
+                "f1": 0.866,
             }
         ]
     )
