@@ -2,6 +2,8 @@ import json
 from pathlib import Path
 import shutil
 
+import joblib
+import numpy as np
 import pytest
 
 from backend.app.core.artifact_loader import (
@@ -13,11 +15,45 @@ from backend.app.core.settings import load_settings
 from backend.ml.registry.production_manifest import (
     MANIFEST_REQUIRED_ARTIFACT_KEYS,
     compute_file_sha256,
+    load_production_manifest,
 )
 from backend.app.services.scoring import score_request_with_bundle
 from backend.ml.data_generation.generator import generate_synthetic_dataset
+from backend.ml.explainability.dice_explainer import (
+    build_default_persisted_dice_explainer,
+    save_persisted_dice_explainer,
+)
+from backend.ml.explainability.shap_explainer import PersistedShapExplainer
+from backend.ml.preprocessing.feature_registry import ALL_MODEL_FEATURES
 from backend.ml.training.classical.baselines import train_baselines
 from backend.ml.training.classical.train_classical import train_classical_models
+
+
+class _DummyPreprocessor:
+    def transform(self, frame):
+        return np.zeros((len(frame), len(ALL_MODEL_FEATURES)), dtype=float)
+
+
+class _DummyTextPca:
+    def transform(self, embeddings):
+        return np.zeros((len(embeddings), 2), dtype=float)
+
+
+class _FixedProbabilityModel:
+    def __init__(self, probability: float) -> None:
+        self.probability = probability
+
+    def predict_proba(self, features):
+        row_count = np.asarray(features).shape[0]
+        probabilities = np.full(row_count, self.probability, dtype=float)
+        return np.column_stack([1.0 - probabilities, probabilities])
+
+
+class _AveragingStackingModel:
+    def predict_proba(self, meta_features):
+        meta_matrix = np.asarray(meta_features, dtype=float)
+        probabilities = np.clip(meta_matrix.mean(axis=1), 0.0, 1.0)
+        return np.column_stack([1.0 - probabilities, probabilities])
 
 
 def test_load_runtime_artifact_bundle_supports_manifest_backed_scoring_bundle(
@@ -176,6 +212,104 @@ def test_load_runtime_artifact_bundle_fails_clearly_for_malformed_manifest(
         load_runtime_artifact_bundle(settings, strict=False)
 
 
+def test_load_runtime_artifact_bundle_validates_ensemble_dependencies(
+    tmp_path,
+) -> None:
+    _prepare_minimal_ensemble_bundle(tmp_path)
+    settings = load_settings({"ALTERSCORE_REPO_ROOT": str(tmp_path)})
+
+    bundle = load_runtime_artifact_bundle(settings, strict=True)
+
+    assert bundle.report.source == "manifest"
+    assert bundle.report.runtime_model_type == "ensemble"
+    assert bundle.report.scoring_ready is True
+    assert "stacking_config" in bundle.report.artifacts_loaded
+    assert "base_models" in bundle.report.artifacts_loaded
+    assert bundle.base_models is not None
+    assert tuple(bundle.base_models) == ("model_a", "model_b")
+
+
+def test_load_runtime_artifact_bundle_rejects_tampered_ensemble_base_model(
+    tmp_path,
+) -> None:
+    artifact_paths = _prepare_minimal_ensemble_bundle(tmp_path)
+    artifact_paths["base_models"]["model_b"].write_text(
+        "not-a-valid-model",
+        encoding="utf-8",
+    )
+    settings = load_settings({"ALTERSCORE_REPO_ROOT": str(tmp_path)})
+
+    bundle = load_runtime_artifact_bundle(settings, strict=False)
+
+    assert bundle.report.scoring_ready is False
+    assert "base_models" in bundle.report.invalid_artifacts
+    assert "base_models" not in bundle.report.artifacts_loaded
+    assert "checksum" in bundle.report.artifact_errors["base_models"]
+    with pytest.raises(ArtifactLoadError, match="base_models"):
+        load_runtime_artifact_bundle(settings, strict=True)
+
+
+def test_load_runtime_artifact_bundle_rejects_tampered_stacking_config(
+    tmp_path,
+) -> None:
+    artifact_paths = _prepare_minimal_ensemble_bundle(tmp_path)
+    artifact_paths["stacking_config"].write_text(
+        json.dumps(
+            {
+                "model_name": "calibrated_stacking",
+                "model_type": "ensemble",
+                "base_model_order": ["model_a", "model_b"],
+                "tampered": True,
+            }
+        ),
+        encoding="utf-8",
+    )
+    settings = load_settings({"ALTERSCORE_REPO_ROOT": str(tmp_path)})
+
+    bundle = load_runtime_artifact_bundle(settings, strict=False)
+
+    assert bundle.report.scoring_ready is False
+    assert "stacking_config" in bundle.report.invalid_artifacts
+    assert "stacking_config" not in bundle.report.artifacts_loaded
+    assert "checksum" in bundle.report.artifact_errors["stacking_config"]
+    with pytest.raises(ArtifactLoadError, match="stacking_config"):
+        load_runtime_artifact_bundle(settings, strict=True)
+
+
+def test_load_runtime_artifact_bundle_rejects_stale_ensemble_base_order(
+    tmp_path,
+) -> None:
+    _prepare_minimal_ensemble_bundle(
+        tmp_path,
+        base_model_names=("model_a", "model_b"),
+        stacking_order=("model_a",),
+    )
+    settings = load_settings({"ALTERSCORE_REPO_ROOT": str(tmp_path)})
+
+    bundle = load_runtime_artifact_bundle(settings, strict=False)
+
+    assert bundle.report.scoring_ready is False
+    assert "base_models" in bundle.report.invalid_artifacts
+    assert "must match stacking_config base_model_order" in bundle.report.artifact_errors[
+        "base_models"
+    ]
+
+
+def test_production_manifest_requires_ensemble_dependency_sections(tmp_path) -> None:
+    artifact_paths = _prepare_minimal_ensemble_bundle(tmp_path)
+    manifest_path = tmp_path / "models" / "registry" / "production_manifest.json"
+    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    payload.pop("base_models")
+    payload["stacking_config"] = {
+        "path": _relative_artifact_path(artifact_paths["stacking_config"], tmp_path),
+        "sha256": compute_file_sha256(artifact_paths["stacking_config"]),
+    }
+    manifest_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="base_models"):
+        load_production_manifest(manifest_path)
+
+
 def _prepare_runtime_bundle(
     tmp_path,
     *,
@@ -246,6 +380,144 @@ def _prepare_runtime_bundle(
             artifact_paths["shap_explainer"],
         )
     return artifact_paths
+
+
+def _prepare_minimal_ensemble_bundle(
+    tmp_path,
+    *,
+    base_model_names: tuple[str, ...] = ("model_a", "model_b"),
+    stacking_order: tuple[str, ...] | None = None,
+) -> dict[str, object]:
+    model_root = tmp_path / "models"
+    artifact_paths = {
+        "runtime_model": model_root / "artifacts" / "calibrated_stacking.pkl",
+        "preprocessor": model_root / "preprocessors" / "preprocessor.pkl",
+        "text_pca": model_root / "preprocessors" / "text_pca.pkl",
+        "shap_explainer": model_root / "explainers" / "shap_explainer.pkl",
+        "dice_explainer": model_root / "explainers" / "dice_explainer.pkl",
+        "metrics": model_root / "reports" / "metrics.json",
+        "baseline_metrics": model_root / "reports" / "baseline_metrics.json",
+        "fairness_report": model_root / "reports" / "fairness_report.json",
+        "psi_report": model_root / "reports" / "psi_report.json",
+        "global_importance": model_root / "reports" / "global_importance.json",
+        "population_percentiles": model_root / "reports" / "population_percentiles.json",
+        "stacking_config": model_root / "artifacts" / "calibrated_stacking_config.json",
+        "base_models": {
+            model_name: model_root / "artifacts" / f"{model_name}.pkl"
+            for model_name in base_model_names
+        },
+    }
+    for artifact_path in [
+        value
+        for key, value in artifact_paths.items()
+        if key != "base_models"
+    ]:
+        artifact_path.parent.mkdir(parents=True, exist_ok=True)
+    for artifact_path in artifact_paths["base_models"].values():
+        artifact_path.parent.mkdir(parents=True, exist_ok=True)
+
+    joblib.dump(_AveragingStackingModel(), artifact_paths["runtime_model"])
+    joblib.dump(_DummyPreprocessor(), artifact_paths["preprocessor"])
+    joblib.dump(_DummyTextPca(), artifact_paths["text_pca"])
+    joblib.dump(
+        PersistedShapExplainer(
+            model_name="stacking_ensemble",
+            feature_names=tuple(ALL_MODEL_FEATURES),
+            background_mean=np.zeros(len(ALL_MODEL_FEATURES), dtype=float),
+            background_size=1,
+            coefficients=np.zeros(len(ALL_MODEL_FEATURES), dtype=float),
+        ),
+        artifact_paths["shap_explainer"],
+    )
+    save_persisted_dice_explainer(
+        build_default_persisted_dice_explainer(model_name="stacking_ensemble"),
+        artifact_paths["dice_explainer"],
+    )
+    for index, artifact_path in enumerate(artifact_paths["base_models"].values()):
+        joblib.dump(_FixedProbabilityModel(0.4 + index * 0.2), artifact_path)
+
+    artifact_paths["metrics"].write_text(json.dumps({}), encoding="utf-8")
+    artifact_paths["baseline_metrics"].write_text(json.dumps([]), encoding="utf-8")
+    artifact_paths["fairness_report"].write_text(json.dumps({}), encoding="utf-8")
+    artifact_paths["psi_report"].write_text(json.dumps({}), encoding="utf-8")
+    artifact_paths["global_importance"].write_text(json.dumps({}), encoding="utf-8")
+    artifact_paths["population_percentiles"].write_text(json.dumps({}), encoding="utf-8")
+    artifact_paths["stacking_config"].write_text(
+        json.dumps(
+            {
+                "model_name": "calibrated_stacking",
+                "model_type": "ensemble",
+                "base_model_order": list(stacking_order or base_model_names),
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+    _write_minimal_ensemble_manifest(tmp_path, artifact_paths)
+    return artifact_paths
+
+
+def _write_minimal_ensemble_manifest(tmp_path, artifact_paths: dict[str, object]) -> Path:
+    manifest_path = tmp_path / "models" / "registry" / "production_manifest.json"
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    artifact_entries = {
+        artifact_key: {
+            "path": _relative_artifact_path(artifact_path, tmp_path),
+            "sha256": compute_file_sha256(artifact_path),
+        }
+        for artifact_key, artifact_path in artifact_paths.items()
+        if artifact_key in MANIFEST_REQUIRED_ARTIFACT_KEYS
+    }
+    base_model_entries = {
+        model_name: {
+            "path": _relative_artifact_path(artifact_path, tmp_path),
+            "sha256": compute_file_sha256(artifact_path),
+        }
+        for model_name, artifact_path in artifact_paths["base_models"].items()
+    }
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "manifest_schema_version": "1.0.0",
+                "manifest_version": "test_ensemble_bundle_v1",
+                "model_version": "0.2.0",
+                "run_id": "20260516_095448_ensemble_promotion",
+                "created_at": "2026-05-16T09:54:48Z",
+                "code_ref": "test-code-ref",
+                "data_version": "synthetic_v0.1.0",
+                "feature_registry_version": "0.1.0",
+                "runtime_model_name": "stacking_ensemble",
+                "runtime_model_type": "ensemble",
+                "target": "repayment_label",
+                "split": {
+                    "train": "cohort_month 1-8",
+                    "validation": "cohort_month 9-10",
+                    "test": "cohort_month 11-12",
+                },
+                "artifacts": artifact_entries,
+                "base_models": base_model_entries,
+                "stacking_config": {
+                    "path": _relative_artifact_path(
+                        artifact_paths["stacking_config"],
+                        tmp_path,
+                    ),
+                    "sha256": compute_file_sha256(artifact_paths["stacking_config"]),
+                },
+                "metrics_summary": {"test_auc_roc": 0.8},
+                "fairness_summary": {"verdict": "acceptable"},
+                "drift_summary": {"verdict": "stable"},
+                "promotion_status": "promoted",
+                "promotion_notes": "Synthetic ensemble manifest for loader tests.",
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+    return manifest_path
+
+
+def _relative_artifact_path(path: Path, repo_root: Path) -> str:
+    return str(path.relative_to(repo_root)).replace("\\", "/")
 
 
 def _write_manifest(

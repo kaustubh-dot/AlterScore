@@ -151,6 +151,18 @@ def load_production_manifest(path: str | Path) -> ProductionManifest:
     if "stacking_config" in payload:
         stacking_config = _parse_artifact_entry(payload, "stacking_config")
 
+    if str(payload["runtime_model_type"]) == "ensemble":
+        if not base_models:
+            raise ValueError(
+                "production manifest for an ensemble runtime model must declare "
+                "a non-empty 'base_models' artifact map."
+            )
+        if stacking_config is None:
+            raise ValueError(
+                "production manifest for an ensemble runtime model must declare "
+                "a 'stacking_config' artifact entry."
+            )
+
     return ProductionManifest(
         manifest_schema_version=str(payload["manifest_schema_version"]),
         manifest_version=str(payload["manifest_version"]),
