@@ -194,11 +194,11 @@ Current runtime note:
 }
 ```
 
-Current scaffold note:
+Current runtime note:
 - The response fields above remain required, and the checked-in bundle now returns real `explanation` items when the persisted SHAP artifact loads successfully.
 - The checked-in bundle now returns `counterfactual_actions` from the persisted `models/explainers/dice_explainer.pkl` artifact, which stores bounded actionable counterfactual policies against the loaded model bundle and is validated at startup.
 - The fallback may legitimately report `estimated_score_gain = 0` when the applicant is already at the current score ceiling but a simulated change still improves repayment probability.
-- When `models/preprocessors/text_pca.pkl` is present, runtime semantic dimensions use the persisted PCA artifact; the temporary zero-fill fallback remains only for intentionally PCA-less test or stub bundles.
+- When `models/preprocessors/text_pca.pkl` is present, runtime semantic dimensions use the persisted PCA artifact; the temporary zero-fill fallback remains only for intentionally PCA-less test bundles.
 - Score requests are now append-logged to `runtime/logs/requests.jsonl` by default, without storing the raw answers or behavioral payload in the JSONL entry.
 - Structured `500` errors now expose only a sanitized error type in the client payload; full failure details remain in server-side logs.
 
@@ -262,7 +262,7 @@ Uses the `GlobalImportanceResponse` shape documented below.
 
 Current foundation note:
 - The score-distribution endpoint now serves the saved histogram and summary payload from `models/reports/population_percentiles.json`.
-- The response reflects the active runtime model's saved percentile table when the artifact contains multiple model-specific payloads.
+- The response reflects the active runtime model's saved percentile table when available; otherwise it falls back to the artifact's documented default model table.
 - If `population_percentiles.json` is missing at startup, the endpoint returns a structured `503` with `missing_artifacts`.
 
 ### Response
@@ -391,7 +391,12 @@ Current foundation note:
     "tn": 170,
     "tpr": 0.9584,
     "fpr": 0.6607,
-    "fnr": 0.0416
+    "fnr": 0.0416,
+    "precision": 0.79,
+    "recall": 0.9584,
+    "specificity": 0.3393,
+    "accuracy": 0.785,
+    "f1": 0.866
   }
 ]
 ```
@@ -526,7 +531,12 @@ Current foundation note:
     "tn": 170,
     "tpr": 0.9584,
     "fpr": 0.6607,
-    "fnr": 0.0416
+    "fnr": 0.0416,
+    "precision": 0.79,
+    "recall": 0.9584,
+    "specificity": 0.3393,
+    "accuracy": 0.785,
+    "f1": 0.866
   }
 ]
 ```
@@ -535,7 +545,7 @@ Current foundation note:
 
 ```json
 {
-  "model_name": "xgboost",
+  "model_name": "logistic_regression",
   "model_type": "classical",
   "items": [
     {

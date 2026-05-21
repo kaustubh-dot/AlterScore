@@ -1,102 +1,119 @@
 # AlterScore
 
 AlterScore is an alternative credit scoring platform for unbanked and thin-file
-borrowers. The project combines psychometric assessment answers, behavioral
-telemetry, and local NLP signals to generate credit scores, explanations,
-counterfactual improvement actions, and evaluator analytics.
+borrowers. It combines psychometric answers, behavioral telemetry, and local
+NLP signals to produce credit scores, explanations, counterfactual actions, and
+analytics-ready reporting.
 
-## Status
+## Current Working State
 
-Backend Tracks A–D+ are complete. The checked-in manifest-backed runtime bundle
-serves a **calibrated stacking ensemble** (6 base models: Logistic, RF, XGBoost,
-LightGBM, TabNet, MLP) with a calibrated meta-learner. The bundle includes the
-preprocessor, text PCA, SHAP and DICE explainers, and all governance reports
-(fairness, PSI, global importance, metrics, population percentiles). The scoring
-API (`/api/score`) returns real per-user SHAP factors, counterfactual actions,
-and loan eligibility through the full ensemble inference path. The frontend
-borrower experience (Track E) is the next milestone.
+- Backend runtime is implemented and manifest-backed.
+- The checked-in production bundle serves a calibrated stacking ensemble with
+  six base models plus saved preprocessors, explainers, and reports.
+- The borrower frontend is implemented in React/Vite.
+- The evaluator dashboard exists as a shell, but full analytics-panel wiring is
+  still pending.
+- This cleanup pass does not modify core scoring or model logic.
 
-## Quick Start
+## Quickstart
+
+Run from the repository root.
 
 ```powershell
-# 1. Install backend dependencies
-cd backend
-python -m pip install -r requirements.txt
+# 1. Verify the supported local toolchain
+& 'C:\Users\Kaustubh\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe' scripts\setup\check_environment.py
 
-# 2. Start backend (loads manifest-backed bundle automatically)
-python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+# 2. Create a fresh Python 3.12 environment
+& 'C:\Users\Kaustubh\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe' -m venv backend\.venv-cleanup
 
-# 3. Verify backend health
-curl http://localhost:8000/api/health
+# 3. Install backend dependencies
+backend\.venv-cleanup\Scripts\python.exe -m pip install -r backend\requirements.txt
 
-# 4. Install frontend dependencies
-cd ../frontend
-npm install
+# 4. Optional: install backend test dependencies
+backend\.venv-cleanup\Scripts\python.exe -m pip install -r backend\requirements-dev.txt
 
-# 5. Start frontend dev server
-npm run dev -- --host 127.0.0.1 --port 5173
-
-# 6. Run tests
-cd ..
-python -m pytest tests/ -v
+# 5. Start the backend from the repo root
+backend\.venv-cleanup\Scripts\python.exe -m uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000
 ```
+
+In a second terminal:
+
+```powershell
+cd frontend
+& 'C:\Program Files\nodejs\npm.cmd' install
+& 'C:\Program Files\nodejs\npm.cmd' run dev -- --host 127.0.0.1 --port 5173
+```
+
+Then verify:
+
+- Backend health: `http://127.0.0.1:8000/api/health`
+- Frontend app: `http://127.0.0.1:5173`
+
+## Environment Requirements
+
+- Python `3.12.x`
+- Node.js `>=18 <25`
+- npm `>=9 <12`
+- scikit-learn `>=1.8,<1.9`
+
+Python `3.10` is the syntax floor for the codebase, but the recommended local
+setup target is Python `3.12.x`. Python `3.14.x` is not part of the supported
+local workflow for this repository today.
 
 ## Repository Guide
 
 | Directory | Purpose |
 |---|---|
-| `docs/` | Project memory, contracts, workflow rules, and roadmap |
-| `backend/` | FastAPI backend, ML pipelines, and runtime inference |
-| `frontend/` | React/Vite package scaffold for borrower and dashboard UI |
-| `tests/` | Unit, integration, and fixture files (145 tests) |
-| `models/` | Checked-in runtime artifacts and production manifest |
-| `scripts/` | CLI entrypoints for offline training pipelines |
-| `data/` | Generated datasets (gitignored except `.gitkeep`) |
+| `backend/` | FastAPI backend, runtime loading, inference, and offline ML modules |
+| `frontend/` | React/Vite borrower UI and evaluator dashboard shell |
+| `models/` | Checked-in manifest-backed runtime artifacts and reports |
+| `scripts/` | Setup, data, training, and maintenance entrypoints |
+| `tests/` | Unit and integration coverage |
+| `docs/` | Setup, architecture, contracts, roadmap, and project memory |
+| `data/` | Generated datasets and validation outputs |
 
 ## Key Documentation
 
-| Document | When To Read It |
+| Document | Purpose |
 |---|---|
-| [BACKEND_RUNTIME_ARCHITECTURE.md](docs/BACKEND_RUNTIME_ARCHITECTURE.md) | **Read first** — explains the ensemble serving architecture and what not to break |
-| [FRONTEND_INTEGRATION_GUIDE.md](docs/FRONTEND_INTEGRATION_GUIDE.md) | Before writing any frontend code — covers all API contracts, telemetry, rendering guidance |
-| [API_CONTRACTS.md](docs/API_CONTRACTS.md) | Reference for all request/response schemas |
-| [ROADMAP.md](docs/ROADMAP.md) | Track status and implementation order |
-| [TODO.md](docs/TODO.md) | Detailed task queue |
-| [CURRENT_STATE.md](docs/CURRENT_STATE.md) | What exists, what doesn't, architectural decisions |
-| [ENGINEERING_CONTEXT.md](docs/ENGINEERING_CONTEXT.md) | Deep technical context and constraints |
-| [TESTING_STRATEGY.md](docs/TESTING_STRATEGY.md) | Test layout, requirements, and acceptance gates |
-| [DEPLOYMENT.md](docs/DEPLOYMENT.md) | Environment variables, Docker plan, rollback |
-| [DECISIONS.md](docs/DECISIONS.md) | Architecture decision records |
-| [AI_WORKFLOW_RULES.md](docs/AI_WORKFLOW_RULES.md) | Required reading before AI-assisted sessions |
+| [docs/SETUP.md](docs/SETUP.md) | Setup, onboarding, troubleshooting, and known current issues |
+| [backend/README.md](backend/README.md) | Backend startup, runtime expectations, and health checks |
+| [frontend/README.md](frontend/README.md) | Frontend startup and API connectivity notes |
+| [docs/BACKEND_RUNTIME_ARCHITECTURE.md](docs/BACKEND_RUNTIME_ARCHITECTURE.md) | Runtime bundle and scoring-path architecture |
+| [docs/FRONTEND_INTEGRATION_GUIDE.md](docs/FRONTEND_INTEGRATION_GUIDE.md) | Score flow and analytics integration guidance |
+| [docs/API_CONTRACTS.md](docs/API_CONTRACTS.md) | Request and response contracts |
+| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Deployment expectations and runtime environment variables |
+| [docs/CURRENT_STATE.md](docs/CURRENT_STATE.md) | Snapshot of what is working right now |
+| [docs/TESTING_STRATEGY.md](docs/TESTING_STRATEGY.md) | Test layout, expectations, and milestone gates |
 
-## Environment Requirements
+## Known Current Issues
 
-- **Python** `>=3.10` — tested on 3.14.3
-- **scikit-learn** `>=1.8.0` — checked-in artifacts require this version
-- **Node.js** `>=18` — frontend build
-- See `backend/requirements.txt` and `frontend/package.json` for pinned versions
+- Scoring logic is still under audit and should not be treated as finalized.
+- Model behavior and score calibration remain under investigation for the next
+  debugging phase.
+- The evaluator dashboard shell is present, but full panel wiring is incomplete.
+- Frontend coverage is still lighter than backend and pipeline coverage.
+- The WebGL/R3F frontend build may emit a non-critical bundle-size warning.
+- Fresh `npm install` currently reports 5 frontend dependency vulnerabilities in
+  transitive packages; `npm audit` could not be completed in this environment
+  without registry access.
 
-## Branch Strategy
-
-- `main` — stable, merged only after full test suite passes
-- `feature/ensemble-serving-runtime` — current development branch (backend complete, frontend next)
-- Frontend work should branch from `main` after merge
-
-## Test Suite
+## Validation Commands
 
 ```powershell
-# Full suite (145 tests, ~12 minutes)
-python -m pytest tests/ -v
+# Backend tests
+backend\.venv-cleanup\Scripts\python.exe -m pytest tests\ -v
 
-# Fast feedback (unit + API smoke, ~2 minutes)
-python -m pytest tests/unit/ tests/integration/api/ -v
+# Focused API smoke coverage
+backend\.venv-cleanup\Scripts\python.exe -m pytest tests\integration\api\test_checked_in_runtime_bundle_smoke.py -v
 
-# Checked-in bundle smoke only (~20 seconds)
-python -m pytest tests/integration/api/test_checked_in_runtime_bundle_smoke.py -v
+# Frontend production build
+cd frontend
+& 'C:\Program Files\nodejs\npm.cmd' run build
 ```
 
 ## Workflow
 
-Follow `docs/AI_WORKFLOW_RULES.md` before making changes. It defines the
-required startup checks, testing expectations, and documentation update rules
-for this repository.
+Follow [docs/AI_WORKFLOW_RULES.md](docs/AI_WORKFLOW_RULES.md) before making
+changes. It defines the repository's expectations for startup checks,
+documentation updates, testing, and git hygiene.

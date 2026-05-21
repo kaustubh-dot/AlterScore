@@ -1,114 +1,68 @@
 # AlterScore TODO
 
-## Completed — Track D+ (Ensemble Serving Runtime) ✅
+## Completed Backend Scope
 
-Branch: `feature/ensemble-serving-runtime`
+- [x] Track A governance: fairness, calibration parity, individual-fairness proxy.
+- [x] Track B neural training: TabNet and residual MLP.
+- [x] Track C ensemble and calibration: calibrated stacking ensemble.
+- [x] Track D explainability and promotion: SHAP, DICE, global importance, manifest promotion.
+- [x] Track D+ runtime serving: ensemble adapter, loader integration, score routing, manifest-backed validation.
+- [x] API endpoints: health, score, and report-backed analytics.
+- [x] Checked-in runtime bundle: model artifacts, preprocessors, explainers, reports, manifest.
 
-### Phase D+.1 — Ensemble Inference Adapter ✅
-- [x] Create `backend/ml/inference/ensemble_adapter.py`
-  - [x] `EnsembleInferenceBundle` dataclass
-  - [x] `predict_ensemble_proba()` — preprocessed features → base probabilities → meta-learner
-  - [x] `_predict_base_model_proba()` — handle sklearn, TabNet, and MLP inference
-  - [x] `WrappedEnsembleModel` — `predict_proba(preprocessed_35)` facade for DICE
-- [x] Create `tests/unit/ml/test_ensemble_adapter.py` (5 tests)
+## Completed Frontend Scope
 
-### Phase D+.2 — Artifact Loader Extension ✅
-- [x] Extend `LoadedArtifactBundle` with `base_models` and `stacking_config` fields
-- [x] Extend `production_manifest.py` with optional `base_models` and `stacking_config` schema
-- [x] Load 6 base models when `runtime_model_type == "ensemble"` (joblib / TabNet / torch)
-- [x] Load stacking config sidecar and validate base model order
+- [x] React/Vite app with routes for `/`, `/assessment`, `/results`, and `/dashboard`.
+- [x] Landing experience with current visual direction.
+- [x] Assessment question data aligned to the backend score contract.
+- [x] Answer renderers for number, MCQ, binary choice, Likert, and open text.
+- [x] Behavioral telemetry capture and score payload construction.
+- [x] Retry-safe score submission without clearing saved answers.
+- [x] Processing screen and persisted results handoff.
+- [x] Results page with animated score reveal, SHAP bars, counterfactual actions, eligibility, tips, and sharing/export.
+- [x] Initial evaluator dashboard shell with backend health check.
 
-### Phase D+.3 — Scoring Service Integration ✅
-- [x] `ScoringService.__init__` constructs `EnsembleInferenceBundle` when base models are loaded
-- [x] `_predict_repayment_probability` routes through `predict_ensemble_proba()` when ensemble
-- [x] DICE receives `WrappedEnsembleModel` when ensemble is active
+## Current Frontend TODO
 
-### Phase D+.4 — Explainability Refresh ✅
-- [x] SHAP surrogate validated against ensemble predictions
-- [x] DICE explainer regenerated
-- [x] Global importance, fairness, PSI reports regenerated
+### Track E - Borrower QA And Tests
 
-### Phase D+.5 — Manifest Promotion ✅
-- [x] Full artifact pipeline executed via `promote_ensemble.py`
-- [x] SHA256 checksums computed for all 18 artifacts
-- [x] `production_manifest.json` declares `stacking_ensemble` with `base_models` + `stacking_config`
+- [ ] Run browser screenshot QA for landing, assessment, processing, and results.
+- [ ] Verify mobile layout at 375px and common desktop widths.
+- [ ] Add tests for `frontend/src/data/questions.js`.
+- [ ] Add tests for `frontend/src/services/scorePayload.js`.
+- [ ] Add tests for retry-safe assessment submission.
+- [ ] Add tests for results rendering with a mocked score response.
+- [ ] Review R3F bundle size and decide whether manual chunking is needed.
 
-### Phase D+.6 — Testing & Validation ✅
-- [x] Ensemble adapter unit tests (5 passing)
-- [x] Smoke tests updated for `stacking_ensemble` / `v0.2.0`
-- [x] Full test suite: 145 passed, 0 failed
+### Track F - Evaluator Dashboard
 
-### Documentation Updates ✅
-- [x] `CURRENT_STATE.md` — ensemble as active runtime
-- [x] `ROADMAP.md` — Track D+ complete, Track E next
-- [x] `TODO.md` — all D+ tasks checked
-- [x] `BACKEND_RUNTIME_ARCHITECTURE.md` — updated for ensemble serving
-- [x] `DEPLOYMENT.md` — updated artifact checklist for ensemble
-- [x] `DECISIONS.md` — added DEC-0017 for ensemble serving
-- [x] `README.md` — reflects ensemble serving
-- [x] `MODEL_REGISTRY.md` — updated for ensemble runtime
+- [ ] Build dashboard API helpers for all analytics endpoints.
+- [ ] Add independent loading/error/success state per dashboard panel.
+- [ ] Implement model metrics and baseline comparison panels.
+- [ ] Implement global importance and score distribution visualizations.
+- [ ] Implement ROC, PR, calibration, and confusion-matrix visualizations.
+- [ ] Implement fairness and drift panels.
+- [ ] Add mobile overflow handling for charts and tables.
+- [ ] Add dashboard tests with mocked endpoint payloads.
 
----
+## Backend Future Enhancements
 
-## Backend Completion (Tracks A–D+)
+- [ ] Add a focused test for manifest checksum tamper detection.
+- [ ] Add a focused test for manifest-backed health after future promotions.
+- [ ] Review `/api/health` for any additional fields needed by the dashboard.
+- [ ] Decide whether to keep the lightweight persisted counterfactual artifact contract or migrate to a fuller `dice_ml` object.
+- [ ] Investigate lazy-loading PyTorch/TabNet base models to reduce cold start time.
 
-### Completed Backend Items
-- [x] All governance items (calibration parity, individual fairness, fairness report)
-- [x] TabNet + MLP neural training (12 smoke tests)
-- [x] Calibrated stacking ensemble training (6 smoke tests)
-- [x] SHAP + DICE + global importance + fairness + PSI artifacts
-- [x] Full promotion pipeline (`promote_ensemble.py`)
-- [x] Phase 7: Model Training (Classical & TabNet/MLP)
-- [x] Phase 8: Fairness & Metrics
-- [x] Phase 9.1-9.2: API Endpoints (Health, Analytics)
-- [x] Phase 9.3: Score Endpoint
-- [x] **Track D+: Ensemble Serving Runtime & Explainability** (Completed)
-- [x] Implement SHAP and DICE for Ensemble
-- [x] Finalize backend architecture
-- [x] Backend Feature Complete & Freeze
+## Deployment TODO
 
-### Open Backend Items (Future Enhancements)
-- [ ] Focused test for manifest checksum tamper detection
-- [ ] Focused test for manifest-backed health after future promotions
-- [ ] Review `/api/health` for additional fields needed by frontend dashboard
-- [ ] Decide whether lightweight persisted counterfactual contract remains or migrates to full `dice_ml`
-- [ ] Lazy-load PyTorch/TabNet at startup to reduce cold start time
+- [ ] Backend Dockerfile.
+- [ ] Frontend Dockerfile.
+- [ ] `docker-compose.yml`.
+- [ ] Release smoke-test checklist.
+- [ ] Demo walkthrough script.
+- [ ] Rollback checklist tied to manifest versions.
 
----
+## Cleanup TODO
 
-## Frontend TODO (Unblocked)
-
-### Track E — Frontend Borrower Experience
-- [x] E.1 Foundation (design tokens, question data, router, landing page)
-  - [x] Added Vite/React routes for `/`, `/assessment`, `/results`, `/dashboard`
-  - [x] Added premium dark design system, responsive layout, GSAP motion, WebGL layers, and Web3/fintech art direction
-  - [x] Added persistent R3F particle lattice, WebGL grid, split boot loader, custom cursor, film grain, pinned manifesto, and pillar cards
-  - [x] Added assessment question data aligned to PRD core questions plus backend-required score-contract fields
-- [x] E.2 Assessment flow (question renderer, telemetry, submit handler)
-  - [x] Added renderers for number, MCQ, binary choice, Likert, and open text
-  - [x] Added section progress, persisted answers, behavioral telemetry, session IDs, and retry-safe submit
-  - [x] Built `POST /api/score` payloads using the documented answer and behavioral contracts
-- [x] E.3 Results page (score gauge, SHAP bars, actions, eligibility)
-  - [x] Added animated score gauge, percentile callout, eligibility card, SHAP factor bars, counterfactual actions, tips, and PNG/WhatsApp share flow
-- [ ] E.4 Polish (mobile, loading states, error handling, tests)
-  - [x] Added mobile-responsive layouts and 44px+ controls for the borrower flow
-  - [x] Added assessment network-error retry without clearing answers
-  - [x] Reworked borrower UI into the current Web3/WebGL credit-intelligence direction with processing and cinematic results reveal
-  - [ ] Add browser screenshot QA once local Chrome/Playwright permissions are available
-  - [ ] Add focused frontend unit/E2E tests for payload construction, telemetry, and full assessment-to-results flow
-
-### Track F — Evaluator Dashboard
-- [ ] F.1 Foundation (layout, data hooks, error isolation)
-  - [x] Added first dashboard shell and backend health panel
-  - [ ] Build independent fetch/data-state hooks for all analytics panels
-- [ ] F.2 Panels (10 analytics panels)
-- [ ] F.3 Polish (mobile, responsive charts)
-
----
-
-## Deployment TODO (Blocked Until E+F Complete)
-
-### Track G — Deployment & Demo
-- [ ] Docker assets (backend + frontend Dockerfiles, docker-compose)
-- [ ] Release documentation (startup, env vars, rollback, smoke tests)
-- [ ] Demo polish (walkthrough script, demo data, release checklist)
+- [ ] Remove or repair local restricted `runtime/pytest-*` directories outside version control if they continue to interfere with local tools.
+- [ ] Keep generated frontend `dist/`, local virtualenvs, caches, and logs ignored and out of commits.

@@ -30,7 +30,7 @@ def get_risk_band(score: int) -> str:
 
 
 def get_loan_eligibility(score: int) -> dict[str, Any]:
-    """Return a bounded loan-eligibility stub aligned with the response schema."""
+    """Return bounded loan-eligibility guidance aligned with the response schema."""
 
     risk_band = get_risk_band(score)
     if risk_band == "excellent":

@@ -1,35 +1,53 @@
 # Current State
 
-**Date:** May 2026  
-**Phase:** Track E borrower frontend implemented — Track F dashboard pending  
-**Active Runtime:** Calibrated Stacking Ensemble v0.2.0  
+**Date:** May 22, 2026
+**Phase:** Repository stabilization before scoring/debugging audit
+**Active Runtime:** Calibrated stacking ensemble v0.2.0
 **Branch:** `main`
 
 ## Status Summary
 
-The **backend architecture is complete and frozen**. The calibrated stacking ensemble is the active production runtime model, serving through the `EnsembleInferenceBundle` adapter. All 12 API endpoints are stable and tested. All governance reports, explainability artifacts, and the production manifest are checksum-verified and committed.
+The backend is implemented and should be treated as frozen for routine product
+work during this cleanup phase. The default startup path is the repository-root
+command `python -m uvicorn backend.app.main:app`, which loads
+`models/registry/production_manifest.json`, validates manifest checksums, and
+serves the checked-in artifact bundle.
 
-No further backend modifications should be made without explicit architectural review.
+The borrower frontend is implemented in `frontend/` and includes the landing
+page, assessment flow, processing state, results rendering, score sharing, and
+API submission to `/api/score`. The evaluator dashboard currently exists as a
+health-backed shell and still needs complete analytics-panel wiring.
 
-The Track E borrower frontend now has a premium dark React experience in `frontend/`: routed landing, assessment, results, and dashboard entry pages; an immersive Web3/WebGL credit-intelligence visual system; persistent React Three Fiber particle lattice and grid scene; GSAP split boot loader; custom cursor; cinematic grain overlay; Lenis smooth scrolling; scroll-pinned manifesto and pillar sections; score-contract question data; behavioral telemetry capture; retry-safe `/api/score` submission; processing screen; animated results reveal with 3D gauge arc; SHAP factor bars; counterfactual action cards; loan eligibility visualization; improvement tips; and PNG/WhatsApp share support.
+## What Is Stable
 
-## What Is Frozen
+- Manifest-backed backend startup
+- Checked-in runtime artifact bundle under `models/`
+- Score, health, and analytics API contracts
+- Borrower assessment and results flow
+- Backend and pipeline test layout
 
-- Feature registry (35 features)
-- Preprocessing pipeline (fitted ColumnTransformer)
-- Ensemble inference adapter (6 base models → meta-learner)
-- Production manifest (SHA256-verified, 18+ artifacts)
-- All analytics endpoints and governance reports
-- SHAP and DICE explainability pipelines
+## What Remains Open
 
-## Immediate Next Steps (Track E)
+- Scoring logic audit is still pending.
+- Model behavior and score calibration are still under investigation.
+- Dashboard endpoint wiring and panel UX are incomplete.
+- Frontend-focused test coverage still needs expansion.
+- Deployment assets such as Docker files are still placeholders or absent.
 
-1. Run browser screenshot QA for the WebGL landing hero, assessment flow, and results reveal once local Chrome/Playwright permissions are available.
-2. Add focused frontend tests for question data, telemetry computation, payload construction, and retry-safe submit.
-3. Build Track F dashboard data hooks and independent analytics panels.
-4. Continue bundle optimization for the React Three Fiber vendor chunk if production Lighthouse performance becomes a demo concern.
+## Known Current Issues
 
-## Blocking Issues
+- Python `3.12.x` is the supported local setup target; Python `3.14.x` is not.
+- A fresh backend dependency install in this synced Windows workspace resolved
+  dependencies successfully but hit a local file-lock error inside the temporary
+  virtual environment during package installation.
+- The frontend build can emit a non-critical bundle-size warning because of the
+  WebGL/R3F stack.
+- Some deployment directories remain scaffolding only and are not yet
+  production-ready assets.
 
-* The default checked-in manifest/report checksums in this local checkout did not produce `/api/health` status `ok` until a temporary manifest copy with current file hashes was used for local verification. No backend/model files were modified.
-* Local backend verification on macOS required making `libomp.dylib` visible to XGBoost in the temporary runtime environment.
+## Immediate Next Steps
+
+1. Finish the scoring/debugging audit without changing unrelated runtime docs again.
+2. Add focused frontend tests for question data, payload assembly, retry behavior, and result rendering.
+3. Wire the dashboard to the existing analytics endpoints with independent panel states.
+4. Add deployment packaging once Track F is functional.

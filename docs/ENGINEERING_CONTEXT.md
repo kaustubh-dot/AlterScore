@@ -72,8 +72,8 @@ Before any AI agent edits the repository, it must read and follow `docs/AI_WORKF
 - Landing page for product entry.
 - Assessment page with 27-question flow, section transitions, progress, validation, telemetry capture, and resilient submit retry.
 - Results page with score gauge, risk band, percentile, eligibility, SHAP factor bars, DICE actions, improvement tips, and WhatsApp-shareable card export.
-- Dashboard page with model comparison, baseline comparison, global importance, ROC, PR, calibration, score distribution, confusion matrix, drift, fairness, and data inspection.
-- Shared components for loading, error boundaries, tables, charts, formatting, and device/time telemetry.
+- Dashboard page currently has a health-backed shell and placeholder governance panels; full analytics panels are Track F work.
+- Shared hooks/services currently cover API requests, score payload construction, scroll observation, Lenis, and magnetic-button interactions.
 
 ### Data Pipeline Requirements
 
@@ -99,19 +99,19 @@ Before any AI agent edits the repository, it must read and follow `docs/AI_WORKF
 
 - Global feature importance: SHAP mean absolute values, top features, and summary plot.
 - Per-user explanation: top 6 SHAP factors with direction, value, display name, and contribution.
-- Counterfactual actions: the checked-in local runtime bundle now uses a persisted `dice_explainer.pkl` artifact that emits 2-3 bounded actionable suggestions for the current logistic model, while future production bundles may decide whether to keep this lightweight contract or migrate to a fuller `dice_ml` object.
+- Counterfactual actions: the checked-in local runtime bundle uses a persisted `dice_explainer.pkl` artifact that emits bounded actionable suggestions through the active runtime path. With the ensemble bundle, DICE uses `WrappedEnsembleModel` so simulated actions flow through the six base models and calibrated meta-learner.
 - Plain-language tip generation mapped from negative or weak factors.
 
 ### Ensemble Serving Architecture (Track D+)
 
-- The calibrated stacking ensemble is training-complete but not yet serving-complete.
-- The scoring service currently sends 35 preprocessed features to `model.predict_proba()`. The stacking meta-learner expects 6 base-model probability columns.
-- An ensemble inference adapter (`backend/ml/inference/ensemble_adapter.py`) must bridge this gap by: loading 6 base models at startup, running each base model on the preprocessed features, stacking the 6 probability outputs, and passing them to the calibrated meta-learner.
-- The adapter must handle three inference APIs: sklearn `.predict_proba()`, TabNet `.predict_proba()`, and PyTorch forward pass.
-- The artifact loader must extend the manifest schema with `base_models` and `stacking_config` sections.
-- A `WrappedEnsembleModel` must expose `predict_proba(preprocessed_35)` so the DICE counterfactual explainer can call the full ensemble path without knowing about the internal architecture.
-- The SHAP explainer (surrogate LR on processed features) requires no changes because it operates on the same 35-feature preprocessed space regardless of the downstream model.
-- See `docs/BACKEND_RUNTIME_ARCHITECTURE.md` and `docs/ROADMAP.md` Track D+ for the full implementation plan.
+- The calibrated stacking ensemble is the active serving runtime.
+- The scoring service assembles 35 canonical features, applies the saved preprocessor, then routes processed features through `backend/ml/inference/ensemble_adapter.py`.
+- The adapter loads six base models at startup, runs each base model on the processed feature row, stacks the six probability outputs, and passes them to the calibrated meta-learner.
+- The adapter handles sklearn `.predict_proba()`, TabNet `.predict_proba()`, and PyTorch forward pass inference.
+- The manifest schema includes `base_models` and `stacking_config` sections, and startup validates all checksums before scoring.
+- `WrappedEnsembleModel` exposes `predict_proba(processed_35)` so the DICE counterfactual explainer can use the full ensemble path.
+- The SHAP explainer is a surrogate over the same processed feature space and remains compatible with the ensemble runtime.
+- See `docs/BACKEND_RUNTIME_ARCHITECTURE.md` for the frozen runtime details.
 
 ### Fairness Modules
 
@@ -239,7 +239,6 @@ AlterScore/
       core/                   Settings, paths, startup, CORS, artifact loading
       schemas/                Pydantic API request/response models
       services/               Scoring, analytics, logging, artifact access
-      utils/                  Shared backend helpers
     ml/
       data_generation/        Synthetic data generation and validation
       features/               Answer parsing and derived feature engineering
@@ -252,8 +251,6 @@ AlterScore/
       inference/              Runtime feature assembly and score mapping
       evaluation/             Metrics, curves, baselines, confusion matrices
       explainability/         SHAP and DICE generation
-      fairness/               Fairness audit jobs
-      drift/                  PSI jobs
       registry/               Artifact metadata helpers
   data/
     raw/                      Raw or generated source data
@@ -268,7 +265,6 @@ AlterScore/
     reports/                  Metrics, fairness, PSI, importance, curves
     registry/                 Model registry metadata
   experiments/
-    configs/                  Experiment configs
     runs/                     Run outputs and summaries
     optuna/                   Optuna studies
   frontend/
@@ -276,21 +272,15 @@ AlterScore/
       pages/                  Landing, Assessment, Results, Dashboard
       components/assessment/  Assessment-specific components
       components/results/     Results-specific components
-      components/dashboard/   Dashboard-specific components
       hooks/                  React hooks
-      utils/                  Formatting, API, device/time helpers
+      services/               API client and score payload helpers
       data/                   Question definitions and constants
       styles/                 Global styles and Tailwind entry
   scripts/
-    setup/                    Environment setup helpers
     data/                     Data generation commands
     training/                 Training orchestration commands
-    evaluation/               Evaluation/report commands
-    deployment/               Packaging/deploy commands
   deploy/
-    docker/                   Docker assets
-    cloud/                    Cloud deployment notes/config
-    monitoring/               Monitoring configuration
+    # Docker/cloud/monitoring assets are Track G work and are not scaffolded yet.
   runtime/
     logs/                     Local append-only runtime logs
     pytest-cache/             Workspace-local pytest cache output
@@ -300,10 +290,8 @@ AlterScore/
     unit/ml/                  ML unit tests
     integration/api/          API integration tests
     integration/pipeline/     Data/training pipeline tests
-    e2e/                      Browser/E2E tests
     fixtures/                 Test payloads and small fixtures
   docs/
-    adr/                      Detailed architecture decision records
     context_templates/        AI handoff and session templates
 ```
 

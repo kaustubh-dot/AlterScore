@@ -7,7 +7,8 @@
 - Prefer deterministic small smoke tests for CI and heavier full-pipeline tests for local milestone gates.
 - Every dashboard panel needs a backend contract test before frontend work is considered complete.
 - ML acceptance is based on temporal test split, not random split.
-- Tests that need temporary files should use the workspace-local `tmp_path` fixture override in `tests/conftest.py`, which now writes under `runtime/pytest-workspace`, and pytest cache output is now redirected to `runtime/pytest-cache` so local runs do not depend on the global Windows temp path, the unwritable local `.tmp` path, or the unwritable repo-root `.pytest_cache` path.
+- Tests that need temporary files should use the workspace-local `tmp_path` fixture override in `tests/conftest.py`, which writes under `runtime/pytest-workspace`.
+- Pytest cache output uses the ignored `.runtime/pytest-cache` directory. `pytest.ini` excludes local runtime output directories from collection so stale or permission-restricted `runtime/pytest-*` folders do not break test discovery.
 
 ## Test Layout
 
@@ -53,13 +54,8 @@ tests/
       test_mlp_training.py
       test_stacking_training.py
       test_ensemble_promotion.py
-  e2e/
-    test_assessment_to_results.py                # placeholder
-    test_dashboard_loads.py                      # placeholder
   fixtures/
     score_request_valid.json
-    score_request_low_signal.json
-    score_request_high_signal.json
 ```
 
 ## Unit Test Requirements
@@ -219,7 +215,7 @@ assert metrics["ensemble"]["auc_roc"] > metrics["baselines"]["simulated_loan_off
 ### Artifact Loading Smoke Test
 
 - Runtime artifact loader supports a manifest-backed bundle when available and verifies manifest-declared SHA256 checksums.
-- Runtime artifact loader supports a direct runtime-model fallback for the current local scoring stub when explicitly requested.
+- Runtime artifact loader supports a direct runtime-model fallback for explicit dev/test runs.
 - Incomplete or malformed manifests fail clearly rather than silently falling back to candidate loading.
 - Missing scoring-critical artifacts fail clearly.
 - Present-but-invalid optional artifacts are reported separately from missing optional artifacts.
@@ -234,7 +230,7 @@ Each analytics endpoint must:
 - Return useful error if the backing report is missing.
 - Avoid expensive model retraining during request handling.
 
-### Current Stub Coverage
+### Current Coverage
 
 - `test_health_endpoint.py` verifies the startup cache and artifact-health response, including explicit manifest-backed state fields for health payloads.
 - `test_score_endpoint.py` verifies the schema-valid happy path and structured `503` behavior when scoring-critical artifacts are missing.
@@ -247,7 +243,7 @@ Each analytics endpoint must:
 
 ### Assessment
 
-- User can complete all 27 questions.
+- User can complete the full current assessment (`API_CONTRACT_FIELD_COUNT` answer fields, with `CORE_PRD_QUESTION_COUNT` retained for PRD traceability).
 - Required fields prevent invalid submit.
 - Telemetry fields are computed.
 - Network failure does not lose answers.

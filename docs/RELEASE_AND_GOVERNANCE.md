@@ -5,7 +5,7 @@ This document outlines the strict procedures for verifying, releasing, and promo
 ## 1. Release Checklist
 
 Before marking the backend as ready for a new release or promoting to production:
-- [ ] **Tests Pass:** `pytest backend/tests/` passes with 100% success on all 145+ tests.
+- [ ] **Tests Pass:** `python -m pytest tests/` passes with 100% success on the relevant backend, ML, and API suite.
 - [ ] **Data Drift Acceptable:** `/api/drift-report` shows no core feature with PSI > 0.30 (Alert) without documented explanation.
 - [ ] **Fairness Maintained:** `/api/fairness-report` shows acceptable AUC deviation (< 0.07 gap) across demographic groups.
 - [ ] **Calibration Intact:** `/api/calibration-curve` shows the predicted probability reliably matches the fraction of positive outcomes.
@@ -41,5 +41,5 @@ If a deployed model exhibits degraded performance or unexpected bias in producti
 ## 5. Artifact Integrity Verification
 
 To manually verify artifact integrity without starting the server, run the smoke tests:
-`pytest tests/integration/api/test_checked_in_runtime_bundle_smoke.py`
+`python -m pytest tests/integration/api/test_checked_in_runtime_bundle_smoke.py`
 This test suite initializes the artifact loader, validates all checksums, tests the ensemble inference bundle, and performs an end-to-end score calculation.

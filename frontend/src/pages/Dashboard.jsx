@@ -48,8 +48,8 @@ export default function Dashboard() {
             <strong style={{ fontSize: '1.1rem', color: 'var(--text-strong)' }}>MANIFEST BACKED</strong>
           </div>
           <div style={{ border: '1px solid var(--line)', padding: '1.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '6px' }}>
-            <div className="mono-text" style={{ color: 'var(--muted)', marginBottom: '0.5rem', fontSize: '0.7rem' }}>// TELEMETRY ACTIVE</div>
-            <strong style={{ fontSize: '1.1rem', color: 'var(--text-strong)' }}>39 BEHAVIORAL VECTORS</strong>
+            <div className="mono-text" style={{ color: 'var(--muted)', marginBottom: '0.5rem', fontSize: '0.7rem' }}>// FEATURE REGISTRY</div>
+            <strong style={{ fontSize: '1.1rem', color: 'var(--text-strong)' }}>35 MODEL FEATURES</strong>
           </div>
         </div>
       </div>
