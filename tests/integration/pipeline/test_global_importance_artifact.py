@@ -31,7 +31,10 @@ def test_train_baselines_persists_global_importance_report_for_canonical_model_i
         baseline_metrics_path=tmp_path / "baseline_metrics.json",
         metrics_path=tmp_path / "metrics.json",
         population_percentiles_path=tmp_path / "population_percentiles.json",
+        psi_report_path=tmp_path / "psi_report.json",
+        fairness_report_path=tmp_path / "fairness_report.json",
         global_importance_path=tmp_path / "global_importance.json",
+        dice_explainer_path=tmp_path / "dice_explainer.pkl",
     )
 
     report = GlobalImportanceResponse.model_validate(
@@ -82,7 +85,10 @@ def test_train_baselines_supports_persisted_dataset_path_without_raw_text_for_gl
         baseline_metrics_path=tmp_path / "baseline_metrics.json",
         metrics_path=tmp_path / "metrics.json",
         population_percentiles_path=tmp_path / "population_percentiles.json",
+        psi_report_path=tmp_path / "psi_report.json",
+        fairness_report_path=tmp_path / "fairness_report.json",
         global_importance_path=tmp_path / "global_importance.json",
+        dice_explainer_path=tmp_path / "dice_explainer.pkl",
     )
 
     report = GlobalImportanceResponse.model_validate(
@@ -111,7 +117,10 @@ def test_train_classical_models_persists_global_importance_and_runtime_loading_s
         baseline_metrics_path=model_root / "reports" / "baseline_metrics.json",
         metrics_path=model_root / "reports" / "metrics.json",
         population_percentiles_path=model_root / "reports" / "population_percentiles.json",
+        psi_report_path=model_root / "reports" / "psi_report.json",
+        fairness_report_path=model_root / "reports" / "fairness_report.json",
         global_importance_path=model_root / "reports" / "global_importance.json",
+        dice_explainer_path=model_root / "explainers" / "dice_explainer.pkl",
     )
     artifacts = train_classical_models(
         dataset,

@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any, Callable, Final
 
 import joblib
+import numpy as np
 
 from backend.app.core.paths import MODEL_ARTIFACTS_DIR, resolve_repo_path
 from backend.app.core.settings import Settings, get_settings
@@ -22,6 +23,10 @@ from backend.ml.explainability.dice_explainer import (
 from backend.ml.explainability.shap_explainer import (
     PersistedShapExplainer,
     load_persisted_shap_explainer,
+)
+from backend.ml.inference.ensemble_adapter import (
+    EnsembleInferenceBundle,
+    predict_ensemble_proba,
 )
 from backend.ml.preprocessing.feature_registry import ALL_MODEL_FEATURES
 from backend.ml.registry.production_manifest import (
@@ -75,6 +80,11 @@ SCORING_CRITICAL_ARTIFACTS: Final[tuple[str, ...]] = (
     "runtime_model",
     "preprocessor",
     "text_pca",
+)
+ENSEMBLE_SCORING_CRITICAL_ARTIFACTS: Final[tuple[str, ...]] = (
+    *SCORING_CRITICAL_ARTIFACTS,
+    "stacking_config",
+    "base_models",
 )
 DEFAULT_RUNTIME_ARTIFACT_RELATIVE_PATHS: Final[dict[str, Path]] = {
     "preprocessor": Path("models/preprocessors/preprocessor.pkl"),
@@ -302,38 +312,66 @@ def load_runtime_artifact_bundle(
         invalid_artifacts=invalid_artifacts,
         artifact_errors=artifact_errors,
     )
-    if strict and not _pre_ensemble_report.scoring_ready:
-        raise ArtifactLoadError(_format_scoring_ready_error(_pre_ensemble_report))
+    base_scoring_ready = all(
+        artifact_key in loaded_artifacts for artifact_key in SCORING_CRITICAL_ARTIFACTS
+    )
+    if strict and not base_scoring_ready:
+        raise ArtifactLoadError(
+            _format_scoring_ready_error(
+                _pre_ensemble_report,
+                required_artifacts=SCORING_CRITICAL_ARTIFACTS,
+            )
+        )
 
     # Load base models and config if manifest is an ensemble
     base_models: dict[str, Any] | None = None
     stacking_config: dict[str, Any] | None = None
 
     if manifest is not None and manifest.runtime_model_type == "ensemble":
-        if manifest.base_models and manifest.stacking_config:
-            try:
-                # Load stacking config using the existing _load_json helper
-                config_path = manifest.stacking_config.resolved_path(repo_root)
-                stacking_config = _load_json(config_path)
-                loaded_artifacts.add("stacking_config")
-
-                # Load each base model using the appropriate loader per file type
-                base_models = {}
-                for model_name, entry in manifest.base_models.items():
-                    model_path = entry.resolved_path(repo_root)
-                    if model_path.suffix == ".zip":
-                        base_models[model_name] = load_tabnet_model(model_path)
-                    elif model_path.suffix == ".pt":
-                        base_models[model_name] = load_mlp_model(model_path)
-                    else:
-                        base_models[model_name] = joblib.load(model_path)
-                loaded_artifacts.add("base_models")
-            except Exception as e:
-                invalid_artifacts.add("base_models")
-                artifact_errors["base_models"] = f"Failed to load ensemble base models: {e}"
-        else:
+        if manifest.base_models is None or manifest.stacking_config is None:
             invalid_artifacts.add("base_models")
-            artifact_errors["base_models"] = "Ensemble manifest is missing base_models or stacking_config."
+            artifact_errors["base_models"] = (
+                "Ensemble manifest is missing base_models or stacking_config."
+            )
+        else:
+            stacking_config_path = manifest.stacking_config.resolved_path(repo_root)
+            if not stacking_config_path.is_file():
+                invalid_artifacts.add("stacking_config")
+                artifact_errors["stacking_config"] = (
+                    f"Declared stacking_config artifact is missing at {stacking_config_path}."
+                )
+            else:
+                stacking_config = _load_validated_artifact(
+                    artifact_key="stacking_config",
+                    path=stacking_config_path,
+                    loader=_load_json,
+                    validator=_validate_stacking_config,
+                    expected_sha256=manifest.stacking_config.sha256,
+                    loaded_artifacts=loaded_artifacts,
+                    invalid_artifacts=invalid_artifacts,
+                    artifact_errors=artifact_errors,
+                )
+            if stacking_config is not None:
+                base_model_order = tuple(stacking_config["base_model_order"])
+                base_models = _load_ensemble_base_models(
+                    manifest=manifest,
+                    repo_root=repo_root,
+                    base_model_order=base_model_order,
+                    loaded_artifacts=loaded_artifacts,
+                    invalid_artifacts=invalid_artifacts,
+                    artifact_errors=artifact_errors,
+                )
+                if base_models is not None:
+                    _validate_loaded_ensemble_runtime(
+                        stacking_model=model,
+                        base_models=base_models,
+                        base_model_order=base_model_order,
+                        preprocessor=preprocessor,
+                        stacking_config=stacking_config,
+                        invalid_artifacts=invalid_artifacts,
+                        artifact_errors=artifact_errors,
+                        loaded_artifacts=loaded_artifacts,
+                    )
 
     # Finalize report after ensemble loading so base_models appear in artifacts_loaded
     report = _finalize_artifact_report(
@@ -342,6 +380,8 @@ def load_runtime_artifact_bundle(
         invalid_artifacts=invalid_artifacts,
         artifact_errors=artifact_errors,
     )
+    if strict and not report.scoring_ready:
+        raise ArtifactLoadError(_format_scoring_ready_error(report))
 
     return LoadedArtifactBundle(
         report=report,
@@ -629,36 +669,57 @@ def _finalize_artifact_report(
     invalid_artifacts: set[str],
     artifact_errors: dict[str, str],
 ) -> ArtifactLoadReport:
+    required_scoring_artifacts = _required_scoring_artifacts(base_report)
     return replace(
         base_report,
         artifacts_loaded=tuple(sorted(loaded_artifacts)),
         invalid_artifacts=tuple(sorted(invalid_artifacts)),
         artifact_errors=dict(sorted(artifact_errors.items())),
         scoring_ready=all(
-            artifact_key in loaded_artifacts for artifact_key in SCORING_CRITICAL_ARTIFACTS
+            artifact_key in loaded_artifacts for artifact_key in required_scoring_artifacts
         ),
     )
 
 
-def _format_scoring_ready_error(report: ArtifactLoadReport) -> str:
+def _format_scoring_ready_error(
+    report: ArtifactLoadReport,
+    *,
+    required_artifacts: tuple[str, ...] | None = None,
+) -> str:
+    required_scoring_artifacts = required_artifacts or _required_scoring_artifacts(report)
     critical_missing = [
         artifact_key
-        for artifact_key in SCORING_CRITICAL_ARTIFACTS
+        for artifact_key in required_scoring_artifacts
         if artifact_key in report.missing_artifacts
     ]
     critical_invalid = [
         artifact_key
-        for artifact_key in SCORING_CRITICAL_ARTIFACTS
+        for artifact_key in required_scoring_artifacts
         if artifact_key in report.invalid_artifacts
+    ]
+    critical_not_loaded = [
+        artifact_key
+        for artifact_key in required_scoring_artifacts
+        if artifact_key not in report.artifacts_loaded
+        and artifact_key not in critical_missing
+        and artifact_key not in critical_invalid
     ]
     details: list[str] = []
     if critical_missing:
         details.append(f"missing {critical_missing}")
     if critical_invalid:
         details.append(f"invalid {critical_invalid}")
+    if critical_not_loaded:
+        details.append(f"not loaded {critical_not_loaded}")
     if not details:
         details.append("unknown scoring-critical artifact failure")
     return "Scoring artifacts are not ready: " + "; ".join(details) + "."
+
+
+def _required_scoring_artifacts(report: ArtifactLoadReport) -> tuple[str, ...]:
+    if report.runtime_model_type == "ensemble":
+        return ENSEMBLE_SCORING_CRITICAL_ARTIFACTS
+    return SCORING_CRITICAL_ARTIFACTS
 
 
 def _load_joblib(path: Path) -> Any:
@@ -704,6 +765,137 @@ def _validate_json_mapping(payload: Any) -> None:
 def _validate_json_sequence(payload: Any) -> None:
     if not isinstance(payload, list):
         raise ValueError("artifact payload must be a JSON list.")
+
+
+def _validate_stacking_config(payload: Any) -> None:
+    if not isinstance(payload, dict):
+        raise ValueError("stacking config payload must be a JSON object.")
+
+    base_model_order = payload.get("base_model_order")
+    if not isinstance(base_model_order, list) or not base_model_order:
+        raise ValueError("stacking config must contain a non-empty base_model_order list.")
+    if any(
+        not isinstance(model_name, str) or not model_name
+        for model_name in base_model_order
+    ):
+        raise ValueError("stacking config base_model_order entries must be non-empty strings.")
+    if len(set(base_model_order)) != len(base_model_order):
+        raise ValueError("stacking config base_model_order entries must be unique.")
+
+    model_type = payload.get("model_type")
+    if model_type is not None and model_type != "ensemble":
+        raise ValueError("stacking config model_type must be 'ensemble' when present.")
+
+
+def _load_ensemble_base_models(
+    *,
+    manifest: ProductionManifest,
+    repo_root: Path,
+    base_model_order: tuple[str, ...],
+    loaded_artifacts: set[str],
+    invalid_artifacts: set[str],
+    artifact_errors: dict[str, str],
+) -> dict[str, Any] | None:
+    declared_base_models = manifest.base_models or {}
+    declared_model_names = set(declared_base_models)
+    ordered_model_names = set(base_model_order)
+    missing_model_names = sorted(ordered_model_names - declared_model_names)
+    extra_model_names = sorted(declared_model_names - ordered_model_names)
+    if missing_model_names or extra_model_names:
+        invalid_artifacts.add("base_models")
+        artifact_errors["base_models"] = (
+            "Ensemble manifest base_models must match stacking_config base_model_order; "
+            f"missing={missing_model_names}, extra={extra_model_names}."
+        )
+        return None
+
+    base_models: dict[str, Any] = {}
+    for model_name in base_model_order:
+        entry = declared_base_models[model_name]
+        model_path = entry.resolved_path(repo_root)
+        try:
+            actual_sha256 = compute_file_sha256(model_path)
+            if actual_sha256 != entry.sha256:
+                raise ValueError(
+                    "artifact checksum does not match the production manifest: "
+                    f"expected {entry.sha256}, got {actual_sha256}."
+                )
+            base_models[model_name] = _load_base_model_artifact(model_path)
+        except Exception as exc:
+            invalid_artifacts.add("base_models")
+            artifact_errors["base_models"] = (
+                f"Failed to load ensemble base model {model_name!r}: "
+                f"{type(exc).__name__}: {exc}"
+            )
+            return None
+
+    loaded_artifacts.add("base_models")
+    return base_models
+
+
+def _load_base_model_artifact(model_path: Path) -> Any:
+    if model_path.suffix == ".zip":
+        return load_tabnet_model(model_path)
+    if model_path.suffix == ".pt":
+        return load_mlp_model(model_path)
+    return joblib.load(model_path)
+
+
+def _validate_loaded_ensemble_runtime(
+    *,
+    stacking_model: Any | None,
+    base_models: dict[str, Any],
+    base_model_order: tuple[str, ...],
+    preprocessor: Any | None,
+    stacking_config: dict[str, Any],
+    invalid_artifacts: set[str],
+    artifact_errors: dict[str, str],
+    loaded_artifacts: set[str],
+) -> None:
+    if stacking_model is None:
+        invalid_artifacts.add("runtime_model")
+        artifact_errors.setdefault(
+            "runtime_model",
+            "Ensemble runtime model could not be loaded.",
+        )
+        loaded_artifacts.discard("base_models")
+        return
+    if preprocessor is None:
+        loaded_artifacts.discard("base_models")
+        return
+
+    try:
+        probe_features = np.zeros((1, len(ALL_MODEL_FEATURES)), dtype=float)
+        probe_probabilities = predict_ensemble_proba(
+            EnsembleInferenceBundle(
+                stacking_model=stacking_model,
+                base_models=base_models,
+                base_model_order=base_model_order,
+                preprocessor=preprocessor,
+                stacking_config=stacking_config,
+            ),
+            probe_features,
+        )
+        _validate_probability_matrix("ensemble runtime", probe_probabilities)
+    except Exception as exc:
+        invalid_artifacts.add("base_models")
+        artifact_errors["base_models"] = (
+            "Loaded ensemble artifacts failed a one-row runtime probe: "
+            f"{type(exc).__name__}: {exc}"
+        )
+        loaded_artifacts.discard("base_models")
+
+
+def _validate_probability_matrix(model_name: str, probabilities: Any) -> None:
+    probability_matrix = np.asarray(probabilities, dtype=float)
+    if probability_matrix.ndim != 2 or probability_matrix.shape[1] != 2:
+        raise ValueError(
+            f"{model_name} predict_proba output must be a two-column probability matrix."
+        )
+    if not np.isfinite(probability_matrix).all():
+        raise ValueError(f"{model_name} predict_proba output must be finite.")
+    if ((probability_matrix < 0.0) | (probability_matrix > 1.0)).any():
+        raise ValueError(f"{model_name} predict_proba output must stay within [0, 1].")
 
 
 def _resolve_population_percentiles_payload(

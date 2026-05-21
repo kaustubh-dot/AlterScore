@@ -26,6 +26,11 @@ def test_train_baselines_persists_text_pca_from_train_months_only(tmp_path) -> N
         logistic_artifact_path=artifact_paths["model"],
         baseline_metrics_path=artifact_paths["baseline_metrics"],
         metrics_path=artifact_paths["metrics"],
+        population_percentiles_path=artifact_paths["population_percentiles"],
+        psi_report_path=artifact_paths["psi_report"],
+        fairness_report_path=artifact_paths["fairness_report"],
+        global_importance_path=artifact_paths["global_importance"],
+        dice_explainer_path=artifact_paths["dice_explainer"],
         random_state=17,
     )
 
@@ -113,6 +118,11 @@ def _prepare_runtime_bundle(tmp_path, *, include_text_pca: bool):
         logistic_artifact_path=artifact_paths["model"],
         baseline_metrics_path=artifact_paths["baseline_metrics"],
         metrics_path=artifact_paths["metrics"],
+        population_percentiles_path=artifact_paths["population_percentiles"],
+        psi_report_path=artifact_paths["psi_report"],
+        fairness_report_path=artifact_paths["fairness_report"],
+        global_importance_path=artifact_paths["global_importance"],
+        dice_explainer_path=artifact_paths["dice_explainer"],
         random_state=23,
     )
     artifact_paths["population_percentiles"].write_text(
@@ -147,6 +157,10 @@ def _build_training_artifact_paths(tmp_path) -> dict[str, Path]:
         "baseline_metrics": model_root / "reports" / "baseline_metrics.json",
         "metrics": model_root / "reports" / "metrics.json",
         "population_percentiles": model_root / "reports" / "population_percentiles.json",
+        "psi_report": model_root / "reports" / "psi_report.json",
+        "fairness_report": model_root / "reports" / "fairness_report.json",
+        "global_importance": model_root / "reports" / "global_importance.json",
+        "dice_explainer": model_root / "explainers" / "dice_explainer.pkl",
     }
 
 
