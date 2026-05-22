@@ -7,12 +7,20 @@ governance requirements including monotonicity, pairwise counterfactual
 stability, fairness review, calibration review, drift analysis, and promotion
 gating.
 
-## Current Production Direction
+## Current Runtime
 
-The leading governed production candidate is a monotonic `XGBoost` model.
+The checked-in production runtime is a **calibrated stacking ensemble** backed
+by six base models (logistic regression, random forest, XGBoost, LightGBM,
+TabNet, residual MLP) with isotonic calibration and runtime TabNet disagreement
+mitigation.
 
-It currently outperforms the checked-in runtime ensemble baseline while passing
-the active governance stack:
+- Runtime AUC: `0.8062`
+- Manifest: `models/registry/production_manifest.json`
+
+### Governed Production Candidate (Not Yet Promoted)
+
+A monotonic `XGBoost` candidate has been evaluated through the full governance
+stack and outperforms the checked-in ensemble baseline:
 
 - AUC: `0.8090`
 - Brier: `0.1496`
@@ -22,8 +30,9 @@ the active governance stack:
 - fairness gate: passed
 - promotion eligible: `true`
 
+This candidate has not yet been promoted into the checked-in runtime bundle.
 TabNet remains in the repository as a research benchmark and governance case
-study, not as the primary trusted production scorer.
+study.
 
 ## Quickstart
 
