@@ -1,11 +1,10 @@
 import { QUESTIONS } from "../data/questions.js";
 
 const RISK_BANDS = {
-  poor: { label: "Poor", min: 300, max: 499, color: "#ff4d5e" },
-  fair: { label: "Fair", min: 500, max: 599, color: "#ffad33" },
-  good: { label: "Good", min: 600, max: 699, color: "#b9f24b" },
-  very_good: { label: "Very Good", min: 700, max: 799, color: "#38e6a6" },
-  excellent: { label: "Excellent", min: 800, max: 850, color: "#30f2d2" },
+  poor: { label: "Poor", min: 300, max: 549, color: "#ff4d5e" },
+  fair: { label: "Fair", min: 550, max: 649, color: "#ffad33" },
+  good: { label: "Good", min: 650, max: 749, color: "#b9f24b" },
+  excellent: { label: "Excellent", min: 750, max: 850, color: "#30f2d2" },
 };
 
 export function createSessionId() {
@@ -87,10 +86,9 @@ export function getRiskBand(scoreOrBand) {
     return RISK_BANDS[scoreOrBand] || RISK_BANDS.fair;
   }
   const score = Number(scoreOrBand);
-  if (score >= 800) return RISK_BANDS.excellent;
-  if (score >= 700) return RISK_BANDS.very_good;
-  if (score >= 600) return RISK_BANDS.good;
-  if (score >= 500) return RISK_BANDS.fair;
+  if (score >= 750) return RISK_BANDS.excellent;
+  if (score >= 650) return RISK_BANDS.good;
+  if (score >= 550) return RISK_BANDS.fair;
   return RISK_BANDS.poor;
 }
 
