@@ -12,6 +12,11 @@ from typing import Any
 
 import numpy as np
 
+try:
+    import torch
+except ImportError:
+    torch = None
+
 
 @dataclass(frozen=True)
 class EnsembleInferenceBundle:
@@ -88,7 +93,7 @@ def build_ensemble_meta_features(
     for model_name in bundle.base_model_order:
         base_model = bundle.base_models[model_name]
         positive_class_probability = _extract_positive_class_probability(
-            _predict_base_model_proba(base_model, processed_features),
+            predict_base_model_proba(base_model, processed_features),
             model_name=model_name,
         )
         raw_base_probabilities[model_name] = positive_class_probability
@@ -217,7 +222,7 @@ def _extract_positive_class_probability(
     raise ValueError(f"Unexpected probability shape {probabilities.shape} from {model_name}.")
 
 
-def _predict_base_model_proba(model: Any, processed_features: np.ndarray) -> np.ndarray:
+def predict_base_model_proba(model: Any, processed_features: np.ndarray) -> np.ndarray:
     """Handle predict_proba for sklearn, TabNet, and PyTorch MLP base models."""
 
     # Sklearn / XGBoost / LightGBM / TabNet path
@@ -225,9 +230,7 @@ def _predict_base_model_proba(model: Any, processed_features: np.ndarray) -> np.
         return np.asarray(model.predict_proba(processed_features), dtype=float)
 
     # PyTorch MLP path
-    import torch
-    
-    if isinstance(model, torch.nn.Module):
+    if torch is not None and isinstance(model, torch.nn.Module):
         model.eval()
         try:
             device = next(model.parameters()).device
@@ -249,5 +252,6 @@ __all__ = [
     "TabNetMitigationConfig",
     "WrappedEnsembleModel",
     "build_ensemble_meta_features",
+    "predict_base_model_proba",
     "predict_ensemble_proba",
 ]

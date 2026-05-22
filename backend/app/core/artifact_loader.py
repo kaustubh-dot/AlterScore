@@ -402,11 +402,6 @@ def load_runtime_artifact_bundle(
     )
 
 
-@lru_cache(maxsize=1)
-def get_runtime_artifact_bundle() -> LoadedArtifactBundle:
-    """Cached runtime bundle for future FastAPI startup and request handlers."""
-
-    return load_runtime_artifact_bundle(get_settings(), strict=False)
 
 
 def _resolve_artifact_state(
@@ -726,10 +721,6 @@ def _load_joblib(path: Path) -> Any:
     return joblib.load(path)
 
 
-def _load_joblib_if_present(path: Path | None) -> Any | None:
-    if path is None or not path.is_file():
-        return None
-    return _load_joblib(path)
 
 
 def _load_json(path: Path) -> Any:
@@ -898,6 +889,7 @@ def _validate_probability_matrix(model_name: str, probabilities: Any) -> None:
         raise ValueError(f"{model_name} predict_proba output must stay within [0, 1].")
 
 
+
 def _resolve_population_percentiles_payload(
     payload: Any | None,
     *,
@@ -936,7 +928,6 @@ __all__ = [
     "LoadedArtifactBundle",
     "RUNTIME_MODEL_CANDIDATES",
     "RuntimeModelCandidate",
-    "get_runtime_artifact_bundle",
     "inspect_runtime_artifacts",
     "load_runtime_artifact_bundle",
 ]

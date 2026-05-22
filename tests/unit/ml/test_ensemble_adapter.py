@@ -8,7 +8,7 @@ from backend.ml.inference.ensemble_adapter import (
     WrappedEnsembleModel,
     build_ensemble_meta_features,
     predict_ensemble_proba,
-    _predict_base_model_proba,
+    predict_base_model_proba,
 )
 
 class MockSklearnModel:
@@ -50,14 +50,14 @@ class ConstantProbabilityModel:
 def test_predict_base_model_proba_sklearn():
     model = MockSklearnModel()
     X = np.random.rand(5, 35)
-    probas = _predict_base_model_proba(model, X)
+    probas = predict_base_model_proba(model, X)
     assert probas.shape == (5, 2)
     assert np.allclose(probas[:, 1], 0.7)
 
 def test_predict_base_model_proba_torch():
     model = MockTorchModel()
     X = np.random.rand(3, 35)
-    probas = _predict_base_model_proba(model, X)
+    probas = predict_base_model_proba(model, X)
     assert probas.shape == (3, 2)
     assert np.allclose(probas[:, 1], 0.6)
 
