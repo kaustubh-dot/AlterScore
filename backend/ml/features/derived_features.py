@@ -80,7 +80,7 @@ def compute_derived_features(features: Mapping[str, Any]) -> dict[str, float]:
         lower=0.0,
     )
     engagement_score = _clip(
-        values["scroll_hesitation_score"]
+        (1.0 - values["scroll_hesitation_score"])
         * (1.0 - values["answer_change_rate"])
         * _clip(1.0 - values["dropout_count"] / 4.0, lower=0.0, upper=1.0)
         * _clip(1.0 - values["risk_response_speed_ratio"] * 0.3, lower=0.0, upper=1.0),

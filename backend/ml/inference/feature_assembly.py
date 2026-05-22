@@ -20,11 +20,16 @@ from backend.ml.preprocessing.pipeline import TEXT_PCA_FEATURES
 @dataclass(frozen=True)
 class AssembledRequestFeatures:
     psychometric_features: dict[str, float]
+    raw_behavioral_features: dict[str, float | int | str]
     behavioral_features: dict[str, float | int | str]
     nlp_features: dict[str, float]
     raw_embedding: np.ndarray
     feature_row: dict[str, Any]
     feature_frame: pd.DataFrame
+
+
+NEUTRAL_DEVICE_TYPE = "mobile"
+NEUTRAL_TIME_OF_DAY = "afternoon"
 
 
 def assemble_request_features(
@@ -37,7 +42,8 @@ def assemble_request_features(
 
     answers_payload, behavioral_payload = _extract_request_components(request)
     psychometric_features = parse_answers(answers_payload)
-    behavioral_features = parse_behavioral(behavioral_payload)
+    raw_behavioral_features = parse_behavioral(behavioral_payload)
+    behavioral_features = _neutralize_contextual_behavioral_features(raw_behavioral_features)
 
     answer_values = _coerce_mapping(answers_payload, component_name="answers")
     nlp_output = extract_nlp_features(str(answer_values.get("q27_resilience_text", "")))
@@ -61,6 +67,7 @@ def assemble_request_features(
 
     return AssembledRequestFeatures(
         psychometric_features=psychometric_features,
+        raw_behavioral_features=raw_behavioral_features,
         behavioral_features=behavioral_features,
         nlp_features=nlp_features,
         raw_embedding=raw_embedding,
@@ -146,6 +153,17 @@ def _project_text_embedding(
         TEXT_PCA_FEATURES[0]: float(projected_embedding[0]),
         TEXT_PCA_FEATURES[1]: float(projected_embedding[1]),
     }
+
+
+def _neutralize_contextual_behavioral_features(
+    behavioral_features: dict[str, float | int | str],
+) -> dict[str, float | int | str]:
+    """Remove non-financial score variation from device and time context."""
+
+    neutralized_features = dict(behavioral_features)
+    neutralized_features["device_type"] = NEUTRAL_DEVICE_TYPE
+    neutralized_features["time_of_day"] = NEUTRAL_TIME_OF_DAY
+    return neutralized_features
 
 
 __all__ = [

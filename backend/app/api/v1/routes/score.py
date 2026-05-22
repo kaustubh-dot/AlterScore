@@ -93,6 +93,49 @@ def score_request(request: Request, payload: ScoreRequest) -> ScoreResponse | JS
         return response
 
 
+@router.post(
+    "/debug-score",
+    response_model=None,
+    responses={
+        503: {"model": ErrorResponse},
+        500: {"model": ErrorResponse},
+    },
+)
+def debug_score_request(request: Request, payload: ScoreRequest) -> dict[str, Any] | JSONResponse:
+    scoring_service = request.app.state.scoring_service
+    request_id = f"{payload.session_id}:debug"
+
+    if scoring_service is None:
+        return _error_response(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            code="ARTIFACTS_NOT_READY",
+            message=(
+                "Scoring artifacts are not ready yet. "
+                "Load a runtime model and preprocessor bundle first."
+            ),
+            request_id=request_id,
+            details={
+                "missing_artifacts": list(request.app.state.artifact_bundle.report.missing_artifacts),
+                "invalid_artifacts": list(request.app.state.artifact_bundle.report.invalid_artifacts),
+                "artifact_errors": dict(
+                    request.app.state.artifact_bundle.report.artifact_errors
+                ),
+            },
+        )
+
+    try:
+        return scoring_service.score_request_debug(payload)
+    except Exception as exc:
+        logger.exception("Debug scoring failed for request %s.", request_id)
+        return _error_response(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            code="SCORING_DEBUG_FAILED",
+            message="Debug scoring failed for the supplied request.",
+            request_id=request_id,
+            details={"error_type": type(exc).__name__},
+        )
+
+
 def _error_response(
     *,
     status_code: int,

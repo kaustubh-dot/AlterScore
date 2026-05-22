@@ -70,6 +70,29 @@ def test_score_endpoint_writes_success_request_log(tmp_path) -> None:
     assert "behavioral" not in entry
 
 
+def test_debug_score_endpoint_returns_pipeline_breakdown(tmp_path) -> None:
+    settings = build_runtime_settings(tmp_path)
+    payload = _load_valid_score_payload()
+    app = create_app(settings)
+
+    with TestClient(app) as client:
+        response = client.post("/api/debug-score", json=payload)
+
+    assert response.status_code == 200
+    parsed = response.json()
+    assert parsed["raw_input"]["answers"]["numeracy_q1"] == payload["answers"]["numeracy_q1"]
+    assert parsed["validated_request"]["behavioral"]["device_type"] == payload["behavioral"]["device_type"]
+    assert parsed["feature_names"]
+    assert parsed["preprocessing"]["transformed_feature_vector"]
+    assert parsed["model_debug"]["repayment_probability"] >= 0.0
+    if parsed["model_debug"]["model_type"] == "ensemble":
+        assert "runtime_mitigation" in parsed["model_debug"]
+        assert "ensemble_probabilities_before_mitigation" in parsed["model_debug"]
+    assert parsed["score_mapping"]["final_credit_score"] >= 300
+    assert parsed["final_score"]["credit_score"] == parsed["score_mapping"]["final_credit_score"]
+    assert "explanation_generation_inputs" in parsed
+
+
 def test_score_endpoint_returns_sanitized_500_and_logs_failure(tmp_path) -> None:
     class FailingScoringService:
         def score_request(self, payload) -> ScoreResponse:

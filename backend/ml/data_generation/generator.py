@@ -167,9 +167,9 @@ def generate_synthetic_dataset(
     dropout_count = np.clip(rng.poisson(dropout_lambda), 0, 6).astype(int)
     scroll_hesitation_score = np.clip(
         0.48
-        + 0.10 * discipline
-        + 0.08 * stability
-        - 0.12 * answer_change_rate
+        - 0.10 * discipline
+        - 0.08 * stability
+        + 0.12 * answer_change_rate
         + rng.normal(0.0, 0.08, row_count),
         0.02,
         0.98,
@@ -272,7 +272,7 @@ def generate_synthetic_dataset(
         None,
     )
     engagement_score = np.clip(
-        scroll_hesitation_score
+        (1.0 - scroll_hesitation_score)
         * (1.0 - answer_change_rate)
         * np.clip(1.0 - dropout_count / 4.0, 0.0, 1.0)
         * np.clip(1.0 - risk_response_speed_ratio * 0.3, 0.0, 1.0),
@@ -326,7 +326,6 @@ def generate_synthetic_dataset(
         - 0.5 * response_burden
         - 0.7 * answer_change_rate
         - 0.12 * dropout_count
-        + 0.12 * (device_type == "desktop")
         + rng.normal(0.0, 0.42, row_count)
         + 2.05
     )

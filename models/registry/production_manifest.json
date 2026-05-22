@@ -58,7 +58,7 @@
     },
     "population_percentiles": {
       "path": "models/reports/population_percentiles.json",
-      "sha256": "2090208e6bb99249948eb84a939c5f334ccd8c1c29fda8e7d21fb2ff69daa69f"
+      "sha256": "adf885e0750287e494cab29af65cd00c9fbe4c43feaf73ee7fd572e9726e86f6"
     }
   },
   "base_models": {
@@ -89,7 +89,7 @@
   },
   "stacking_config": {
     "path": "models/artifacts/calibrated_stacking_config.json",
-    "sha256": "9f4ca278ddd4e4fa720a0f4b1d899c7296b9cc029ca7dc6b994d7aa12803b48b"
+    "sha256": "83e615ce8b832b94fb0de02557d016254a0c94756b945167395fe7b41e028044"
   },
   "metrics_summary": {
     "test_split": "test_months_11_12",

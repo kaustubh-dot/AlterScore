@@ -48,7 +48,7 @@ def test_higher_engagement_inputs_increase_engagement_score() -> None:
     low_engagement = compute_derived_features(
         _base_feature_inputs()
         | {
-            "scroll_hesitation_score": 0.2,
+            "scroll_hesitation_score": 0.9,
             "answer_change_rate": 0.4,
             "dropout_count": 3.0,
             "risk_response_speed_ratio": 2.0,
@@ -57,7 +57,7 @@ def test_higher_engagement_inputs_increase_engagement_score() -> None:
     high_engagement = compute_derived_features(
         _base_feature_inputs()
         | {
-            "scroll_hesitation_score": 0.9,
+            "scroll_hesitation_score": 0.1,
             "answer_change_rate": 0.05,
             "dropout_count": 0.0,
             "risk_response_speed_ratio": 0.5,

@@ -46,6 +46,8 @@ runtime/logs/*
 runtime/pytest-cache/
 runtime/pytest-temp/
 runtime/pytest-workspace/
+runtime/governed_reports/
+runtime/research_archive/
 
 # Generated data and validation artifacts
 data/raw/*
