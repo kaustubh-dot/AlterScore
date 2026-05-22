@@ -64,5 +64,23 @@ def test_later_cohorts_are_faster_and_have_higher_typing_speed_on_average() -> N
     assert later_cohorts["typing_speed_wpm"].mean() > early_cohorts["typing_speed_wpm"].mean()
 
 
+def test_repaired_synthetic_supervision_matches_behavioral_directionality() -> None:
+    dataset = generate_synthetic_dataset()
+
+    assert dataset["scroll_hesitation_score"].corr(dataset[TARGET]) < -0.25
+    assert dataset["engagement_score"].corr(dataset[TARGET]) > 0.25
+
+    low_hesitation = dataset[
+        dataset["scroll_hesitation_score"] <= dataset["scroll_hesitation_score"].quantile(0.2)
+    ][TARGET].mean()
+    high_hesitation = dataset[
+        dataset["scroll_hesitation_score"] >= dataset["scroll_hesitation_score"].quantile(0.8)
+    ][TARGET].mean()
+    assert low_hesitation > high_hesitation
+
+    device_repayment_rates = dataset.groupby("device_type")[TARGET].mean()
+    assert device_repayment_rates.max() - device_repayment_rates.min() < 0.05
+
+
 def test_protected_attributes_remain_outside_all_model_features() -> None:
     assert set(PROTECTED_FEATURES).isdisjoint(ALL_MODEL_FEATURES)
