@@ -6,23 +6,23 @@
     "ks_statistic": 0.0,
     "brier_score": 0.3086,
     "expected_calibration_error": 0.3086,
-    "lift_vs_loan_officer": -0.2573
+    "lift_vs_loan_officer": -0.2622
   },
   {
     "model_name": "logistic_regression",
     "model_type": "baseline",
-    "auc_roc": 0.8317,
-    "ks_statistic": 0.5089,
-    "brier_score": 0.1592,
-    "expected_calibration_error": 0.0983,
-    "lift_vs_loan_officer": 0.0744
+    "auc_roc": 0.8341,
+    "ks_statistic": 0.5211,
+    "brier_score": 0.1578,
+    "expected_calibration_error": 0.0958,
+    "lift_vs_loan_officer": 0.0719
   },
   {
     "model_name": "simulated_loan_officer",
     "model_type": "baseline",
-    "auc_roc": 0.7573,
-    "ks_statistic": 0.402,
-    "brier_score": 0.2329,
+    "auc_roc": 0.7622,
+    "ks_statistic": 0.4164,
+    "brier_score": 0.232,
     "expected_calibration_error": 0.2386,
     "lift_vs_loan_officer": 0.0
   }
