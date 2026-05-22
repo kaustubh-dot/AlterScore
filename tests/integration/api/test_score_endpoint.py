@@ -93,6 +93,25 @@ def test_debug_score_endpoint_returns_pipeline_breakdown(tmp_path) -> None:
     assert "explanation_generation_inputs" in parsed
 
 
+def test_debug_score_endpoint_returns_404_in_production(tmp_path) -> None:
+    settings = load_settings(
+        {
+            "ALTERSCORE_REPO_ROOT": str(tmp_path),
+            "ALTERSCORE_RUNTIME_MODEL_PATH": "models/artifacts/logistic_best.pkl",
+            "ALTERSCORE_ENV": "production",
+        }
+    )
+    payload = _load_valid_score_payload()
+    app = create_app(settings)
+
+    with TestClient(app) as client:
+        response = client.post("/api/debug-score", json=payload)
+
+    assert response.status_code == 404
+    parsed = response.json()
+    assert parsed["error"]["code"] == "DEBUG_NOT_AVAILABLE"
+
+
 def test_score_endpoint_returns_sanitized_500_and_logs_failure(tmp_path) -> None:
     class FailingScoringService:
         def score_request(self, payload) -> ScoreResponse:
