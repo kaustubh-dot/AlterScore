@@ -97,11 +97,21 @@ def score_request(request: Request, payload: ScoreRequest) -> ScoreResponse | JS
     "/debug-score",
     response_model=None,
     responses={
+        404: {"model": ErrorResponse},
         503: {"model": ErrorResponse},
         500: {"model": ErrorResponse},
     },
 )
 def debug_score_request(request: Request, payload: ScoreRequest) -> dict[str, Any] | JSONResponse:
+    settings = request.app.state.settings
+    if settings.environment != "local":
+        return _error_response(
+            status_code=status.HTTP_404_NOT_FOUND,
+            code="DEBUG_NOT_AVAILABLE",
+            message="Debug scoring is only available in the local development environment.",
+            request_id=f"{payload.session_id}:debug",
+        )
+
     scoring_service = request.app.state.scoring_service
     request_id = f"{payload.session_id}:debug"
 
@@ -134,6 +144,7 @@ def debug_score_request(request: Request, payload: ScoreRequest) -> dict[str, An
             request_id=request_id,
             details={"error_type": type(exc).__name__},
         )
+
 
 
 def _error_response(

@@ -25,8 +25,8 @@ from backend.ml.explainability.global_importance import FEATURE_DISPLAY_NAMES
 from backend.ml.inference.ensemble_adapter import (
     EnsembleInferenceBundle,
     WrappedEnsembleModel,
-    _predict_base_model_proba,
     build_ensemble_meta_features,
+    predict_base_model_proba,
     predict_ensemble_proba,
 )
 from backend.ml.inference.feature_assembly import assemble_request_features
@@ -326,7 +326,7 @@ def _build_model_debug(
     base_model_outputs: dict[str, Any] = {}
     for model_name in ensemble_bundle.base_model_order:
         raw_output = np.asarray(
-            _predict_base_model_proba(
+            predict_base_model_proba(
                 ensemble_bundle.base_models[model_name],
                 processed_features,
             ),
