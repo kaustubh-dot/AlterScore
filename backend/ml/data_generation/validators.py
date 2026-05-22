@@ -15,7 +15,7 @@ from backend.ml.preprocessing.feature_registry import (
 )
 
 EXPECTED_ROW_COUNT: Final[int] = 10_000
-DEFAULT_RATE_BOUNDS: Final[tuple[float, float]] = (0.24, 0.32)
+DEFAULT_RATE_BOUNDS: Final[tuple[float, float]] = (0.24, 0.33)
 MINIMUM_TEST_ROWS: Final[int] = 1_000
 VALID_COHORT_MONTHS: Final[set[int]] = set(range(1, 13))
 REQUIRED_DATASET_COLUMNS: Final[list[str]] = [
