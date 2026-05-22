@@ -18,6 +18,7 @@
 | Track C - Ensemble & Calibration | Complete | Calibrated stacking ensemble |
 | Track D - Explainability & Promotion | Complete | SHAP, DICE, global importance, manifest promotion |
 | Track D+ - Ensemble Serving Runtime | Complete | Adapter, loader, scoring, manifest-backed validation |
+| Track D++ - Governed Constrained Trees | Complete | Monotonic XGBoost/LightGBM comparison and promotion gating |
 | Track E - Borrower Frontend | Implemented, QA pending | Landing, assessment, submission, processing, results, sharing |
 | Track F - Evaluator Dashboard | Pending | Dashboard shell exists; analytics panel wiring remains |
 | Track G - Deployment & Demo | Pending | Docker/release assets after Track F |
@@ -49,6 +50,13 @@ ensemble. The promotion pipeline works end to end.
 Closed. The backend loads the calibrated stacking ensemble, all six base models,
 stacking config, preprocessor, text PCA, explainers, reports, and manifest
 checksums at startup. `/api/score` routes through `predict_ensemble_proba()`.
+
+### Track D++ - Governed Constrained Trees
+
+Closed. Monotonic constrained-tree candidates were evaluated through the full
+governance stack. Monotonic `XGBoost` is now the leading production candidate,
+while TabNet remains research-only unless it clears the same governance gates
+later.
 
 ### Track E - Borrower Frontend
 

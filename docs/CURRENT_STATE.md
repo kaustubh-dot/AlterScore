@@ -1,15 +1,15 @@
 # Current State
 
 **Date:** May 22, 2026
-**Phase:** Repository stabilization before scoring/debugging audit
-**Active Runtime:** Calibrated stacking ensemble v0.2.0
-**Branch:** `main`
+**Phase:** Governed production-candidate stabilization
+**Active Runtime:** Checked-in calibrated stacking ensemble baseline
+**Leading Candidate:** Monotonic `XGBoost`
+**Branch:** `codex/constrained-tree-production`
 
 ## Status Summary
 
-The backend is implemented and should be treated as frozen for routine product
-work during this cleanup phase. The default startup path is the repository-root
-command `python -m uvicorn backend.app.main:app`, which loads
+The backend is implemented and manifest-backed. The default startup path is the
+repository-root command `python -m uvicorn backend.app.main:app`, which loads
 `models/registry/production_manifest.json`, validates manifest checksums, and
 serves the checked-in artifact bundle.
 
@@ -18,6 +18,10 @@ page, assessment flow, processing state, results rendering, score sharing, and
 API submission to `/api/score`. The evaluator dashboard currently exists as a
 health-backed shell and still needs complete analytics-panel wiring.
 
+The leading production-track candidate is now a governed monotonic `XGBoost`
+system that has passed monotonic, counterfactual, fairness, calibration, and
+promotion-review checks in the current offline governed comparison workflow.
+
 ## What Is Stable
 
 - Manifest-backed backend startup
@@ -25,14 +29,16 @@ health-backed shell and still needs complete analytics-panel wiring.
 - Score, health, and analytics API contracts
 - Borrower assessment and results flow
 - Backend and pipeline test layout
+- Governed monotonic-tree evaluation pipeline
+- Fairness-hardening review workflow for the leading `XGBoost` candidate
 
 ## What Remains Open
 
-- Scoring logic audit is still pending.
-- Model behavior and score calibration are still under investigation.
 - Dashboard endpoint wiring and panel UX are incomplete.
 - Frontend-focused test coverage still needs expansion.
 - Deployment assets such as Docker files are still placeholders or absent.
+- Final production promotion of the monotonic `XGBoost` candidate into the
+  checked-in runtime bundle has not been executed yet.
 
 ## Known Current Issues
 
@@ -47,7 +53,7 @@ health-backed shell and still needs complete analytics-panel wiring.
 
 ## Immediate Next Steps
 
-1. Finish the scoring/debugging audit without changing unrelated runtime docs again.
+1. Finalize release packaging and promotion-review handoff for the monotonic `XGBoost` candidate.
 2. Add focused frontend tests for question data, payload assembly, retry behavior, and result rendering.
 3. Wire the dashboard to the existing analytics endpoints with independent panel states.
 4. Add deployment packaging once Track F is functional.

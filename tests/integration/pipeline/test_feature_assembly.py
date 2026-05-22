@@ -49,6 +49,30 @@ def test_assemble_request_features_builds_canonical_feature_frame_with_train_fit
     )
 
 
+def test_assemble_request_features_neutralizes_device_and_time_inputs_for_model_scoring() -> None:
+    requests = _build_score_requests()
+    train_embeddings = np.vstack(
+        [
+            extract_raw_text_embedding(request.answers.q27_resilience_text)
+            for request in requests[:2]
+        ]
+    )
+    text_pca = fit_text_pca(train_embeddings)
+
+    assembled = assemble_request_features(
+        requests[2],
+        text_pca=text_pca,
+        require_text_pca=True,
+    )
+
+    assert assembled.raw_behavioral_features["device_type"] == "tablet"
+    assert assembled.raw_behavioral_features["time_of_day"] == "evening"
+    assert assembled.behavioral_features["device_type"] == "mobile"
+    assert assembled.behavioral_features["time_of_day"] == "afternoon"
+    assert assembled.feature_row["device_type"] == "mobile"
+    assert assembled.feature_row["time_of_day"] == "afternoon"
+
+
 def test_assembled_request_features_flow_into_preprocessing_transform() -> None:
     requests = _build_score_requests()
     train_embeddings = np.vstack(

@@ -91,8 +91,8 @@ Canonical breakdown:
 | `scroll_hesitation_score` | float | 0-1 | Scroll events normalized | Reading carefully vs skimming |
 | `risk_response_speed_ratio` | float | 0-5 | Risk question response time / average response time | Fast risk choices imply impulsivity |
 | `typing_speed_wpm` | float | 0-200 | Q27 typing speed | Literacy proxy |
-| `time_of_day` | category | morning, afternoon, evening, night | Browser time bucket | Categorical model input |
-| `device_type` | category | mobile, desktop, tablet | User-agent parsing | Categorical model input |
+| `time_of_day` | category | morning, afternoon, evening, night | Browser time bucket | Raw telemetry; neutralized before runtime scoring |
+| `device_type` | category | mobile, desktop, tablet | User-agent parsing | Raw telemetry; neutralized before runtime scoring |
 
 ### Layer 3 - Local NLP Features
 
@@ -113,7 +113,7 @@ Canonical breakdown:
 | `repayment_intention_score` | float | `locus_of_control * social_capital_score * honesty_score` |
 | `impulsivity_index` | float | `(risk_attitude * risk_response_speed_ratio) / (CRT_score + 0.1)` |
 | `cognitive_load_index` | float | `(avg_response_time_ms / 4500) * (1 + answer_change_rate) * (1 + dropout_count * 0.2)` |
-| `engagement_score` | float | `scroll_hesitation_score * (1 - answer_change_rate) * (1 - dropout_count/4) * (1 - risk_response_speed_ratio*0.3)` |
+| `engagement_score` | float | `(1 - scroll_hesitation_score) * (1 - answer_change_rate) * (1 - dropout_count/4) * (1 - risk_response_speed_ratio*0.3)` |
 | `behavioral_trust_score` | float | `engagement_score * honesty_score * (1 - impulsivity_index)` |
 
 ## Canonical Feature Lists

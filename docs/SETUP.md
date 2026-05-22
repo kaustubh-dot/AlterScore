@@ -8,7 +8,8 @@ troubleshooting, and contributor onboarding.
 - Backend runtime is manifest-backed and loads the checked-in production bundle.
 - Borrower frontend is implemented and can submit to `/api/score`.
 - Dashboard shell exists, but full analytics-panel wiring is still pending.
-- Scoring and model behavior are intentionally unchanged in this cleanup pass.
+- The leading governed production candidate is monotonic `XGBoost`, evaluated
+  through the offline governance workflow.
 
 ## Environment Requirements
 
@@ -81,6 +82,7 @@ Frontend:
 
 - Start from `README.md`, then read this document.
 - For backend runtime work, read `docs/BACKEND_RUNTIME_ARCHITECTURE.md`.
+- For governed production-track work, read `docs/governance/GOVERNED_PRODUCTION_ARCHITECTURE.md`.
 - For frontend work, read `docs/FRONTEND_INTEGRATION_GUIDE.md`.
 - For contract-sensitive changes, read `docs/API_CONTRACTS.md`.
 - Do not change scoring logic, serialized model artifacts, or manifest contents
@@ -104,10 +106,6 @@ Frontend:
 
 ## Known Current Issues
 
-- Scoring logic is still under audit; this cleanup pass does not change model or
-  scoring behavior.
-- Model behavior and score calibration are still under investigation for the
-  upcoming scoring/debugging audit.
 - The evaluator dashboard shell exists, but full analytics-panel wiring remains
   incomplete.
 - Frontend test coverage is still lighter than backend and pipeline coverage.
