@@ -147,6 +147,14 @@ def extract_nlp_features(text: str) -> dict[str, float | np.ndarray]:
     normalized_text = _normalize_text(text)
     tokens = _tokenize(normalized_text)
 
+    if not _validate_text_quality(text, tokens):
+        return {
+            "text_sentiment_compound": -1.0,
+            "text_agency_score": 0.0,
+            "text_problem_solving_flag": 0.0,
+            "_embedding_raw": np.zeros(RAW_EMBEDDING_DIM, dtype=float),
+        }
+
     sentiment = _extract_sentiment(text=text, normalized_text=normalized_text, tokens=tokens)
     agency_score = _extract_agency_score(text=text, tokens=tokens)
     problem_solving_flag = _extract_problem_solving_flag(normalized_text=normalized_text, tokens=tokens)
@@ -305,6 +313,36 @@ def _normalize_text(text: str) -> str:
 
 def _tokenize(text: str) -> list[str]:
     return _TOKEN_PATTERN.findall(text)
+
+
+def _validate_text_quality(text: str, tokens: list[str]) -> bool:
+    """Return True if text passes basic quality, lexical diversity, and non-spam checks."""
+    if len(tokens) < 3:
+        return False
+
+    # 1. Lexical Diversity check (Total unique words / Total words)
+    unique_ratio = len(set(tokens)) / len(tokens)
+    if unique_ratio < 0.60:
+        return False
+
+    # 2. Maximum Single Word Repetition check
+    word_counts: dict[str, int] = {}
+    for word in tokens:
+        word_counts[word] = word_counts.get(word, 0) + 1
+    if any(count > 3 for count in word_counts.values()) and len(tokens) < 15:
+        return False
+
+    # 3. Character Repetition check (keyboard spam)
+    cleaned_char_text = "".join(text.split()).lower()
+    if len(cleaned_char_text) > 0:
+        char_counts: dict[str, int] = {}
+        for char in cleaned_char_text:
+            char_counts[char] = char_counts.get(char, 0) + 1
+        max_char_ratio = max(char_counts.values()) / len(cleaned_char_text)
+        if max_char_ratio > 0.35 and len(cleaned_char_text) > 10:
+            return False
+
+    return True
 
 
 @lru_cache(maxsize=1)

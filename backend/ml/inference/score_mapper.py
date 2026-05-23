@@ -16,7 +16,7 @@ def probability_to_score(prob_repay: float) -> int:
 
     probability = float(np.clip(prob_repay, 0.01, 0.99))
     log_odds = np.log(probability / (1.0 - probability))
-    score = 560.0 + (log_odds * 85.0)
+    score = 560.0 + (log_odds * 63.2)
     return int(np.clip(score, SCORE_MIN, SCORE_MAX))
 
 

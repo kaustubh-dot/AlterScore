@@ -117,7 +117,12 @@ class ScoringService:
             ensemble_bundle=self.ensemble_bundle,
         )
         repayment_probability = float(model_debug["repayment_probability"])
-        score_mapping_debug = _build_score_mapping_debug(repayment_probability)
+
+        # Apply Post-Model Governance Multiplier Layer
+        gov_multiplier, gov_reasons = _calculate_governance_multiplier(assembled.feature_row)
+        adjusted_probability = max(0.01, min(0.99, repayment_probability * gov_multiplier))
+
+        score_mapping_debug = _build_score_mapping_debug(adjusted_probability)
         credit_score = int(score_mapping_debug["final_credit_score"])
         risk_band = get_risk_band(credit_score)
         percentile = compute_percentile(
@@ -155,7 +160,7 @@ class ScoringService:
                 "session_id": score_request.session_id,
                 "credit_score": credit_score,
                 "risk_band": risk_band,
-                "repayment_probability": round(repayment_probability, 4),
+                "repayment_probability": round(adjusted_probability, 4),
                 "percentile": percentile,
                 "explanation": [
                     explanation.model_dump(mode="json") for explanation in explanation_items
@@ -172,6 +177,12 @@ class ScoringService:
             }
         )
         debug_trace = {
+            "governance_adjustments": {
+                "base_repayment_probability": repayment_probability,
+                "governance_multiplier": gov_multiplier,
+                "adjusted_repayment_probability": adjusted_probability,
+                "applied_realism_reasons": gov_reasons,
+            },
             "raw_input": _to_jsonable(
                 request if isinstance(request, dict) else request.model_dump(mode="json")
             ),
@@ -365,7 +376,7 @@ def _build_model_debug(
 def _build_score_mapping_debug(repayment_probability: float) -> dict[str, Any]:
     clipped_probability = float(np.clip(repayment_probability, 0.01, 0.99))
     log_odds = float(np.log(clipped_probability / (1.0 - clipped_probability)))
-    raw_score = 560.0 + (log_odds * 85.0)
+    raw_score = 560.0 + (log_odds * 63.2)
     final_credit_score = int(np.clip(raw_score, 300, 850))
     return {
         "raw_repayment_probability": float(repayment_probability),
@@ -535,6 +546,45 @@ def _build_improvement_tips(feature_row: dict[str, Any]) -> list[ImprovementTip]
             body="Clear, consistent answers and careful completion patterns help preserve strong scoring signals.",
         )
     ]
+
+
+def _calculate_governance_multiplier(feature_row: dict[str, Any]) -> tuple[float, list[str]]:
+    """Compute a bounded post-model multiplier [0.65, 1.0] and return warning logs."""
+    reasons = []
+    multiplier = 1.0
+
+    # 1. Impulsivity Penalty
+    # Impulsivity index calculated via click times and CRT. Bounded penalty.
+    impulsivity = float(feature_row.get("impulsivity_index", 0.0))
+    if impulsivity > 1.5:
+        penalty = min(0.15, (impulsivity - 1.5) * 0.05)
+        multiplier -= penalty
+        reasons.append(f"High impulsivity detected (index: {impulsivity:.2f})")
+
+    # 2. Honesty and Inconsistency Penalty
+    # Checked from consistency repeats and self-desirability trap answers.
+    honesty = float(feature_row.get("honesty_score", 1.0))
+    if honesty < 0.75:
+        penalty = min(0.20, (0.75 - honesty) * 0.5)
+        multiplier -= penalty
+        reasons.append(f"Inconsistent psychometric profile (honesty: {honesty:.2f})")
+
+    # 3. Telemetry Focus and Attention (Defocus/Dropout)
+    dropouts = int(feature_row.get("dropout_count", 0))
+    if dropouts > 2:
+        penalty = min(0.10, (dropouts - 2) * 0.02)
+        multiplier -= penalty
+        reasons.append(f"Frequent application defocus events (dropouts: {dropouts})")
+
+    # 4. Low Engagement / Extreme Changes
+    change_rate = float(feature_row.get("answer_change_rate", 0.0))
+    if change_rate > 0.30:
+        penalty = min(0.08, (change_rate - 0.30) * 0.2)
+        multiplier -= penalty
+        reasons.append(f"Erratic answer modification pattern (changes: {change_rate:.1%})")
+
+    final_multiplier = max(0.65, min(1.0, multiplier))
+    return final_multiplier, reasons
 
 
 __all__ = [
