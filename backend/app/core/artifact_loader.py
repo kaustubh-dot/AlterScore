@@ -53,6 +53,11 @@ RUNTIME_MODEL_CANDIDATES: Final[tuple[RuntimeModelCandidate, ...]] = (
         artifact_path=MODEL_ARTIFACTS_DIR / "calibrated_stacking.pkl",
     ),
     RuntimeModelCandidate(
+        model_name="xgboost_monotonic",
+        model_type="classical_monotonic",
+        artifact_path=MODEL_ARTIFACTS_DIR / "xgboost_monotonic.pkl",
+    ),
+    RuntimeModelCandidate(
         model_name="xgboost",
         model_type="classical",
         artifact_path=MODEL_ARTIFACTS_DIR / "xgb_best.pkl",
