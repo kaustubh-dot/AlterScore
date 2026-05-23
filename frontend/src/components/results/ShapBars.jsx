@@ -1,32 +1,110 @@
+import { useState } from "react";
+
 export default function ShapBars({ explanation }) {
+  const [expandedFeature, setExpandedFeature] = useState(null);
   const maxFactor = Math.max(...explanation.map((factor) => Math.abs(factor.shap_value)), 0.01);
+
+  const toggleExpand = (feature) => {
+    setExpandedFeature(expandedFeature === feature ? null : feature);
+  };
 
   return (
     <section className="result-panel result-animate">
       <div className="panel-heading">
         <p className="eyebrow">SHAP explanation</p>
-        <h2>What shaped the score</h2>
+        <h2>Factors Influencing Your Score</h2>
+        <p style={{ color: "var(--soft)", fontSize: "0.8rem", marginTop: "0.2rem" }}>
+          Click on any category below to understand its impact and mathematical validation parameters.
+        </p>
       </div>
-      <div className="shap-list">
+      <div className="shap-list" style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
         {explanation.map((factor) => {
           const positive = factor.direction === "positive";
           const width = Math.max((Math.abs(factor.shap_value) / maxFactor) * 100, 3);
+          const isExpanded = expandedFeature === factor.feature;
+
           return (
-            <article className="shap-row" key={`${factor.feature}-${factor.shap_value}`} data-cursor="interactive">
-              <div>
-                <strong>{factor.display_name}</strong>
-                <p>{factor.plain_language}</p>
+            <article 
+              className="shap-row" 
+              key={`${factor.feature}-${factor.shap_value}`} 
+              data-cursor="interactive"
+              onClick={() => toggleExpand(factor.feature)}
+              style={{
+                background: isExpanded ? "rgba(255, 255, 255, 0.02)" : "transparent",
+                border: isExpanded ? "1px solid var(--border-active)" : "1px solid transparent",
+                borderRadius: "6px",
+                padding: "0.8rem 1rem",
+                cursor: "pointer",
+                transition: "all 0.3s ease",
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.5rem"
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  <strong style={{ color: isExpanded ? "var(--accent)" : "var(--text-strong)", fontSize: "0.95rem" }}>
+                    {factor.display_name}
+                  </strong>
+                  <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "0.1rem" }}>
+                    {factor.plain_language}
+                  </span>
+                </div>
+                <span className={positive ? "factor-badge is-positive" : "factor-badge is-negative"} style={{
+                  padding: "0.25rem 0.5rem",
+                  borderRadius: "4px",
+                  fontSize: "0.8rem",
+                  fontWeight: "bold",
+                  background: positive ? "rgba(48,242,210,0.1)" : "rgba(255,77,94,0.1)",
+                  color: positive ? "var(--status-excellent)" : "var(--status-poor)"
+                }}>
+                  {positive ? "+" : "-"} {Math.abs(factor.shap_value).toFixed(2)}
+                </span>
               </div>
-              <div className="shap-track">
+
+              <div className="shap-track" style={{ width: "100%", background: "rgba(255,255,255,0.03)", height: "8px", borderRadius: "4px", overflow: "hidden", position: "relative" }}>
                 <span
                   className={`shap-fill ${positive ? "is-positive" : "is-negative"}`}
-                  style={{ width: `${width}%` }}
+                  style={{ 
+                    display: "block",
+                    height: "100%",
+                    width: `${width}%`,
+                    background: positive ? "var(--status-excellent)" : "var(--status-poor)",
+                    transition: "width 0.8s ease"
+                  }}
                 />
-                <em>{factor.plain_language}</em>
               </div>
-              <span className={positive ? "factor-badge is-positive" : "factor-badge is-negative"}>
-                {positive ? "+" : "-"} {Math.abs(factor.shap_value).toFixed(2)}
-              </span>
+
+              {isExpanded && (
+                <div 
+                  className="shap-detail-drawer" 
+                  style={{ 
+                    padding: "0.8rem", 
+                    marginTop: "0.4rem", 
+                    background: "rgba(0,0,0,0.2)", 
+                    borderRadius: "4px", 
+                    fontSize: "0.8rem", 
+                    color: "var(--text-muted)",
+                    lineHeight: "1.4",
+                    borderLeft: "2px solid var(--accent)"
+                  }}
+                  onClick={(e) => e.stopPropagation()} // Prevent closing when clicking drawer content
+                >
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "0.5rem" }}>
+                    <div>
+                      <span className="mono-text" style={{ fontSize: "0.7rem", color: "var(--soft)", display: "block" }}>// FEATURE CODE</span>
+                      <strong style={{ fontFamily: "var(--font-mono)", fontSize: "0.75rem" }}>{factor.feature}</strong>
+                    </div>
+                    <div>
+                      <span className="mono-text" style={{ fontSize: "0.7rem", color: "var(--soft)", display: "block" }}>// SHAP IMPACT SCORE</span>
+                      <strong>{factor.shap_value > 0 ? "+" : ""}{factor.shap_value.toFixed(4)}</strong>
+                    </div>
+                  </div>
+                  <p style={{ margin: "0.5rem 0 0 0", color: "var(--text-muted)" }}>
+                    <strong>Governance Note:</strong> This feature is governed by XGBoost monotonic constraints. Positive performance shifts are locked to only benefit your overall credit health. No arbitrary rating degradation can occur on this feature.
+                  </p>
+                </div>
+              )}
             </article>
           );
         })}
