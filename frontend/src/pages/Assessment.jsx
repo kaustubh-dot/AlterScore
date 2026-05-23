@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 import OptionCard from "../components/assessment/OptionCard.jsx";
 import ProgressDots from "../components/assessment/ProgressDots.jsx";
+import TelemetryOptIn from "../components/assessment/TelemetryOptIn.jsx";
 import ProcessingScreen from "../components/processing/ProcessingScreen.jsx";
 import { QUESTIONS, getSectionById } from "../data/questions.js";
 import { submitScore } from "../services/api.js";
@@ -31,6 +32,9 @@ export default function Assessment() {
   const lastScrollY = useRef(window.scrollY);
   const scrollDirection = useRef(0);
 
+  const [consented, setConsented] = useState(() => {
+    return window.sessionStorage.getItem("alterscore_telemetry_consented") === "true";
+  });
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState(() => {
     try {
@@ -60,12 +64,13 @@ export default function Assessment() {
   const hasAnswer = useMemo(() => {
     const value = answers[question.id];
     if (question.type === "text") {
-      return String(value || "").trim().split(/\s+/).filter(Boolean).length >= (question.minWords || 1);
+      return String(value || "").trim().split(/\s+/).filter(Boolean).length >= (question.minWords || 10);
     }
     return value !== undefined && value !== null && value !== "";
   }, [answers, question]);
 
   useEffect(() => {
+    if (!consented) return;
     setQuestionStartTime(Date.now());
     window.clearTimeout(autoTimerRef.current);
     gsap.fromTo(
@@ -80,13 +85,14 @@ export default function Assessment() {
       return () => window.clearTimeout(timer);
     }
     return undefined;
-  }, [currentIndex]);
+  }, [currentIndex, consented]);
 
   useEffect(() => {
     window.sessionStorage.setItem("alterscore_answers", JSON.stringify(answers));
   }, [answers]);
 
   useEffect(() => {
+    if (!consented) return;
     const handleVisibility = () => {
       if (document.hidden) {
         setTelemetry((state) => ({ ...state, dropoutCount: Math.min(state.dropoutCount + 1, 20) }));
@@ -112,7 +118,48 @@ export default function Assessment() {
       document.removeEventListener("visibilitychange", handleVisibility);
       window.removeEventListener("scroll", handleScroll);
     };
-  }, [question.id]);
+  }, [question.id, consented]);
+
+  // Keyboard Navigation Helpers
+  useEffect(() => {
+    if (!consented || isSubmitting) return;
+
+    const handleKeyDown = (event) => {
+      const activeElement = document.activeElement;
+      if (activeElement && (activeElement.tagName === "INPUT" || activeElement.tagName === "TEXTAREA")) {
+        // Allow normal typing inside writing questions
+        return;
+      }
+
+      if (question.type === "likert") {
+        const num = Number(event.key);
+        if (num >= 1 && num <= 5) {
+          recordAnswer(num);
+        }
+      } else if (question.type === "binary_choice") {
+        if (event.key === "1") {
+          recordAnswer(0);
+        } else if (event.key === "2") {
+          recordAnswer(1);
+        }
+      } else if (question.type === "mcq") {
+        const num = Number(event.key);
+        const optionsCount = question.options?.length || 0;
+        if (num >= 1 && num <= optionsCount) {
+          recordAnswer(num - 1);
+        }
+      }
+
+      if (event.key === "ArrowLeft" || event.key === "Backspace") {
+        goBack();
+      } else if (event.key === "ArrowRight" || (event.key === "Enter" && hasAnswer)) {
+        goForward(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [consented, currentIndex, hasAnswer, question, isSubmitting]);
 
   function recordAnswer(rawValue) {
     const value = coerceAnswerValue(question, rawValue);
@@ -174,13 +221,28 @@ export default function Assessment() {
   }
 
   async function handleSubmit(nextAnswers = answers) {
-    const payload = pendingPayloadRef.current || {
-      session_id: storedSessionId,
-      answers: buildAnswersPayload(nextAnswers),
-      behavioral: buildBehavioralPayload({ telemetry, answers: nextAnswers, sessionStartTime }),
-    };
+    let payload = pendingPayloadRef.current;
+    if (!payload) {
+      const storedPayload = window.sessionStorage.getItem("alterscore_pending_payload");
+      if (storedPayload) {
+        try {
+          payload = JSON.parse(storedPayload);
+        } catch {
+          payload = null;
+        }
+      }
+    }
+
+    if (!payload) {
+      payload = {
+        session_id: storedSessionId,
+        answers: buildAnswersPayload(nextAnswers),
+        behavioral: buildBehavioralPayload({ telemetry, answers: nextAnswers, sessionStartTime }),
+      };
+    }
 
     pendingPayloadRef.current = payload;
+    window.sessionStorage.setItem("alterscore_pending_payload", JSON.stringify(payload));
     setIsSubmitting(true);
     setError(null);
 
@@ -190,6 +252,7 @@ export default function Assessment() {
       await wait(Math.max(0, 5000 - (Date.now() - startedAt)));
       window.sessionStorage.setItem("alterscore_score_result", JSON.stringify(result));
       pendingPayloadRef.current = null;
+      window.sessionStorage.removeItem("alterscore_pending_payload");
       navigate("/results", { state: result });
     } catch (err) {
       setError(err.status === 422 ? "The score contract rejected one field. Your answers are still saved." : "Network failed. Retry will reuse the same payload.");
@@ -217,18 +280,68 @@ export default function Assessment() {
     }
 
     if (question.type === "text") {
+      const wordsCount = String(answers[question.id] || "").trim().split(/\s+/).filter(Boolean).length;
+      const minWords = question.minWords || 10;
+      const progressPercent = Math.min((wordsCount / minWords) * 100, 100);
+      const metMin = wordsCount >= minWords;
+
       return (
         <div className="open-answer">
           <textarea
-            rows={5}
+            rows={6}
             maxLength={question.maxLength || 1000}
             value={answers[question.id] ?? ""}
             onChange={(event) => recordAnswer(event.target.value)}
             placeholder="Write the moment, the action, and what changed after it."
+            style={{
+              width: "100%",
+              padding: "1rem",
+              background: "rgba(255,255,255,0.02)",
+              border: "1px solid var(--line)",
+              borderRadius: "6px",
+              color: "var(--text-strong)",
+              fontSize: "1rem",
+              lineHeight: "1.6",
+              outline: "none",
+              transition: "border-color 0.2s"
+            }}
           />
-          <span>
-            {String(answers[question.id] || "").trim().split(/\s+/).filter(Boolean).length} words · min {question.minWords || 1}
-          </span>
+          
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "0.5rem", fontSize: "0.8rem" }}>
+            <span style={{ color: metMin ? "var(--accent-green)" : "var(--accent-red)", fontWeight: "500" }}>
+              {wordsCount} words {metMin ? "✓ Minimum met" : `(needs at least ${minWords} words)`}
+            </span>
+            <span style={{ color: "var(--soft)" }}>
+              Max {question.maxLength || 1000} characters
+            </span>
+          </div>
+
+          <div style={{ width: "100%", height: "4px", background: "rgba(255,255,255,0.05)", borderRadius: "2px", marginTop: "0.5rem", overflow: "hidden" }}>
+            <div style={{
+              width: `${progressPercent}%`,
+              height: "100%",
+              background: metMin ? "var(--accent-green)" : "var(--accent-red)",
+              transition: "width 0.3s ease, background-color 0.3s ease"
+            }} />
+          </div>
+
+          <div className="resilience-helper-card" style={{
+            marginTop: "1.5rem",
+            padding: "1rem",
+            background: "rgba(255,255,255,0.01)",
+            borderLeft: "3px solid var(--accent)",
+            borderRadius: "4px",
+            fontSize: "0.85rem",
+            lineHeight: "1.5",
+            color: "var(--text-muted)"
+          }}>
+            <strong>💡 Suggestion Guide:</strong>
+            <ul style={{ margin: "0.5rem 0 0 0", paddingLeft: "1.2rem" }}>
+              <li>What was the specific event or challenge? (e.g. startup, business trial, financial plan)</li>
+              <li>What did you plan or design as an adjustment?</li>
+              <li>What concrete actions did you execute to resolve the conflict?</li>
+            </ul>
+          </div>
         </div>
       );
     }
@@ -249,6 +362,20 @@ export default function Assessment() {
           );
         })}
       </div>
+    );
+  }
+
+  if (!consented) {
+    return (
+      <main className="assessment-experience" data-section style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "80vh" }}>
+        <TelemetryOptIn
+          onConsent={() => {
+            window.sessionStorage.setItem("alterscore_telemetry_consented", "true");
+            setConsented(true);
+            setQuestionStartTime(Date.now());
+          }}
+        />
+      </main>
     );
   }
 
