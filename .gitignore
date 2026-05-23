@@ -71,12 +71,16 @@ models/artifacts/*
 !models/artifacts/lgbm_best.pkl
 !models/artifacts/tabnet_epoch_best.zip
 !models/artifacts/mlp_best.pt
+!models/artifacts/xgboost_monotonic.pkl
 models/preprocessors/*
 !models/preprocessors/preprocessor.pkl
 !models/preprocessors/text_pca.pkl
+!models/preprocessors/preprocessor_monotonic.pkl
 models/explainers/*
 !models/explainers/shap_explainer.pkl
 !models/explainers/dice_explainer.pkl
+!models/explainers/shap_explainer_monotonic.pkl
+!models/explainers/dice_explainer_monotonic.pkl
 models/reports/*
 !models/reports/baseline_metrics.json
 !models/reports/fairness_report.json
@@ -85,6 +89,7 @@ models/reports/*
 !models/reports/population_percentiles.json
 !models/reports/psi_report.json
 !models/reports/shap_summary.png
+!models/reports/*_monotonic.json
 models/registry/*
 !models/registry/production_manifest.json
 

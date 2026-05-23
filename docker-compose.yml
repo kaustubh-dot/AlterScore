@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  alterscore-backend:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.backend
+    container_name: alterscore-backend
+    environment:
+      - ALTERSCORE_ENV=production
+      - ALTERSCORE_API_VERSION=0.2.0
+      - ALTERSCORE_LOG_LEVEL=INFO
+    volumes:
+      # Persist append-only credit scoring request logs to host
+      - ./runtime/logs:/app/runtime/logs
+    expose:
+      - "8000"
+    networks:
+      - alterscore-network
+    restart: unless-stopped
+
+  alterscore-frontend:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.frontend
+    container_name: alterscore-frontend
+    ports:
+      # Map production Nginx proxy port to host port 80
+      - "80:80"
+    depends_on:
+      - alterscore-backend
+    networks:
+      - alterscore-network
+    restart: unless-stopped
+
+networks:
+  alterscore-network:
+    name: alterscore-network
+    driver: bridge

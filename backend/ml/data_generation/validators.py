@@ -1,4 +1,4 @@
-python -m pytest --tb=short -q"""Validation helpers for AlterScore synthetic data generation."""
+"""Validation helpers for AlterScore synthetic data generation."""
 
 from __future__ import annotations
 

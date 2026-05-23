@@ -28,7 +28,10 @@ import joblib
 import numpy as np
 import pandas as pd
 from sklearn.calibration import CalibratedClassifierCV
-from sklearn.frozen import FrozenEstimator
+try:
+    from sklearn.frozen import FrozenEstimator
+except ImportError:
+    FrozenEstimator = None
 from sklearn.linear_model import LogisticRegression
 
 from backend.app.core.paths import MODEL_ARTIFACTS_DIR, RAW_DATA_DIR
@@ -220,10 +223,17 @@ def train_stacking(
     # ------------------------------------------------------------------
     # Isotonic calibration on the same validation fold (cv='prefit')
     # ------------------------------------------------------------------
-    calibrated_model = CalibratedClassifierCV(
-        estimator=FrozenEstimator(meta_learner),
-        method="isotonic",
-    )
+    if FrozenEstimator is not None:
+        calibrated_model = CalibratedClassifierCV(
+            estimator=FrozenEstimator(meta_learner),
+            method="isotonic",
+        )
+    else:
+        calibrated_model = CalibratedClassifierCV(
+            estimator=meta_learner,
+            method="isotonic",
+            cv="prefit",
+        )
     calibrated_model.fit(meta_X_val, y_val)
 
     # ------------------------------------------------------------------
