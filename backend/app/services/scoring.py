@@ -37,34 +37,8 @@ from backend.ml.inference.score_mapper import (
 )
 from backend.ml.preprocessing.pipeline import transform_features
 
-_TIP_LIBRARY: dict[str, tuple[str, str]] = {
-    "numeracy_score": (
-        "Strengthen financial math",
-        "Practice interest, discount, and savings calculations before applying again.",
-    ),
-    "financial_literacy_score": (
-        "Review money basics",
-        "Refreshing savings, borrowing, and inflation concepts can improve future applications.",
-    ),
-    "future_orientation": (
-        "Show long-term planning",
-        "Consistent future-oriented choices usually support stronger repayment signals.",
-    ),
-    "conscientiousness_score": (
-        "Build repayment habits",
-        "Small routines around planning and follow-through can improve creditworthiness signals.",
-    ),
-    "social_capital_score": (
-        "Highlight support systems",
-        "Documenting community or family repayment support can strengthen future applications.",
-    ),
-    "text_agency_score": (
-        "Use action-oriented explanations",
-        "Describe concrete steps you take to manage setbacks and repayment plans.",
-    ),
-}
+from backend.app.core.constants import MAX_EXPLANATION_ITEMS, TIP_LIBRARY
 
-_MAX_EXPLANATION_ITEMS = 6
 logger = logging.getLogger(__name__)
 
 
@@ -463,7 +437,7 @@ def _build_explanation_items(
                 ),
             )
         )
-        if len(explanation_candidates) == _MAX_EXPLANATION_ITEMS:
+        if len(explanation_candidates) == MAX_EXPLANATION_ITEMS:
             break
 
     return explanation_candidates
@@ -537,7 +511,7 @@ def _build_explanation_plain_language(*, display_name: str, direction: str) -> s
 
 def _build_improvement_tips(feature_row: dict[str, Any]) -> list[ImprovementTip]:
     tips: list[ImprovementTip] = []
-    for feature_name, (title, body) in _TIP_LIBRARY.items():
+    for feature_name, (title, body) in TIP_LIBRARY.items():
         feature_value = float(feature_row.get(feature_name, 0.0))
         if feature_value >= 0.6:
             continue

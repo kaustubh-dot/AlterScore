@@ -150,18 +150,13 @@
       "status": "stable"
     },
     {
-      "feature": "text_semantic_dim2",
-      "psi": 0.0405,
-      "status": "stable"
-    },
-    {
       "feature": "reciprocity_norm",
       "psi": 0.0373,
       "status": "stable"
     },
     {
       "feature": "text_sentiment_compound",
-      "psi": 0.0356,
+      "psi": 0.0353,
       "status": "stable"
     },
     {
@@ -180,6 +175,11 @@
       "status": "stable"
     },
     {
+      "feature": "text_semantic_dim1",
+      "psi": 0.0291,
+      "status": "stable"
+    },
+    {
       "feature": "time_of_day",
       "psi": 0.0284,
       "status": "stable"
@@ -187,6 +187,11 @@
     {
       "feature": "CRT_score",
       "psi": 0.0277,
+      "status": "stable"
+    },
+    {
+      "feature": "text_semantic_dim2",
+      "psi": 0.0275,
       "status": "stable"
     },
     {
@@ -212,11 +217,6 @@
     {
       "feature": "scroll_hesitation_score",
       "psi": 0.0216,
-      "status": "stable"
-    },
-    {
-      "feature": "text_semantic_dim1",
-      "psi": 0.0148,
       "status": "stable"
     },
     {

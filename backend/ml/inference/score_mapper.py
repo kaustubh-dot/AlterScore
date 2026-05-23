@@ -8,24 +8,24 @@ from typing import Any
 import numpy as np
 
 
+from backend.app.core.constants import RISK_BANDS, SCORE_MIN, SCORE_MAX
+
+
 def probability_to_score(prob_repay: float) -> int:
     """Map repayment probability to the documented 300-850 score range."""
 
     probability = float(np.clip(prob_repay, 0.01, 0.99))
     log_odds = np.log(probability / (1.0 - probability))
     score = 560.0 + (log_odds * 85.0)
-    return int(np.clip(score, 300, 850))
+    return int(np.clip(score, SCORE_MIN, SCORE_MAX))
 
 
 def get_risk_band(score: int) -> str:
     """Return the documented borrower-facing risk band."""
 
-    if score >= 750:
-        return "excellent"
-    if score >= 650:
-        return "good"
-    if score >= 550:
-        return "fair"
+    for band_key, band_info in RISK_BANDS.items():
+        if band_info["min_score"] <= score <= band_info["max_score"]:
+            return band_key
     return "poor"
 
 
@@ -33,32 +33,12 @@ def get_loan_eligibility(score: int) -> dict[str, Any]:
     """Return bounded loan-eligibility guidance aligned with the response schema."""
 
     risk_band = get_risk_band(score)
-    if risk_band == "excellent":
-        return {
-            "band": risk_band,
-            "amount_min": 30000,
-            "amount_max": 75000,
-            "description": "Eligible for larger starter microloans subject to lender policy.",
-        }
-    if risk_band == "good":
-        return {
-            "band": risk_band,
-            "amount_min": 10000,
-            "amount_max": 30000,
-            "description": "Eligible for a moderate starter loan subject to lender policy.",
-        }
-    if risk_band == "fair":
-        return {
-            "band": risk_band,
-            "amount_min": 5000,
-            "amount_max": 12000,
-            "description": "Eligible for a smaller starter loan with moderate risk.",
-        }
+    info = RISK_BANDS.get(risk_band, RISK_BANDS["poor"])
     return {
         "band": risk_band,
-        "amount_min": 0,
-        "amount_max": 5000,
-        "description": "Limited eligibility; financial coaching is recommended before larger borrowing.",
+        "amount_min": info["amount_min"],
+        "amount_max": info["amount_max"],
+        "description": info["description"],
     }
 
 
