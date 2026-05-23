@@ -42,9 +42,9 @@ Aggregated client-side behavior sent to the ML engine:
 
 ---
 
-## 2. Score Response Schema (`ScoreResponse`)
+## 2. Calibrated Score Response Schema (`ScoreResponse`)
 
-The backend returns a standard JSON structure upon scoring success:
+The backend returns a standard JSON structure upon scoring success. Note that our recalibrated score mapping uses a wider logistic scaling factor (`63.2`) to eliminate high-end score saturation, meaning that Excellent ratings (up to 850) are highly descriptive and granular:
 
 ```json
 {
@@ -91,9 +91,28 @@ The backend returns a standard JSON structure upon scoring success:
 
 ---
 
-## 3. Environment & Configuration Variables
+## 3. Telemetry Integrity: U-Shaped Pacing & Text Checks
+
+The backend now enforces strict **behavioral anti-gaming filters** that the frontend must align with:
+
+1. **U-Shaped Response Pacing**:
+   * *Optimal Pace*: Spend 4–15 seconds per question card.
+   * *Fast Pacing Penalty*: Completing the quiz extremely fast ($t < 4000\text{ms}$ per question) or finishing the session in under $120\text{ seconds}$ will quadratically inflate the pacing parameters inside the backend. This triggers the XGBoost negative monotonic constraints, dropping the final score.
+   * **Guidance**: Frontend should naturally slow down or nudge the user if they click through choices too fast.
+2. **Text Quality Validation**:
+   * *Audit Criteria*: Word count must be $\ge 10$ words. Lexical diversity ratio ($\text{Unique Words} / \text{Total Words}$) must be $\ge 0.60$. Text must not contain repeated spam characters (e.g. keyboard mashes) making up $>35\%$ of the total length.
+   * *Anomalous Input Penalty*: Failing these filters sets Spacy/VADER features to maximum negative targets, applying strict score penalties.
+   * **Guidance**: Frontend must validate character and word repetition in real time on Question 27, prompting the applicant with helpful guidelines to "explain their actions clearly."
+3. **Copy-Paste and Bot Detection**:
+   * *Typing Speed Audit*: Copy-pasting responses or using automated script typing yields WPM $>85.0$. The backend reverses this to $0.0\text{ WPM}$, stripping away positive score contributions.
+   * **Guidance**: Frontend should discourage copy-pasting into the textarea or log a clipboard paste event.
+
+---
+
+## 4. Environment & Configuration Variables
 
 Ensure the following configuration variables are loaded in the environment (`.env.production`):
 * `VITE_API_URL`: The base domain for backend requests (e.g. `https://api.alterscore.io`).
 * `VITE_TELEMETRY_LOGGING`: Set to `true` to enable tracking behaviors.
 * `VITE_DEMO_PRESETS`: Enable to inject pre-populated test data (like the Excellent and Risky personas) during presentation audits.
+
