@@ -1,14 +1,14 @@
 {
   "manifest_schema_version": "1.0.0",
-  "manifest_version": "calibrated_stacking_ensemble_v1",
+  "manifest_version": "xgboost_monotonic_v1",
   "model_version": "0.2.0",
-  "run_id": "20260516_095448_ensemble_promotion",
-  "created_at": "2026-05-16T09:54:48Z",
+  "run_id": "20260522_180006_xgboost_monotonic_promotion",
+  "created_at": "2026-05-22T18:00:06Z",
   "code_ref": "antigravity/dev",
   "data_version": "synthetic_v0.1.0",
   "feature_registry_version": "0.1.0",
-  "runtime_model_name": "stacking_ensemble",
-  "runtime_model_type": "ensemble",
+  "runtime_model_name": "xgboost_monotonic",
+  "runtime_model_type": "classical_monotonic",
   "target": "repayment_label",
   "split": {
     "train": "cohort_month 1-8",
@@ -17,102 +17,63 @@
   },
   "artifacts": {
     "runtime_model": {
-      "path": "models/artifacts/calibrated_stacking.pkl",
-      "sha256": "e81d933ed29ca65b9fa6abbda23fc43318582a7db770164856aaf8a86a125293"
+      "path": "models/artifacts/xgboost_monotonic.pkl",
+      "sha256": "091b141247f15639015b41feb5e81b94fea5352b65e9cd1a7d5a8aef9b12f7f2"
     },
     "preprocessor": {
-      "path": "models/preprocessors/preprocessor.pkl",
-      "sha256": "5237280dc53ce10b0a75914fc09e480e15d12be8e2a0fd7e8c9e9be5047d6794"
+      "path": "models/preprocessors/preprocessor_monotonic.pkl",
+      "sha256": "8f9e61bd4443186169a4e3d9025e00e73335da998cbd5465c74fe33205ef26ef"
     },
     "text_pca": {
       "path": "models/preprocessors/text_pca.pkl",
       "sha256": "8713ee967bfc78743f8d53f1a8235d771b4ae65f14fab5b0ac2696dbfd85dc2d"
     },
     "shap_explainer": {
-      "path": "models/explainers/shap_explainer.pkl",
-      "sha256": "3faaeeb66eece51b18cef80dc54f1c3d32aa924a1ef1f15ca7c85ba8cf562edf"
+      "path": "models/explainers/shap_explainer_monotonic.pkl",
+      "sha256": "5dee62161e19fb8567632799c33f1a47e33f15bbab300f075134c626f1eeb76f"
     },
     "dice_explainer": {
-      "path": "models/explainers/dice_explainer.pkl",
-      "sha256": "898852ab4c3d8f5bbb9323f7fa787751802f6b7377b6b21efad24e81995b3a74"
+      "path": "models/explainers/dice_explainer_monotonic.pkl",
+      "sha256": "f607566ae6309189c820da2037f957573cbcb4b7bba1dd877eb1891ab5ce2c22"
     },
     "metrics": {
-      "path": "models/reports/metrics.json",
-      "sha256": "0fd64e6406a26eb5e72bbc12a50afbdb9467e87e9fa72f04d2f2b4c8ca17a94e"
+      "path": "models/reports/metrics_monotonic.json",
+      "sha256": "8236ad460c95a8fcac722f4c80039bb8f3c341bd4a60d1b0f912a568de6415b1"
     },
     "baseline_metrics": {
-      "path": "models/reports/baseline_metrics.json",
-      "sha256": "491f55f01c7c6ba05d2b196f121875bd209d0db807b0cee3ca710e9eb427f107"
+      "path": "models/reports/baseline_metrics_monotonic.json",
+      "sha256": "1d48b47ced674bd822e85b2ad91fefa53d5ac02d04089fdb73399dd3040c11e6"
     },
     "fairness_report": {
-      "path": "models/reports/fairness_report.json",
-      "sha256": "55e9049603c545a77c49376160238c5e151e12825804c83e9461bf96466dcb68"
+      "path": "models/reports/fairness_report_monotonic.json",
+      "sha256": "cf6cbb0fb0bc4d280670c0db813649561694b47f05392eaef7a4294bc0d28cf3"
     },
     "psi_report": {
-      "path": "models/reports/psi_report.json",
-      "sha256": "e327cc1fba116dbf4582e49a5b47a5c1e05c6ac63af5249bee8e19aad3107070"
+      "path": "models/reports/psi_report_monotonic.json",
+      "sha256": "0ab349c8c40cfd570134780033d8d39c14b5afc4aa379e4c8a110fec1178ae72"
     },
     "global_importance": {
-      "path": "models/reports/global_importance.json",
-      "sha256": "79903c9ddcbbc20e395ea5147439ecd29cc37e3d7ce0938650ca2020af081232"
+      "path": "models/reports/global_importance_monotonic.json",
+      "sha256": "ead32fa1319c6582f2fd055b37fef7ba13bcca485c3ff3a748b6286f9f349f58"
     },
     "population_percentiles": {
-      "path": "models/reports/population_percentiles.json",
-      "sha256": "52ddf336b3176c55e45011080583904fe02f3a1769b49aefd24f369470de80e1"
+      "path": "models/reports/population_percentiles_monotonic.json",
+      "sha256": "76112bcdb92b50906974473b5adaae28b727dff108b5267de3f379365fddd6e8"
     }
-  },
-  "base_models": {
-    "logistic_regression": {
-      "path": "models/artifacts/logistic_best.pkl",
-      "sha256": "6f873bc60612561b68f5ff9180fb112a0d2ef3733e372a5e105b6356659d5597"
-    },
-    "random_forest": {
-      "path": "models/artifacts/rf_best.pkl",
-      "sha256": "79c24a73196291baf8df063fc75da5af2b6eeeaa9d62dc3ec1b64a93ffb613d1"
-    },
-    "xgboost": {
-      "path": "models/artifacts/xgb_best.pkl",
-      "sha256": "8df329a6e2b5ce789671c4d78141265e95f1e88b248fe58bfd1296cb1ac0eb6c"
-    },
-    "lightgbm": {
-      "path": "models/artifacts/lgbm_best.pkl",
-      "sha256": "28f6161425585879a4d866fd30f63c84bc230bc5cb1a3eaa85e5c508edc80cbb"
-    },
-    "tabnet": {
-      "path": "models/artifacts/tabnet_epoch_best.zip",
-      "sha256": "52f06b9a69d98c6b8966f27d545ff9d2a2236ff8fbc997f66d457640f3eae077"
-    },
-    "residual_mlp": {
-      "path": "models/artifacts/mlp_best.pt",
-      "sha256": "9e629d2f67e93679aaf87d496176712e672509c9e306f417f74741b80126aad1"
-    }
-  },
-  "stacking_config": {
-    "path": "models/artifacts/calibrated_stacking_config.json",
-    "sha256": "5150c334d1a4fb23168a0182e2082edec3709f76373a0a1e4acb3472c2af9983"
   },
   "metrics_summary": {
     "test_split": "test_months_11_12",
-    "test_auc_roc": 0.8062,
-    "ensemble_base_models": [
-      "logistic_regression",
-      "random_forest",
-      "xgboost",
-      "lightgbm",
-      "tabnet",
-      "residual_mlp"
-    ],
-    "meta_learner": "LogisticRegression(C=1.0)",
-    "calibration": "isotonic"
+    "test_auc_roc": 0.804,
+    "calibration": "none"
   },
   "fairness_summary": {
-    "overall_auc": 0.8062,
-    "verdict": "Model shows acceptable fairness across all tested demographic groups. No subgroup shows AUC deviation >4% from the overall model."
+    "overall_auc": 0.804,
+    "verdict": "Model requires attention for: gender=non_binary. These groups show AUC deviation beyond threshold. Recommend targeted feature collection or separate calibration."
   },
   "drift_summary": {
-    "verdict": "see psi_report.json",
-    "note": "PSI computed on base features; ensemble does not alter feature distribution."
+    "verdict": "see psi_report_monotonic.json",
+    "note": "PSI computed on base features; model does not alter feature distribution."
   },
   "promotion_status": "promoted",
-  "promotion_notes": "Calibrated stacking ensemble promoted. Meta-learner: LogisticRegression on months-9-10 stacked probabilities. Calibration: isotonic (cv=prefit). SHAP: surrogate LR on train-split features vs ensemble soft labels. DICE: model-agnostic (predict_proba compatible)."
+  "promotion_notes": "Monotonic XGBoost candidate promoted to production. Guaranteed monotonicity constraints on key behavioral features. Removes unconstrained TabNet complexity and PyTorch runtime dependency."
 }

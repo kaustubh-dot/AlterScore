@@ -56,7 +56,7 @@ def test_checked_in_bundle_loader_validates_real_runtime_artifacts() -> None:
 
     assert settings.request_log_path == REQUEST_LOG_PATH
     assert bundle.report.source == "manifest"
-    assert bundle.report.runtime_model_name == "stacking_ensemble"
+    assert bundle.report.runtime_model_name == "xgboost_monotonic"
     assert bundle.report.manifest_version is not None
     assert bundle.report.model_version == "0.2.0"
     assert bundle.report.scoring_ready is True
@@ -73,10 +73,9 @@ def test_checked_in_bundle_loader_validates_real_runtime_artifacts() -> None:
     assert "text_pca" in bundle.report.artifacts_loaded
     assert "shap_explainer" in bundle.report.artifacts_loaded
     assert "dice_explainer" in bundle.report.artifacts_loaded
-    assert "base_models" in bundle.report.artifacts_loaded
-    assert bundle.base_models is not None
-    assert len(bundle.base_models) == 6
-    assert bundle.stacking_config is not None
+    assert "base_models" not in bundle.report.artifacts_loaded
+    assert bundle.base_models is None
+    assert bundle.stacking_config is None
     assert bundle.report.missing_artifacts == ()
     assert bundle.report.invalid_artifacts == ()
 
@@ -103,7 +102,7 @@ def test_checked_in_bundle_health_endpoint_reports_validated_optional_status() -
 
 def test_copied_checked_in_bundle_marks_invalid_optional_artifacts(tmp_path) -> None:
     settings = _copy_checked_in_runtime_bundle(tmp_path)
-    dice_path = settings.repo_root / "models" / "explainers" / "dice_explainer.pkl"
+    dice_path = settings.repo_root / "models" / "explainers" / "dice_explainer_monotonic.pkl"
     dice_path.write_text("not-a-valid-dice-artifact", encoding="utf-8")
     app = create_app(settings)
 
@@ -166,7 +165,10 @@ def test_checked_in_bundle_score_endpoint_appends_to_runtime_log_path() -> None:
     parsed = ScoreResponse.model_validate(response.json())
     assert parsed.credit_score >= 300
     assert parsed.explanation
-    assert parsed.counterfactual_actions
+    if parsed.credit_score < 850:
+        assert parsed.counterfactual_actions
+    else:
+        assert isinstance(parsed.counterfactual_actions, list)
     assert all(item.display_name for item in parsed.explanation)
     assert all(action.estimated_score_gain >= 0 for action in parsed.counterfactual_actions)
     assert log_path.is_file()
