@@ -84,13 +84,6 @@ button:disabled {
   min-height: 100vh;
 }
 
-@media (pointer: fine) {
-  body,
-  body * {
-    cursor: none !important;
-  }
-}
-
 .background-scene {
   position: fixed;
   inset: 0;
@@ -104,9 +97,7 @@ button:disabled {
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background:
-    radial-gradient(circle at var(--mouse-x) var(--mouse-y), rgba(61, 255, 200, 0.12), transparent 22rem),
-    radial-gradient(circle at center, transparent 0 38%, rgba(4, 5, 15, 0.78) 100%);
+  background: radial-gradient(circle at center, transparent 0 38%, rgba(4, 5, 15, 0.78) 100%);
 }
 
 .grain-overlay {
@@ -119,37 +110,6 @@ button:disabled {
   pointer-events: none;
   image-rendering: pixelated;
   mix-blend-mode: screen;
-}
-
-.custom-cursor {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 10001;
-  width: 10px;
-  height: 10px;
-  border: 1px solid var(--accent-teal);
-  border-radius: 999px;
-  background: var(--accent-teal);
-  pointer-events: none;
-  transition: width 0.3s var(--ease-out-expo), height 0.3s var(--ease-out-expo), background 0.3s, transform 0.12s;
-  will-change: transform;
-}
-
-.custom-cursor.is-interactive {
-  width: 40px;
-  height: 40px;
-  background: transparent;
-}
-
-.custom-cursor.is-down {
-  scale: 0.6;
-}
-
-@media (pointer: coarse) {
-  .custom-cursor {
-    display: none;
-  }
 }
 
 .site-shell {
