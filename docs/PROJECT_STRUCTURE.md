@@ -48,15 +48,16 @@ The goal is to make it easy to distinguish:
 
 The current active production-track work centers on:
 
-- monotonic constrained-tree evaluation
-- governed promotion reviews
-- fairness hardening for monotonic `XGBoost`
+- manifest-backed monotonic `XGBoost` serving
+- runtime report and fairness reconciliation
+- dashboard and deployment validation
 
 Primary entrypoints:
 
 - [scripts/train_monotonic_tree_candidates.py](C:/Kaustubh/Projects/AlterScore/scripts/train_monotonic_tree_candidates.py)
 - [scripts/fairness_harden_xgboost_candidate.py](C:/Kaustubh/Projects/AlterScore/scripts/fairness_harden_xgboost_candidate.py)
 - [backend/ml/training/classical/monotonic_constraints.py](C:/Kaustubh/Projects/AlterScore/backend/ml/training/classical/monotonic_constraints.py)
+- [models/registry/production_manifest.json](C:/Kaustubh/Projects/AlterScore/models/registry/production_manifest.json)
 
 ## Research Archive
 

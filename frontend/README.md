@@ -1,13 +1,13 @@
 # AlterScore Frontend
 
 The frontend is a React/Vite application for the borrower flow plus the
-evaluator dashboard shell. It talks to the backend API through
-`VITE_API_BASE_URL`.
+evaluator dashboard. It talks to the backend API through `VITE_API_BASE_URL`.
 
 ## Working State
 
 - Borrower flow implemented: landing, assessment, processing, results, sharing
-- Dashboard state: shell implemented, full analytics wiring still pending
+- Dashboard state: analytics panels partially wired to the backend; confusion
+  matrix, independent panel states, and browser QA still pending
 - Recommended local Node.js: `18+`
 - Recommended local npm: `9+`
 
@@ -35,7 +35,8 @@ Before validating the borrower flow, confirm:
 
 ## Current Frontend Gaps
 
-- Dashboard panels are not fully wired to all analytics endpoints yet.
+- Dashboard panels still need confusion-matrix rendering and independent
+  loading/error states.
 - Focused frontend tests are still thin compared with backend coverage.
 - The production build can emit a large bundle warning because of the WebGL/R3F
   stack.

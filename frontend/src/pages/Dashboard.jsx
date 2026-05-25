@@ -23,8 +23,7 @@ import {
   fetchScoreDistribution,
   fetchRocData,
   fetchPrCurve,
-  fetchCalibrationCurve,
-  fetchConfusionMatrix
+  fetchCalibrationCurve
 } from "../services/api.js";
 
 // Reusable Recharts curve plotting component
@@ -182,7 +181,17 @@ export default function Dashboard() {
     );
   }
 
-  const overallStats = modelStats ? modelStats.find(item => item.split === "test") || modelStats[0] : null;
+  const activeModelName = health?.manifest_version?.replace(/_v\d+$/, "") || null;
+  const overallStats = modelStats
+    ? modelStats.find((item) => item.model_name === activeModelName && item.split === "test_months_11_12")
+      || modelStats.find((item) => item.split === "test_months_11_12")
+      || modelStats[0]
+    : null;
+  const fairnessStatusLabel = fairness
+    ? fairness.verdict === "fair" && fairness.flagged_groups?.length === 0
+      ? "FAIR"
+      : "REVIEW"
+    : "UNKNOWN";
 
   return (
     <main className="assessment-page" style={{ maxWidth: '1200px', padding: '2rem' }}>
@@ -201,7 +210,7 @@ export default function Dashboard() {
           <div>
             <h2><GlitchText text="MODEL GOVERNANCE CENTER" /></h2>
             <p className="mono-text" style={{ fontSize: "0.75rem", color: "var(--soft)", marginTop: "0.2rem" }}>
-              MANIFEST HASH: <span style={{ color: "var(--accent)" }}>{health?.manifest_version || "N/A"}</span> · ENGINE SIGNATURE LOCKED
+              MANIFEST ID: <span style={{ color: "var(--accent)" }}>{health?.manifest_version || "N/A"}</span> | ENGINE SIGNATURE LOCKED
             </p>
           </div>
           <div style={{ display: "flex", gap: "0.5rem" }}>
@@ -234,26 +243,26 @@ export default function Dashboard() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1rem", marginBottom: "1.5rem" }}>
         <div style={{ border: '1px solid var(--line)', padding: '1.2rem', background: 'rgba(255,255,255,0.01)', borderRadius: '6px' }}>
           <div className="mono-text" style={{ color: 'var(--muted)', marginBottom: '0.4rem', fontSize: '0.7rem' }}>// MODEL ROC-AUC</div>
-          <strong style={{ fontSize: '1.4rem', color: 'var(--text-strong)' }}>{overallStats?.auc_roc?.toFixed(4) || "0.8422"}</strong>
-          <span style={{ color: "var(--accent-green)", fontSize: "0.7rem", display: "block", marginTop: "0.2rem" }}>Split: TEST</span>
+          <strong style={{ fontSize: '1.4rem', color: 'var(--text-strong)' }}>{overallStats?.auc_roc?.toFixed(4) || "N/A"}</strong>
+          <span style={{ color: "var(--accent-green)", fontSize: "0.7rem", display: "block", marginTop: "0.2rem" }}>{overallStats?.model_name || "No model metric loaded"}</span>
         </div>
         <div style={{ border: '1px solid var(--line)', padding: '1.2rem', background: 'rgba(255,255,255,0.01)', borderRadius: '6px' }}>
           <div className="mono-text" style={{ color: 'var(--muted)', marginBottom: '0.4rem', fontSize: '0.7rem' }}>// DRIFT PSI MONITOR</div>
           <strong style={{ fontSize: '1.4rem', color: drift?.verdict === "stable" ? "var(--accent-green)" : "var(--status-poor)" }}>
-            {drift?.max_psi?.toFixed(4) || "0.0820"}
+            {drift?.max_psi?.toFixed(4) || "N/A"}
           </strong>
-          <span style={{ color: "var(--soft)", fontSize: "0.7rem", display: "block", marginTop: "0.2rem" }}>Verdict: {drift?.verdict?.toUpperCase() || "STABLE"}</span>
+          <span style={{ color: "var(--soft)", fontSize: "0.7rem", display: "block", marginTop: "0.2rem" }}>Verdict: {drift?.verdict?.toUpperCase() || "UNKNOWN"}</span>
         </div>
         <div style={{ border: '1px solid var(--line)', padding: '1.2rem', background: 'rgba(255,255,255,0.01)', borderRadius: '6px' }}>
           <div className="mono-text" style={{ color: 'var(--muted)', marginBottom: '0.4rem', fontSize: '0.7rem' }}>// DEVIATION AUDIT</div>
           <strong style={{ fontSize: '1.4rem', color: fairness?.verdict === "fair" ? "var(--accent-green)" : "var(--status-fair)" }}>
-            {fairness?.worst_auc_gap !== undefined ? `${(fairness.worst_auc_gap * 100).toFixed(2)}%` : "1.50%"}
+            {fairness?.worst_auc_gap !== undefined ? `${(fairness.worst_auc_gap * 100).toFixed(2)}%` : "N/A"}
           </strong>
-          <span style={{ color: "var(--soft)", fontSize: "0.7rem", display: "block", marginTop: "0.2rem" }}>Verdict: {fairness?.verdict?.toUpperCase() || "FAIR"}</span>
+          <span style={{ color: "var(--soft)", fontSize: "0.7rem", display: "block", marginTop: "0.2rem" }}>Verdict: {fairnessStatusLabel}</span>
         </div>
         <div style={{ border: '1px solid var(--line)', padding: '1.2rem', background: 'rgba(255,255,255,0.01)', borderRadius: '6px' }}>
           <div className="mono-text" style={{ color: 'var(--muted)', marginBottom: '0.4rem', fontSize: '0.7rem' }}>// LOCKED RUNTIME</div>
-          <strong style={{ fontSize: '1.2rem', color: 'var(--text-strong)' }}>{health?.model_version || "XGBoost Promotion"}</strong>
+          <strong style={{ fontSize: '1.2rem', color: 'var(--text-strong)' }}>{activeModelName || health?.manifest_version || "N/A"}</strong>
           <span style={{ color: "var(--soft)", fontSize: "0.7rem", display: "block", marginTop: "0.2rem" }}>Engine Source: {health?.artifact_source || "manifest"}</span>
         </div>
       </div>
@@ -408,9 +417,9 @@ export default function Dashboard() {
                 <div>
                   <h4 style={{ color: "var(--text-strong)", fontSize: "0.95rem", marginBottom: "0.5rem" }}>Disparity Verification Result</h4>
                   <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", lineHeight: "1.5" }}>
-                    The backend evaluation service cross-checks algorithmic results across protected demographic features using proxy metrics. 
-                    The worst AUC Gap between groups is currently <strong style={{ color: "var(--accent)" }}>{(fairness.worst_auc_gap * 100).toFixed(3)}%</strong>, 
-                    satisfying the fairness criteria for the current locked model manifest.
+                    The backend evaluation service cross-checks algorithmic results across protected demographic features using proxy metrics.
+                    The worst AUC gap between groups is currently <strong style={{ color: "var(--accent)" }}>{(fairness.worst_auc_gap * 100).toFixed(3)}%</strong>;
+                    the locked manifest should keep this under active review before pilot release.
                   </p>
                 </div>
                 <div style={{ background: "rgba(255,255,255,0.01)", border: "1px solid var(--line)", padding: "1rem", borderRadius: "6px" }}>

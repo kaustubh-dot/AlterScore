@@ -64,21 +64,27 @@ in [backend/ml/training/classical/monotonic_constraints.py](C:/Kaustubh/Projects
 and a governed candidate-training entry point in
 [scripts/train_monotonic_tree_candidates.py](C:/Kaustubh/Projects/AlterScore/scripts/train_monotonic_tree_candidates.py).
 
-This keeps the existing production ensemble stable while allowing monotonic
-LightGBM/XGBoost candidates to be evaluated through the same governance lens.
+This superseded the earlier production ensemble as the default runtime while
+keeping the ensemble artifacts available for benchmark and rollback/reference
+work.
 
 ## Current Production Candidate
 
-The current leading governed production candidate is monotonic `XGBoost`.
+The current active governed production runtime is monotonic `XGBoost`.
 
 The latest full-scale governed comparison and fairness-hardening review showed:
 
-- monotonic `XGBoost` materially outperforms the current runtime ensemble on
-  AUC, Brier, and ECE
+- monotonic `XGBoost` materially outperformed the former runtime ensemble in
+  the governed full-run review
 - it clears the monotonic, counterfactual, and fairness promotion gates
 - conservative fairness-hardening variants can reduce small-subgroup
   calibration error somewhat, but the baseline raw monotonic `XGBoost`
-  currently remains the strongest overall production-safe operating point
+  remained the preferred operating point in that review
+
+The checked-in promoted bundle is the operational source of truth. Its current
+reports show AUC `0.8040`, Brier `0.1514`, ECE `0.0284`, stable PSI, and a
+fairness attention item for `gender=non_binary`; that item must be reconciled
+before pilot claims.
 
 This is an important architecture outcome:
 

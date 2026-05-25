@@ -36,11 +36,11 @@ Implemented:
 - results
 - retry-safe submission
 - sharing/export
-- dashboard shell
+- dashboard analytics panels for most report-backed endpoints
 
 Pending:
 
-- dashboard analytics-panel wiring
+- dashboard confusion-matrix rendering and independent panel states
 - focused frontend tests
 - formal browser QA evidence
 

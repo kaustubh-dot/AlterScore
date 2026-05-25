@@ -7,56 +7,63 @@
 - Temporal-split validation before promotion claims.
 - Backend contract stability before frontend feature coupling.
 - Report-backed analytics before dashboard visuals.
-- Manifest-backed reproducibility before deployment packaging.
+- Manifest-backed reproducibility before release/demo packaging.
+- Fairness and calibration claims must match the checked-in serving bundle.
 
 ## Current Status Summary
 
 | Track | Status | Notes |
 |---|---|---|
-| Track A - Governance | Complete | Fairness, calibration parity, individual-fairness proxy |
-| Track B - Neural Training | Complete | TabNet + MLP, offline artifacts, smoke tests |
-| Track C - Ensemble & Calibration | Complete | Calibrated stacking ensemble |
-| Track D - Explainability & Promotion | Complete | SHAP, DICE, global importance, manifest promotion |
-| Track D+ - Ensemble Serving Runtime | Complete | Adapter, loader, scoring, manifest-backed validation |
-| Track D++ - Governed Constrained Trees | Complete | Monotonic XGBoost/LightGBM comparison and promotion gating |
-| Track E - Borrower Frontend | Implemented, QA pending | Trust-first minimal landing, assessment, submission, processing, results, sharing |
-| Track F - Evaluator Dashboard | Pending | Dashboard shell exists; analytics panel wiring remains |
-| Track G - Deployment & Demo | Pending | Docker/release assets after Track F |
+| Track A - Governance | Complete, monitoring open | Fairness, calibration parity, individual-fairness proxy exist; current promoted report still needs `gender=non_binary` review |
+| Track B - Neural Training | Complete | TabNet + MLP remain benchmark/research artifacts |
+| Track C - Ensemble & Calibration | Complete, no longer active runtime | Calibrated stacking ensemble remains a benchmark and rollback/reference bundle |
+| Track D - Explainability & Promotion | Complete | SHAP, DICE, global importance, manifest validation |
+| Track D+ - Ensemble Serving Runtime | Complete, reference path | Adapter and tests remain useful for rollback/benchmarking |
+| Track D++ - Governed Constrained Trees | Promoted | `xgboost_monotonic` is the checked-in manifest runtime |
+| Track E - Borrower Frontend | Implemented, QA pending | Assessment, submission, processing, results, sharing/export |
+| Track F - Evaluator Dashboard | Partial | Most analytics endpoints consumed; confusion matrix, panel states, and tests remain |
+| Track G - Release & Demo | Pending | Local/manual runbook, release checklist, and demo script remain |
 
 ## Program Tracks
 
 ### Track A - Governance Completion
 
-Closed. Calibration parity, individual-fairness proxy, and fairness report
-refresh are in the checked-in bundle.
+Core governance reports exist. The current priority is not adding another
+metric, but reconciling the promoted monotonic runtime bundle with the
+governed full-run review:
+
+- checked-in runtime report: AUC `0.8040`, Brier `0.1514`, ECE `0.0284`
+- governed full-run review: AUC `0.8090`, Brier `0.1496`, ECE `0.0207`
+- checked-in fairness verdict: attention required for `gender=non_binary`
 
 ### Track B - Neural Offline Training
 
 Closed. TabNet and MLP training modules, CLI entrypoints, artifacts, and smoke
-tests are merged.
+tests are present. TabNet remains research-only unless a future candidate
+passes the same monotonic and counterfactual gates.
 
 ### Track C - Ensemble And Calibration
 
-Closed. `calibrated_stacking.pkl` exists and is promoted as the active runtime
-meta-learner.
+Closed as an implementation track. The calibrated stacking ensemble remains a
+validated benchmark and rollback/reference path, but the active manifest now
+serves monotonic `XGBoost`.
 
 ### Track D - Production Explainability Refresh
 
-Closed. SHAP, DICE, and global importance artifacts were regenerated for the
-ensemble. The promotion pipeline works end to end.
+Closed. SHAP, DICE, global importance, fairness, PSI, and percentile artifacts
+are present for the checked-in runtime bundle.
 
 ### Track D+ - Ensemble Serving Runtime
 
-Closed. The backend loads the calibrated stacking ensemble, all six base models,
-stacking config, preprocessor, text PCA, explainers, reports, and manifest
-checksums at startup. `/api/score` routes through `predict_ensemble_proba()`.
+Closed as a reference runtime path. The backend still supports ensemble
+bundles when the manifest declares `runtime_model_type: "ensemble"`, but the
+current default manifest is `classical_monotonic`.
 
 ### Track D++ - Governed Constrained Trees
 
-Closed. Monotonic constrained-tree candidates were evaluated through the full
-governance stack. Monotonic `XGBoost` is now the leading production candidate,
-while TabNet remains research-only unless it clears the same governance gates
-later.
+Promoted. Monotonic `XGBoost` is now the checked-in runtime. The remaining
+work is hardening and documentation around the promoted bundle, especially the
+fairness attention item and metric/report reconciliation.
 
 ### Track E - Borrower Frontend
 
@@ -71,62 +78,57 @@ Implementation is present. Remaining work is QA and test coverage:
 
 ### Track F - Evaluator Dashboard
 
-Pending. The current dashboard shell checks backend health but still needs:
+Partial. The dashboard currently consumes health, model stats, baseline,
+fairness, drift, global importance, score distribution, ROC, PR, and
+calibration endpoints. Remaining work:
 
-- Independent data hooks for all analytics endpoints.
-- Loading, error, empty, and success states per panel.
-- Model metrics, baseline, fairness, drift, global importance, score
-  distribution, ROC, PR, calibration, and confusion-matrix views.
-- Mobile table/chart overflow handling.
+- Render `/api/confusion-matrix`.
+- Add independent loading, error, empty, and success states per panel.
+- Add dashboard tests with mocked endpoint payloads and failure cases.
+- Improve mobile overflow handling for charts and tables.
+- Decide whether to expose runtime model name/type directly from `/api/health`
+  instead of deriving it from the manifest id in the frontend.
 
-### Track G - Deployment & Demo
+### Track G - Release And Demo
 
-Pending until Track F is usable. Required deliverables:
+Image-based packaging is intentionally out of scope. Required before
+treating release/demo readiness as complete:
 
-- Backend Dockerfile.
-- Frontend Dockerfile.
-- `docker-compose.yml`.
-- Release smoke-test checklist.
-- Demo walkthrough script and rollback notes.
+- Write a local/manual runbook for starting backend and frontend.
+- Define production-style environment variables for a manual host.
+- Validate backend startup and frontend build from a clean local setup.
+- Finalize release smoke-test checklist.
+- Write demo walkthrough script and rollback notes tied to manifest versions.
 
 ## Recommended Execution Order
 
 ```text
-E.4 QA/tests
-  -> F.1 dashboard data hooks
-  -> F.2 dashboard panels
-  -> F.3 dashboard responsive polish
-  -> G.1 Docker packaging
-  -> G.2 release docs
+D++.1 runtime report/fairness reconciliation
+  -> E.4 borrower QA/tests
+  -> F.1 dashboard confusion matrix and panel states
+  -> F.2 dashboard responsive polish
+  -> G.1 local/manual release runbook
+  -> G.2 release checklist
   -> G.3 demo script
 ```
 
-## Milestones
-
-| Milestone | Theme | Dependencies |
-|---|---|---|
-| M5.5 | Ensemble serving adapter + integration | Complete |
-| M5.6 | Ensemble manifest promotion + validation | Complete |
-| M6.1 | Borrower UI foundation | Complete |
-| M6.2 | Borrower assessment/results flow | Complete, QA pending |
-| M6.3 | Evaluator dashboard | Track E QA and frontend test harness |
-| M7.1 | Deployment packaging | Dashboard usable |
-
 ## Known Technical Debt
 
-- Stacking config sidecar still says `cv: "prefit"`; scikit-learn now represents this with `FrozenEstimator` semantics.
-- `promote_ensemble.py` `code_ref` defaults to `"antigravity/dev"`; it should use the current branch or explicit release identifier.
-- Individual fairness proxy has a high flagged-pair share; investigate before pilot claims.
-- Docker assets do not exist yet.
-- PyTorch/TabNet are currently required at startup for base-model loading; lazy loading may reduce cold start time.
-- Frontend unit/E2E coverage is still thin for the borrower flow and dashboard.
+- Promoted monotonic runtime report metrics do not exactly match the governed
+  full-run review metrics.
+- Checked-in fairness report requires attention for `gender=non_binary`.
+- `production_manifest.json` still records historical `code_ref:
+  "antigravity/dev"` instead of a release branch/commit identifier.
+- Dashboard still derives active model identity from `manifest_version`.
+- Frontend unit/E2E coverage is thin for borrower flow and dashboard failures.
+- Release/demo runbook is still pending.
 
 ## PRD Mapping
 
 | PRD Section | Track |
 |---|---|
-| Sections 8, 13.1 | Track A governance - complete |
-| Section 7 | Tracks B, C, D ML pipeline - complete |
-| Section 9 | Track D+ serving runtime - complete |
-| Section 10 | Track E borrower frontend implemented; Track F dashboard pending |
-| Section 12 | Track G deployment - pending |
+| Sections 8, 13.1 | Track A governance - implemented, fairness hardening open |
+| Section 7 | Tracks B, C, D ML pipeline - implemented; active runtime superseded by governed monotonic XGBoost |
+| Section 9 | Track D+/D++ serving runtime - implemented |
+| Section 10 | Track E borrower frontend implemented; Track F dashboard partial |
+| Section 12 | Track G release/demo readiness - pending |

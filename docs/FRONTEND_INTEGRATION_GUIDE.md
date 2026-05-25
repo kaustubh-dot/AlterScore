@@ -90,11 +90,13 @@ Implemented:
 - processing screen
 - results rendering
 - score sharing/export
-- dashboard shell
+- dashboard health, model metrics, baseline, fairness, drift, global
+  importance, score distribution, ROC, PR, and calibration panels
 
 Still pending:
 
-- full dashboard analytics-panel wiring
+- dashboard confusion-matrix rendering
+- independent loading/error/empty states per dashboard panel
 - deeper frontend test coverage
 - final browser QA evidence across target viewports
 
@@ -113,4 +115,6 @@ The dashboard is expected to consume these backend routes independently:
 - `/api/calibration-curve`
 - `/api/confusion-matrix`
 
-Each panel should own its own loading, empty, and error states.
+Most of these endpoints are already consumed by the dashboard. The remaining
+frontend work is to render `/api/confusion-matrix`, give each panel its own
+loading/empty/error state, and add targeted tests around endpoint failures.

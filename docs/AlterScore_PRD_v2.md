@@ -12,6 +12,29 @@
 
 ---
 
+## Implementation Status Addendum - May 25, 2026
+
+This PRD records the original product target, including a calibrated stacking
+ensemble as the planned production scorer. The implemented repository has since
+completed that ensemble track and then superseded the default runtime with a
+governed monotonic `XGBoost` bundle after constrained-tree governance review.
+
+Current implementation source of truth:
+
+- Active manifest runtime: `xgboost_monotonic`
+- Manifest version: `xgboost_monotonic_v1`
+- Runtime manifest: `models/registry/production_manifest.json`
+- Reference ensemble: retained as benchmark and rollback/reference
+  infrastructure
+- Open pre-pilot item: reconcile checked-in monotonic metrics and fairness
+  reports, especially the `gender=non_binary` attention finding
+
+The original PRD should still be used for product scope, API intent, and
+workflow coverage. Current runtime details live in `docs/CURRENT_STATE.md`,
+`docs/BACKEND_RUNTIME_ARCHITECTURE.md`, and `docs/MODEL_REGISTRY.md`.
+
+---
+
 # TABLE OF CONTENTS
 
 1. [Executive Summary](#1-executive-summary)
@@ -2231,7 +2254,7 @@ alterscore/
 ├── README.md
 ├── .env
 ├── .gitignore
-└── docker-compose.yml                 # Optional: containerize backend
+release_runbook.md                 # Optional: manual release/demo notes
 ```
 
 ---

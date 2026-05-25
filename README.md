@@ -9,28 +9,26 @@ gating.
 
 ## Current Runtime
 
-The checked-in production runtime is a **calibrated stacking ensemble** backed
-by six base models (logistic regression, random forest, XGBoost, LightGBM,
-TabNet, residual MLP) with isotonic calibration and runtime TabNet disagreement
-mitigation.
+The checked-in production runtime is now a manifest-backed **monotonic
+XGBoost** scorer:
 
-- Runtime AUC: `0.8062`
+- Runtime model: `xgboost_monotonic`
+- Runtime type: `classical_monotonic`
 - Manifest: `models/registry/production_manifest.json`
+- Manifest version: `xgboost_monotonic_v1`
+- Checked-in test AUC: `0.8040`
+- Checked-in Brier score: `0.1514`
+- Checked-in ECE: `0.0284`
+- Checked-in drift verdict: `stable`
 
-### Governed Production Candidate (Not Yet Promoted)
+The earlier calibrated stacking ensemble remains in the repository as a
+validated benchmark and rollback/reference bundle, but it is no longer the
+default manifest runtime. The governed full-scale comparison that led to the
+promotion recorded stronger `xgboost_monotonic` results (`0.8090` AUC,
+`0.1496` Brier, `0.0207` ECE), while the current checked-in fairness report
+still flags `gender=non_binary` for review. Treat fairness hardening and report
+reconciliation as pre-pilot work, not as optional polish.
 
-A monotonic `XGBoost` candidate has been evaluated through the full governance
-stack and outperforms the checked-in ensemble baseline:
-
-- AUC: `0.8090`
-- Brier: `0.1496`
-- ECE: `0.0207`
-- monotonic gate: passed
-- pairwise counterfactual gate: passed
-- fairness gate: passed
-- promotion eligible: `true`
-
-This candidate has not yet been promoted into the checked-in runtime bundle.
 TabNet remains in the repository as a research benchmark and governance case
 study.
 
@@ -101,6 +99,7 @@ backend\.venv-cleanup\Scripts\python.exe scripts\fairness_harden_xgboost_candida
 | Document | Purpose |
 |---|---|
 | [docs/PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md) | High-level repository organization and active vs archived areas |
+| [docs/REPO_AUDIT_2026-05-25.md](docs/REPO_AUDIT_2026-05-25.md) | Latest repository hygiene/runtime alignment audit |
 | [docs/GOVERNANCE_WORKFLOW.md](docs/GOVERNANCE_WORKFLOW.md) | Promotion gates, audit flow, and governance operating model |
 | [docs/MODEL_SELECTION_DECISIONS.md](docs/MODEL_SELECTION_DECISIONS.md) | Why monotonic XGBoost became the leading production path |
 | [docs/governance/GOVERNED_PRODUCTION_ARCHITECTURE.md](docs/governance/GOVERNED_PRODUCTION_ARCHITECTURE.md) | Current governed production architecture |

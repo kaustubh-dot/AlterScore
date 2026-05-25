@@ -60,7 +60,8 @@ Promotion requires the full governance stack to remain green.
 
 ## Current Operating Position
 
-The leading governed production candidate is monotonic `XGBoost`.
+The active checked-in runtime is monotonic `XGBoost`.
 
-The current runtime ensemble remains the checked-in baseline until the final
-promotion package is approved and released in a deliberate handoff.
+The current promotion-readiness work is to reconcile the checked-in monotonic
+reports with the governed full-run review, especially the
+`gender=non_binary` fairness attention item.

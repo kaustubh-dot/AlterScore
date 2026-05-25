@@ -187,3 +187,26 @@ Record every architecture-level decision here. Small implementation choices can 
 - Decision: Implement the ensemble inference adapter (`backend/ml/inference/ensemble_adapter.py`) with `EnsembleInferenceBundle`, `predict_ensemble_proba()`, and `WrappedEnsembleModel`. Extend `artifact_loader.py` to load all 6 base models and stacking config when the manifest declares `runtime_model_type: "ensemble"`. Wire `scoring.py` to route through the adapter. Restore the production manifest to `stacking_ensemble` (v0.2.0) with all 18 artifact checksums.
 - Consequences: The backend now serves the calibrated stacking ensemble in production. All 6 base models are loaded at startup. The inference path is: preprocessed features → 6 base model probabilities → meta-feature stack → calibrated meta-learner → final probability. DICE receives `WrappedEnsembleModel` so counterfactual actions are computed through the full ensemble path. PyTorch and pytorch-tabnet are now required at startup (not just for offline training). 145 tests pass including 6 ensemble-specific smoke tests.
 - Follow-ups: Consider lazy-loading neural models to reduce cold start time. Monitor the individual fairness proxy flagged-pair rate under ensemble predictions.
+
+## DEC-0018 - Promote Monotonic XGBoost As The Active Manifest Runtime
+
+- Status: accepted
+- Date: 2026-05-25
+- Owner: Codex audit alignment
+- Context: The checked-in `production_manifest.json` now declares
+  `xgboost_monotonic` as the active runtime, while several repository docs
+  still described the calibrated stacking ensemble as production. The governed
+  constrained-tree track also showed better monotonic and counterfactual
+  behavior than the ensemble path.
+- Decision: Treat the monotonic `XGBoost` bundle as the active
+  manifest-backed runtime. Keep the calibrated stacking ensemble and its
+  adapter as benchmark and rollback/reference infrastructure.
+- Consequences: Runtime architecture, setup, roadmap, registry, frontend, and
+  deployment docs must refer to `xgboost_monotonic` as the default checked-in
+  runtime. The current checked-in fairness report still requires attention for
+  `gender=non_binary`, so pilot/release claims must wait for fairness/report
+  reconciliation.
+- Follow-ups: Reconcile checked-in metrics with the governed full-run review,
+  harden or explicitly accept the fairness finding, and replace historical
+  manifest `code_ref` labels with explicit branch/commit identifiers during the
+  next promotion.

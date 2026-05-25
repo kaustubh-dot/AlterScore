@@ -8,7 +8,7 @@ without retraining models at request time.
 
 - Startup path: `backend.app.main:app` from the repository root
 - Default artifact source: `models/registry/production_manifest.json`
-- Runtime bundle: calibrated stacking ensemble plus six base models
+- Runtime bundle: monotonic `XGBoost` manifest bundle
 - API surface: `/api/health`, `/api/score`, and report-backed analytics routes
 - Recommended local Python: `3.12.x`
 
@@ -30,7 +30,10 @@ your preferred environment path.
 
 - `backend/requirements.txt` contains the runtime stack only.
 - `backend/requirements-dev.txt` layers test dependencies on top of runtime.
-- The checked-in artifacts currently require `scikit-learn>=1.8,<1.9`.
+- The checked-in runtime artifacts currently require `scikit-learn>=1.8,<1.9`.
+- The older calibrated stacking ensemble artifacts remain checked in for
+  benchmark and rollback/reference work, but they are not the default manifest
+  runtime.
 - Python `3.14.x` is not part of the supported local setup path for this repo.
 
 ## Health Check

@@ -14,7 +14,8 @@ Deployment must package three things together:
 - Local backend serving is implemented.
 - Local frontend serving is implemented.
 - Manifest-backed artifact loading is implemented.
-- Docker and cloud deployment assets are not complete yet.
+- Deployment will use local/manual process documentation rather than image packaging.
+- Release smoke validation is still pending.
 
 ## Environment Variables
 
@@ -24,7 +25,7 @@ Deployment must package three things together:
 | `ALTERSCORE_API_VERSION` | `0.1.0` | Health/version reporting |
 | `ALTERSCORE_REPO_ROOT` | repository root | Optional path override |
 | `ALTERSCORE_MODEL_MANIFEST` | `models/registry/production_manifest.json` | Serving manifest |
-| `ALTERSCORE_RUNTIME_MODEL_PATH` | `models/artifacts/calibrated_stacking.pkl` | Explicit dev/test override path |
+| `ALTERSCORE_RUNTIME_MODEL_PATH` | `models/artifacts/xgboost_monotonic.pkl` | Explicit dev/test override path |
 | `ALTERSCORE_REQUEST_LOG_PATH` | `runtime/logs/requests.jsonl` | Append-only request log path |
 | `ALTERSCORE_LOG_LEVEL` | `INFO` | Backend log level |
 | `ALTERSCORE_CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Allowed frontend origins |
@@ -60,12 +61,12 @@ cd frontend
 
 ### Core Runtime Artifacts
 
-- [x] `models/artifacts/calibrated_stacking.pkl`
-- [x] `models/preprocessors/preprocessor.pkl`
+- [x] `models/artifacts/xgboost_monotonic.pkl`
+- [x] `models/preprocessors/preprocessor_monotonic.pkl`
 - [x] `models/preprocessors/text_pca.pkl`
 - [x] `models/registry/production_manifest.json`
 
-### Base Models
+### Reference Ensemble / Base Models
 
 - [x] `models/artifacts/logistic_best.pkl`
 - [x] `models/artifacts/rf_best.pkl`
@@ -77,17 +78,17 @@ cd frontend
 
 ### Explainability Artifacts
 
-- [x] `models/explainers/shap_explainer.pkl`
-- [x] `models/explainers/dice_explainer.pkl`
+- [x] `models/explainers/shap_explainer_monotonic.pkl`
+- [x] `models/explainers/dice_explainer_monotonic.pkl`
 
 ### Report Artifacts
 
-- [x] `models/reports/metrics.json`
-- [x] `models/reports/baseline_metrics.json`
-- [x] `models/reports/fairness_report.json`
-- [x] `models/reports/psi_report.json`
-- [x] `models/reports/global_importance.json`
-- [x] `models/reports/population_percentiles.json`
+- [x] `models/reports/metrics_monotonic.json`
+- [x] `models/reports/baseline_metrics_monotonic.json`
+- [x] `models/reports/fairness_report_monotonic.json`
+- [x] `models/reports/psi_report_monotonic.json`
+- [x] `models/reports/global_importance_monotonic.json`
+- [x] `models/reports/population_percentiles_monotonic.json`
 
 ## Backend Startup Requirements
 
@@ -118,7 +119,6 @@ Rollback expectation for future deployments:
 
 ## Current Gaps Before Real Deployment
 
-- `deploy/docker/` is still scaffolding only.
 - `deploy/cloud/` is still scaffolding only.
 - `deploy/monitoring/` is still scaffolding only.
 - Release smoke docs need to be finalized after the dashboard work is complete.

@@ -2,8 +2,8 @@
 
 ## Final Direction
 
-The preferred production-track architecture is now a governed monotonic
-`XGBoost` candidate.
+The active production-track architecture is now a governed monotonic
+`XGBoost` runtime.
 
 ## Why Monotonic XGBoost Won
 
@@ -17,7 +17,7 @@ It is currently the strongest balance of:
 - operational simplicity
 - explainability and auditability
 
-In the latest governed full-scale comparison it achieved:
+In the governed full-scale comparison it achieved:
 
 - AUC `0.8090`
 - Brier `0.1496`
@@ -29,9 +29,9 @@ In the latest governed full-scale comparison it achieved:
 
 ## Why the Previous Ensemble Is No Longer the Preferred Architecture
 
-The earlier calibrated stacking ensemble remains valuable as the checked-in
-runtime baseline, but it is no longer the preferred long-term direction
-because the constrained-tree production candidate:
+The earlier calibrated stacking ensemble remains valuable as a checked-in
+benchmark and rollback/reference path, but it is no longer the default runtime
+because the constrained-tree production path:
 
 - materially outperformed it on AUC
 - materially improved calibration
@@ -60,6 +60,14 @@ Focused fairness hardening on the monotonic `XGBoost` candidate found that:
   `gender=non_binary` subgroup calibration gap somewhat
 - however, the baseline raw monotonic `XGBoost` still remains the strongest
   production-safe overall operating point
+
+## Current Checked-In Runtime Caveat
+
+The promoted checked-in monotonic bundle reports AUC `0.8040`, Brier `0.1514`,
+ECE `0.0284`, stable PSI, and a fairness attention item for
+`gender=non_binary`. The next production-readiness task is to reconcile these
+checked-in reports with the stronger governed full-run review before any pilot
+claim.
 
 ## Decision Rule Going Forward
 

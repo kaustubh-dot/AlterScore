@@ -153,7 +153,8 @@ with the detailed results recorded in
 
 Current practical interpretation:
 
-- `xgboost_monotonic` remains the leading governed production candidate
+- `xgboost_monotonic` remains the governed constrained-tree choice and has
+  since become the checked-in manifest runtime
 - conservative fairness-hardening variants improved the `gender=non_binary`
   subgroup calibration gap somewhat
 - however, the baseline raw `xgboost_monotonic` still remains the strongest

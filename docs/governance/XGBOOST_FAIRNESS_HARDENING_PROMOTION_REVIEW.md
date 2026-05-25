@@ -166,11 +166,15 @@ No candidate was preferred merely because:
 
 The final production recommendation remains:
 
-- keep the current runtime ensemble stable until formal promotion approval
-- treat `xgboost_monotonic` as the leading production-ready governed candidate
+- `xgboost_monotonic` has since been promoted as the checked-in manifest runtime
 - use baseline raw probabilities for the current promotion package
 - keep the proxy-regularized and proxy-clipped variants as fairness-hardening
   references, not immediate replacements
+
+Post-promotion note: the checked-in promoted bundle reports AUC `0.8040`,
+Brier `0.1514`, ECE `0.0284`, stable PSI, and a fairness attention item for
+`gender=non_binary`. Reconcile that checked-in report state with this review
+before making pilot-readiness claims.
 
 ## Why This Matters
 

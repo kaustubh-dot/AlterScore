@@ -17,7 +17,7 @@ Before any AI agent edits the repository, it must read and follow `docs/AI_WORKF
 - The scoring model must use psychometric and behavioral signals, not bank history or traditional bureau history.
 - Protected attributes are collected only for fairness analysis and must never be model inputs.
 - Final validation must use a temporal cohort split: months 1-8 train, months 9-10 validation/calibration, months 11-12 test.
-- The production model target is a calibrated stacking ensemble built from logistic regression, random forest, XGBoost, LightGBM, TabNet, and MLP.
+- The original PRD production target was a calibrated stacking ensemble; the active checked-in runtime has since been superseded by a governed monotonic `XGBoost` manifest bundle after constrained-tree governance review.
 - Explainability must include per-user SHAP explanations and DICE-ML counterfactual improvement actions.
 - Fairness must include demographic parity, equalized odds, calibration parity, and an individual-fairness proxy across gender, age group, region, and education level.
 - The frontend must include assessment, results, score sharing, and evaluator dashboard workflows.
@@ -61,10 +61,11 @@ Before any AI agent edits the repository, it must read and follow `docs/AI_WORKF
 - Preprocessing pipeline with scaling, imputation, ordinal/categorical encoding, and saved `ColumnTransformer`.
 - Classical training: logistic regression, random forest, XGBoost, LightGBM, Optuna tuning where appropriate.
 - Neural training: TabNet (`backend/ml/training/neural/train_tabnet.py`, `.zip` artifacts, 6/6 smoke tests) and residual MLP (`backend/ml/training/neural/train_mlp.py`, `.pt` checkpoints, 6/6 smoke tests) are both implemented. Track B (neural) is complete.
-- Ensemble training: calibrated stacking ensemble (`backend/ml/training/ensemble/train_stacking.py`) is implemented — `LogisticRegression` meta-learner on stacked validation-month probabilities wrapped in isotonic `CalibratedClassifierCV`; `.pkl` + config sidecar; 6/6 smoke tests. Track C (ensemble + calibration) is complete. Track D (explainability refresh + manifest promotion) is complete. The promoted model in `production_manifest.json` is `stacking_ensemble` which resolves to `calibrated_stacking.pkl`.
+- Ensemble training: calibrated stacking ensemble (`backend/ml/training/ensemble/train_stacking.py`) is implemented and remains available as benchmark and rollback/reference infrastructure.
+- Governed constrained-tree runtime: monotonic `XGBoost` is now the active checked-in manifest runtime (`xgboost_monotonic_v1`) after monotonic, counterfactual, and fairness-focused governance review.
 - Metrics computation and artifact export.
 - SHAP explainer creation and global importance report generation.
-- DICE-style counterfactual explainer creation with immutable/protected feature exclusions; the checked-in local bundle currently persists a lightweight validated counterfactual artifact at `models/explainers/dice_explainer.pkl`.
+- DICE-style counterfactual explainer creation with immutable/protected feature exclusions; the checked-in local bundle currently persists a lightweight validated monotonic counterfactual artifact at `models/explainers/dice_explainer_monotonic.pkl`.
 - Fairness audit and PSI drift report generation.
 
 ### Frontend Components
@@ -72,7 +73,7 @@ Before any AI agent edits the repository, it must read and follow `docs/AI_WORKF
 - Landing page for product entry.
 - Assessment page with 27-question flow, section transitions, progress, validation, telemetry capture, and resilient submit retry.
 - Results page with score gauge, risk band, percentile, eligibility, SHAP factor bars, DICE actions, improvement tips, and WhatsApp-shareable card export.
-- Dashboard page currently has a health-backed shell and placeholder governance panels; full analytics panels are Track F work.
+- Dashboard page consumes most report-backed analytics endpoints; confusion-matrix rendering, independent panel states, and browser QA remain Track F work.
 - Shared hooks/services currently cover API requests, score payload construction, scroll observation, Lenis, and magnetic-button interactions.
 
 ### Data Pipeline Requirements
@@ -99,19 +100,17 @@ Before any AI agent edits the repository, it must read and follow `docs/AI_WORKF
 
 - Global feature importance: SHAP mean absolute values, top features, and summary plot.
 - Per-user explanation: top 6 SHAP factors with direction, value, display name, and contribution.
-- Counterfactual actions: the checked-in local runtime bundle uses a persisted `dice_explainer.pkl` artifact that emits bounded actionable suggestions through the active runtime path. With the ensemble bundle, DICE uses `WrappedEnsembleModel` so simulated actions flow through the six base models and calibrated meta-learner.
+- Counterfactual actions: the checked-in local runtime bundle uses a persisted `dice_explainer_monotonic.pkl` artifact that emits bounded actionable suggestions through the active runtime path. Ensemble bundles still use `WrappedEnsembleModel` when intentionally loaded.
 - Plain-language tip generation mapped from negative or weak factors.
 
-### Ensemble Serving Architecture (Track D+)
+### Runtime Serving Architecture (Tracks D+ And D++)
 
-- The calibrated stacking ensemble is the active serving runtime.
-- The scoring service assembles 35 canonical features, applies the saved preprocessor, then routes processed features through `backend/ml/inference/ensemble_adapter.py`.
-- The adapter loads six base models at startup, runs each base model on the processed feature row, stacks the six probability outputs, and passes them to the calibrated meta-learner.
-- The adapter handles sklearn `.predict_proba()`, TabNet `.predict_proba()`, and PyTorch forward pass inference.
-- The manifest schema includes `base_models` and `stacking_config` sections, and startup validates all checksums before scoring.
-- `WrappedEnsembleModel` exposes `predict_proba(processed_35)` so the DICE counterfactual explainer can use the full ensemble path.
-- The SHAP explainer is a surrogate over the same processed feature space and remains compatible with the ensemble runtime.
-- See `docs/BACKEND_RUNTIME_ARCHITECTURE.md` for the frozen runtime details.
+- The active serving runtime is monotonic `XGBoost`.
+- The scoring service assembles 35 canonical features, applies the saved monotonic preprocessor, calls the active runtime model, applies the bounded governance multiplier, and maps repayment probability into a 300-850 score.
+- The calibrated stacking ensemble adapter remains implemented for reference/rollback manifests that declare `runtime_model_type: "ensemble"`.
+- The manifest schema validates checksums before scoring.
+- The SHAP and DICE artifacts are runtime-specific and currently use the monotonic artifact variants.
+- See `docs/BACKEND_RUNTIME_ARCHITECTURE.md` for the current runtime details.
 
 ### Fairness Modules
 
@@ -162,7 +161,7 @@ flowchart TD
   D --> F
   E --> F
   F --> G["Preprocessor Artifact"]
-  G --> H["Calibrated Stacking Ensemble"]
+  G --> H["Monotonic XGBoost Runtime"]
   H --> I["Score Mapper"]
   H --> J["SHAP Explainer"]
   H --> K["DICE Explainer"]
@@ -175,10 +174,11 @@ flowchart TD
   O --> P["Preprocessing Fit"]
   P --> Q["Classical Models"]
   P --> R["Neural Models"]
-  Q --> S["Stacking Ensemble"]
+  Q --> S["Stacking Ensemble Benchmark"]
   R --> S
-  S --> T["Calibration"]
-  T --> U["Evaluation Reports"]
+  Q --> T["Monotonic Tree Candidate"]
+  S --> U["Evaluation Reports"]
+  T --> U
   T --> V["Explainability Artifacts"]
   T --> W["Fairness and PSI Reports"]
   U --> X["FastAPI Analytics Routes"]
@@ -200,10 +200,11 @@ flowchart TD
 | Derived feature engineer | Base features, behavioral features, NLP features | Preprocessing, inference |
 | Preprocessor | Feature registry, train split | All model training and inference |
 | Baselines | Data split, preprocessor | Model comparison dashboard |
-| Classical models | Data split, preprocessor, baselines | Stacking ensemble, SHAP RF explainer |
-| Neural models | Data split, preprocessor, GPU setup | Stacking ensemble |
-| Stacking ensemble | Classical and neural base models | Calibration, production inference |
-| Calibration | Validation split, stacking model | Score mapping, metrics, API response reliability |
+| Classical models | Data split, preprocessor, baselines | Stacking benchmark, monotonic tree runtime, explainability |
+| Neural models | Data split, preprocessor, GPU setup | Stacking benchmark |
+| Stacking ensemble | Classical and neural base models | Benchmarking, rollback/reference runtime |
+| Monotonic tree runtime | Classical feature policy, governance gates | Production inference |
+| Calibration | Validation split, candidate model | Score mapping, metrics, API response reliability |
 | Explainability | Trained RF/production model, preprocessor | Results page, dashboard |
 | Counterfactuals | Production model, DICE data interface, actionable feature list | Results page |
 | Evaluation | All models, calibrated model, test split | Analytics endpoints |
@@ -222,8 +223,8 @@ flowchart TD
 5. Implement derived feature engineering and preprocessing.
 6. Train baselines and classical models.
 7. Train neural models once classical pipeline is reliable.
-8. Train stacking ensemble, calibrate probabilities, and freeze production artifact bundle.
-9. Generate explainability, counterfactual, fairness, drift, and metrics reports.
+8. Train stacking ensemble as a benchmark/reference path, then evaluate governed monotonic tree candidates.
+9. Freeze the selected manifest runtime and generate explainability, counterfactual, fairness, drift, and metrics reports.
 10. Build FastAPI scoring and analytics endpoints against fixed contracts.
 11. Build frontend assessment and result flow.
 12. Build dashboard only after analytics reports and endpoints are stable.
@@ -280,7 +281,8 @@ AlterScore/
     data/                     Data generation commands
     training/                 Training orchestration commands
   deploy/
-    # Docker/cloud/monitoring assets are Track G work and are not scaffolded yet.
+    cloud/                   Cloud deployment scaffolding
+    monitoring/              Monitoring scaffolding
   runtime/
     logs/                     Local append-only runtime logs
     pytest-cache/             Workspace-local pytest cache output

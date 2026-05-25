@@ -17,7 +17,6 @@ Files that were explicitly requested but are **not present** in this repository:
 - `poetry.lock`
 - `Pipfile`
 - `setup.py`
-- `Dockerfile`
 - CI/CD workflow files such as `.github/workflows/*.yml`
 - shell startup scripts such as `.sh` or `.ps1`
 

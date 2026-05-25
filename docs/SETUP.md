@@ -5,11 +5,14 @@ troubleshooting, and contributor onboarding.
 
 ## Current Working State
 
-- Backend runtime is manifest-backed and loads the checked-in production bundle.
+- Backend runtime is manifest-backed and loads the checked-in monotonic
+  `XGBoost` production bundle.
 - Borrower frontend is implemented and can submit to `/api/score`.
-- Dashboard shell exists, but full analytics-panel wiring is still pending.
-- The leading governed production candidate is monotonic `XGBoost`, evaluated
-  through the offline governance workflow.
+- Dashboard analytics panels are partially wired to the report-backed API; the
+  confusion-matrix view, independent panel states, and browser QA evidence are
+  still pending.
+- The earlier calibrated stacking ensemble remains available as a benchmark and
+  rollback/reference artifact, but it is not the default manifest runtime.
 
 ## Environment Requirements
 
@@ -106,8 +109,9 @@ Frontend:
 
 ## Known Current Issues
 
-- The evaluator dashboard shell exists, but full analytics-panel wiring remains
-  incomplete.
+- The evaluator dashboard consumes most analytics endpoints, but still needs a
+  confusion-matrix panel, independent panel-level loading/error states, and
+  browser QA evidence.
 - Frontend test coverage is still lighter than backend and pipeline coverage.
 - The WebGL/R3F frontend build may emit a non-critical bundle-size warning.
 - Fresh `npm install` currently reports 5 dependency vulnerabilities in
