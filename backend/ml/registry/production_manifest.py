@@ -90,8 +90,15 @@ class ProductionManifest:
 def compute_file_sha256(path: str | Path) -> str:
     """Return the lowercase SHA256 checksum for ``path``."""
 
+    path_obj = Path(path)
+    if path_obj.suffix.lower() == ".json":
+        # Normalize line endings to LF to ensure platform-agnostic checksums
+        content = path_obj.read_bytes()
+        normalized_content = content.replace(b"\r\n", b"\n")
+        return hashlib.sha256(normalized_content).hexdigest()
+
     digest = hashlib.sha256()
-    with Path(path).open("rb") as handle:
+    with path_obj.open("rb") as handle:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
