@@ -11,6 +11,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "test": "node run-tests.js",
     "check": "node -e \"const pkg=require('./package.json'); console.log(pkg.name)\""
   },
   "dependencies": {

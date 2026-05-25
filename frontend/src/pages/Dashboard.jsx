@@ -23,7 +23,8 @@ import {
   fetchScoreDistribution,
   fetchRocData,
   fetchPrCurve,
-  fetchCalibrationCurve
+  fetchCalibrationCurve,
+  fetchConfusionMatrix
 } from "../services/api.js";
 
 // Reusable Recharts curve plotting component
@@ -120,6 +121,39 @@ function ScoreHistogramPlot({ buckets }) {
   );
 }
 
+// Panel Boundary Loader/Error wrapper component
+function PanelWrapper({ title, loading, error, empty, emptyMessage = "Data unavailable", children }) {
+  return (
+    <div className="hud-panel" style={{ minHeight: "auto", display: "flex", flexDirection: "column" }}>
+      <div className="question-topline" style={{ display: "flex", justifyContent: "space-between" }}>
+        <span>{title}</span>
+        {error && <span style={{ color: "var(--status-poor)" }}>ENGINE ERROR</span>}
+        {loading && <span style={{ color: "var(--accent)" }}>LOADING...</span>}
+        {!loading && !error && !empty && <span style={{ color: "var(--accent-green)" }}>ACTIVE SECURE</span>}
+      </div>
+
+      {loading ? (
+        <div style={{ height: 240, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: "10px" }}>
+          <div className="spinner" style={{ width: "30px", height: "30px", border: "2px solid rgba(255,255,255,0.05)", borderTopColor: "var(--accent)", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+          <p className="mono-text" style={{ fontSize: "0.7rem", color: "var(--soft)" }}>// DECRYPTING ARTIFACT DATA...</p>
+        </div>
+      ) : error ? (
+        <div style={{ height: 240, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", border: "1px dashed var(--status-poor)", borderRadius: "6px", padding: "1.5rem", textAlign: "center" }}>
+          <span style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>⚠️</span>
+          <p className="mono-text" style={{ fontSize: "0.75rem", color: "var(--status-poor)", fontWeight: "bold" }}>ENDPOINT FAILED</p>
+          <p className="mono-text" style={{ fontSize: "0.65rem", color: "var(--soft)", marginTop: "0.4rem" }}>{error.message || "Failed to load telemetry payload"}</p>
+        </div>
+      ) : empty ? (
+        <div style={{ height: 240, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", border: "1px dashed var(--line)", borderRadius: "6px", color: "var(--soft)", fontSize: "0.8rem" }}>
+          {emptyMessage}
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", flexGrow: 1 }}>{children}</div>
+      )}
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const [health, setHealth] = useState(null);
   const [modelStats, setModelStats] = useState(null);
@@ -128,55 +162,118 @@ export default function Dashboard() {
   const [drift, setDrift] = useState(null);
   const [importance, setImportance] = useState(null);
   const [distribution, setDistribution] = useState(null);
+  const [confusionMatrix, setConfusionMatrix] = useState(null);
   
   // Curve states
   const [rocData, setRocData] = useState(null);
   const [prCurve, setPrCurve] = useState(null);
   const [calibrationCurve, setCalibrationCurve] = useState(null);
   
-  const [activeTab, setActiveTab] = useState("performance"); // performance, drift, fairness, audit
+  const [activeTab, setActiveTab] = useState("performance"); // performance, drift, fairness
   const [activeCurveTab, setActiveCurveTab] = useState("roc"); // roc, pr, calibration
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Individual loading/error tracking
+  const [panelStates, setPanelStates] = useState({
+    stats: { loading: true, error: null },
+    baseline: { loading: true, error: null },
+    fairness: { loading: true, error: null },
+    drift: { loading: true, error: null },
+    importance: { loading: true, error: null },
+    distribution: { loading: true, error: null },
+    roc: { loading: true, error: null },
+    pr: { loading: true, error: null },
+    cal: { loading: true, error: null },
+    matrix: { loading: true, error: null }
+  });
+
+  const updatePanel = (panelKey, loadingState, errorState = null) => {
+    setPanelStates(prev => ({
+      ...prev,
+      [panelKey]: { loading: loadingState, error: errorState }
+    }));
+  };
+
   useEffect(() => {
     setLoading(true);
-    Promise.all([
-      fetchHealth(),
-      fetchModelStats().catch(err => ({ error: err })),
-      fetchBaselineComparison().catch(err => ({ error: err })),
-      fetchFairnessReport().catch(err => ({ error: err })),
-      fetchDriftReport().catch(err => ({ error: err })),
-      fetchGlobalImportance().catch(err => ({ error: err })),
-      fetchScoreDistribution().catch(err => ({ error: err })),
-      fetchRocData().catch(err => ({ error: err })),
-      fetchPrCurve().catch(err => ({ error: err })),
-      fetchCalibrationCurve().catch(err => ({ error: err }))
-    ])
-      .then(([healthData, stats, base, fair, dr, imp, dist, roc, pr, cal]) => {
+    // Base system setup
+    fetchHealth()
+      .then(healthData => {
         setHealth(healthData);
-        if (!stats.error) setModelStats(stats);
-        if (!base.error) setBaseline(base);
-        if (!fair.error) setFairness(fair);
-        if (!dr.error) setDrift(dr);
-        if (!imp.error) setImportance(imp);
-        if (!dist.error) setDistribution(dist);
-        if (!roc.error) setRocData(roc);
-        if (!pr.error) setPrCurve(pr);
-        if (!cal.error) setCalibrationCurve(cal);
         setLoading(false);
       })
       .catch((err) => {
         setError(err);
         setLoading(false);
       });
+
+    // Independent Async Telemetry Panel Queries
+    fetchModelStats()
+      .then(res => { setModelStats(res); updatePanel("stats", false); })
+      .catch(err => updatePanel("stats", false, err));
+
+    fetchBaselineComparison()
+      .then(res => { setBaseline(res); updatePanel("baseline", false); })
+      .catch(err => updatePanel("baseline", false, err));
+
+    fetchFairnessReport()
+      .then(res => { setFairness(res); updatePanel("fairness", false); })
+      .catch(err => updatePanel("fairness", false, err));
+
+    fetchDriftReport()
+      .then(res => { setDrift(res); updatePanel("drift", false); })
+      .catch(err => updatePanel("drift", false, err));
+
+    fetchGlobalImportance()
+      .then(res => { setImportance(res); updatePanel("importance", false); })
+      .catch(err => updatePanel("importance", false, err));
+
+    fetchScoreDistribution()
+      .then(res => { setDistribution(res); updatePanel("distribution", false); })
+      .catch(err => updatePanel("distribution", false, err));
+
+    fetchRocData()
+      .then(res => { setRocData(res); updatePanel("roc", false); })
+      .catch(err => updatePanel("roc", false, err));
+
+    fetchPrCurve()
+      .then(res => { setPrCurve(res); updatePanel("pr", false); })
+      .catch(err => updatePanel("pr", false, err));
+
+    fetchCalibrationCurve()
+      .then(res => { setCalibrationCurve(res); updatePanel("cal", false); })
+      .catch(err => updatePanel("cal", false, err));
+
+    fetchConfusionMatrix()
+      .then(res => { setConfusionMatrix(res); updatePanel("matrix", false); })
+      .catch(err => updatePanel("matrix", false, err));
   }, []);
 
   if (loading) {
     return (
       <main className="assessment-page" style={{ maxWidth: '1000px', display: "flex", justifyContent: "center", alignItems: "center", minHeight: "60vh" }}>
-        <p className="mono-text">// LOADING GOVERNANCE CENTER TELEMETRY...</p>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
+          <div className="spinner" style={{ width: "40px", height: "40px", border: "3px solid rgba(255,255,255,0.05)", borderTopColor: "var(--accent)", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+          <p className="mono-text">// ESTABLISHING CONNECTION TO RISK GATE HUD...</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="assessment-page" style={{ maxWidth: '1000px', display: "flex", justifyContent: "center", alignItems: "center", minHeight: "60vh" }}>
+        <div style={{ textAlign: "center", border: "1px dashed var(--status-poor)", padding: "2.5rem", borderRadius: "8px", background: "rgba(0,0,0,0.2)" }}>
+          <h2 style={{ color: "var(--status-poor)", marginBottom: "1rem" }}>CONNECTION FAILED</h2>
+          <p className="mono-text" style={{ fontSize: "0.8rem", color: "var(--soft)", marginBottom: "1.5rem" }}>
+            The Evaluator backend service is currently unreachable. Make sure the FastAPI backend is running.
+          </p>
+          <p className="mono-text" style={{ fontSize: "0.7rem", color: "var(--soft)" }}>
+            ERROR DETAILS: {error.message || "Failed to resolve backend API"}
+          </p>
+        </div>
       </main>
     );
   }
@@ -192,6 +289,13 @@ export default function Dashboard() {
       ? "FAIR"
       : "REVIEW"
     : "UNKNOWN";
+
+  // Reconcile and calculate confusion matrix data
+  const matrixItem = confusionMatrix
+    ? confusionMatrix.find((item) => item.model_name === activeModelName && item.split === "test_months_11_12")
+      || confusionMatrix.find((item) => item.split === "test_months_11_12")
+      || confusionMatrix[0]
+    : null;
 
   return (
     <main className="assessment-page" style={{ maxWidth: '1200px', padding: '2rem' }}>
@@ -244,7 +348,7 @@ export default function Dashboard() {
         <div style={{ border: '1px solid var(--line)', padding: '1.2rem', background: 'rgba(255,255,255,0.01)', borderRadius: '6px' }}>
           <div className="mono-text" style={{ color: 'var(--muted)', marginBottom: '0.4rem', fontSize: '0.7rem' }}>// MODEL ROC-AUC</div>
           <strong style={{ fontSize: '1.4rem', color: 'var(--text-strong)' }}>{overallStats?.auc_roc?.toFixed(4) || "N/A"}</strong>
-          <span style={{ color: "var(--accent-green)", fontSize: "0.7rem", display: "block", marginTop: "0.2rem" }}>{overallStats?.model_name || "No model metric loaded"}</span>
+          <span style={{ color: "var(--accent-green)", fontSize: "0.7rem", display: "block", marginTop: "0.2rem" }}>{overallStats?.model_name || "No model metrics"}</span>
         </div>
         <div style={{ border: '1px solid var(--line)', padding: '1.2rem', background: 'rgba(255,255,255,0.01)', borderRadius: '6px' }}>
           <div className="mono-text" style={{ color: 'var(--muted)', marginBottom: '0.4rem', fontSize: '0.7rem' }}>// DRIFT PSI MONITOR</div>
@@ -269,92 +373,194 @@ export default function Dashboard() {
 
       {/* Dynamic Tab Rendering */}
       {activeTab === "performance" && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", flexWrap: "wrap" }}>
-          {/* Diagnostic Curves Panel */}
-          <div className="hud-panel" style={{ minHeight: "auto" }}>
-            <div className="question-topline" style={{ display: "flex", justifyContent: "space-between" }}>
-              <span>DIAGNOSTIC VISUALIZATION</span>
-              <div style={{ display: "flex", gap: "0.3rem" }}>
-                <span 
-                  onClick={() => setActiveCurveTab("roc")}
-                  style={{ cursor: "pointer", color: activeCurveTab === "roc" ? "var(--accent)" : "var(--soft)", textDecoration: activeCurveTab === "roc" ? "underline" : "none", fontSize: "0.7rem" }}
-                >
-                  ROC
-                </span>
-                <span style={{ color: "var(--line)" }}>|</span>
-                <span 
-                  onClick={() => setActiveCurveTab("pr")}
-                  style={{ cursor: "pointer", color: activeCurveTab === "pr" ? "var(--accent)" : "var(--soft)", textDecoration: activeCurveTab === "pr" ? "underline" : "none", fontSize: "0.7rem" }}
-                >
-                  PR
-                </span>
-                <span style={{ color: "var(--line)" }}>|</span>
-                <span 
-                  onClick={() => setActiveCurveTab("cal")}
-                  style={{ cursor: "pointer", color: activeCurveTab === "cal" ? "var(--accent)" : "var(--soft)", textDecoration: activeCurveTab === "cal" ? "underline" : "none", fontSize: "0.7rem" }}
-                >
-                  CALIBRATION
-                </span>
-              </div>
-            </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", flexWrap: "wrap" }}>
             
-            <h3 style={{ marginBottom: "1rem" }}>
-              {activeCurveTab === "roc" ? "Receiver Operating Characteristic" : activeCurveTab === "pr" ? "Precision-Recall Curve" : "Expected Calibration Curve"}
-            </h3>
+            {/* Diagnostic Curves Panel */}
+            <PanelWrapper 
+              title="DIAGNOSTIC VISUALIZATION" 
+              loading={panelStates.roc.loading || panelStates.pr.loading || panelStates.cal.loading}
+              error={panelStates.roc.error || panelStates.pr.error || panelStates.cal.error}
+              empty={!rocData && !prCurve && !calibrationCurve}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem" }}>
+                <h3 style={{ margin: 0 }}>
+                  {activeCurveTab === "roc" ? "Receiver Operating Characteristic" : activeCurveTab === "pr" ? "Precision-Recall Curve" : "Expected Calibration Curve"}
+                </h3>
+                <div style={{ display: "flex", gap: "0.3rem" }}>
+                  <span 
+                    onClick={() => setActiveCurveTab("roc")}
+                    style={{ cursor: "pointer", color: activeCurveTab === "roc" ? "var(--accent)" : "var(--soft)", textDecoration: activeCurveTab === "roc" ? "underline" : "none", fontSize: "0.7rem" }}
+                  >
+                    ROC
+                  </span>
+                  <span style={{ color: "var(--line)" }}>|</span>
+                  <span 
+                    onClick={() => setActiveCurveTab("pr")}
+                    style={{ cursor: "pointer", color: activeCurveTab === "pr" ? "var(--accent)" : "var(--soft)", textDecoration: activeCurveTab === "pr" ? "underline" : "none", fontSize: "0.7rem" }}
+                  >
+                    PR
+                  </span>
+                  <span style={{ color: "var(--line)" }}>|</span>
+                  <span 
+                    onClick={() => setActiveCurveTab("cal")}
+                    style={{ cursor: "pointer", color: activeCurveTab === "cal" ? "var(--accent)" : "var(--soft)", textDecoration: activeCurveTab === "cal" ? "underline" : "none", fontSize: "0.7rem" }}
+                  >
+                    CALIBRATION
+                  </span>
+                </div>
+              </div>
 
-            {activeCurveTab === "roc" && (
-              <CurvePlot seriesList={rocData} xLabel="False Positive Rate" yLabel="True Positive Rate" activeCurveTab="roc" />
-            )}
-            {activeCurveTab === "pr" && (
-              <CurvePlot seriesList={prCurve} xLabel="Recall" yLabel="Precision" activeCurveTab="pr" />
-            )}
-            {activeCurveTab === "cal" && (
-              <CurvePlot seriesList={calibrationCurve} xLabel="Mean Predicted Value" yLabel="Fraction of Positives" activeCurveTab="cal" />
-            )}
+              {activeCurveTab === "roc" && (
+                <CurvePlot seriesList={rocData} xLabel="False Positive Rate" yLabel="True Positive Rate" activeCurveTab="roc" />
+              )}
+              {activeCurveTab === "pr" && (
+                <CurvePlot seriesList={prCurve} xLabel="Recall" yLabel="Precision" activeCurveTab="pr" />
+              )}
+              {activeCurveTab === "cal" && (
+                <CurvePlot seriesList={calibrationCurve} xLabel="Mean Predicted Value" yLabel="Fraction of Positives" activeCurveTab="cal" />
+              )}
+            </PanelWrapper>
+
+            {/* Score Distribution and Histogram */}
+            <PanelWrapper 
+              title="POPULATION STATISTICS // HISTOGRAM" 
+              loading={panelStates.distribution.loading}
+              error={panelStates.distribution.error}
+              empty={!distribution}
+            >
+              <h3 style={{ marginBottom: "1rem" }}>Score Distribution Summary</h3>
+              {distribution && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.5rem", padding: "0.8rem", background: "rgba(255,255,255,0.01)", border: "1px solid var(--line)", borderRadius: "4px" }}>
+                    <div>
+                      <span className="mono-text" style={{ fontSize: "0.65rem", color: "var(--soft)", display: "block" }}>// MEAN SCORE</span>
+                      <strong>{distribution.summary.mean_score.toFixed(1)}</strong>
+                    </div>
+                    <div>
+                      <span className="mono-text" style={{ fontSize: "0.65rem", color: "var(--soft)", display: "block" }}>// MEDIAN SCORE</span>
+                      <strong>{distribution.summary.median_score.toFixed(1)}</strong>
+                    </div>
+                    <div>
+                      <span className="mono-text" style={{ fontSize: "0.65rem", color: "var(--soft)", display: "block" }}>// APPLICANTS COUNT</span>
+                      <strong>{distribution.row_count}</strong>
+                    </div>
+                  </div>
+                  <ScoreHistogramPlot buckets={distribution.score_histogram} />
+                </div>
+              )}
+            </PanelWrapper>
           </div>
 
-          {/* Score Distribution and Histogram */}
-          <div className="hud-panel" style={{ minHeight: "auto" }}>
-            <div className="question-topline">
-              <span>POPULATION STATISTICS</span>
-              <span>HISTOGRAM</span>
+          {/* New Interactive Confusion Matrix panel */}
+          <PanelWrapper 
+            title="PREDICTIVE CONFUSION MATRIX" 
+            loading={panelStates.matrix.loading}
+            error={panelStates.matrix.error}
+            empty={!confusionMatrix}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "1.2rem", flexWrap: "wrap", gap: "10px" }}>
+              <h3 style={{ margin: 0 }}>Decisions Grid & Threshold Analysis</h3>
+              <span className="mono-text" style={{ fontSize: "0.75rem", color: "var(--soft)" }}>
+                CLASSIFICATION THRESHOLD: <strong style={{ color: "var(--accent)" }}>{matrixItem?.threshold?.toFixed(4) || "0.5000"}</strong>
+              </span>
             </div>
-            <h3 style={{ marginBottom: "1rem" }}>Score Distribution Summary</h3>
-            
-            {distribution ? (
-              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.5rem", padding: "0.8rem", background: "rgba(255,255,255,0.01)", border: "1px solid var(--line)", borderRadius: "4px" }}>
-                  <div>
-                    <span className="mono-text" style={{ fontSize: "0.65rem", color: "var(--soft)", display: "block" }}>// MEAN SCORE</span>
-                    <strong>{distribution.summary.mean_score.toFixed(1)}</strong>
+
+            {matrixItem && (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: "2rem" }}>
+                {/* 2x2 Matrix Render */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "100px 1fr 1fr", gap: "0.5rem", textAlign: "center", fontWeight: "bold", fontSize: "0.75rem", color: "var(--soft)" }}>
+                    <div />
+                    <div>PREDICTED DEFAULTER</div>
+                    <div>PREDICTED REPAYER</div>
                   </div>
-                  <div>
-                    <span className="mono-text" style={{ fontSize: "0.65rem", color: "var(--soft)", display: "block" }}>// MEDIAN SCORE</span>
-                    <strong>{distribution.summary.median_score.toFixed(1)}</strong>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "100px 1fr 1fr", gap: "0.5rem", alignItems: "stretch" }}>
+                    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", fontWeight: "bold", fontSize: "0.75rem", color: "var(--soft)", textTransform: "uppercase", padding: "10px", textAlign: "right" }}>
+                      Actual Defaulter
+                    </div>
+                    <div style={{ background: "rgba(255, 77, 94, 0.05)", border: "1px dashed rgba(255, 77, 94, 0.3)", borderRadius: "6px", padding: "1.2rem", textAlign: "center" }}>
+                      <span className="mono-text" style={{ fontSize: "0.6rem", color: "rgba(255,77,94,0.7)", display: "block", marginBottom: "0.3rem" }}>TRUE NEGATIVE (TN)</span>
+                      <strong style={{ fontSize: "1.6rem", color: "var(--text-strong)", display: "block" }}>{matrixItem.tn}</strong>
+                      <span className="mono-text" style={{ fontSize: "0.7rem", color: "var(--soft)" }}>
+                        {((matrixItem.tn / (matrixItem.tn + matrixItem.fp + matrixItem.fn + matrixItem.tp)) * 100).toFixed(1)}%
+                      </span>
+                    </div>
+                    <div style={{ background: "rgba(255, 173, 51, 0.05)", border: "1px dashed rgba(255, 173, 51, 0.3)", borderRadius: "6px", padding: "1.2rem", textAlign: "center" }}>
+                      <span className="mono-text" style={{ fontSize: "0.6rem", color: "rgba(255,173,51,0.7)", display: "block", marginBottom: "0.3rem" }}>FALSE POSITIVE (FP)</span>
+                      <strong style={{ fontSize: "1.6rem", color: "var(--text-strong)", display: "block" }}>{matrixItem.fp}</strong>
+                      <span className="mono-text" style={{ fontSize: "0.7rem", color: "var(--soft)" }}>
+                        {((matrixItem.fp / (matrixItem.tn + matrixItem.fp + matrixItem.fn + matrixItem.tp)) * 100).toFixed(1)}%
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <span className="mono-text" style={{ fontSize: "0.65rem", color: "var(--soft)", display: "block" }}>// APPLICANTS COUNT</span>
-                    <strong>{distribution.row_count}</strong>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "100px 1fr 1fr", gap: "0.5rem", alignItems: "stretch" }}>
+                    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", fontWeight: "bold", fontSize: "0.75rem", color: "var(--soft)", textTransform: "uppercase", padding: "10px", textAlign: "right" }}>
+                      Actual Repayer
+                    </div>
+                    <div style={{ background: "rgba(255, 173, 51, 0.05)", border: "1px dashed rgba(255, 173, 51, 0.3)", borderRadius: "6px", padding: "1.2rem", textAlign: "center" }}>
+                      <span className="mono-text" style={{ fontSize: "0.6rem", color: "rgba(255,173,51,0.7)", display: "block", marginBottom: "0.3rem" }}>FALSE NEGATIVE (FN)</span>
+                      <strong style={{ fontSize: "1.6rem", color: "var(--text-strong)", display: "block" }}>{matrixItem.fn}</strong>
+                      <span className="mono-text" style={{ fontSize: "0.7rem", color: "var(--soft)" }}>
+                        {((matrixItem.fn / (matrixItem.tn + matrixItem.fp + matrixItem.fn + matrixItem.tp)) * 100).toFixed(1)}%
+                      </span>
+                    </div>
+                    <div style={{ background: "rgba(48, 242, 210, 0.05)", border: "1px dashed rgba(48, 242, 210, 0.3)", borderRadius: "6px", padding: "1.2rem", textAlign: "center" }}>
+                      <span className="mono-text" style={{ fontSize: "0.6rem", color: "rgba(48,242,210,0.7)", display: "block", marginBottom: "0.3rem" }}>TRUE POSITIVE (TP)</span>
+                      <strong style={{ fontSize: "1.6rem", color: "var(--text-strong)", display: "block" }}>{matrixItem.tp}</strong>
+                      <span className="mono-text" style={{ fontSize: "0.7rem", color: "var(--soft)" }}>
+                        {((matrixItem.tp / (matrixItem.tn + matrixItem.fp + matrixItem.fn + matrixItem.tp)) * 100).toFixed(1)}%
+                      </span>
+                    </div>
                   </div>
                 </div>
-                <ScoreHistogramPlot buckets={distribution.score_histogram} />
+
+                {/* Score Rates Panel */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px", justifyContent: "center" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                    <div style={{ background: "rgba(255,255,255,0.01)", border: "1px solid var(--line)", padding: "0.8rem", borderRadius: "4px" }}>
+                      <span className="mono-text" style={{ fontSize: "0.65rem", color: "var(--soft)", display: "block" }}>// CLASSIFIED ACCURACY</span>
+                      <strong style={{ fontSize: "1.2rem", color: "var(--text-strong)" }}>{(matrixItem.accuracy * 100).toFixed(2)}%</strong>
+                    </div>
+                    <div style={{ background: "rgba(255,255,255,0.01)", border: "1px solid var(--line)", padding: "0.8rem", borderRadius: "4px" }}>
+                      <span className="mono-text" style={{ fontSize: "0.65rem", color: "var(--soft)", display: "block" }}>// F1 HARMONIC SCORE</span>
+                      <strong style={{ fontSize: "1.2rem", color: "var(--text-strong)" }}>{(matrixItem.f1 * 100).toFixed(2)}%</strong>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                    <div style={{ background: "rgba(255,255,255,0.01)", border: "1px solid var(--line)", padding: "0.8rem", borderRadius: "4px" }}>
+                      <span className="mono-text" style={{ fontSize: "0.65rem", color: "var(--soft)", display: "block" }}>// PRECISION RATE</span>
+                      <strong style={{ fontSize: "1.2rem", color: "var(--text-strong)" }}>{(matrixItem.precision * 100).toFixed(2)}%</strong>
+                    </div>
+                    <div style={{ background: "rgba(255,255,255,0.01)", border: "1px solid var(--line)", padding: "0.8rem", borderRadius: "4px" }}>
+                      <span className="mono-text" style={{ fontSize: "0.65rem", color: "var(--soft)", display: "block" }}>// SENSITIVITY (RECALL)</span>
+                      <strong style={{ fontSize: "1.2rem", color: "var(--text-strong)" }}>{(matrixItem.recall * 100).toFixed(2)}%</strong>
+                    </div>
+                  </div>
+
+                  <div style={{ background: "rgba(255,255,255,0.01)", border: "1px solid var(--line)", padding: "0.8rem", borderRadius: "4px" }}>
+                    <span className="mono-text" style={{ fontSize: "0.65rem", color: "var(--soft)", display: "block" }}>// SPECIFICITY (REJECTION ACCURACY)</span>
+                    <strong style={{ fontSize: "1.2rem", color: "var(--text-strong)" }}>{(matrixItem.specificity * 100).toFixed(2)}%</strong>
+                  </div>
+                </div>
               </div>
-            ) : (
-              <p className="mono-text" style={{ fontSize: "0.8rem", color: "var(--soft)" }}>No score distribution loaded.</p>
             )}
-          </div>
+          </PanelWrapper>
         </div>
       )}
 
       {activeTab === "drift" && (
-        <div className="hud-panel" style={{ minHeight: "auto" }}>
-          <div className="question-topline">
-            <span>STABILITY REGISTRY</span>
-            <span>POPULATION STABILITY INDEX (PSI)</span>
-          </div>
+        <PanelWrapper 
+          title="STABILITY REGISTRY // POPULATION STABILITY INDEX (PSI)" 
+          loading={panelStates.drift.loading}
+          error={panelStates.drift.error}
+          empty={!drift}
+        >
           <h3 style={{ marginBottom: "1rem" }}>Feature-Level Drift Diagnostics</h3>
-          
-          {drift ? (
+          {drift && (
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem", textAlign: "left" }}>
                 <thead>
@@ -397,21 +603,19 @@ export default function Dashboard() {
                 </tbody>
               </table>
             </div>
-          ) : (
-            <p className="mono-text" style={{ fontSize: "0.8rem", color: "var(--soft)" }}>No drift report available.</p>
           )}
-        </div>
+        </PanelWrapper>
       )}
 
       {activeTab === "fairness" && (
-        <div className="hud-panel" style={{ minHeight: "auto" }}>
-          <div className="question-topline">
-            <span>RESPONSIBLE AI AUDITING</span>
-            <span>SUBGROUP DISPARITY AUDITS</span>
-          </div>
+        <PanelWrapper 
+          title="RESPONSIBLE AI AUDITING // SUBGROUP DISPARITY AUDITS" 
+          loading={panelStates.fairness.loading}
+          error={panelStates.fairness.error}
+          empty={!fairness}
+        >
           <h3 style={{ marginBottom: "1rem" }}>Protected Proxy-Group Fairness Breakdown</h3>
-
-          {fairness ? (
+          {fairness && (
             <div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", marginBottom: "1.5rem", flexWrap: "wrap" }}>
                 <div>
@@ -419,7 +623,7 @@ export default function Dashboard() {
                   <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", lineHeight: "1.5" }}>
                     The backend evaluation service cross-checks algorithmic results across protected demographic features using proxy metrics.
                     The worst AUC gap between groups is currently <strong style={{ color: "var(--accent)" }}>{(fairness.worst_auc_gap * 100).toFixed(3)}%</strong>;
-                    the locked manifest should keep this under active review before pilot release.
+                    the locked manifest keeps this under active review.
                   </p>
                 </div>
                 <div style={{ background: "rgba(255,255,255,0.01)", border: "1px solid var(--line)", padding: "1rem", borderRadius: "6px" }}>
@@ -481,10 +685,8 @@ export default function Dashboard() {
                 </table>
               </div>
             </div>
-          ) : (
-            <p className="mono-text" style={{ fontSize: "0.8rem", color: "var(--soft)" }}>No fairness report audit data available.</p>
           )}
-        </div>
+        </PanelWrapper>
       )}
     </main>
   );
