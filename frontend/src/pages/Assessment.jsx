@@ -328,14 +328,14 @@ export default function Assessment() {
           <div className="resilience-helper-card" style={{
             marginTop: "1.5rem",
             padding: "1rem",
-            background: "rgba(255,255,255,0.01)",
-            borderLeft: "3px solid var(--accent)",
-            borderRadius: "4px",
+            background: "rgba(255,255,255,0.02)",
+            borderLeft: "2px solid var(--accent)",
+            borderRadius: "0",
             fontSize: "0.85rem",
             lineHeight: "1.5",
             color: "var(--text-muted)"
           }}>
-            <strong>💡 Suggestion Guide:</strong>
+            <strong>Suggestion guide</strong>
             <ul style={{ margin: "0.5rem 0 0 0", paddingLeft: "1.2rem" }}>
               <li>What was the specific event or challenge? (e.g. startup, business trial, financial plan)</li>
               <li>What did you plan or design as an adjustment?</li>

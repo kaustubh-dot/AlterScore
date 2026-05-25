@@ -11,9 +11,10 @@ CustomEase.create("alterQuart", "0.76,0,0.24,1");
 export default function useLenis() {
   useEffect(() => {
     const lenis = new Lenis({
-      lerp: 0.1,
+      lerp: 0.05,          // Incredibly smooth, liquid inertial scroll glide
+      duration: 1.8,       // Longer luxurious deceleration duration
       smoothWheel: true,
-      wheelMultiplier: 1.0,
+      wheelMultiplier: 0.95, // Soft, premium wheel scaling
     });
 
     const update = (time) => {

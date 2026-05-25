@@ -1,6 +1,6 @@
 # Current State
 
-**Date:** May 22, 2026
+**Date:** May 24, 2026
 **Phase:** Governed production-candidate stabilization
 **Active Runtime:** Checked-in calibrated stacking ensemble
 **Leading Candidate:** Monotonic `XGBoost` (evaluated, not yet promoted)
@@ -15,8 +15,12 @@ serves the checked-in artifact bundle.
 
 The borrower frontend is implemented in `frontend/` and includes the landing
 page, assessment flow, processing state, results rendering, score sharing, and
-API submission to `/api/score`. The evaluator dashboard currently exists as a
-health-backed shell and still needs complete analytics-panel wiring.
+API submission to `/api/score`. The current visual direction is a trust-first
+minimal dark interface with oversized editorial typography, glassmorphism
+surfaces, a slow blue/teal ambient canvas field, stripped-back feature/spec
+sections, and cleaner assessment/results panels. The evaluator dashboard
+currently exists as a health-backed shell and still needs complete
+analytics-panel wiring.
 
 The leading production-track candidate is a governed monotonic `XGBoost`
 system that has passed monotonic, counterfactual, fairness, calibration, and
@@ -46,8 +50,8 @@ runtime remains the calibrated stacking ensemble.
 ## Known Current Issues
 
 - Python `3.12.x` is the supported local setup target; Python `3.14.x` is not.
-- The frontend build can emit a non-critical bundle-size warning because of the
-  WebGL/R3F stack.
+- The frontend build can emit a non-critical bundle-size warning because the
+  dashboard and results still include Recharts/R3F chunks.
 - Some deployment directories remain scaffolding only and are not yet
   production-ready assets.
 
@@ -57,4 +61,3 @@ runtime remains the calibrated stacking ensemble.
 2. Decide on monotonic XGBoost promotion into the runtime bundle.
 3. Wire the dashboard to the existing analytics endpoints.
 4. Add deployment packaging once Track F is functional.
-

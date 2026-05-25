@@ -13,7 +13,7 @@
 ## Completed Frontend Scope
 
 - [x] React/Vite app with routes for `/`, `/assessment`, `/results`, and `/dashboard`.
-- [x] Landing experience with current visual direction.
+- [x] Landing experience with trust-first minimal dark/glass visual direction.
 - [x] Assessment question data aligned to the backend score contract.
 - [x] Answer renderers for number, MCQ, binary choice, Likert, and open text.
 - [x] Behavioral telemetry capture and score payload construction.
@@ -33,6 +33,7 @@
 - [ ] Add tests for retry-safe assessment submission.
 - [ ] Add tests for results rendering with a mocked score response.
 - [ ] Review R3F bundle size and decide whether manual chunking is needed.
+- [ ] Screenshot QA the trust-first minimal/glass direction on desktop and mobile.
 
 ### Track F - Evaluator Dashboard
 
