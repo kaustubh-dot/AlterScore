@@ -1,3 +1,13 @@
+---
+title: AlterScore Backend
+emoji: 📊
+colorFrom: green
+colorTo: blue
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # AlterScore
 
 AlterScore is a governed behavioral credit scoring platform for unbanked and
