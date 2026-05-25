@@ -19,7 +19,7 @@
 | Track D - Explainability & Promotion | Complete | SHAP, DICE, global importance, manifest promotion |
 | Track D+ - Ensemble Serving Runtime | Complete | Adapter, loader, scoring, manifest-backed validation |
 | Track D++ - Governed Constrained Trees | Complete | Monotonic XGBoost/LightGBM comparison and promotion gating |
-| Track E - Borrower Frontend | Implemented, QA pending | Landing, assessment, submission, processing, results, sharing |
+| Track E - Borrower Frontend | Implemented, QA pending | Trust-first minimal landing, assessment, submission, processing, results, sharing |
 | Track F - Evaluator Dashboard | Pending | Dashboard shell exists; analytics panel wiring remains |
 | Track G - Deployment & Demo | Pending | Docker/release assets after Track F |
 

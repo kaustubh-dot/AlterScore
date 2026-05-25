@@ -1,20 +1,26 @@
+import { useEffect, useRef } from "react";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
+
 const pillars = [
   {
-    title: "27-Question Assessment",
+    title: "Assessment",
     description:
-      "Covering financial literacy, future orientation, risk preference, locus of control, resilience, social capital, and more.",
+      "A focused sequence covering numeracy, financial judgement, risk preference, resilience, and social context.",
     type: "dots",
   },
   {
-    title: "Behavioral Telemetry",
+    title: "Behavior",
     description:
-      "Response timing, answer confidence, scroll hesitation, typing cadence, and session patterns feed the model silently.",
+      "Response rhythm, answer changes, session duration, typing cadence, and hesitation become quiet context.",
     type: "wave",
   },
   {
-    title: "6-Model Ensemble",
+    title: "Explanation",
     description:
-      "A calibrated stacking ensemble with SHAP explainability and DICE counterfactual generation.",
+      "Every score returns factors, eligibility, and actions that can move the borrower upward.",
     type: "graph",
   },
 ];
@@ -62,9 +68,55 @@ function handleMove(event) {
 }
 
 export default function PillarsSection() {
+  const containerRef = useRef(null);
+  const labelRef = useRef(null);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      const cards = gsap.utils.toArray(".pillar-card");
+
+      // 1. Initial layout states
+      gsap.set(labelRef.current, { autoAlpha: 0, y: -20 });
+      gsap.set(cards, { autoAlpha: 0, y: 120, rotateX: 12, filter: "blur(10px)" });
+
+      // 2. Scroll-Pinned Scrub Sequence
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: containerRef.current,
+          start: "top top",
+          end: "+=120%",
+          pin: true,
+          scrub: 1.2,
+          pinSpacing: true,
+        }
+      });
+
+      // Sequence timeline choreography
+      tl.to(labelRef.current, { autoAlpha: 1, y: 0, duration: 0.15 })
+        
+        // Card 1
+        .to(cards[0], { autoAlpha: 1, y: 0, rotateX: 0, filter: "blur(0px)", duration: 0.3 }, 0.15)
+        
+        // Card 2
+        .to(cards[1], { autoAlpha: 1, y: 0, rotateX: 0, filter: "blur(0px)", duration: 0.3 }, 0.45)
+        
+        // Card 3
+        .to(cards[2], { autoAlpha: 1, y: 0, rotateX: 0, filter: "blur(0px)", duration: 0.3 }, 0.75)
+        
+        // Final glow state: slightly brighten all borders
+        .to(cards, {
+          borderColor: "rgba(212, 168, 83, 0.28)",
+          duration: 0.15,
+        }, 1.05);
+
+    }, containerRef);
+
+    return () => ctx.revert();
+  }, []);
+
   return (
-    <section className="pillars-section" data-section>
-      <p className="section-label">How it works</p>
+    <section ref={containerRef} className="pillars-section" data-section>
+      <p ref={labelRef} className="section-label">What it measures</p>
       <div className="pillar-grid">
         {pillars.map((pillar, index) => (
           <article
