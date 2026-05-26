@@ -338,9 +338,21 @@ def _validate_text_quality(text: str, tokens: list[str]) -> bool:
         char_counts: dict[str, int] = {}
         for char in cleaned_char_text:
             char_counts[char] = char_counts.get(char, 0) + 1
-        max_char_ratio = max(char_counts.values()) / len(cleaned_char_text)
-        if max_char_ratio > 0.35 and len(cleaned_char_text) > 10:
-            return False
+        
+        most_common_char = max(char_counts, key=char_counts.get)
+        max_char_count = char_counts[most_common_char]
+        max_char_ratio = max_char_count / len(cleaned_char_text)
+        
+        # Apply checks: 
+        # A high ratio is allowed for short strings if the character is a common English vowel (avoiding false positives like "I had a bad day").
+        # If it's a consonant or is extremely long, apply standard spam limits.
+        if len(cleaned_char_text) > 10:
+            if most_common_char in "aeiou":
+                if max_char_ratio > 0.45 and len(cleaned_char_text) > 20:
+                    return False
+            else:
+                if max_char_ratio > 0.35:
+                    return False
 
     return True
 

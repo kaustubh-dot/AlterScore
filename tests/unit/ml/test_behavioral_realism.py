@@ -47,6 +47,11 @@ def test_text_quality_validation() -> None:
     spam_tokens = [spam_text]
     assert _validate_text_quality(spam_text, spam_tokens) is False
 
+    # 4. Legitimate short vowel-heavy sentence (regression check for false-positive bug)
+    regression_text = "I had a bad day"
+    regression_tokens = ["i", "had", "a", "bad", "day"]
+    assert _validate_text_quality(regression_text, regression_tokens) is True
+
 
 def test_score_saturation_fix() -> None:
     # Under old logic, 0.968 mapped to 850. Let's verify our new wider logistic mapping:
