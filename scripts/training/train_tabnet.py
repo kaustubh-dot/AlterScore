@@ -22,6 +22,8 @@ from backend.ml.training.neural.train_tabnet import (
     DEFAULT_DATASET_PATH,
     DEFAULT_TABNET_ARTIFACT_PATH,
     train_tabnet,
+    _TABNET_MAX_EPOCHS,
+    _TABNET_PATIENCE,
 )
 
 
@@ -58,6 +60,8 @@ def build_parser() -> argparse.ArgumentParser:
         default=DEFAULT_POPULATION_PERCENTILES_PATH,
     )
     parser.add_argument("--random-state", type=int, default=42)
+    parser.add_argument("--max-epochs", type=int, default=_TABNET_MAX_EPOCHS)
+    parser.add_argument("--patience", type=int, default=_TABNET_PATIENCE)
     return parser
 
 
@@ -73,6 +77,8 @@ def main(argv: list[str] | None = None) -> int:
         metrics_path=args.metrics_path,
         population_percentiles_path=args.population_percentiles_path,
         random_state=args.random_state,
+        max_epochs=args.max_epochs,
+        patience=args.patience,
     )
     print(
         json.dumps(

@@ -21,6 +21,8 @@ from backend.ml.training.neural.train_mlp import (
     DEFAULT_DATASET_PATH,
     DEFAULT_MLP_ARTIFACT_PATH,
     train_mlp,
+    _MLP_MAX_EPOCHS,
+    _MLP_PATIENCE,
 )
 
 
@@ -37,6 +39,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--metrics-path", type=Path, default=DEFAULT_METRICS_PATH)
     parser.add_argument("--population-percentiles-path", type=Path, default=DEFAULT_POPULATION_PERCENTILES_PATH)
     parser.add_argument("--random-state", type=int, default=42)
+    parser.add_argument("--max-epochs", type=int, default=_MLP_MAX_EPOCHS)
+    parser.add_argument("--patience", type=int, default=_MLP_PATIENCE)
     return parser
 
 
@@ -52,6 +56,8 @@ def main(argv: list[str] | None = None) -> int:
         metrics_path=args.metrics_path,
         population_percentiles_path=args.population_percentiles_path,
         random_state=args.random_state,
+        max_epochs=args.max_epochs,
+        patience=args.patience,
     )
     print(
         json.dumps(

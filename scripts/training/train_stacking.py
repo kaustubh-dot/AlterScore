@@ -44,6 +44,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--metrics-path", type=Path, default=DEFAULT_METRICS_PATH)
     p.add_argument("--population-percentiles-path", type=Path, default=DEFAULT_POPULATION_PERCENTILES_PATH)
     p.add_argument("--random-state", type=int, default=42)
+    p.add_argument("--max-epochs", type=int, default=None, help="Max epochs for neural base models")
+    p.add_argument("--patience", type=int, default=None, help="Patience for neural base models")
     return p
 
 
@@ -60,6 +62,8 @@ def main(argv: list[str] | None = None) -> int:
         metrics_path=args.metrics_path,
         population_percentiles_path=args.population_percentiles_path,
         random_state=args.random_state,
+        max_epochs=args.max_epochs,
+        patience=args.patience,
     )
     print(json.dumps({
         "run_id": art.run_id,

@@ -24,9 +24,9 @@ def _load_base_payload() -> dict:
 # 1. Monotonic Score Constraint Verification
 # ---------------------------------------------------------------------------
 
-def test_score_endpoint_enforces_monotonicity_on_literacy_answers(tmp_path) -> None:
+def test_score_endpoint_enforces_monotonicity_on_literacy_answers(trained_model_dir) -> None:
     """Verifies that correct numeracy answers yield a score >= incorrect answers."""
-    settings = build_runtime_settings(tmp_path)
+    settings = build_runtime_settings(trained_model_dir)
     app = create_app(settings)
 
     # Base payload with correct math/numeracy answers
@@ -89,9 +89,9 @@ def test_fairness_gate_evaluator_correctly_flags_exceeding_gaps() -> None:
 # 3. Input Payload Validation Guardrails
 # ---------------------------------------------------------------------------
 
-def test_score_endpoint_rejects_out_of_bound_inputs(tmp_path) -> None:
+def test_score_endpoint_rejects_out_of_bound_inputs(trained_model_dir) -> None:
     """Verifies that the API triggers validation errors for schema out-of-bound entries."""
-    settings = build_runtime_settings(tmp_path)
+    settings = build_runtime_settings(trained_model_dir)
     app = create_app(settings)
 
     # Load base payload and corrupt financial literacy choice (allowed range is 0 to 3)
@@ -110,9 +110,9 @@ def test_score_endpoint_rejects_out_of_bound_inputs(tmp_path) -> None:
     assert any("financial_literacy_q1" in str(d.get("loc")) for d in details)
 
 
-def test_score_endpoint_rejects_missing_behavioral_telemetry(tmp_path) -> None:
+def test_score_endpoint_rejects_missing_behavioral_telemetry(trained_model_dir) -> None:
     """Verifies that missing the behavioral telemetry group fails validation."""
-    settings = build_runtime_settings(tmp_path)
+    settings = build_runtime_settings(trained_model_dir)
     app = create_app(settings)
 
     payload = _load_base_payload()

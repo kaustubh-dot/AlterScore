@@ -64,6 +64,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--manifest-path", type=Path, default=DEFAULT_MANIFEST_PATH)
     p.add_argument("--manifest-version", type=str, default="calibrated_stacking_ensemble_v1")
     p.add_argument("--code-ref", type=str, default="antigravity/dev")
+    p.add_argument("--max-epochs", type=int, default=None, help="Max epochs for neural base models")
+    p.add_argument("--patience", type=int, default=None, help="Patience for neural base models")
     return p
 
 
@@ -88,6 +90,8 @@ def main(argv: list[str] | None = None) -> int:
         manifest_path=args.manifest_path,
         manifest_version=args.manifest_version,
         code_ref=args.code_ref,
+        max_epochs=args.max_epochs,
+        patience=args.patience,
     )
     print(json.dumps({
         "run_id": art.run_id,

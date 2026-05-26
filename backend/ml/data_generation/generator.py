@@ -327,7 +327,7 @@ def generate_synthetic_dataset(
         - 0.7 * answer_change_rate
         - 0.12 * dropout_count
         + rng.normal(0.0, 0.42, row_count)
-        + 2.05
+        + 1.35
     )
     repayment_probability = _sigmoid(repayment_logit)
     repayment_label = (rng.random(row_count) < repayment_probability).astype(int)

@@ -42,10 +42,13 @@ def _try_import_tabnet() -> bool:
         return False
 
 
-pytestmark = pytest.mark.skipif(
-    not _try_import_tabnet(),
-    reason="pytorch-tabnet is not installed; skipping neural training smoke tests.",
-)
+pytestmark = [
+    pytest.mark.slow,
+    pytest.mark.skipif(
+        not _try_import_tabnet(),
+        reason="pytorch-tabnet is not installed; skipping neural training smoke tests.",
+    )
+]
 
 
 def _patch_fit_epochs(monkeypatch: pytest.MonkeyPatch) -> None:

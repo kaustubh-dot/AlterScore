@@ -147,6 +147,8 @@ def train_stacking(
     metrics_path: str | Path | None = DEFAULT_METRICS_PATH,
     population_percentiles_path: str | Path | None = DEFAULT_POPULATION_PERCENTILES_PATH,
     random_state: int = DEFAULT_RANDOM_STATE,
+    max_epochs: int | None = None,
+    patience: int | None = None,
 ) -> StackingTrainingArtifacts:
     """Train and calibrate a stacking ensemble on the documented temporal split.
 
@@ -191,6 +193,8 @@ def train_stacking(
             preprocessor_artifact_path=preprocessor_artifact_path,
             text_pca_artifact_path=text_pca_artifact_path,
             random_state=random_state,
+            max_epochs=max_epochs,
+            patience=patience,
         )
 
     # Validate that all required base models are present
@@ -433,6 +437,8 @@ def _build_stacking_inputs(
     preprocessor_artifact_path: str | Path | None,
     text_pca_artifact_path: str | Path | None,
     random_state: int,
+    max_epochs: int | None = None,
+    patience: int | None = None,
 ) -> StackingInputs:
     """Re-train all six base models and collect their probability arrays."""
     resolved_dataset, _ = _load_dataset(dataset, dataset_path)
@@ -476,6 +482,12 @@ def _build_stacking_inputs(
         random_state=random_state,
     )
 
+    tabnet_kwargs = {}
+    if max_epochs is not None:
+        tabnet_kwargs["max_epochs"] = max_epochs
+    if patience is not None:
+        tabnet_kwargs["patience"] = patience
+
     tn = train_tabnet(
         resolved_dataset,
         expected_row_count=expected_row_count,
@@ -486,7 +498,14 @@ def _build_stacking_inputs(
         metrics_path=None,
         population_percentiles_path=None,
         random_state=random_state,
+        **tabnet_kwargs,
     )
+
+    mlp_kwargs = {}
+    if max_epochs is not None:
+        mlp_kwargs["max_epochs"] = max_epochs
+    if patience is not None:
+        mlp_kwargs["patience"] = patience
 
     mlp = train_mlp(
         resolved_dataset,
@@ -498,6 +517,7 @@ def _build_stacking_inputs(
         metrics_path=None,
         population_percentiles_path=None,
         random_state=random_state,
+        **mlp_kwargs,
     )
 
     # Derive y arrays from the prepared data (lightweight re-prepare)

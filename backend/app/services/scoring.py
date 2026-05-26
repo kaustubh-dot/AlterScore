@@ -376,7 +376,7 @@ def _build_model_debug(
 def _build_score_mapping_debug(repayment_probability: float) -> dict[str, Any]:
     clipped_probability = float(np.clip(repayment_probability, 0.01, 0.99))
     log_odds = float(np.log(clipped_probability / (1.0 - clipped_probability)))
-    raw_score = 560.0 + (log_odds * 63.2)
+    raw_score = 500.0 + (log_odds * 80.0)
     final_credit_score = int(np.clip(raw_score, 300, 850))
     return {
         "raw_repayment_probability": float(repayment_probability),
@@ -583,7 +583,35 @@ def _calculate_governance_multiplier(feature_row: dict[str, Any]) -> tuple[float
         multiplier -= penalty
         reasons.append(f"Erratic answer modification pattern (changes: {change_rate:.1%})")
 
-    final_multiplier = max(0.65, min(1.0, multiplier))
+    # 5. Cognitive Floor Penalty
+    # Near-zero numeracy AND CRT indicates careless/random responding.
+    # Default to 1.0 if not present to avoid penalizing legacy test rows.
+    numeracy = float(feature_row.get("numeracy_score", 1.0))
+    crt = float(feature_row.get("CRT_score", 1.0))
+    if numeracy < 0.1 and crt < 0.1:
+        penalty = 0.20
+        multiplier -= penalty
+        reasons.append(
+            f"Near-zero cognitive scores (numeracy: {numeracy:.2f}, CRT: {crt:.2f})"
+        )
+
+    # 6. Low Engagement Penalty
+    engagement = float(feature_row.get("engagement_score", 1.0))
+    if engagement < 0.30:
+        penalty = min(0.12, (0.30 - engagement) * 0.4)
+        multiplier -= penalty
+        reasons.append(f"Very low engagement detected (score: {engagement:.2f})")
+
+    # 7. Speed Penalty (extremely fast average response)
+    avg_time = float(feature_row.get("avg_response_time_ms", 5000.0))
+    if avg_time < 2000.0:
+        penalty = min(0.15, (2000.0 - avg_time) / 10000.0)
+        multiplier -= penalty
+        reasons.append(
+            f"Suspiciously fast response pacing (avg: {avg_time:.0f}ms)"
+        )
+
+    final_multiplier = max(0.40, min(1.0, multiplier))
     return final_multiplier, reasons
 
 

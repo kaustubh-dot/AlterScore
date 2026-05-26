@@ -35,10 +35,13 @@ def _try_import_torch() -> bool:
         return False
 
 
-pytestmark = pytest.mark.skipif(
-    not _try_import_torch(),
-    reason="torch is not installed; skipping MLP training smoke tests.",
-)
+pytestmark = [
+    pytest.mark.slow,
+    pytest.mark.skipif(
+        not _try_import_torch(),
+        reason="torch is not installed; skipping MLP training smoke tests.",
+    )
+]
 
 
 def _patch_fit_epochs(monkeypatch: pytest.MonkeyPatch) -> None:

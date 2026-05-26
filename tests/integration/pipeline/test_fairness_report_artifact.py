@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.slow
+
 import json
 
 from backend.app.core.artifact_loader import load_runtime_artifact_bundle

@@ -123,6 +123,8 @@ def train_tabnet(
     metrics_path: str | Path | None = DEFAULT_METRICS_PATH,
     population_percentiles_path: str | Path | None = DEFAULT_POPULATION_PERCENTILES_PATH,
     random_state: int = DEFAULT_RANDOM_STATE,
+    max_epochs: int = _TABNET_MAX_EPOCHS,
+    patience: int = _TABNET_PATIENCE,
 ) -> TabNetTrainingArtifacts:
     """Train a TabNet classifier on the documented temporal split.
 
@@ -207,8 +209,8 @@ def train_tabnet(
         eval_set=[(X_validation_processed, y_validation)],
         eval_name=["validation"],
         eval_metric=["auc"],
-        max_epochs=_TABNET_MAX_EPOCHS,
-        patience=_TABNET_PATIENCE,
+        max_epochs=max_epochs,
+        patience=patience,
         batch_size=_TABNET_BATCH_SIZE,
         virtual_batch_size=_TABNET_VIRTUAL_BATCH_SIZE,
         num_workers=0,

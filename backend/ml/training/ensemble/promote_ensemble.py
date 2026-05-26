@@ -134,6 +134,8 @@ def promote_ensemble(
     lightgbm_artifact_path: str | Path | None = None,
     tabnet_artifact_path: str | Path | None = None,
     mlp_artifact_path: str | Path | None = None,
+    max_epochs: int | None = None,
+    patience: int | None = None,
 ) -> PromotionArtifacts:
     """Full offline pipeline → promotion.
 
@@ -209,6 +211,12 @@ def promote_ensemble(
         random_state=random_state,
     )
 
+    tabnet_kwargs = {}
+    if max_epochs is not None:
+        tabnet_kwargs["max_epochs"] = max_epochs
+    if patience is not None:
+        tabnet_kwargs["patience"] = patience
+
     tn = train_tabnet(
         dataset.copy(),
         expected_row_count=expected_row_count,
@@ -219,7 +227,14 @@ def promote_ensemble(
         metrics_path=cl.metrics_path,
         population_percentiles_path=cl.population_percentiles_path,
         random_state=random_state,
+        **tabnet_kwargs,
     )
+
+    mlp_kwargs = {}
+    if max_epochs is not None:
+        mlp_kwargs["max_epochs"] = max_epochs
+    if patience is not None:
+        mlp_kwargs["patience"] = patience
 
     mlp_art = train_mlp(
         dataset.copy(),
@@ -231,6 +246,7 @@ def promote_ensemble(
         metrics_path=tn.metrics_path,
         population_percentiles_path=tn.population_percentiles_path,
         random_state=random_state,
+        **mlp_kwargs,
     )
 
     # ------------------------------------------------------------------

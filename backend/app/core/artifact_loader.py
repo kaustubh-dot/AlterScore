@@ -152,16 +152,32 @@ def inspect_runtime_artifacts(settings: Settings | None = None) -> ArtifactLoadR
     return load_runtime_artifact_bundle(settings, strict=False).report
 
 
+@lru_cache(maxsize=16)
+def _cached_load_runtime_artifact_bundle(
+    settings: Settings,
+    strict: bool,
+) -> LoadedArtifactBundle:
+    """Internal cached loader implementation."""
+    return _load_runtime_artifact_bundle_impl(settings, strict=strict)
+
+
 def load_runtime_artifact_bundle(
     settings: Settings | None = None,
     *,
     strict: bool = True,
 ) -> LoadedArtifactBundle:
     """Load the current runtime artifact bundle for backend scoring."""
-
     resolved_settings = settings or get_settings()
-    repo_root = resolved_settings.repo_root
-    base_report, manifest = _resolve_artifact_state(resolved_settings)
+    return _cached_load_runtime_artifact_bundle(resolved_settings, strict)
+
+
+def _load_runtime_artifact_bundle_impl(
+    settings: Settings,
+    *,
+    strict: bool = True,
+) -> LoadedArtifactBundle:
+    repo_root = settings.repo_root
+    base_report, manifest = _resolve_artifact_state(settings)
     loaded_artifacts: set[str] = set()
     invalid_artifacts: set[str] = set()
     artifact_errors: dict[str, str] = {}

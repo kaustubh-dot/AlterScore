@@ -9,6 +9,9 @@ Test plan (5 tests):
 """
 
 from __future__ import annotations
+import pytest
+pytestmark = pytest.mark.slow
+
 
 import json
 import numpy as np

@@ -19,11 +19,5 @@
     "method": "isotonic",
     "cv": "prefit"
   },
-  "tabnet_mitigation": {
-    "enabled": true,
-    "min_peer_confidence": 0.8,
-    "disagreement_threshold": 0.25,
-    "max_blend_weight": 0.75
-  },
   "random_state": 42
 }

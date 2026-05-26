@@ -36,7 +36,6 @@ _LOSS_AVERSION_SCORE_MAP: Final[dict[int, float]] = {
     0: 0.0,
     1: 0.5,
     2: 1.0,
-    3: 0.2,
 }
 _SOCIAL_CAPITAL_Q1_SCORE_MAP: Final[dict[int, float]] = {
     0: 0.0,
@@ -46,9 +45,8 @@ _SOCIAL_CAPITAL_Q1_SCORE_MAP: Final[dict[int, float]] = {
 }
 _SOCIAL_CAPITAL_Q2_SCORE_MAP: Final[dict[int, float]] = {
     0: 1.0,
-    1: 0.8,
+    1: 0.5,
     2: 0.0,
-    3: 0.5,
 }
 _SOCIAL_CAPITAL_Q3_SCORE_MAP: Final[dict[int, float]] = {
     0: 1.0,
@@ -57,8 +55,8 @@ _SOCIAL_CAPITAL_Q3_SCORE_MAP: Final[dict[int, float]] = {
 }
 _RESILIENCE_Q3_SCORE_MAP: Final[dict[int, float]] = {
     0: 1.0,
-    1: 0.9,
-    2: 0.8,
+    1: 0.6,
+    2: 0.35,
     3: 0.0,
 }
 _RECIPROCITY_Q2_SCORE_MAP: Final[dict[int, float]] = {
@@ -196,10 +194,10 @@ def _compute_honesty_score(
     inconsistency_ratio = (future_inconsistency + locus_inconsistency) / 2.0
 
     suspicious_traps = sum(
-        _coerce_int(answers.get(question_id), default=3) >= 4
+        _coerce_int(answers.get(question_id), default=3) >= 3
         for question_id in ("honesty_trap_q1", "honesty_trap_q2")
     )
-    social_desirability_penalty = 0.25 * suspicious_traps
+    social_desirability_penalty = 0.35 * suspicious_traps
 
     implausibility_flag = float(
         suspicious_traps == 2 and numeracy_score >= (2.0 / 3.0) and crt_score >= (2.0 / 3.0)

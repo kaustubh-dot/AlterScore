@@ -13,7 +13,7 @@ def test_probability_to_score_tracks_boundary_midpoint_and_upper_tail() -> None:
     strong_score = probability_to_score(0.72)
     upper_tail_score = probability_to_score(0.90)
 
-    assert midpoint_score == 560
+    assert midpoint_score == 500
     assert 300 <= strong_score <= 850
     assert 300 <= upper_tail_score <= 850
     assert midpoint_score < strong_score < upper_tail_score

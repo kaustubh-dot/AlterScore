@@ -112,6 +112,8 @@ def train_mlp(
     metrics_path: str | Path | None = DEFAULT_METRICS_PATH,
     population_percentiles_path: str | Path | None = DEFAULT_POPULATION_PERCENTILES_PATH,
     random_state: int = DEFAULT_RANDOM_STATE,
+    max_epochs: int = _MLP_MAX_EPOCHS,
+    patience: int = _MLP_PATIENCE,
 ) -> MLPTrainingArtifacts:
     """Train a residual MLP on the documented temporal split.
 
@@ -175,6 +177,8 @@ def train_mlp(
         y_val=y_val,
         device=device,
         random_state=random_state,
+        max_epochs=max_epochs,
+        patience=patience,
     )
     model.eval()
 
@@ -325,6 +329,8 @@ def _fit_mlp(
     y_val: np.ndarray,
     device: Any,
     random_state: int,
+    max_epochs: int,
+    patience: int,
 ) -> Any:
     import torch
     import torch.nn.functional as F
@@ -347,7 +353,7 @@ def _fit_mlp(
     patience_ctr = 0
     n = len(X_tr)
 
-    for _ in range(_MLP_MAX_EPOCHS):
+    for _ in range(max_epochs):
         model.train()
         perm = torch.randperm(n)
         for start in range(0, n, _MLP_BATCH_SIZE):
@@ -374,7 +380,7 @@ def _fit_mlp(
             patience_ctr = 0
         else:
             patience_ctr += 1
-            if patience_ctr >= _MLP_PATIENCE:
+            if patience_ctr >= patience:
                 break
 
     if best_state:

@@ -20,8 +20,8 @@ def _load_valid_score_payload() -> dict:
     )
 
 
-def test_score_endpoint_returns_schema_valid_runtime_response(tmp_path) -> None:
-    settings = build_runtime_settings(tmp_path)
+def test_score_endpoint_returns_schema_valid_runtime_response(trained_model_dir) -> None:
+    settings = build_runtime_settings(trained_model_dir)
     payload = _load_valid_score_payload()
     app = create_app(settings)
 
@@ -41,8 +41,8 @@ def test_score_endpoint_returns_schema_valid_runtime_response(tmp_path) -> None:
     assert parsed.improvement_tips
 
 
-def test_score_endpoint_writes_success_request_log(tmp_path) -> None:
-    settings = build_runtime_settings(tmp_path)
+def test_score_endpoint_writes_success_request_log(trained_model_dir) -> None:
+    settings = build_runtime_settings(trained_model_dir)
     app = create_app(settings)
 
     with TestClient(app) as client:
@@ -70,8 +70,8 @@ def test_score_endpoint_writes_success_request_log(tmp_path) -> None:
     assert "behavioral" not in entry
 
 
-def test_debug_score_endpoint_returns_pipeline_breakdown(tmp_path) -> None:
-    settings = build_runtime_settings(tmp_path)
+def test_debug_score_endpoint_returns_pipeline_breakdown(trained_model_dir) -> None:
+    settings = build_runtime_settings(trained_model_dir)
     payload = _load_valid_score_payload()
     app = create_app(settings)
 
@@ -93,10 +93,10 @@ def test_debug_score_endpoint_returns_pipeline_breakdown(tmp_path) -> None:
     assert "explanation_generation_inputs" in parsed
 
 
-def test_debug_score_endpoint_returns_404_in_production(tmp_path) -> None:
+def test_debug_score_endpoint_returns_404_in_production(trained_model_dir) -> None:
     settings = load_settings(
         {
-            "ALTERSCORE_REPO_ROOT": str(tmp_path),
+            "ALTERSCORE_REPO_ROOT": str(trained_model_dir),
             "ALTERSCORE_RUNTIME_MODEL_PATH": "models/artifacts/logistic_best.pkl",
             "ALTERSCORE_ENV": "production",
         }
@@ -112,12 +112,12 @@ def test_debug_score_endpoint_returns_404_in_production(tmp_path) -> None:
     assert parsed["error"]["code"] == "DEBUG_NOT_AVAILABLE"
 
 
-def test_score_endpoint_returns_sanitized_500_and_logs_failure(tmp_path) -> None:
+def test_score_endpoint_returns_sanitized_500_and_logs_failure(trained_model_dir) -> None:
     class FailingScoringService:
         def score_request(self, payload) -> ScoreResponse:
             raise RuntimeError("boom")
 
-    settings = build_runtime_settings(tmp_path)
+    settings = build_runtime_settings(trained_model_dir)
     app = create_app(settings)
 
     with TestClient(app) as client:

@@ -1,14 +1,14 @@
 {
   "manifest_schema_version": "1.0.0",
-  "manifest_version": "xgboost_monotonic_v1",
+  "manifest_version": "calibrated_stacking_ensemble_v1",
   "model_version": "0.2.0",
-  "run_id": "20260522_180006_xgboost_monotonic_promotion",
-  "created_at": "2026-05-22T18:00:06Z",
-  "code_ref": "main",
+  "run_id": "20260525_184952_ensemble_promotion",
+  "created_at": "2026-05-25T18:49:52Z",
+  "code_ref": "antigravity/dev",
   "data_version": "synthetic_v0.1.0",
   "feature_registry_version": "0.1.0",
-  "runtime_model_name": "xgboost_monotonic",
-  "runtime_model_type": "classical_monotonic",
+  "runtime_model_name": "stacking_ensemble",
+  "runtime_model_type": "ensemble",
   "target": "repayment_label",
   "split": {
     "train": "cohort_month 1-8",
@@ -17,63 +17,102 @@
   },
   "artifacts": {
     "runtime_model": {
-      "path": "models/artifacts/xgboost_monotonic.pkl",
-      "sha256": "091b141247f15639015b41feb5e81b94fea5352b65e9cd1a7d5a8aef9b12f7f2"
+      "path": "models/artifacts/calibrated_stacking.pkl",
+      "sha256": "766eabb976162494eafe873012200f6fbd114db28816dc626cdb2d11e4fd89ed"
     },
     "preprocessor": {
-      "path": "models/preprocessors/preprocessor_monotonic.pkl",
-      "sha256": "8f9e61bd4443186169a4e3d9025e00e73335da998cbd5465c74fe33205ef26ef"
+      "path": "models/preprocessors/preprocessor.pkl",
+      "sha256": "b208bbc07499e22a6f801f652fec773a47f7aeb4fd097ca03fc3cd9d25908c64"
     },
     "text_pca": {
       "path": "models/preprocessors/text_pca.pkl",
-      "sha256": "8713ee967bfc78743f8d53f1a8235d771b4ae65f14fab5b0ac2696dbfd85dc2d"
+      "sha256": "c4afee6797ecbb7f2b10db7c9baad5666fbc30087eb34739d79b37bdfaeca07a"
     },
     "shap_explainer": {
-      "path": "models/explainers/shap_explainer_monotonic.pkl",
-      "sha256": "5dee62161e19fb8567632799c33f1a47e33f15bbab300f075134c626f1eeb76f"
+      "path": "models/explainers/shap_explainer.pkl",
+      "sha256": "f1378a4378b183f1f47c81a0189efe60c3e4581ccc6f2e8739b2418ba8b3d2fd"
     },
     "dice_explainer": {
-      "path": "models/explainers/dice_explainer_monotonic.pkl",
-      "sha256": "f607566ae6309189c820da2037f957573cbcb4b7bba1dd877eb1891ab5ce2c22"
+      "path": "models/explainers/dice_explainer.pkl",
+      "sha256": "d83a89f19afa26591f6ce76037d2653cc7add988362c1898d03acf348d0e63d5"
     },
     "metrics": {
-      "path": "models/reports/metrics_monotonic.json",
-      "sha256": "13091b58ded8a05669468a37b706b91a0e43ae3015c7a80594d9ff353bc74401"
+      "path": "models/reports/metrics.json",
+      "sha256": "edbfaa0d8b6d4b502fc5679211bbcbee45dea8d3bb19b555d28104fcdf905a62"
     },
     "baseline_metrics": {
-      "path": "models/reports/baseline_metrics_monotonic.json",
-      "sha256": "ce379badd9d087910f815f823f9572074decd6b8c4bada3bfed5213c01fb3c8a"
+      "path": "models/reports/baseline_metrics.json",
+      "sha256": "d5ae74ed51cfac62b9764ffc7b762b840d119781f147234f0654e4b64359c170"
     },
     "fairness_report": {
-      "path": "models/reports/fairness_report_monotonic.json",
-      "sha256": "0c7c5ed4381f43acbc3d6f22ab392d14a4d9cc4710e840d654ef76905ddf8d3c"
+      "path": "models/reports/fairness_report.json",
+      "sha256": "1a9c08d1b784d3ed83b9a7bc60668334ff9f4156ab5c2dc6d84ee751cb410389"
     },
     "psi_report": {
-      "path": "models/reports/psi_report_monotonic.json",
-      "sha256": "32041413add82f63d8055476ce3956bb067bf3d0fe96438920eaf5390d3ae030"
+      "path": "models/reports/psi_report.json",
+      "sha256": "09d23061e0e7f7b2382a6c82b61ed2721e861b1032fcbdeb823eb2f18f09a0fb"
     },
     "global_importance": {
-      "path": "models/reports/global_importance_monotonic.json",
-      "sha256": "d431c2038e981a9d91984aba3352993d1caa64e2e11525939bb5f84f9ac911e3"
+      "path": "models/reports/global_importance.json",
+      "sha256": "73abed482b0d99090926ece27dc7bc000b6fa23bd2f59d061fe0b785163b3a8b"
     },
     "population_percentiles": {
-      "path": "models/reports/population_percentiles_monotonic.json",
-      "sha256": "d9d7457c2b7763b2d03ffdcdd3bc10249f48fadb78c17017df413e57802fe20e"
+      "path": "models/reports/population_percentiles.json",
+      "sha256": "1edbd4e85f1f145cea0b154723cb3b0564f1847942207b9f84779b04be8f52fb"
     }
+  },
+  "base_models": {
+    "logistic_regression": {
+      "path": "models/artifacts/logistic_best.pkl",
+      "sha256": "f91a2dff1b9b39efefaeff4b1fd8341b0bdd0044db5e6339bf711526a64e9a4e"
+    },
+    "random_forest": {
+      "path": "models/artifacts/rf_best.pkl",
+      "sha256": "fe014c5ce1bc82be8ddd025100d80b7ca692f6ed46c72f23f9e8d040dce4d3d1"
+    },
+    "xgboost": {
+      "path": "models/artifacts/xgb_best.pkl",
+      "sha256": "93be3269cde08819c781905a99c2a9fc0a0cfebb17b19f68100c49947fd54cfe"
+    },
+    "lightgbm": {
+      "path": "models/artifacts/lgbm_best.pkl",
+      "sha256": "7d067d4d7fdc980ede6e57ada2437cd5692bc4b2bd88663b34578964fb2234bd"
+    },
+    "tabnet": {
+      "path": "models/artifacts/tabnet_epoch_best.zip",
+      "sha256": "c41d1575710bb80a2742d49b646094e32f46c01c52922f012e1392b30ba185c9"
+    },
+    "residual_mlp": {
+      "path": "models/artifacts/mlp_best.pt",
+      "sha256": "b747222f2c30dc52be08efc87ec0bffa7f1f886ed4f60880d2f013c551757441"
+    }
+  },
+  "stacking_config": {
+    "path": "models/artifacts/calibrated_stacking_config.json",
+    "sha256": "0b305365662cd7c052b54bb26ad00d924d01b6a960dfc29a4c2ae52f780eae81"
   },
   "metrics_summary": {
     "test_split": "test_months_11_12",
-    "test_auc_roc": 0.804,
-    "calibration": "none"
+    "test_auc_roc": 0.7945,
+    "ensemble_base_models": [
+      "logistic_regression",
+      "random_forest",
+      "xgboost",
+      "lightgbm",
+      "tabnet",
+      "residual_mlp"
+    ],
+    "meta_learner": "LogisticRegression(C=1.0)",
+    "calibration": "isotonic"
   },
   "fairness_summary": {
-    "overall_auc": 0.804,
-    "verdict": "Model requires attention for: gender=non_binary. These groups show AUC deviation beyond threshold. Recommend targeted feature collection or separate calibration."
+    "overall_auc": 0.7945,
+    "verdict": "Model requires attention for: age_group=36-50, education_level=graduate. These groups show AUC deviation beyond threshold. Recommend targeted feature collection or separate calibration."
   },
   "drift_summary": {
-    "verdict": "see psi_report_monotonic.json",
-    "note": "PSI computed on base features; model does not alter feature distribution."
+    "verdict": "see psi_report.json",
+    "note": "PSI computed on base features; ensemble does not alter feature distribution."
   },
   "promotion_status": "promoted",
-  "promotion_notes": "Monotonic XGBoost candidate promoted to production. Guaranteed monotonicity constraints on key behavioral features. Removes unconstrained TabNet complexity and PyTorch runtime dependency."
+  "promotion_notes": "Calibrated stacking ensemble promoted. Meta-learner: LogisticRegression on months-9-10 stacked probabilities. Calibration: isotonic (cv=prefit). SHAP: surrogate LR on train-split features vs ensemble soft labels. DICE: model-agnostic (predict_proba compatible)."
 }

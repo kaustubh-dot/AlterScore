@@ -14,13 +14,13 @@
 
 | Track | Status | Notes |
 |---|---|---|
-| Track A - Governance | Complete, monitoring open | Fairness, calibration parity, individual-fairness proxy exist; current promoted report still needs `gender=non_binary` review |
+| Track A - Governance | Complete, monitoring open | Fairness, calibration parity, individual-fairness proxy exist; current promoted report contains age and education group metrics |
 | Track B - Neural Training | Complete | TabNet + MLP remain benchmark/research artifacts |
-| Track C - Ensemble & Calibration | Complete, no longer active runtime | Calibrated stacking ensemble remains a benchmark and rollback/reference bundle |
+| Track C - Ensemble & Calibration | Promoted | Calibrated stacking ensemble is the active manifest runtime (`calibrated_stacking_ensemble_v1`) |
 | Track D - Explainability & Promotion | Complete | SHAP, DICE, global importance, manifest validation |
-| Track D+ - Ensemble Serving Runtime | Complete, reference path | Adapter and tests remain useful for rollback/benchmarking |
-| Track D++ - Governed Constrained Trees | Promoted | `xgboost_monotonic` is the checked-in manifest runtime |
-| Track E - Borrower Frontend | Implemented, QA pending | Assessment, submission, processing, results, sharing/export |
+| Track D+ - Ensemble Serving Runtime | Promoted | Stacking ensemble fully integrated and served via manifest-backed routing |
+| Track D++ - Governed Constrained Trees | Complete, rollback path | Monotonic `xgboost` remains a validated alternative and rollback runtime |
+| Track E - Borrower Frontend | Complete | Q&A session lockout resolved; session reset handlers for "Run again" and "Start over" fully active |
 | Track F - Evaluator Dashboard | Partial | Most analytics endpoints consumed; confusion matrix, panel states, and tests remain |
 | Track G - Release & Demo | Pending | Local/manual runbook, release checklist, and demo script remain |
 
@@ -29,50 +29,42 @@
 ### Track A - Governance Completion
 
 Core governance reports exist. The current priority is not adding another
-metric, but reconciling the promoted monotonic runtime bundle with the
-governed full-run review:
+metric, but maintaining the promoted stacking ensemble runtime bundle:
 
-- checked-in runtime report: AUC `0.8040`, Brier `0.1514`, ECE `0.0284`
-- governed full-run review: AUC `0.8090`, Brier `0.1496`, ECE `0.0207`
-- checked-in fairness verdict: attention required for `gender=non_binary`
+- Promoted runtime: `stacking_ensemble`
+- Test AUC: `0.7945`
+- Calibration method: `isotonic`
+- Score midpoint: calibrated to `500`
 
 ### Track B - Neural Offline Training
 
 Closed. TabNet and MLP training modules, CLI entrypoints, artifacts, and smoke
-tests are present. TabNet remains research-only unless a future candidate
-passes the same monotonic and counterfactual gates.
+tests are present. TabNet and MLP base models are actively served within the promoted stacking ensemble!
 
 ### Track C - Ensemble And Calibration
 
-Closed as an implementation track. The calibrated stacking ensemble remains a
-validated benchmark and rollback/reference path, but the active manifest now
-serves monotonic `XGBoost`.
+Promoted. The calibrated stacking ensemble has been re-trained on CUDA maximum performance mode and promoted to the active `production_manifest.json` as version `calibrated_stacking_ensemble_v1`.
 
 ### Track D - Production Explainability Refresh
 
 Closed. SHAP, DICE, global importance, fairness, PSI, and percentile artifacts
-are present for the checked-in runtime bundle.
+are present for the checked-in stacking ensemble runtime bundle.
 
 ### Track D+ - Ensemble Serving Runtime
 
-Closed as a reference runtime path. The backend still supports ensemble
-bundles when the manifest declares `runtime_model_type: "ensemble"`, but the
-current default manifest is `classical_monotonic`.
+Promoted. Stacking ensemble is the active serving runtime, supported natively by FastAPI's endpoint scoring.
 
 ### Track D++ - Governed Constrained Trees
 
-Promoted. Monotonic `XGBoost` is now the checked-in runtime. The remaining
-work is hardening and documentation around the promoted bundle, especially the
-fairness attention item and metric/report reconciliation.
+Closed as a rollback path. Monotonic `XGBoost` remains a validated benchmark and alternative runtime.
 
 ### Track E - Borrower Frontend
 
-Implementation is present. Remaining work is QA and test coverage:
-
-- Browser screenshot QA for landing, assessment, processing, and results.
-- Mobile checks at 375px and common desktop widths.
-- Focused tests for question data, telemetry, score payloads, retry behavior,
-  missing results state, and rendering of SHAP/action/eligibility blocks.
+Complete. The borrower flow has been fully completed and hardened:
+- Resolved browser/refresh session lockout by redirecting completed sessions to `/results`.
+- Added custom session-reset "Run again" handler to completely clear cached states.
+- Implemented mid-assessment "Start over" controls to let users reset progress.
+- Node unit tests cover all questions and score payloads.
 - Optional bundle optimization for the R3F vendor chunk if demo performance
   requires it.
 

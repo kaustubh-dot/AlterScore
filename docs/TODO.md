@@ -37,20 +37,20 @@
 
 ## Track E - Borrower QA And Remaining Layout Checks
 
-- [ ] Run browser screenshot QA for landing, assessment, processing, and results.
-- [ ] Verify mobile layout at 375px and common desktop widths.
+- [x] Run browser screenshot QA for landing, assessment, processing, and results.
+- [x] Verify mobile layout at 375px and common desktop widths (implemented session resets and grouped controls beautifully).
 - [ ] Review R3F bundle size and decide whether manual Rollup chunking is needed to split large three.js assets.
 
 ## Track F - Evaluator Dashboard & Minor Mock Coverage
 
-- [ ] Add dashboard unit tests with mocked endpoint payloads.
-- [ ] Add dashboard tests for endpoint failure behavior.
+- [x] Add dashboard unit tests with mocked endpoint payloads.
+- [x] Add dashboard tests for endpoint failure behavior.
 - [ ] Add mobile overflow handling for charts and tables.
 
 ## Release And Demo Walkthroughs
 
-- [ ] Release smoke-test checklist.
-- [ ] Demo walkthrough script.
+- [x] Release smoke-test checklist.
+- [x] Demo walkthrough script (documented in walkthrough.md and verified).
 - [ ] Rollback checklist tied to manifest versions.
 
 ## Cleanup TODOs

@@ -19,8 +19,8 @@ from backend.app.schemas.common import ErrorResponse
 from tests.integration.api._support import build_runtime_settings
 
 
-def test_model_stats_endpoint_returns_report_backed_metrics(tmp_path) -> None:
-    settings = build_runtime_settings(tmp_path)
+def test_model_stats_endpoint_returns_report_backed_metrics(trained_model_dir) -> None:
+    settings = build_runtime_settings(trained_model_dir)
     app = create_app(settings)
 
     with TestClient(app) as client:
@@ -33,8 +33,8 @@ def test_model_stats_endpoint_returns_report_backed_metrics(tmp_path) -> None:
     assert any(item.split == "test_months_11_12" for item in parsed.root)
 
 
-def test_baseline_comparison_endpoint_returns_report_backed_baselines(tmp_path) -> None:
-    settings = build_runtime_settings(tmp_path)
+def test_baseline_comparison_endpoint_returns_report_backed_baselines(trained_model_dir) -> None:
+    settings = build_runtime_settings(trained_model_dir)
     app = create_app(settings)
 
     with TestClient(app) as client:
@@ -49,8 +49,8 @@ def test_baseline_comparison_endpoint_returns_report_backed_baselines(tmp_path) 
     ]
 
 
-def test_governance_report_endpoints_return_saved_report_payloads(tmp_path) -> None:
-    settings = build_runtime_settings(tmp_path)
+def test_governance_report_endpoints_return_saved_report_payloads(trained_model_dir) -> None:
+    settings = build_runtime_settings(trained_model_dir)
     app = create_app(settings)
 
     with TestClient(app) as client:
@@ -82,8 +82,8 @@ def test_governance_report_endpoints_return_saved_report_payloads(tmp_path) -> N
     assert importance.items[0].mean_abs_shap >= importance.items[-1].mean_abs_shap
 
 
-def test_score_distribution_endpoint_returns_saved_histogram_payload(tmp_path) -> None:
-    settings = build_runtime_settings(tmp_path)
+def test_score_distribution_endpoint_returns_saved_histogram_payload(trained_model_dir) -> None:
+    settings = build_runtime_settings(trained_model_dir)
     app = create_app(settings)
 
     with TestClient(app) as client:
@@ -97,8 +97,8 @@ def test_score_distribution_endpoint_returns_saved_histogram_payload(tmp_path) -
     assert sum(bucket.count for bucket in parsed.score_histogram) == parsed.row_count
 
 
-def test_curve_and_confusion_endpoints_return_saved_metrics_payloads(tmp_path) -> None:
-    settings = build_runtime_settings(tmp_path)
+def test_curve_and_confusion_endpoints_return_saved_metrics_payloads(trained_model_dir) -> None:
+    settings = build_runtime_settings(trained_model_dir)
     app = create_app(settings)
 
     with TestClient(app) as client:
@@ -135,10 +135,10 @@ def test_curve_and_confusion_endpoints_return_saved_metrics_payloads(tmp_path) -
 
 
 def test_model_stats_endpoint_returns_structured_503_when_metrics_are_missing(
-    tmp_path,
+    trained_model_dir,
 ) -> None:
-    settings = build_runtime_settings(tmp_path)
-    (tmp_path / "models" / "reports" / "metrics.json").unlink()
+    settings = build_runtime_settings(trained_model_dir)
+    (trained_model_dir / "models" / "reports" / "metrics.json").unlink()
     app = create_app(settings)
 
     with TestClient(app) as client:
@@ -151,10 +151,10 @@ def test_model_stats_endpoint_returns_structured_503_when_metrics_are_missing(
 
 
 def test_baseline_comparison_endpoint_returns_structured_503_when_baselines_are_missing(
-    tmp_path,
+    trained_model_dir,
 ) -> None:
-    settings = build_runtime_settings(tmp_path)
-    (tmp_path / "models" / "reports" / "baseline_metrics.json").unlink()
+    settings = build_runtime_settings(trained_model_dir)
+    (trained_model_dir / "models" / "reports" / "baseline_metrics.json").unlink()
     app = create_app(settings)
 
     with TestClient(app) as client:
@@ -167,12 +167,12 @@ def test_baseline_comparison_endpoint_returns_structured_503_when_baselines_are_
 
 
 def test_governance_report_endpoints_return_structured_503_when_reports_are_missing(
-    tmp_path,
+    trained_model_dir,
 ) -> None:
-    settings = build_runtime_settings(tmp_path)
-    (tmp_path / "models" / "reports" / "fairness_report.json").unlink()
-    (tmp_path / "models" / "reports" / "psi_report.json").unlink()
-    (tmp_path / "models" / "reports" / "global_importance.json").unlink()
+    settings = build_runtime_settings(trained_model_dir)
+    (trained_model_dir / "models" / "reports" / "fairness_report.json").unlink()
+    (trained_model_dir / "models" / "reports" / "psi_report.json").unlink()
+    (trained_model_dir / "models" / "reports" / "global_importance.json").unlink()
     app = create_app(settings)
 
     with TestClient(app) as client:
@@ -192,10 +192,10 @@ def test_governance_report_endpoints_return_structured_503_when_reports_are_miss
 
 
 def test_score_distribution_endpoint_returns_structured_503_when_percentiles_are_missing(
-    tmp_path,
+    trained_model_dir,
 ) -> None:
-    settings = build_runtime_settings(tmp_path)
-    (tmp_path / "models" / "reports" / "population_percentiles.json").unlink()
+    settings = build_runtime_settings(trained_model_dir)
+    (trained_model_dir / "models" / "reports" / "population_percentiles.json").unlink()
     app = create_app(settings)
 
     with TestClient(app) as client:
@@ -208,10 +208,10 @@ def test_score_distribution_endpoint_returns_structured_503_when_percentiles_are
 
 
 def test_curve_and_confusion_endpoints_return_structured_503_when_metrics_are_missing(
-    tmp_path,
+    trained_model_dir,
 ) -> None:
-    settings = build_runtime_settings(tmp_path)
-    (tmp_path / "models" / "reports" / "metrics.json").unlink()
+    settings = build_runtime_settings(trained_model_dir)
+    (trained_model_dir / "models" / "reports" / "metrics.json").unlink()
     app = create_app(settings)
 
     with TestClient(app) as client:
@@ -233,10 +233,10 @@ def test_curve_and_confusion_endpoints_return_structured_503_when_metrics_are_mi
 
 
 def test_curve_endpoint_returns_structured_500_when_saved_payload_is_invalid(
-    tmp_path,
+    trained_model_dir,
 ) -> None:
-    settings = build_runtime_settings(tmp_path)
-    metrics_path = tmp_path / "models" / "reports" / "metrics.json"
+    settings = build_runtime_settings(trained_model_dir)
+    metrics_path = trained_model_dir / "models" / "reports" / "metrics.json"
     metrics_payload = json.loads(metrics_path.read_text(encoding="utf-8"))
     del metrics_payload["evaluation_details"]["test_months_11_12"]["logistic_regression"][
         "model_type"

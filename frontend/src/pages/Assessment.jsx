@@ -55,6 +55,13 @@ export default function Assessment() {
   const [error, setError] = useState(null);
   const [halfwayPulse, setHalfwayPulse] = useState(false);
 
+  useEffect(() => {
+    const storedResult = window.sessionStorage.getItem("alterscore_score_result");
+    if (storedResult) {
+      navigate("/results", { replace: true });
+    }
+  }, [navigate]);
+
   const question = QUESTIONS[currentIndex];
   const currentSection = getSectionById(question.section);
   const isFirst = currentIndex === 0;
@@ -218,6 +225,28 @@ export default function Assessment() {
       ease: "power2.inOut",
       onComplete: () => setCurrentIndex((value) => value - 1),
     });
+  }
+
+  function handleStartOver() {
+    if (window.confirm("Are you sure you want to start over? All your current progress will be lost.")) {
+      window.sessionStorage.removeItem("alterscore_answers");
+      window.sessionStorage.removeItem("alterscore_session_id");
+      window.sessionStorage.removeItem("alterscore_score_result");
+      window.sessionStorage.removeItem("alterscore_pending_payload");
+      
+      const newSessionId = createSessionId();
+      window.sessionStorage.setItem("alterscore_session_id", newSessionId);
+      
+      setAnswers({});
+      setCurrentIndex(0);
+      setTelemetry({
+        responseTimes: {},
+        changeCounts: {},
+        dropoutCount: 0,
+        scrollHesitations: {},
+      });
+      setQuestionStartTime(Date.now());
+    }
   }
 
   async function handleSubmit(nextAnswers = answers) {
@@ -407,9 +436,24 @@ export default function Assessment() {
       </section>
 
       <div className="assessment-controls">
-        <button type="button" onClick={goBack} disabled={isFirst} data-magnetic>
-          Back
-        </button>
+        <div style={{ display: "flex", gap: "0.8rem", pointerEvents: "auto" }}>
+          <button type="button" onClick={goBack} disabled={isFirst} data-magnetic>
+            Back
+          </button>
+          {Object.keys(answers).length > 0 && (
+            <button
+              type="button"
+              onClick={handleStartOver}
+              data-magnetic
+              style={{
+                borderColor: "rgba(255, 77, 94, 0.2)",
+                color: "var(--text-secondary)",
+              }}
+            >
+              Start over
+            </button>
+          )}
+        </div>
         {!choiceTypes.has(question.type) && (
           <button type="button" onClick={() => goForward(false)} disabled={!hasAnswer} data-magnetic>
             {isLast ? "Submit profile" : "Continue"}
