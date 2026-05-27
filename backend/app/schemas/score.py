@@ -61,7 +61,7 @@ class AnswerPayload(SchemaModel):
     scenario_s5: ScenarioAnswer
     scenario_s6: ScenarioAnswer
     honesty_trap_q1: int = Field(..., ge=1, le=5)
-    honesty_trap_q2: int = Field(..., ge=1, le=5)
+    honesty_trap_q2: int = Field(default=3, ge=1, le=5)  # optional — removed from frontend v2 question bank
     scenario_s8: ScenarioAnswer  # Consistency trap — mirrors S1
 
     # -----------------------------------------------------------------------

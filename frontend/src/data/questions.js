@@ -1,5 +1,5 @@
 // AlterScore v2 Question Bank
-// 14 questions: 5 reasoning + 8 behavioral scenarios + 1 open-text
+// 14 questions: 5 reasoning + 7 behavioral scenarios + 1 honesty trap + 1 open-text
 // Scenario options include pre-coded feature values for backend mapping.
 
 export const SECTIONS = [
@@ -371,17 +371,6 @@ export const QUESTIONS = [
         },
       },
     ],
-  },
-
-  // Honesty trap: second one, also embedded naturally
-  {
-    id: "honesty_trap_q2",
-    section: "B",
-    type: "likert",
-    question: "Without fail, I always repay every single debt completely on time.",
-    scale: ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"],
-    isRiskQuestion: false,
-    isTrap: true,
   },
 
   // S8 — CONSISTENCY TRAP: mirrors S1 (EMI vs. opportunity).

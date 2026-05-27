@@ -160,33 +160,56 @@ def compute_scenario_enriched_features(
 ) -> dict[str, float]:
     """Merge scenario feature contributions into existing psychometric features.
 
-    For each feature that scenarios contribute to, blend the scenario-derived
-    value with the existing value using a weighted average:
-      - Scenario contribution weight: 0.40
-      - Existing psychometric weight: 0.60
+    Blending strategy (Phase 1 — no retraining):
+    - Features with a REAL psychometric measurement (numeracy, CRT, financial
+      literacy, honesty): kept exactly as-is from answer_parser. Scenario
+      signals do not override objective measurement.
+    - Features with NO direct v2 question (locus, conscientiousness, resilience,
+      future_orientation, etc.): the answer_parser returns 0.5 as a neutral
+      prior. For these, we use the scenario-derived value directly (100% weight),
+      since there is no real measurement to preserve.
 
-    This ensures the existing calibrated values remain dominant while
-    the scenario layer enriches them without overriding them.
+    This ensures good scenario choices produce high feature values, matching the
+    distribution the model was trained on.
     """
     analysis = analyze_scenario_responses(answers)
     contributions = analysis["feature_contributions"]
     consistency = analysis["scenario_consistency_score"]
 
-    # Blend weights: psychometric is primary (60%), scenario supplements (40%)
-    existing_weight = 0.60
-    scenario_weight = 0.40
+    # Features that come from objective questions — never overridden by scenarios
+    OBJECTIVE_FEATURES = frozenset({
+        "numeracy_score",
+        "CRT_score",
+        "financial_literacy_score",
+        "honesty_score",
+        "risk_consistency_flag",    # no direct v2 question but not scenario-driven either
+    })
+
+    # Neutral prior sentinel: answer_parser sets 0.5 for features without a direct question
+    NEUTRAL_PRIOR = 0.5
 
     enriched = dict(psychometric_features)
     for feature_name, scenario_value in contributions.items():
-        existing_value = float(enriched.get(feature_name, 0.5))
-        blended = existing_weight * existing_value + scenario_weight * scenario_value
-        enriched[feature_name] = float(min(max(blended, 0.0), 1.0))
+        if feature_name in OBJECTIVE_FEATURES:
+            # Never override objective measurements with scenario signals
+            continue
 
-    # Expose consistency score for downstream use in derived features
+        existing_value = float(enriched.get(feature_name, NEUTRAL_PRIOR))
+
+        if abs(existing_value - NEUTRAL_PRIOR) < 1e-9:
+            # No real measurement behind this value — use scenario directly
+            enriched[feature_name] = float(min(max(scenario_value, 0.0), 1.0))
+        else:
+            # Real measurement exists (future Phase 2 compatibility) — blend conservatively
+            blended = 0.65 * existing_value + 0.35 * scenario_value
+            enriched[feature_name] = float(min(max(blended, 0.0), 1.0))
+
+    # Expose governance signals for downstream use
     enriched["scenario_consistency_score"] = consistency
     enriched["scenario_fast_gaming"] = float(analysis["fast_pattern_gaming"])
 
     return enriched
+
 
 
 def _compute_consistency_score(answer_values: dict[str, Any]) -> float:

@@ -100,9 +100,23 @@ export default function ShapBars({ explanation }) {
                       <strong>{factor.shap_value > 0 ? "+" : ""}{factor.shap_value.toFixed(4)}</strong>
                     </div>
                   </div>
-                  <p style={{ margin: "0.5rem 0 0 0", color: "var(--text-muted)" }}>
-                    <strong>Governance Note:</strong> This feature is governed by XGBoost monotonic constraints. Positive performance shifts are locked to only benefit your overall credit health. No arbitrary rating degradation can occur on this feature.
-                  </p>
+                  {/* Governance note — only for monotonically constrained features */}
+                  {factor.direction === "positive" && (
+                    <p style={{ margin: "0.5rem 0 0 0", color: "var(--text-muted)" }}>
+                      <strong>Governance Note:</strong> This feature has a positive monotonic
+                      constraint. Improvements here can only benefit your score — the model is
+                      mathematically prevented from penalising you for getting better on this
+                      dimension.
+                    </p>
+                  )}
+                  {factor.direction === "negative" && (
+                    <p style={{ margin: "0.5rem 0 0 0", color: "var(--text-muted)" }}>
+                      <strong>Governance Note:</strong> This feature has a negative monotonic
+                      constraint. Higher raw values on this signal correspond to lower repayment
+                      likelihood — for example, very fast responses or frequent answer changes
+                      can indicate low engagement.
+                    </p>
+                  )}
                 </div>
               )}
             </article>
