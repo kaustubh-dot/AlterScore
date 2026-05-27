@@ -146,7 +146,10 @@ def test_score_request_with_loaded_bundle_returns_schema_valid_runtime_response(
     assert 0.0 <= response.repayment_probability <= 1.0
     assert 0 <= response.percentile <= 100
     assert response.explanation == []
-    assert response.counterfactual_actions
+    if response.credit_score < 850:
+        assert response.counterfactual_actions
+    else:
+        assert isinstance(response.counterfactual_actions, list)
     assert all(action.estimated_score_gain >= 0 for action in response.counterfactual_actions)
     assert response.loan_eligibility.band == response.risk_band
     assert response.improvement_tips
@@ -374,6 +377,7 @@ def _prepare_runtime_bundle(
         artifact_paths["shap_explainer"].parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(
             Path(__file__).resolve().parents[3]
+            / "archive"
             / "models"
             / "explainers"
             / "shap_explainer.pkl",

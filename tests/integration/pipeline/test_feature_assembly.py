@@ -19,7 +19,7 @@ def test_assemble_request_features_builds_canonical_feature_frame_with_train_fit
     requests = _build_score_requests()
     train_embeddings = np.vstack(
         [
-            extract_raw_text_embedding(request.answers.q27_resilience_text)
+            extract_raw_text_embedding(request.answers.open_response_text)
             for request in requests[:2]
         ]
     )
@@ -53,7 +53,7 @@ def test_assemble_request_features_neutralizes_device_and_time_inputs_for_model_
     requests = _build_score_requests()
     train_embeddings = np.vstack(
         [
-            extract_raw_text_embedding(request.answers.q27_resilience_text)
+            extract_raw_text_embedding(request.answers.open_response_text)
             for request in requests[:2]
         ]
     )
@@ -77,7 +77,7 @@ def test_assembled_request_features_flow_into_preprocessing_transform() -> None:
     requests = _build_score_requests()
     train_embeddings = np.vstack(
         [
-            extract_raw_text_embedding(request.answers.q27_resilience_text)
+            extract_raw_text_embedding(request.answers.open_response_text)
             for request in requests[:2]
         ]
     )
@@ -119,7 +119,7 @@ def _build_score_requests() -> list[ScoreRequest]:
         {
             "answers": _base_answers()
             | {
-                "q27_resilience_text": (
+                "open_response_text": (
                     "When income fell, I cut expenses, found extra work, and "
                     "made a repayment plan."
                 ),
@@ -135,10 +135,13 @@ def _build_score_requests() -> list[ScoreRequest]:
         {
             "answers": _base_answers()
             | {
-                "future_orient_q1": 0,
-                "future_orient_q2": 0,
-                "future_orient_q3": 2,
-                "q27_resilience_text": (
+                "scenario_s1": {
+                    "primary": "s1_a",
+                    "least": "s1_b",
+                    "first_click_ms": 3000,
+                    "change_count": 0
+                },
+                "open_response_text": (
                     "I felt stuck at first, but I asked for help and started "
                     "budgeting more carefully."
                 ),
@@ -157,8 +160,7 @@ def _build_score_requests() -> list[ScoreRequest]:
             | {
                 "CRT_q1": 10,
                 "honesty_trap_q1": 5,
-                "honesty_trap_q2": 5,
-                "q27_resilience_text": (
+                "open_response_text": (
                     "Things fell apart and I felt stuck before I made a plan "
                     "to recover."
                 ),
@@ -177,41 +179,29 @@ def _build_score_requests() -> list[ScoreRequest]:
     return [ScoreRequest.model_validate(payload) for payload in payloads]
 
 
-def _base_answers() -> dict[str, int | float | str]:
-    return {
-        "numeracy_q1": 6600,
-        "numeracy_q2": 1120,
-        "numeracy_q3": 14400,
-        "financial_literacy_q1": 1,
-        "financial_literacy_q2": 1,
-        "conscientiousness_q1": 4,
-        "CRT_q1": 5,
-        "CRT_q2": 5,
-        "CRT_q3": 47,
-        "future_orient_q1": 1,
-        "future_orient_q2": 1,
-        "future_orient_q3": 4,
-        "risk_q1": 1,
-        "risk_q2": 1,
-        "locus_q1": 0,
-        "locus_q2": 0,
-        "locus_q3": 4,
-        "social_capital_q1": 2,
-        "social_capital_q2": 0,
-        "social_capital_q3": 0,
-        "resilience_q1": 4,
-        "resilience_q2": 4,
-        "resilience_q3": 0,
-        "loss_aversion_q1": 0,
-        "honesty_trap_q1": 2,
-        "honesty_trap_q2": 2,
-        "future_orient_repeat": 1,
-        "locus_repeat": 0,
-        "reciprocity_q1": 4,
-        "reciprocity_q2": 0,
-        "q27_resilience_text": "I reduced expenses and found extra work.",
+def _base_answers() -> dict[str, int | float | str | dict]:
+    _scenario = lambda opt: {
+        'primary': opt,
+        'least': None,
+        'first_click_ms': 4000,
+        'change_count': 0
     }
-
+    return {
+        'numeracy_q1': 6600,
+        'numeracy_q2': 1120,
+        'financial_literacy_q1': 1,
+        'CRT_q1': 5,
+        'CRT_q2': 47,
+        'scenario_s1': _scenario('s1_b'),
+        'scenario_s2': _scenario('s2_b'),
+        'scenario_s3': _scenario('s3_b'),
+        'scenario_s4': _scenario('s4_b'),
+        'scenario_s5': _scenario('s5_b'),
+        'scenario_s6': _scenario('s6_c'),
+        'honesty_trap_q1': 2,
+        'scenario_s8': _scenario('s8_b'),
+        'open_response_text': 'I reduced expenses and found extra work.',
+    }
 
 def _base_behavioral() -> dict[str, float | int | str]:
     return {

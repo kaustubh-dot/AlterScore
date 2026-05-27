@@ -88,7 +88,7 @@ export function buildBehavioralPayload({ telemetry, answers, sessionStartTime, s
     device_type: getDeviceType(),
     typing_speed_wpm: round(
       clip(
-        computeTypingSpeed(answers.q27_resilience_text, responseTimes.q27_resilience_text),
+        computeTypingSpeed(answers.open_response_text, responseTimes.open_response_text),
         0,
         200,
       ),

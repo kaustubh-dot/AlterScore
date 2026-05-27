@@ -14,7 +14,7 @@ SENTENCE_TRANSFORMER_MODEL_NAME: Final[str] = "all-MiniLM-L6-v2"
 SPACY_MODEL_NAME: Final[str] = "en_core_web_sm"
 RAW_EMBEDDING_DIM: Final[int] = 384
 MIN_TEXT_LENGTH: Final[int] = 10
-RAW_TEXT_RESPONSE_COLUMN: Final[str] = "q27_resilience_text"
+RAW_TEXT_RESPONSE_COLUMN: Final[str] = "open_response_text"
 
 _FIRST_PERSON_TOKENS: Final[set[str]] = {"i", "me", "my", "myself", "mine"}
 _AGENCY_VERBS: Final[set[str]] = {

@@ -67,8 +67,8 @@ def main() -> int:
     print("Starting promotion of monotonic XGBoost candidate...")
 
     # Define paths
-    source_preprocessor = REPO_ROOT / "runtime/governed_reports/monotonic_tree_candidates/full/monotonic_tree_preprocessor.pkl"
-    source_model = REPO_ROOT / "runtime/governed_reports/monotonic_tree_candidates/full/artifacts/xgboost_monotonic.pkl"
+    source_preprocessor = REPO_ROOT / "runtime/governed_reports/monotonic_tree_candidates/latest/monotonic_tree_preprocessor.pkl"
+    source_model = REPO_ROOT / "runtime/governed_reports/monotonic_tree_candidates/latest/artifacts/xgboost_monotonic.pkl"
 
     dest_preprocessor = MODEL_PREPROCESSORS_DIR / "preprocessor_monotonic.pkl"
     dest_model = MODEL_ARTIFACTS_DIR / "xgboost_monotonic.pkl"

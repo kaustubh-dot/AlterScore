@@ -2,35 +2,53 @@
   "answers": {
     "numeracy_q1": 6600,
     "numeracy_q2": 1120,
-    "numeracy_q3": 14400,
     "financial_literacy_q1": 1,
-    "financial_literacy_q2": 1,
-    "conscientiousness_q1": 4,
     "CRT_q1": 5,
-    "CRT_q2": 5,
-    "CRT_q3": 47,
-    "future_orient_q1": 1,
-    "future_orient_q2": 1,
-    "future_orient_q3": 4,
-    "risk_q1": 0,
-    "risk_q2": 1,
-    "locus_q1": 0,
-    "locus_q2": 1,
-    "locus_q3": 4,
-    "social_capital_q1": 2,
-    "social_capital_q2": 0,
-    "social_capital_q3": 0,
-    "resilience_q1": 4,
-    "resilience_q2": 4,
-    "resilience_q3": 0,
-    "loss_aversion_q1": 0,
+    "CRT_q2": 47,
+    "scenario_s1": {
+      "primary": "s1_a",
+      "least": "s1_b",
+      "first_click_ms": 4500,
+      "change_count": 0
+    },
+    "scenario_s2": {
+      "primary": "s2_a",
+      "least": null,
+      "first_click_ms": 3500,
+      "change_count": 1
+    },
+    "scenario_s3": {
+      "primary": "s3_a",
+      "least": null,
+      "first_click_ms": 6000,
+      "change_count": 0
+    },
+    "scenario_s4": {
+      "primary": "s4_a",
+      "least": null,
+      "first_click_ms": 5000,
+      "change_count": 0
+    },
+    "scenario_s5": {
+      "primary": "s5_a",
+      "least": null,
+      "first_click_ms": 5500,
+      "change_count": 0
+    },
+    "scenario_s6": {
+      "primary": "s6_a",
+      "least": null,
+      "first_click_ms": 4000,
+      "change_count": 0
+    },
     "honesty_trap_q1": 2,
-    "honesty_trap_q2": 3,
-    "future_orient_repeat": 1,
-    "locus_repeat": 0,
-    "reciprocity_q1": 4,
-    "reciprocity_q2": 0,
-    "q27_resilience_text": "When my income fell, I reduced expenses, found extra work, and made a repayment plan."
+    "scenario_s8": {
+      "primary": "s8_a",
+      "least": null,
+      "first_click_ms": 3000,
+      "change_count": 0
+    },
+    "open_response_text": "When my income fell, I reduced expenses, found extra work, and made a repayment plan."
   },
   "behavioral": {
     "avg_response_time_ms": 5200.0,

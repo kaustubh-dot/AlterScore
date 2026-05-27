@@ -1,11 +1,11 @@
-import { QUESTIONS, SECTIONS, CORE_PRD_QUESTION_COUNT, getSectionQuestions, getSectionById } from "./questions.js";
+import { QUESTIONS, SECTIONS, CORE_QUESTION_COUNT, getSectionQuestions, getSectionById } from "./questions.js";
 
 export function runQuestionsTests() {
   console.log("▶ Running questions.js tests...");
 
   // Test 1: Questions count
-  if (QUESTIONS.length < CORE_PRD_QUESTION_COUNT) {
-    throw new Error(`Expected at least ${CORE_PRD_QUESTION_COUNT} questions, got ${QUESTIONS.length}`);
+  if (QUESTIONS.length < CORE_QUESTION_COUNT) {
+    throw new Error(`Expected at least ${CORE_QUESTION_COUNT} questions, got ${QUESTIONS.length}`);
   }
   console.log("  ✓ Total questions count is correct");
 
@@ -14,7 +14,7 @@ export function runQuestionsTests() {
     if (!q.id) throw new Error("Question found without an id");
     if (!q.section) throw new Error(`Question ${q.id} found without a section`);
     if (!q.type) throw new Error(`Question ${q.id} found without a type`);
-    if (!["number", "mcq", "likert", "binary_choice", "text"].includes(q.type)) {
+    if (!["number", "mcq", "likert", "binary_choice", "text", "scenario"].includes(q.type)) {
       throw new Error(`Question ${q.id} has invalid type: ${q.type}`);
     }
   }
@@ -34,7 +34,7 @@ export function runQuestionsTests() {
 
   // Test 4: getSectionById works
   const sectionB = getSectionById("B");
-  if (!sectionB || sectionB.title !== "Risk & Decisions") {
+  if (!sectionB || sectionB.title !== "Decision Scenarios") {
     throw new Error("getSectionById('B') failed to retrieve correct section definition");
   }
   console.log("  ✓ getSectionById helper resolves titles correctly");

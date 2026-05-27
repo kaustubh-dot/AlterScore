@@ -31,7 +31,6 @@ def test_social_desirability_trap_agreement_lowers_honesty_score() -> None:
     suspicious_features = parse_answers(
         _base_answers() | {
             "honesty_trap_q1": 5,
-            "honesty_trap_q2": 5,
         }
     )
 
@@ -90,18 +89,26 @@ def test_risk_consistency_flag_defaults_to_zero_in_v2() -> None:
     assert features["risk_consistency_flag"] == 0.0
 
 
-def _base_answers() -> dict[str, int | float | str]:
-    """Minimal v2 answer dict — only objective question fields needed by parse_answers."""
+def _base_answers() -> dict[str, int | float | str | dict]:
+    _scenario = lambda opt: {
+        'primary': opt,
+        'least': None,
+        'first_click_ms': 4000,
+        'change_count': 0
+    }
     return {
-        # Section A — Financial Reasoning
-        "numeracy_q1": 6600,
-        "numeracy_q2": 1120,
-        "financial_literacy_q1": 1,
-        "CRT_q1": 5,
-        "CRT_q2": 47,
-        # Honesty traps (embedded in Section B)
-        "honesty_trap_q1": 2,   # Disagree — honest response
-        "honesty_trap_q2": 2,   # Disagree — honest response
-        # Open text
-        "q27_resilience_text": "I reduced expenses and found extra work.",
+        'numeracy_q1': 6600,
+        'numeracy_q2': 1120,
+        'financial_literacy_q1': 1,
+        'CRT_q1': 5,
+        'CRT_q2': 47,
+        'scenario_s1': _scenario('s1_b'),
+        'scenario_s2': _scenario('s2_b'),
+        'scenario_s3': _scenario('s3_b'),
+        'scenario_s4': _scenario('s4_b'),
+        'scenario_s5': _scenario('s5_b'),
+        'scenario_s6': _scenario('s6_c'),
+        'honesty_trap_q1': 2,
+        'scenario_s8': _scenario('s8_b'),
+        'open_response_text': 'I reduced expenses and found extra work.',
     }

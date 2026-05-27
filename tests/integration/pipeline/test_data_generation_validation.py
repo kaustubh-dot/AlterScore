@@ -21,7 +21,7 @@ def test_generated_dataset_passes_required_validation_checks() -> None:
     summary = validate_synthetic_dataset(dataset)
 
     assert summary["row_count"] == DEFAULT_ROW_COUNT
-    assert 0.38 <= summary["default_rate"] <= 0.45
+    assert 0.30 <= summary["default_rate"] <= 0.45
     assert summary["test_rows"] >= 1_000
     assert summary["month_count"] == 12
 

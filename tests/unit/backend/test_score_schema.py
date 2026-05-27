@@ -31,10 +31,9 @@ def build_valid_score_request_payload() -> dict:
             "scenario_s5": _scenario("s5_b"),
             "scenario_s6": _scenario("s6_c"),
             "honesty_trap_q1": 2,
-            "honesty_trap_q2": 2,
             "scenario_s8": _scenario("s8_b"),
             # Section C — Open Text
-            "q27_resilience_text": (
+            "open_response_text": (
                 "When my income fell, I reduced expenses, found extra work, "
                 "and made a repayment plan."
             ),

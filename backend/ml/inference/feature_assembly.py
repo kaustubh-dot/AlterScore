@@ -74,7 +74,7 @@ def assemble_request_features(
     behavioral_features["scenario_fast_gaming"] = scenario_fast_gaming
 
     # Step 4: NLP features from open-text response
-    nlp_output = extract_nlp_features(str(answers_dict.get("q27_resilience_text", "")))
+    nlp_output = extract_nlp_features(str(answers_dict.get("open_response_text", "")))
     raw_embedding = np.asarray(nlp_output.pop("_embedding_raw"), dtype=float)
     nlp_features = {key: float(value) for key, value in nlp_output.items()}
     nlp_features.update(

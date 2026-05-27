@@ -74,7 +74,7 @@ def test_train_baselines_supports_persisted_dataset_path_without_raw_text_for_gl
 ) -> None:
     dataset_path = tmp_path / "synthetic_dataset.csv"
     dataset = generate_synthetic_dataset(row_count=1_200, seed=71).drop(
-        columns=["q27_resilience_text"]
+        columns=["open_response_text"]
     )
     dataset.to_csv(dataset_path, index=False)
 

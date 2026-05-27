@@ -125,8 +125,6 @@ def test_answer_parser_and_derived_features_flow_into_preprocessing() -> None:
             "I started budgeting more carefully and asked for help early.",
             {
                 "numeracy_q1": 6500,
-                "future_orient_q2": 0,
-                "risk_q2": 0,
             },
         ),
         (
@@ -137,7 +135,6 @@ def test_answer_parser_and_derived_features_flow_into_preprocessing() -> None:
             {
                 "CRT_q1": 10,
                 "honesty_trap_q1": 4,
-                "honesty_trap_q2": 4,
             },
         ),
         ]:
@@ -188,37 +185,26 @@ def _build_embedding_matrix(dataset) -> np.ndarray:
     return embeddings
 
 
-def _answer_payload() -> dict[str, int | float | str]:
+def _answer_payload() -> dict[str, int | float | str | dict]:
+    _scenario = lambda opt: {
+        'primary': opt,
+        'least': None,
+        'first_click_ms': 4000,
+        'change_count': 0
+    }
     return {
-        "numeracy_q1": 6600,
-        "numeracy_q2": 1120,
-        "numeracy_q3": 14400,
-        "financial_literacy_q1": 1,
-        "financial_literacy_q2": 1,
-        "conscientiousness_q1": 4,
-        "CRT_q1": 5,
-        "CRT_q2": 5,
-        "CRT_q3": 47,
-        "future_orient_q1": 1,
-        "future_orient_q2": 1,
-        "future_orient_q3": 4,
-        "risk_q1": 1,
-        "risk_q2": 1,
-        "locus_q1": 0,
-        "locus_q2": 0,
-        "locus_q3": 4,
-        "social_capital_q1": 2,
-        "social_capital_q2": 0,
-        "social_capital_q3": 0,
-        "resilience_q1": 4,
-        "resilience_q2": 4,
-        "resilience_q3": 0,
-        "loss_aversion_q1": 0,
-        "honesty_trap_q1": 2,
-        "honesty_trap_q2": 2,
-        "future_orient_repeat": 1,
-        "locus_repeat": 0,
-        "reciprocity_q1": 4,
-        "reciprocity_q2": 0,
-        "q27_resilience_text": "I reduced expenses and found extra work.",
+        'numeracy_q1': 6600,
+        'numeracy_q2': 1120,
+        'financial_literacy_q1': 1,
+        'CRT_q1': 5,
+        'CRT_q2': 47,
+        'scenario_s1': _scenario('s1_b'),
+        'scenario_s2': _scenario('s2_b'),
+        'scenario_s3': _scenario('s3_b'),
+        'scenario_s4': _scenario('s4_b'),
+        'scenario_s5': _scenario('s5_b'),
+        'scenario_s6': _scenario('s6_c'),
+        'honesty_trap_q1': 2,
+        'scenario_s8': _scenario('s8_b'),
+        'open_response_text': 'I reduced expenses and found extra work.',
     }

@@ -323,7 +323,7 @@ export const QUESTIONS = [
     id: "honesty_trap_q1",
     section: "B",
     type: "likert",
-    question: "I have never told even a small lie in my entire life.",
+    question: "When pitching to a new client, I have never exaggerated any aspect of my business to win the deal.",
     scale: ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"],
     isRiskQuestion: false,
     isTrap: true,
@@ -436,12 +436,12 @@ export const QUESTIONS = [
   // ---------------------------------------------------------------------------
 
   {
-    id: "q27_resilience_text",
+    id: "open_response_text",
     section: "C",
     type: "text",
     question:
-      "Tell us about a time your finances were under real pressure — what happened, and how did you handle it?",
-    hint: "Write 2–5 sentences. Be specific about what you did, not just how you felt.",
+      "Describe a time when you faced a significant financial setback or business challenge. How did you respond, and what steps did you take to manage the situation?",
+    placeholder: "E.g., When my main supplier raised prices unexpectedly, I...",
     minWords: 10,
     maxLength: 1000,
     isRiskQuestion: false,

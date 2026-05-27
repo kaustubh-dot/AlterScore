@@ -229,12 +229,26 @@ Each analytics endpoint must:
 - Return schema-valid JSON.
 - Return useful error if the backing report is missing.
 - Avoid expensive model retraining during request handling.
+- Incomplete or malformed manifests fail clearly rather than silently falling back to candidate loading.
+- Missing scoring-critical artifacts fail clearly.
+- Present-but-invalid optional artifacts are reported separately from missing optional artifacts.
+- A loaded runtime bundle can score the valid request fixture and return schema-valid JSON.
+
+### Analytics
+
+Each analytics endpoint must:
+
+- Return 200 after report artifacts exist.
+- Return schema-valid JSON.
+- Return useful error if the backing report is missing.
+- Avoid expensive model retraining during request handling.
 
 ### Current Coverage
 
 - `test_health_endpoint.py` verifies the startup cache and artifact-health response, including explicit manifest-backed state fields for health payloads.
 - `test_score_endpoint.py` verifies the schema-valid happy path and structured `503` behavior when scoring-critical artifacts are missing.
 - `test_score_endpoint.py` also verifies append-only request logging for success, sanitized `500`, and artifacts-not-ready responses.
+- `test_personas.py` located in `tests/integration/behavioral_personas/` verifies that behavioral scenarios (Thoughtful, Impulsive, Manipulated) are correctly mapped by the backend and anti-gaming penalties are appropriately enforced on out-of-bound behavior.
 - `test_analytics_endpoints.py` now verifies `/api/model-stats`, `/api/baseline-comparison`, `/api/fairness-report`, `/api/drift-report`, `/api/global-importance`, `/api/score-distribution`, `/api/roc-data`, `/api/pr-curve`, `/api/calibration-curve`, and `/api/confusion-matrix` for both report-backed success responses and structured missing-artifact behavior.
 - `test_artifact_loading.py` now also verifies manifest priority over candidate fallback plus clear failures for incomplete or malformed manifest payloads.
 - `test_checked_in_runtime_bundle_smoke.py` now verifies the real checked-in manifest-backed local bundle directly, including the restored SHAP artifact load path, the validated `dice_explainer.pkl` load path, the refreshed fairness payload, the saved `global_importance.json` payload, non-empty score-response explainability fields, the runtime log path behavior, and manifest-backed health behavior for missing versus invalid optional artifacts.

@@ -138,13 +138,10 @@ def _compute_honesty_score(
     Honesty trap: "I have never told even a small lie in my entire life."
     Agreeing (≥4) with an implausible universal triggers a penalty.
     """
-    # q2 will be 3 (neutral) from schema default — counts as 0 suspicious traps
-    suspicious_traps = sum(
-        _coerce_int(answers.get(q_id), default=3) >= 4
-        for q_id in ("honesty_trap_q1", "honesty_trap_q2")
-    )
-    # 1 suspicious trap = 0.25 penalty (max from q1 alone); 2 = 0.45 (legacy compat)
-    social_desirability_penalty = 0.25 * suspicious_traps if suspicious_traps == 1 else 0.45 * suspicious_traps
+    # Only honesty_trap_q1 remains active
+    suspicious_traps = int(_coerce_int(answers.get("honesty_trap_q1"), default=3) >= 4)
+    # 1 suspicious trap = 0.25 penalty
+    social_desirability_penalty = 0.25 * suspicious_traps
 
     # Implausibility: agreeing with both traps + high cognitive score = likely faking
     implausibility_flag = float(

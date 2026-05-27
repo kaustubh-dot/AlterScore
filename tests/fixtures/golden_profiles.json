@@ -5,35 +5,54 @@
       "answers": {
         "numeracy_q1": 6600,
         "numeracy_q2": 1120.0,
-        "numeracy_q3": 14400.0,
         "financial_literacy_q1": 1,
         "financial_literacy_q2": 1,
-        "conscientiousness_q1": 5,
         "CRT_q1": 5.0,
         "CRT_q2": 5.0,
-        "CRT_q3": 47,
-        "future_orient_q1": 1,
-        "future_orient_q2": 1,
-        "future_orient_q3": 5,
-        "risk_q1": 0,
-        "risk_q2": 0,
-        "locus_q1": 0,
-        "locus_q2": 0,
-        "locus_q3": 5,
-        "social_capital_q1": 3,
-        "social_capital_q2": 0,
-        "social_capital_q3": 0,
-        "resilience_q1": 5,
-        "resilience_q2": 5,
-        "resilience_q3": 0,
-        "loss_aversion_q1": 2,
         "honesty_trap_q1": 1,
-        "honesty_trap_q2": 1,
-        "future_orient_repeat": 1,
-        "locus_repeat": 0,
-        "reciprocity_q1": 5,
-        "reciprocity_q2": 0,
-        "q27_resilience_text": "I responded immediately to the setback, reduced my daily expenses, created a strict budget, and successfully paid off my obligations."
+        "open_response_text": "I responded immediately to the setback, reduced my daily expenses, created a strict budget, and successfully paid off my obligations.",
+        "scenario_s1": {
+          "primary": "s1_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s2": {
+          "primary": "s2_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s3": {
+          "primary": "s3_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s4": {
+          "primary": "s4_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s5": {
+          "primary": "s5_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s6": {
+          "primary": "s6_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s8": {
+          "primary": "s8_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        }
       },
       "behavioral": {
         "avg_response_time_ms": 1500.0,
@@ -64,35 +83,54 @@
       "answers": {
         "numeracy_q1": 6600,
         "numeracy_q2": 1120.0,
-        "numeracy_q3": 0.0,
         "financial_literacy_q1": 1,
         "financial_literacy_q2": 1,
-        "conscientiousness_q1": 4,
         "CRT_q1": 5.0,
         "CRT_q2": 5.0,
-        "CRT_q3": 1,
-        "future_orient_q1": 1,
-        "future_orient_q2": 0,
-        "future_orient_q3": 4,
-        "risk_q1": 0,
-        "risk_q2": 0,
-        "locus_q1": 0,
-        "locus_q2": 0,
-        "locus_q3": 4,
-        "social_capital_q1": 2,
-        "social_capital_q2": 0,
-        "social_capital_q3": 0,
-        "resilience_q1": 4,
-        "resilience_q2": 4,
-        "resilience_q3": 0,
-        "loss_aversion_q1": 1,
         "honesty_trap_q1": 2,
-        "honesty_trap_q2": 2,
-        "future_orient_repeat": 1,
-        "locus_repeat": 0,
-        "reciprocity_q1": 4,
-        "reciprocity_q2": 0,
-        "q27_resilience_text": "When my income fell, I reduced expenses, found extra work, and made a repayment plan."
+        "open_response_text": "When my income fell, I reduced expenses, found extra work, and made a repayment plan.",
+        "scenario_s1": {
+          "primary": "s1_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s2": {
+          "primary": "s2_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s3": {
+          "primary": "s3_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s4": {
+          "primary": "s4_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s5": {
+          "primary": "s5_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s6": {
+          "primary": "s6_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s8": {
+          "primary": "s8_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        }
       },
       "behavioral": {
         "avg_response_time_ms": 3200.0,
@@ -123,35 +161,54 @@
       "answers": {
         "numeracy_q1": 6600,
         "numeracy_q2": 0.0,
-        "numeracy_q3": 0.0,
         "financial_literacy_q1": 1,
         "financial_literacy_q2": 0,
-        "conscientiousness_q1": 3,
         "CRT_q1": 5.0,
         "CRT_q2": 0.0,
-        "CRT_q3": 1,
-        "future_orient_q1": 1,
-        "future_orient_q2": 0,
-        "future_orient_q3": 3,
-        "risk_q1": 1,
-        "risk_q2": 1,
-        "locus_q1": 1,
-        "locus_q2": 1,
-        "locus_q3": 3,
-        "social_capital_q1": 1,
-        "social_capital_q2": 1,
-        "social_capital_q3": 1,
-        "resilience_q1": 3,
-        "resilience_q2": 3,
-        "resilience_q3": 1,
-        "loss_aversion_q1": 1,
         "honesty_trap_q1": 3,
-        "honesty_trap_q2": 3,
-        "future_orient_repeat": 1,
-        "locus_repeat": 1,
-        "reciprocity_q1": 3,
-        "reciprocity_q2": 1,
-        "q27_resilience_text": "I tried to save money and find extra work during the income reduction, but it was difficult."
+        "open_response_text": "I tried to save money and find extra work during the income reduction, but it was difficult.",
+        "scenario_s1": {
+          "primary": "s1_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s2": {
+          "primary": "s2_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s3": {
+          "primary": "s3_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s4": {
+          "primary": "s4_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s5": {
+          "primary": "s5_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s6": {
+          "primary": "s6_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s8": {
+          "primary": "s8_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        }
       },
       "behavioral": {
         "avg_response_time_ms": 6000.0,
@@ -182,35 +239,54 @@
       "answers": {
         "numeracy_q1": 0,
         "numeracy_q2": 0.0,
-        "numeracy_q3": 0.0,
         "financial_literacy_q1": 0,
         "financial_literacy_q2": 0,
-        "conscientiousness_q1": 1,
         "CRT_q1": 0.0,
         "CRT_q2": 0.0,
-        "CRT_q3": 1,
-        "future_orient_q1": 0,
-        "future_orient_q2": 0,
-        "future_orient_q3": 1,
-        "risk_q1": 1,
-        "risk_q2": 0,
-        "locus_q1": 2,
-        "locus_q2": 2,
-        "locus_q3": 1,
-        "social_capital_q1": 0,
-        "social_capital_q2": 2,
-        "social_capital_q3": 2,
-        "resilience_q1": 1,
-        "resilience_q2": 1,
-        "resilience_q3": 3,
-        "loss_aversion_q1": 0,
         "honesty_trap_q1": 5,
-        "honesty_trap_q2": 5,
-        "future_orient_repeat": 0,
-        "locus_repeat": 2,
-        "reciprocity_q1": 1,
-        "reciprocity_q2": 2,
-        "q27_resilience_text": "I felt completely helpless, ignored my bills, and did not know what to do."
+        "open_response_text": "I felt completely helpless, ignored my bills, and did not know what to do.",
+        "scenario_s1": {
+          "primary": "s1_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s2": {
+          "primary": "s2_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s3": {
+          "primary": "s3_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s4": {
+          "primary": "s4_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s5": {
+          "primary": "s5_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s6": {
+          "primary": "s6_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s8": {
+          "primary": "s8_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        }
       },
       "behavioral": {
         "avg_response_time_ms": 110000.0,
@@ -241,35 +317,54 @@
       "answers": {
         "numeracy_q1": 6600,
         "numeracy_q2": 1120.0,
-        "numeracy_q3": 14400.0,
         "financial_literacy_q1": 1,
         "financial_literacy_q2": 1,
-        "conscientiousness_q1": 5,
         "CRT_q1": 5.0,
         "CRT_q2": 5.0,
-        "CRT_q3": 47,
-        "future_orient_q1": 1,
-        "future_orient_q2": 1,
-        "future_orient_q3": 5,
-        "risk_q1": 0,
-        "risk_q2": 0,
-        "locus_q1": 0,
-        "locus_q2": 0,
-        "locus_q3": 5,
-        "social_capital_q1": 3,
-        "social_capital_q2": 0,
-        "social_capital_q3": 0,
-        "resilience_q1": 5,
-        "resilience_q2": 5,
-        "resilience_q3": 0,
-        "loss_aversion_q1": 2,
         "honesty_trap_q1": 5,
-        "honesty_trap_q2": 5,
-        "future_orient_repeat": 0,
-        "locus_repeat": 2,
-        "reciprocity_q1": 5,
-        "reciprocity_q2": 0,
-        "q27_resilience_text": "I responded immediately to the setback, reduced my daily expenses, created a strict budget, and successfully paid off my obligations."
+        "open_response_text": "I responded immediately to the setback, reduced my daily expenses, created a strict budget, and successfully paid off my obligations.",
+        "scenario_s1": {
+          "primary": "s1_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s2": {
+          "primary": "s2_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s3": {
+          "primary": "s3_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s4": {
+          "primary": "s4_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s5": {
+          "primary": "s5_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s6": {
+          "primary": "s6_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s8": {
+          "primary": "s8_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        }
       },
       "behavioral": {
         "avg_response_time_ms": 1500.0,
@@ -300,35 +395,54 @@
       "answers": {
         "numeracy_q1": 6600,
         "numeracy_q2": 1120.0,
-        "numeracy_q3": 14400.0,
         "financial_literacy_q1": 1,
         "financial_literacy_q2": 1,
-        "conscientiousness_q1": 4,
         "CRT_q1": 5.0,
         "CRT_q2": 5.0,
-        "CRT_q3": 47,
-        "future_orient_q1": 1,
-        "future_orient_q2": 1,
-        "future_orient_q3": 4,
-        "risk_q1": 0,
-        "risk_q2": 0,
-        "locus_q1": 0,
-        "locus_q2": 0,
-        "locus_q3": 4,
-        "social_capital_q1": 2,
-        "social_capital_q2": 0,
-        "social_capital_q3": 0,
-        "resilience_q1": 4,
-        "resilience_q2": 4,
-        "resilience_q3": 0,
-        "loss_aversion_q1": 2,
         "honesty_trap_q1": 1,
-        "honesty_trap_q2": 1,
-        "future_orient_repeat": 0,
-        "locus_repeat": 2,
-        "reciprocity_q1": 4,
-        "reciprocity_q2": 0,
-        "q27_resilience_text": "I responded to the setback and paid back the loan."
+        "open_response_text": "I responded to the setback and paid back the loan.",
+        "scenario_s1": {
+          "primary": "s1_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s2": {
+          "primary": "s2_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s3": {
+          "primary": "s3_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s4": {
+          "primary": "s4_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s5": {
+          "primary": "s5_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s6": {
+          "primary": "s6_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s8": {
+          "primary": "s8_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        }
       },
       "behavioral": {
         "avg_response_time_ms": 3500.0,
@@ -359,35 +473,54 @@
       "answers": {
         "numeracy_q1": 1200,
         "numeracy_q2": 0.0,
-        "numeracy_q3": 0.0,
         "financial_literacy_q1": 0,
         "financial_literacy_q2": 0,
-        "conscientiousness_q1": 1,
         "CRT_q1": 0.0,
         "CRT_q2": 0.0,
-        "CRT_q3": 1,
-        "future_orient_q1": 0,
-        "future_orient_q2": 0,
-        "future_orient_q3": 1,
-        "risk_q1": 1,
-        "risk_q2": 1,
-        "locus_q1": 2,
-        "locus_q2": 2,
-        "locus_q3": 1,
-        "social_capital_q1": 0,
-        "social_capital_q2": 2,
-        "social_capital_q3": 2,
-        "resilience_q1": 1,
-        "resilience_q2": 1,
-        "resilience_q3": 3,
-        "loss_aversion_q1": 0,
         "honesty_trap_q1": 3,
-        "honesty_trap_q2": 3,
-        "future_orient_repeat": 0,
-        "locus_repeat": 2,
-        "reciprocity_q1": 1,
-        "reciprocity_q2": 2,
-        "q27_resilience_text": "I spent everything."
+        "open_response_text": "I spent everything.",
+        "scenario_s1": {
+          "primary": "s1_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s2": {
+          "primary": "s2_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s3": {
+          "primary": "s3_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s4": {
+          "primary": "s4_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s5": {
+          "primary": "s5_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s6": {
+          "primary": "s6_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s8": {
+          "primary": "s8_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        }
       },
       "behavioral": {
         "avg_response_time_ms": 350.0,
@@ -418,35 +551,54 @@
       "answers": {
         "numeracy_q1": 6600,
         "numeracy_q2": 1120.0,
-        "numeracy_q3": 14400.0,
         "financial_literacy_q1": 1,
         "financial_literacy_q2": 1,
-        "conscientiousness_q1": 4,
         "CRT_q1": 5.0,
         "CRT_q2": 5.0,
-        "CRT_q3": 47,
-        "future_orient_q1": 1,
-        "future_orient_q2": 1,
-        "future_orient_q3": 4,
-        "risk_q1": 0,
-        "risk_q2": 0,
-        "locus_q1": 0,
-        "locus_q2": 0,
-        "locus_q3": 4,
-        "social_capital_q1": 2,
-        "social_capital_q2": 0,
-        "social_capital_q3": 0,
-        "resilience_q1": 4,
-        "resilience_q2": 4,
-        "resilience_q3": 0,
-        "loss_aversion_q1": 2,
         "honesty_trap_q1": 1,
-        "honesty_trap_q2": 1,
-        "future_orient_repeat": 1,
-        "locus_repeat": 0,
-        "reciprocity_q1": 4,
-        "reciprocity_q2": 0,
-        "q27_resilience_text": "I responded immediately to the setback, reduced my daily expenses, created a strict budget, and successfully paid off my obligations."
+        "open_response_text": "I responded immediately to the setback, reduced my daily expenses, created a strict budget, and successfully paid off my obligations.",
+        "scenario_s1": {
+          "primary": "s1_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s2": {
+          "primary": "s2_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s3": {
+          "primary": "s3_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s4": {
+          "primary": "s4_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s5": {
+          "primary": "s5_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s6": {
+          "primary": "s6_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        },
+        "scenario_s8": {
+          "primary": "s8_a",
+          "least": null,
+          "first_click_ms": 4000,
+          "change_count": 0
+        }
       },
       "behavioral": {
         "avg_response_time_ms": 6500.0,

@@ -7,7 +7,18 @@ from backend.app.main import create_app
 from backend.app.schemas.common import ErrorResponse
 from backend.app.schemas.score import ScoreResponse
 from tests.integration.api._support import build_runtime_settings
-from scripts.train_monotonic_tree_candidates import evaluate_fairness_gate
+from backend.ml.evaluation.fairness import RED_AUC_GAP_THRESHOLD
+
+def evaluate_fairness_gate(fairness_report: dict) -> dict:
+    flagged_groups = list(fairness_report.get("flagged_groups", []))
+    worst_auc_gap = float(fairness_report.get("worst_auc_gap", 0.0))
+    return {
+        "passed": not flagged_groups and worst_auc_gap <= RED_AUC_GAP_THRESHOLD,
+        "max_allowed_worst_auc_gap": float(RED_AUC_GAP_THRESHOLD),
+        "worst_auc_gap": worst_auc_gap,
+        "flagged_groups": flagged_groups,
+        "verdict": fairness_report.get("verdict", ""),
+    }
 
 
 def _load_base_payload() -> dict:
@@ -33,13 +44,11 @@ def test_score_endpoint_enforces_monotonicity_on_literacy_answers(trained_model_
     payload_correct = _load_base_payload()
     payload_correct["answers"]["numeracy_q1"] = 6600
     payload_correct["answers"]["numeracy_q2"] = 1120
-    payload_correct["answers"]["numeracy_q3"] = 14400
 
     # Payload with incorrect math/numeracy answers
     payload_incorrect = _load_base_payload()
     payload_incorrect["answers"]["numeracy_q1"] = 100
     payload_incorrect["answers"]["numeracy_q2"] = 200
-    payload_incorrect["answers"]["numeracy_q3"] = 300
 
     # Submit both to the API
     with TestClient(app) as client:

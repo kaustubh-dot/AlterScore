@@ -61,13 +61,12 @@ class AnswerPayload(SchemaModel):
     scenario_s5: ScenarioAnswer
     scenario_s6: ScenarioAnswer
     honesty_trap_q1: int = Field(..., ge=1, le=5)
-    honesty_trap_q2: int = Field(default=3, ge=1, le=5)  # optional — removed from frontend v2 question bank
     scenario_s8: ScenarioAnswer  # Consistency trap — mirrors S1
 
     # -----------------------------------------------------------------------
     # Section C — Open Text (1 question)
     # -----------------------------------------------------------------------
-    q27_resilience_text: str = Field(..., max_length=1000)
+    open_response_text: str = Field(..., max_length=1000)
 
     def as_dict(self) -> dict[str, Any]:
         """Return a plain dict suitable for passing to parsers and analyzers."""
