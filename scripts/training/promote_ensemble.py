@@ -50,22 +50,44 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--expected-row-count", type=int, default=None)
     p.add_argument("--minimum-test-rows", type=int, default=1_000)
     p.add_argument("--random-state", type=int, default=42)
-    p.add_argument("--stacking-artifact-path", type=Path, default=DEFAULT_STACKING_ARTIFACT_PATH)
-    p.add_argument("--stacking-config-path", type=Path, default=DEFAULT_STACKING_CONFIG_PATH)
+    p.add_argument(
+        "--stacking-artifact-path", type=Path, default=DEFAULT_STACKING_ARTIFACT_PATH
+    )
+    p.add_argument(
+        "--stacking-config-path", type=Path, default=DEFAULT_STACKING_CONFIG_PATH
+    )
     p.add_argument("--preprocessor-path", type=Path, default=DEFAULT_PREPROCESSOR_PATH)
     p.add_argument("--text-pca-path", type=Path, default=DEFAULT_TEXT_PCA_PATH)
-    p.add_argument("--shap-explainer-path", type=Path, default=DEFAULT_SHAP_EXPLAINER_PATH)
-    p.add_argument("--dice-explainer-path", type=Path, default=DEFAULT_DICE_EXPLAINER_PATH)
-    p.add_argument("--global-importance-path", type=Path, default=DEFAULT_GLOBAL_IMPORTANCE_PATH)
-    p.add_argument("--fairness-report-path", type=Path, default=DEFAULT_FAIRNESS_REPORT_PATH)
+    p.add_argument(
+        "--shap-explainer-path", type=Path, default=DEFAULT_SHAP_EXPLAINER_PATH
+    )
+    p.add_argument(
+        "--dice-explainer-path", type=Path, default=DEFAULT_DICE_EXPLAINER_PATH
+    )
+    p.add_argument(
+        "--global-importance-path", type=Path, default=DEFAULT_GLOBAL_IMPORTANCE_PATH
+    )
+    p.add_argument(
+        "--fairness-report-path", type=Path, default=DEFAULT_FAIRNESS_REPORT_PATH
+    )
     p.add_argument("--psi-report-path", type=Path, default=DEFAULT_PSI_REPORT_PATH)
     p.add_argument("--metrics-path", type=Path, default=DEFAULT_METRICS_PATH)
-    p.add_argument("--population-percentiles-path", type=Path, default=DEFAULT_POPULATION_PERCENTILES_PATH)
+    p.add_argument(
+        "--population-percentiles-path",
+        type=Path,
+        default=DEFAULT_POPULATION_PERCENTILES_PATH,
+    )
     p.add_argument("--manifest-path", type=Path, default=DEFAULT_MANIFEST_PATH)
-    p.add_argument("--manifest-version", type=str, default="calibrated_stacking_ensemble_v2")
+    p.add_argument(
+        "--manifest-version", type=str, default="calibrated_stacking_ensemble_v2"
+    )
     p.add_argument("--code-ref", type=str, default="antigravity/dev")
-    p.add_argument("--max-epochs", type=int, default=None, help="Max epochs for neural base models")
-    p.add_argument("--patience", type=int, default=None, help="Patience for neural base models")
+    p.add_argument(
+        "--max-epochs", type=int, default=None, help="Max epochs for neural base models"
+    )
+    p.add_argument(
+        "--patience", type=int, default=None, help="Patience for neural base models"
+    )
     return p
 
 
@@ -93,12 +115,17 @@ def main(argv: list[str] | None = None) -> int:
         max_epochs=args.max_epochs,
         patience=args.patience,
     )
-    print(json.dumps({
-        "run_id": art.run_id,
-        "test_auc_roc": art.test_auc_roc,
-        "manifest_path": str(art.manifest_path),
-        "stacking_artifact_path": str(art.stacking_artifact_path),
-    }, indent=2))
+    print(
+        json.dumps(
+            {
+                "run_id": art.run_id,
+                "test_auc_roc": art.test_auc_roc,
+                "manifest_path": str(art.manifest_path),
+                "stacking_artifact_path": str(art.stacking_artifact_path),
+            },
+            indent=2,
+        )
+    )
     return 0
 
 

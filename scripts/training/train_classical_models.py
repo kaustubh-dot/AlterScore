@@ -5,7 +5,6 @@ import json
 from pathlib import Path
 import sys
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
@@ -134,30 +133,46 @@ def main(argv: list[str] | None = None) -> int:
         json.dumps(
             {
                 "run_id": artifacts.run_id,
-                "dataset_path": None
-                if artifacts.dataset_path is None
-                else str(artifacts.dataset_path),
-                "text_pca_path": None
-                if artifacts.text_pca_path is None
-                else str(artifacts.text_pca_path),
-                "metrics_path": None
-                if artifacts.metrics_path is None
-                else str(artifacts.metrics_path),
-                "population_percentiles_path": None
-                if artifacts.population_percentiles_path is None
-                else str(artifacts.population_percentiles_path),
-                "psi_report_path": None
-                if artifacts.psi_report_path is None
-                else str(artifacts.psi_report_path),
-                "fairness_report_path": None
-                if artifacts.fairness_report_path is None
-                else str(artifacts.fairness_report_path),
-                "global_importance_path": None
-                if artifacts.global_importance_path is None
-                else str(artifacts.global_importance_path),
-                "dice_explainer_path": None
-                if artifacts.dice_explainer_path is None
-                else str(artifacts.dice_explainer_path),
+                "dataset_path": (
+                    None
+                    if artifacts.dataset_path is None
+                    else str(artifacts.dataset_path)
+                ),
+                "text_pca_path": (
+                    None
+                    if artifacts.text_pca_path is None
+                    else str(artifacts.text_pca_path)
+                ),
+                "metrics_path": (
+                    None
+                    if artifacts.metrics_path is None
+                    else str(artifacts.metrics_path)
+                ),
+                "population_percentiles_path": (
+                    None
+                    if artifacts.population_percentiles_path is None
+                    else str(artifacts.population_percentiles_path)
+                ),
+                "psi_report_path": (
+                    None
+                    if artifacts.psi_report_path is None
+                    else str(artifacts.psi_report_path)
+                ),
+                "fairness_report_path": (
+                    None
+                    if artifacts.fairness_report_path is None
+                    else str(artifacts.fairness_report_path)
+                ),
+                "global_importance_path": (
+                    None
+                    if artifacts.global_importance_path is None
+                    else str(artifacts.global_importance_path)
+                ),
+                "dice_explainer_path": (
+                    None
+                    if artifacts.dice_explainer_path is None
+                    else str(artifacts.dice_explainer_path)
+                ),
                 "artifacts": {
                     model_name: None if path is None else str(path)
                     for model_name, path in artifacts.model_artifact_paths.items()

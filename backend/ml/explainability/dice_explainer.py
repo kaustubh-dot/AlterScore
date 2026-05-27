@@ -87,21 +87,30 @@ class PersistedDiceExplainer:
         expected_immutable_features: Sequence[str] | None = None,
     ) -> None:
         if not isinstance(self.model_name, str) or not self.model_name:
-            raise ValueError("Persisted DICE explainer must define a non-empty model_name.")
+            raise ValueError(
+                "Persisted DICE explainer must define a non-empty model_name."
+            )
         if not isinstance(self.algorithm, str) or not self.algorithm:
-            raise ValueError("Persisted DICE explainer must define a non-empty algorithm.")
+            raise ValueError(
+                "Persisted DICE explainer must define a non-empty algorithm."
+            )
 
         resolved_feature_names = tuple(self.feature_names)
         if not resolved_feature_names:
             raise ValueError("Persisted DICE explainer must contain feature names.")
-        if expected_feature_names is not None and tuple(expected_feature_names) != resolved_feature_names:
+        if (
+            expected_feature_names is not None
+            and tuple(expected_feature_names) != resolved_feature_names
+        ):
             raise ValueError(
                 "Persisted DICE explainer feature names do not match the canonical feature order."
             )
 
         actionable_features = tuple(self.actionable_features)
         if not actionable_features:
-            raise ValueError("Persisted DICE explainer must declare actionable features.")
+            raise ValueError(
+                "Persisted DICE explainer must declare actionable features."
+            )
         if allowed_actionable_features is not None:
             unsupported_actionables = sorted(
                 set(actionable_features) - set(allowed_actionable_features)
@@ -136,7 +145,10 @@ class PersistedDiceExplainer:
             raise ValueError(
                 "Persisted DICE explainer min_score_gain must be non-negative."
             )
-        if not np.isfinite(float(self.min_probability_gain)) or float(self.min_probability_gain) < 0.0:
+        if (
+            not np.isfinite(float(self.min_probability_gain))
+            or float(self.min_probability_gain) < 0.0
+        ):
             raise ValueError(
                 "Persisted DICE explainer min_probability_gain must be finite and non-negative."
             )
@@ -218,13 +230,14 @@ class PersistedDiceExplainer:
                 candidate_frame.loc[row_index, derived_feature_name] = derived_value
 
             candidate_processed = transform_features(preprocessor, candidate_frame)
-            candidate_probability = _predict_repayment_probability(model, candidate_processed)
+            candidate_probability = _predict_repayment_probability(
+                model, candidate_processed
+            )
             candidate_credit_score = probability_to_score(candidate_probability)
             estimated_score_gain = candidate_credit_score - current_credit_score
             probability_gain = candidate_probability - current_probability
-            if (
-                estimated_score_gain < self.min_score_gain
-                and probability_gain < float(self.min_probability_gain)
+            if estimated_score_gain < self.min_score_gain and probability_gain < float(
+                self.min_probability_gain
             ):
                 continue
 
@@ -246,7 +259,9 @@ class PersistedDiceExplainer:
                 )
             )
 
-        candidate_actions.sort(key=lambda item: (-item[0], -item[1], item[2]["feature"]))
+        candidate_actions.sort(
+            key=lambda item: (-item[0], -item[1], item[2]["feature"])
+        )
         return [item[2] for item in candidate_actions[: int(self.max_actions)]]
 
     def _rank_actionable_features(
@@ -267,7 +282,8 @@ class PersistedDiceExplainer:
         remaining_actionable = [
             feature_name
             for feature_name in self.actionable_features
-            if feature_name not in negative_actionable and feature_name in self.feature_policies
+            if feature_name not in negative_actionable
+            and feature_name in self.feature_policies
         ]
         return negative_actionable + remaining_actionable
 
@@ -281,7 +297,9 @@ def build_default_persisted_dice_explainer(
         feature_names=tuple(ALL_MODEL_FEATURES),
         actionable_features=tuple(DEFAULT_COUNTERFACTUAL_POLICIES),
         immutable_features=tuple(IMMUTABLE_FEATURES),
-        feature_policies={key: dict(value) for key, value in DEFAULT_COUNTERFACTUAL_POLICIES.items()},
+        feature_policies={
+            key: dict(value) for key, value in DEFAULT_COUNTERFACTUAL_POLICIES.items()
+        },
     )
     explainer.validate(
         expected_feature_names=ALL_MODEL_FEATURES,
@@ -340,7 +358,9 @@ def _resolve_counterfactual_target(
 def _predict_repayment_probability(model: Any, processed_features: np.ndarray) -> float:
     probabilities = np.asarray(model.predict_proba(processed_features), dtype=float)
     if probabilities.ndim != 2 or probabilities.shape[1] < 2:
-        raise ValueError("Runtime model predict_proba output must have at least two columns.")
+        raise ValueError(
+            "Runtime model predict_proba output must have at least two columns."
+        )
 
     repayment_probability = float(np.clip(probabilities[0, 1], 0.0, 1.0))
     if np.isnan(repayment_probability):

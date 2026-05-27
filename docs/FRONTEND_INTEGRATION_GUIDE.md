@@ -83,26 +83,26 @@ The score response includes:
 
 Implemented:
 
-- landing page
-- assessment flow
-- telemetry capture
-- score payload construction
-- processing screen
-- results rendering
-- score sharing/export
-- dashboard health, model metrics, baseline, fairness, drift, global
-  importance, score distribution, ROC, PR, and calibration panels
+- Landing page.
+- Assessment flow.
+- Telemetry capture.
+- Score payload construction.
+- Processing screen.
+- Results rendering.
+- Score sharing/export.
+- Dashboard analytics panel (health, model metrics, baseline, fairness, drift, global importance, score distribution, ROC, PR, calibration curves).
+- Dashboard confusion-matrix rendering.
+- Independent loading, error, and empty states per dashboard panel (using async wrappers).
+- Targeted frontend mock tests covering endpoint failures and edge cases.
 
-Still pending:
+Still pending / Next steps:
 
-- dashboard confusion-matrix rendering
-- independent loading/error/empty states per dashboard panel
-- deeper frontend test coverage
-- final browser QA evidence across target viewports
+- Deeper frontend test coverage.
+- Final browser QA evidence and layout adjustments across target viewports.
 
 ## Dashboard Endpoints
 
-The dashboard is expected to consume these backend routes independently:
+The dashboard consumes these backend routes independently:
 
 - `/api/model-stats`
 - `/api/baseline-comparison`
@@ -115,6 +115,5 @@ The dashboard is expected to consume these backend routes independently:
 - `/api/calibration-curve`
 - `/api/confusion-matrix`
 
-Most of these endpoints are already consumed by the dashboard. The remaining
-frontend work is to render `/api/confusion-matrix`, give each panel its own
-loading/empty/error state, and add targeted tests around endpoint failures.
+All of these endpoints are fully integrated into the dashboard views.
+

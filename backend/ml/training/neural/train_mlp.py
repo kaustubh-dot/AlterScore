@@ -28,7 +28,10 @@ import numpy as np
 import pandas as pd
 
 from backend.app.core.paths import MODEL_ARTIFACTS_DIR, RAW_DATA_DIR
-from backend.ml.data_generation.validators import MINIMUM_TEST_ROWS, validate_synthetic_dataset
+from backend.ml.data_generation.validators import (
+    MINIMUM_TEST_ROWS,
+    validate_synthetic_dataset,
+)
 from backend.ml.evaluation.metrics import (
     build_population_percentiles_payload,
     build_split_evaluation_details,
@@ -71,8 +74,16 @@ _MLP_PATIENCE: Final[int] = 10
 _MLP_BATCH_SIZE: Final[int] = 512
 
 NUMERIC_METRIC_FIELDS: Final[tuple[str, ...]] = (
-    "auc_roc", "auc_pr", "ks_statistic", "brier_score",
-    "expected_calibration_error", "accuracy", "precision", "recall", "f1", "threshold",
+    "auc_roc",
+    "auc_pr",
+    "ks_statistic",
+    "brier_score",
+    "expected_calibration_error",
+    "accuracy",
+    "precision",
+    "recall",
+    "f1",
+    "threshold",
 )
 
 
@@ -110,7 +121,9 @@ def train_mlp(
     text_pca_artifact_path: str | Path | None = DEFAULT_TEXT_PCA_ARTIFACT_PATH,
     mlp_artifact_path: str | Path | None = DEFAULT_MLP_ARTIFACT_PATH,
     metrics_path: str | Path | None = DEFAULT_METRICS_PATH,
-    population_percentiles_path: str | Path | None = DEFAULT_POPULATION_PERCENTILES_PATH,
+    population_percentiles_path: (
+        str | Path | None
+    ) = DEFAULT_POPULATION_PERCENTILES_PATH,
     random_state: int = DEFAULT_RANDOM_STATE,
     max_epochs: int = _MLP_MAX_EPOCHS,
     patience: int = _MLP_PATIENCE,
@@ -135,7 +148,9 @@ def train_mlp(
 
     # Data loading and preprocessing
     resolved_dataset, resolved_dataset_path = _load_dataset(dataset, dataset_path)
-    aligned_dataset, raw_text_embeddings = align_text_features_from_raw_text(resolved_dataset)
+    aligned_dataset, raw_text_embeddings = align_text_features_from_raw_text(
+        resolved_dataset
+    )
     validate_synthetic_dataset(
         aligned_dataset,
         expected_row_count=(
@@ -150,7 +165,9 @@ def train_mlp(
         text_pca_random_state=random_state,
         text_pca_artifact_path=text_pca_artifact_path,
     )
-    preprocessor = fit_preprocessor(prepared.train.X, artifact_path=preprocessor_artifact_path)
+    preprocessor = fit_preprocessor(
+        prepared.train.X, artifact_path=preprocessor_artifact_path
+    )
     X_full_processed = transform_features(preprocessor, prepared.feature_frame)
     X_train_processed = transform_features(preprocessor, prepared.train.X)
     X_val_processed = transform_features(preprocessor, prepared.validation.X)
@@ -202,35 +219,53 @@ def train_mlp(
     # Metrics
     model_stats = [
         compute_binary_classification_metrics(
-            y_val, val_probs,
-            model_name=MLP_MODEL_NAME, model_type=MLP_MODEL_TYPE,
-            split="validation_months_9_10", threshold=val_threshold,
+            y_val,
+            val_probs,
+            model_name=MLP_MODEL_NAME,
+            model_type=MLP_MODEL_TYPE,
+            split="validation_months_9_10",
+            threshold=val_threshold,
         ),
         compute_binary_classification_metrics(
-            y_test, test_probs,
-            model_name=MLP_MODEL_NAME, model_type=MLP_MODEL_TYPE,
-            split="test_months_11_12", threshold=val_threshold,
+            y_test,
+            test_probs,
+            model_name=MLP_MODEL_NAME,
+            model_type=MLP_MODEL_TYPE,
+            split="test_months_11_12",
+            threshold=val_threshold,
         ),
     ]
     evaluation_details: dict[str, dict[str, Any]] = {
         "validation_months_9_10": {
             MLP_MODEL_NAME: build_split_evaluation_details(
-                y_val, val_probs,
-                model_name=MLP_MODEL_NAME, model_type=MLP_MODEL_TYPE,
-                split="validation_months_9_10", threshold=val_threshold,
+                y_val,
+                val_probs,
+                model_name=MLP_MODEL_NAME,
+                model_type=MLP_MODEL_TYPE,
+                split="validation_months_9_10",
+                threshold=val_threshold,
             )
         },
         "test_months_11_12": {
             MLP_MODEL_NAME: build_split_evaluation_details(
-                y_test, test_probs,
-                model_name=MLP_MODEL_NAME, model_type=MLP_MODEL_TYPE,
-                split="test_months_11_12", threshold=val_threshold,
+                y_test,
+                test_probs,
+                model_name=MLP_MODEL_NAME,
+                model_type=MLP_MODEL_TYPE,
+                split="test_months_11_12",
+                threshold=val_threshold,
             )
         },
     }
-    population_payload = build_population_percentiles_payload(full_probs, model_name=MLP_MODEL_NAME)
+    population_payload = build_population_percentiles_payload(
+        full_probs, model_name=MLP_MODEL_NAME
+    )
     run_id = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_mlp")
-    split_row_counts = {"train": int(len(y_train)), "validation": int(len(y_val)), "test": int(len(y_test))}
+    split_row_counts = {
+        "train": int(len(y_train)),
+        "validation": int(len(y_val)),
+        "test": int(len(y_test)),
+    }
 
     # Merge metrics.json
     merged_model_stats: list[dict[str, Any]] = model_stats
@@ -241,8 +276,17 @@ def train_mlp(
             updated_model_stats=model_stats,
         )
         metrics_out: dict[str, Any] = {
-            **{k: v for k, v in existing_payload.items()
-               if k not in {"run_id", "split_row_counts", "model_stats", "evaluation_details"}},
+            **{
+                k: v
+                for k, v in existing_payload.items()
+                if k
+                not in {
+                    "run_id",
+                    "split_row_counts",
+                    "model_stats",
+                    "evaluation_details",
+                }
+            },
             "run_id": run_id,
             "split_row_counts": split_row_counts,
             "model_stats": merged_model_stats,
@@ -263,7 +307,9 @@ def train_mlp(
         )
         _save_json(
             merge_population_percentiles_reports(
-                existing_pop, {MLP_MODEL_NAME: population_payload}, default_model_name=default_name
+                existing_pop,
+                {MLP_MODEL_NAME: population_payload},
+                default_model_name=default_name,
             ),
             population_percentiles_path,
         )
@@ -291,22 +337,37 @@ def _build_mlp_model(config: dict[str, Any], *, device: Any) -> Any:
     import torch.nn as nn
 
     class ResidualMLP(nn.Module):
-        def __init__(self, n_features: int, hidden_dim: int, n_hidden_layers: int, dropout: float) -> None:
+        def __init__(
+            self, n_features: int, hidden_dim: int, n_hidden_layers: int, dropout: float
+        ) -> None:
             super().__init__()
             self.input_proj = nn.Sequential(
-                nn.Linear(n_features, hidden_dim), nn.BatchNorm1d(hidden_dim), nn.ReLU(), nn.Dropout(dropout),
+                nn.Linear(n_features, hidden_dim),
+                nn.BatchNorm1d(hidden_dim),
+                nn.ReLU(),
+                nn.Dropout(dropout),
             )
-            self.skip = nn.Linear(n_features, hidden_dim) if n_features != hidden_dim else nn.Identity()
-            self.hidden_blocks = nn.ModuleList([
-                nn.Sequential(
-                    nn.Linear(hidden_dim, hidden_dim), nn.BatchNorm1d(hidden_dim), nn.ReLU(), nn.Dropout(dropout),
-                )
-                for _ in range(max(0, n_hidden_layers - 1))
-            ])
+            self.skip = (
+                nn.Linear(n_features, hidden_dim)
+                if n_features != hidden_dim
+                else nn.Identity()
+            )
+            self.hidden_blocks = nn.ModuleList(
+                [
+                    nn.Sequential(
+                        nn.Linear(hidden_dim, hidden_dim),
+                        nn.BatchNorm1d(hidden_dim),
+                        nn.ReLU(),
+                        nn.Dropout(dropout),
+                    )
+                    for _ in range(max(0, n_hidden_layers - 1))
+                ]
+            )
             self.output = nn.Linear(hidden_dim, 1)
 
         def forward(self, x: Any) -> Any:
             import torch
+
             h = self.input_proj(x) + self.skip(x)
             for block in self.hidden_blocks:
                 h = block(h) + h
@@ -346,7 +407,9 @@ def _fit_mlp(
     pos_weight_val = (n_neg / n_pos) if n_pos > 0 else 1.0
     pos_w = torch.tensor([pos_weight_val], dtype=torch.float32).to(device)
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=_MLP_LEARNING_RATE, weight_decay=_MLP_WEIGHT_DECAY)
+    optimizer = torch.optim.Adam(
+        model.parameters(), lr=_MLP_LEARNING_RATE, weight_decay=_MLP_WEIGHT_DECAY
+    )
 
     best_auc = -1.0
     best_state: dict[str, Any] = {}
@@ -357,7 +420,7 @@ def _fit_mlp(
         model.train()
         perm = torch.randperm(n)
         for start in range(0, n, _MLP_BATCH_SIZE):
-            idx = perm[start: start + _MLP_BATCH_SIZE]
+            idx = perm[start : start + _MLP_BATCH_SIZE]
             xb, yb = X_tr[idx], y_tr[idx]
             optimizer.zero_grad()
             preds = model(xb)
@@ -393,12 +456,18 @@ def _fit_mlp(
 # ---------------------------------------------------------------------------
 
 
-def _save_mlp_checkpoint(model: Any, config: dict[str, Any], artifact_path: Path) -> None:
+def _save_mlp_checkpoint(
+    model: Any, config: dict[str, Any], artifact_path: Path
+) -> None:
     import torch
+
     artifact_path.parent.mkdir(parents=True, exist_ok=True)
     torch.save(
-        {"model_name": MLP_MODEL_NAME, "config": config,
-         "state_dict": {k: v.cpu() for k, v in model.state_dict().items()}},
+        {
+            "model_name": MLP_MODEL_NAME,
+            "config": config,
+            "state_dict": {k: v.cpu() for k, v in model.state_dict().items()},
+        },
         str(artifact_path),
     )
 
@@ -427,9 +496,15 @@ def load_mlp_model(artifact_path: str | Path) -> Any:
 
 def _infer_proba(model: Any, X: np.ndarray, device: Any) -> np.ndarray:
     import torch
+
     model.eval()
     with torch.no_grad():
-        return model(torch.tensor(X, dtype=torch.float32).to(device)).cpu().numpy().astype(float)
+        return (
+            model(torch.tensor(X, dtype=torch.float32).to(device))
+            .cpu()
+            .numpy()
+            .astype(float)
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -450,6 +525,7 @@ def _assert_torch_available() -> None:
 def _set_torch_seed(seed: int) -> None:
     try:
         import torch
+
         torch.manual_seed(seed)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
@@ -459,7 +535,9 @@ def _set_torch_seed(seed: int) -> None:
         pass
 
 
-def _predict_positive_class_probabilities(model_name: str, probabilities: np.ndarray | list[float]) -> np.ndarray:
+def _predict_positive_class_probabilities(
+    model_name: str, probabilities: np.ndarray | list[float]
+) -> np.ndarray:
     arr = np.asarray(probabilities, dtype=float)
     if np.isnan(arr).any():
         raise ValueError(f"{model_name} produced NaN predicted probabilities.")
@@ -468,7 +546,9 @@ def _predict_positive_class_probabilities(model_name: str, probabilities: np.nda
     return arr
 
 
-def _load_dataset(dataset: pd.DataFrame | None, dataset_path: str | Path | None) -> tuple[pd.DataFrame, Path | None]:
+def _load_dataset(
+    dataset: pd.DataFrame | None, dataset_path: str | Path | None
+) -> tuple[pd.DataFrame, Path | None]:
     if dataset is not None:
         return dataset.copy(), None
     resolved = Path(dataset_path or DEFAULT_DATASET_PATH)
@@ -508,7 +588,9 @@ def _load_existing_population_payload(path: str | Path | None) -> dict[str, Any]
 
 
 def _merge_model_stats(
-    *, existing_model_stats: list[dict[str, Any]], updated_model_stats: list[dict[str, Any]]
+    *,
+    existing_model_stats: list[dict[str, Any]],
+    updated_model_stats: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
     lookup = {(item["model_name"], item["split"]): item for item in updated_model_stats}
     merged: list[dict[str, Any]] = []
@@ -530,18 +612,26 @@ def _merge_model_stats(
 
 
 def _resolve_population_default_model_name(
-    *, model_stats: list[dict[str, Any]], existing_payload: dict[str, Any] | None,
+    *,
+    model_stats: list[dict[str, Any]],
+    existing_payload: dict[str, Any] | None,
     updated_model_payloads: dict[str, dict[str, Any]],
 ) -> str:
     available = set(updated_model_payloads)
     if isinstance(existing_payload, dict):
         existing_models = existing_payload.get("models")
         if isinstance(existing_models, dict):
-            available.update(n for n, p in existing_models.items() if isinstance(n, str) and isinstance(p, dict))
+            available.update(
+                n
+                for n, p in existing_models.items()
+                if isinstance(n, str) and isinstance(p, dict)
+            )
     selected = select_best_test_auc_model(model_stats, candidate_model_names=available)
     if selected is not None:
         return selected
-    existing_default = None if existing_payload is None else existing_payload.get("default_model_name")
+    existing_default = (
+        None if existing_payload is None else existing_payload.get("default_model_name")
+    )
     if isinstance(existing_default, str) and existing_default in available:
         return existing_default
     if available:
@@ -556,7 +646,12 @@ def _save_json(payload: Any, path: str | Path) -> None:
 
 
 __all__ = [
-    "DEFAULT_DATASET_PATH", "DEFAULT_MLP_ARTIFACT_PATH",
-    "MLP_MODEL_NAME", "MLP_MODEL_TYPE", "NUMERIC_METRIC_FIELDS",
-    "MLPTrainingArtifacts", "load_mlp_model", "train_mlp",
+    "DEFAULT_DATASET_PATH",
+    "DEFAULT_MLP_ARTIFACT_PATH",
+    "MLP_MODEL_NAME",
+    "MLP_MODEL_TYPE",
+    "NUMERIC_METRIC_FIELDS",
+    "MLPTrainingArtifacts",
+    "load_mlp_model",
+    "train_mlp",
 ]

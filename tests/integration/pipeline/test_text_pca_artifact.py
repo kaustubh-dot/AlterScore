@@ -1,19 +1,22 @@
-import pytest
-pytestmark = pytest.mark.slow
-
 import json
 from pathlib import Path
 
 import joblib
 import numpy as np
+import pytest
 
 from backend.app.core.artifact_loader import load_runtime_artifact_bundle
 from backend.app.core.settings import load_settings
 from backend.app.services.scoring import score_request_with_bundle
-from backend.ml.data_generation.generator import TEMPORAL_SPLIT_MONTHS, generate_synthetic_dataset
+from backend.ml.data_generation.generator import (
+    TEMPORAL_SPLIT_MONTHS,
+    generate_synthetic_dataset,
+)
 from backend.ml.inference.feature_assembly import assemble_request_features
 from backend.ml.preprocessing.pipeline import build_text_embedding_matrix
 from backend.ml.training.classical.baselines import train_baselines
+
+pytestmark = pytest.mark.slow
 
 
 def test_train_baselines_persists_text_pca_from_train_months_only(tmp_path) -> None:
@@ -40,7 +43,9 @@ def test_train_baselines_persists_text_pca_from_train_months_only(tmp_path) -> N
     raw_embeddings = build_text_embedding_matrix(dataset)
     loaded_text_pca = joblib.load(artifacts.text_pca_path)
     train_mask = dataset["cohort_month"].isin(TEMPORAL_SPLIT_MONTHS["train"]).to_numpy()
-    validation_mask = dataset["cohort_month"].isin(TEMPORAL_SPLIT_MONTHS["validation"]).to_numpy()
+    validation_mask = (
+        dataset["cohort_month"].isin(TEMPORAL_SPLIT_MONTHS["validation"]).to_numpy()
+    )
     test_mask = dataset["cohort_month"].isin(TEMPORAL_SPLIT_MONTHS["test"]).to_numpy()
 
     assert artifacts.text_pca_path.is_file()
@@ -86,7 +91,9 @@ def test_runtime_feature_assembly_uses_persisted_text_pca_for_non_zero_semantics
     assert not np.allclose(semantic_projection, 0.0)
 
 
-def test_runtime_feature_assembly_zero_fills_when_text_pca_is_intentionally_omitted() -> None:
+def test_runtime_feature_assembly_zero_fills_when_text_pca_is_intentionally_omitted() -> (
+    None
+):
     assembled = assemble_request_features(
         _load_valid_score_payload(),
         text_pca=None,
@@ -97,7 +104,9 @@ def test_runtime_feature_assembly_zero_fills_when_text_pca_is_intentionally_omit
     assert assembled.nlp_features["text_semantic_dim2"] == 0.0
 
 
-def test_artifact_loader_succeeds_when_runtime_bundle_includes_text_pca(tmp_path) -> None:
+def test_artifact_loader_succeeds_when_runtime_bundle_includes_text_pca(
+    tmp_path,
+) -> None:
     bundle = _prepare_runtime_bundle(tmp_path, include_text_pca=True)
     response = score_request_with_bundle(_load_valid_score_payload(), bundle)
 
@@ -159,7 +168,9 @@ def _build_training_artifact_paths(tmp_path) -> dict[str, Path]:
         "model": model_root / "artifacts" / "logistic_best.pkl",
         "baseline_metrics": model_root / "reports" / "baseline_metrics.json",
         "metrics": model_root / "reports" / "metrics.json",
-        "population_percentiles": model_root / "reports" / "population_percentiles.json",
+        "population_percentiles": model_root
+        / "reports"
+        / "population_percentiles.json",
         "psi_report": model_root / "reports" / "psi_report.json",
         "fairness_report": model_root / "reports" / "fairness_report.json",
         "global_importance": model_root / "reports" / "global_importance.json",

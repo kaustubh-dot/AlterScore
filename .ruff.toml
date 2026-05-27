@@ -1,0 +1,14 @@
+# Ruff configuration for AlterScore
+
+# Target Python version
+target-version = "py312"
+
+[lint]
+# Add rules to ignore
+ignore = []
+
+[lint.per-file-ignores]
+# Ignore E402 (import not at top of file) in scripts and tests
+# because of sys.path.insert/pytestmark usage.
+"scripts/**/*.py" = ["E402"]
+"tests/**/*.py" = ["E402"]

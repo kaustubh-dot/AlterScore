@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any, Final
 
-import numpy as np
 import pandas as pd
 
 from backend.ml.preprocessing.feature_registry import ALL_MODEL_FEATURES
@@ -59,17 +58,22 @@ def compute_derived_features(features: Mapping[str, Any]) -> dict[str, float]:
         upper=1.0,
     )
     cognitive_consistency_index = _clip(
-        values["CRT_score"] * (1.0 - values["risk_consistency_flag"]) * (1.0 - values["answer_change_rate"]),
+        values["CRT_score"]
+        * (1.0 - values["risk_consistency_flag"])
+        * (1.0 - values["answer_change_rate"]),
         lower=0.0,
         upper=1.0,
     )
     repayment_intention_score = _clip(
-        values["locus_of_control"] * values["social_capital_score"] * values["honesty_score"],
+        values["locus_of_control"]
+        * values["social_capital_score"]
+        * values["honesty_score"],
         lower=0.0,
         upper=1.0,
     )
     impulsivity_index = _clip(
-        (values["risk_attitude"] * values["risk_response_speed_ratio"]) / (values["CRT_score"] + 0.1),
+        (values["risk_attitude"] * values["risk_response_speed_ratio"])
+        / (values["CRT_score"] + 0.1),
         lower=0.0,
         upper=5.0,
     )
@@ -129,18 +133,27 @@ def build_model_feature_row(
     merged_features: dict[str, Any] = {
         **psychometric_features,
         **behavioral_features,
-        **{key: value for key, value in nlp_features.items() if key != "_embedding_raw"},
+        **{
+            key: value for key, value in nlp_features.items() if key != "_embedding_raw"
+        },
     }
     merged_features.update(compute_derived_features(merged_features))
-    return {feature_name: merged_features[feature_name] for feature_name in ALL_MODEL_FEATURES}
+    return {
+        feature_name: merged_features[feature_name]
+        for feature_name in ALL_MODEL_FEATURES
+    }
 
 
 def _assert_required_columns(feature_frame: pd.DataFrame) -> None:
     missing_columns = [
-        column_name for column_name in DERIVED_FEATURE_REQUIREMENTS if column_name not in feature_frame.columns
+        column_name
+        for column_name in DERIVED_FEATURE_REQUIREMENTS
+        if column_name not in feature_frame.columns
     ]
     if missing_columns:
-        raise ValueError(f"Feature frame is missing required columns for derived features: {missing_columns}")
+        raise ValueError(
+            f"Feature frame is missing required columns for derived features: {missing_columns}"
+        )
 
 
 def _clip(value: float, *, lower: float, upper: float | None = None) -> float:

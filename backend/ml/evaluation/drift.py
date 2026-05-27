@@ -117,7 +117,9 @@ def calculate_feature_psi(
 ) -> float:
     """Compute PSI for one feature using deterministic train-derived bins."""
 
-    if pd.api.types.is_numeric_dtype(expected) and pd.api.types.is_numeric_dtype(actual):
+    if pd.api.types.is_numeric_dtype(expected) and pd.api.types.is_numeric_dtype(
+        actual
+    ):
         return _calculate_numeric_psi(expected, actual, bin_count=bin_count)
     return _calculate_categorical_psi(expected, actual)
 

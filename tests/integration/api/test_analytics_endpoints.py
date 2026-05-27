@@ -33,7 +33,9 @@ def test_model_stats_endpoint_returns_report_backed_metrics(trained_model_dir) -
     assert any(item.split == "test_months_11_12" for item in parsed.root)
 
 
-def test_baseline_comparison_endpoint_returns_report_backed_baselines(trained_model_dir) -> None:
+def test_baseline_comparison_endpoint_returns_report_backed_baselines(
+    trained_model_dir,
+) -> None:
     settings = build_runtime_settings(trained_model_dir)
     app = create_app(settings)
 
@@ -49,7 +51,9 @@ def test_baseline_comparison_endpoint_returns_report_backed_baselines(trained_mo
     ]
 
 
-def test_governance_report_endpoints_return_saved_report_payloads(trained_model_dir) -> None:
+def test_governance_report_endpoints_return_saved_report_payloads(
+    trained_model_dir,
+) -> None:
     settings = build_runtime_settings(trained_model_dir)
     app = create_app(settings)
 
@@ -82,7 +86,9 @@ def test_governance_report_endpoints_return_saved_report_payloads(trained_model_
     assert importance.items[0].mean_abs_shap >= importance.items[-1].mean_abs_shap
 
 
-def test_score_distribution_endpoint_returns_saved_histogram_payload(trained_model_dir) -> None:
+def test_score_distribution_endpoint_returns_saved_histogram_payload(
+    trained_model_dir,
+) -> None:
     settings = build_runtime_settings(trained_model_dir)
     app = create_app(settings)
 
@@ -97,7 +103,9 @@ def test_score_distribution_endpoint_returns_saved_histogram_payload(trained_mod
     assert sum(bucket.count for bucket in parsed.score_histogram) == parsed.row_count
 
 
-def test_curve_and_confusion_endpoints_return_saved_metrics_payloads(trained_model_dir) -> None:
+def test_curve_and_confusion_endpoints_return_saved_metrics_payloads(
+    trained_model_dir,
+) -> None:
     settings = build_runtime_settings(trained_model_dir)
     app = create_app(settings)
 
@@ -126,12 +134,12 @@ def test_curve_and_confusion_endpoints_return_saved_metrics_payloads(trained_mod
     assert calibration_parsed.root[0].points[0].count >= 1
 
     assert confusion_response.status_code == 200
-    confusion_parsed = ConfusionMatrixResponse.model_validate(
-        confusion_response.json()
-    )
+    confusion_parsed = ConfusionMatrixResponse.model_validate(confusion_response.json())
     assert confusion_parsed.root
     assert confusion_parsed.root[0].threshold >= 0.0
-    assert any(item.model_name == "logistic_regression" for item in confusion_parsed.root)
+    assert any(
+        item.model_name == "logistic_regression" for item in confusion_parsed.root
+    )
 
 
 def test_model_stats_endpoint_returns_structured_503_when_metrics_are_missing(
@@ -238,9 +246,9 @@ def test_curve_endpoint_returns_structured_500_when_saved_payload_is_invalid(
     settings = build_runtime_settings(trained_model_dir)
     metrics_path = trained_model_dir / "models" / "reports" / "metrics.json"
     metrics_payload = json.loads(metrics_path.read_text(encoding="utf-8"))
-    del metrics_payload["evaluation_details"]["test_months_11_12"]["logistic_regression"][
-        "model_type"
-    ]
+    del metrics_payload["evaluation_details"]["test_months_11_12"][
+        "logistic_regression"
+    ]["model_type"]
     metrics_path.write_text(json.dumps(metrics_payload, indent=2), encoding="utf-8")
     app = create_app(settings)
 

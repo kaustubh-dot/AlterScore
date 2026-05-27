@@ -236,11 +236,23 @@ def compute_confusion_matrix(
     positive_total = true_positive + false_negative
     negative_total = false_positive + true_negative
 
-    precision = float(true_positive / (true_positive + false_positive)) if (true_positive + false_positive) else 0.0
+    precision = (
+        float(true_positive / (true_positive + false_positive))
+        if (true_positive + false_positive)
+        else 0.0
+    )
     recall = float(true_positive / positive_total) if positive_total else 0.0
     specificity = float(true_negative / negative_total) if negative_total else 0.0
-    accuracy = float((true_positive + true_negative) / (positive_total + negative_total)) if (positive_total + negative_total) else 0.0
-    f1 = float(2 * precision * recall / (precision + recall)) if (precision + recall) else 0.0
+    accuracy = (
+        float((true_positive + true_negative) / (positive_total + negative_total))
+        if (positive_total + negative_total)
+        else 0.0
+    )
+    f1 = (
+        float(2 * precision * recall / (precision + recall))
+        if (precision + recall)
+        else 0.0
+    )
 
     return {
         "threshold": round(resolved_threshold, 4),
@@ -282,7 +294,9 @@ def build_population_percentiles_payload(
         dtype=int,
     )
     if scores.size == 0:
-        raise ValueError("Population percentile payload requires at least one scored row.")
+        raise ValueError(
+            "Population percentile payload requires at least one scored row."
+        )
 
     score_grid = np.arange(SCORE_RANGE_MIN, SCORE_RANGE_MAX + 1, dtype=int)
     sorted_scores = np.sort(scores)
@@ -304,7 +318,9 @@ def build_population_percentiles_payload(
         "percentiles": percentiles.astype(int).tolist(),
         "score_to_percentile": {
             str(score): int(percentile)
-            for score, percentile in zip(score_grid.tolist(), percentiles.tolist(), strict=True)
+            for score, percentile in zip(
+                score_grid.tolist(), percentiles.tolist(), strict=True
+            )
         },
     }
 
@@ -325,7 +341,9 @@ def build_population_percentiles_report(
     return {
         "default_model_name": default_model_name,
         "available_models": sorted(model_payloads),
-        "models": {model_name: dict(payload) for model_name, payload in model_payloads.items()},
+        "models": {
+            model_name: dict(payload) for model_name, payload in model_payloads.items()
+        },
         **default_payload,
     }
 
@@ -396,7 +414,10 @@ def select_best_test_auc_model(
         model_name = item.get("model_name")
         if not isinstance(model_name, str):
             continue
-        if candidate_model_names is not None and model_name not in candidate_model_names:
+        if (
+            candidate_model_names is not None
+            and model_name not in candidate_model_names
+        ):
             continue
         try:
             auc_roc = float(item["auc_roc"])

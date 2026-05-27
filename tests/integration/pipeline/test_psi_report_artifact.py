@@ -1,9 +1,7 @@
-import pytest
-pytestmark = pytest.mark.slow
-
 import json
 
 import numpy as np
+import pytest
 
 from backend.app.core.artifact_loader import load_runtime_artifact_bundle
 from backend.app.core.settings import load_settings
@@ -17,6 +15,8 @@ from backend.ml.preprocessing.feature_registry import (
 )
 from backend.ml.training.classical.baselines import train_baselines
 from backend.ml.training.classical.train_classical import train_classical_models
+
+pytestmark = pytest.mark.slow
 
 
 def test_train_baselines_persists_sorted_psi_report_for_canonical_model_inputs(
@@ -105,7 +105,9 @@ def test_runtime_bundle_loading_still_succeeds_when_psi_report_is_present(
         logistic_artifact_path=model_root / "artifacts" / "logistic_best.pkl",
         baseline_metrics_path=model_root / "reports" / "baseline_metrics.json",
         metrics_path=model_root / "reports" / "metrics.json",
-        population_percentiles_path=model_root / "reports" / "population_percentiles.json",
+        population_percentiles_path=model_root
+        / "reports"
+        / "population_percentiles.json",
         psi_report_path=model_root / "reports" / "psi_report.json",
     )
     train_classical_models(
@@ -121,7 +123,10 @@ def test_runtime_bundle_loading_still_succeeds_when_psi_report_is_present(
         baseline_metrics_path=baseline_artifacts.baseline_metrics_path,
         metrics_path=baseline_artifacts.metrics_path,
         population_percentiles_path=baseline_artifacts.population_percentiles_path,
-        psi_report_path=baseline_artifacts.psi_report_path, fairness_report_path=None, global_importance_path=None, dice_explainer_path=None,
+        psi_report_path=baseline_artifacts.psi_report_path,
+        fairness_report_path=None,
+        global_importance_path=None,
+        dice_explainer_path=None,
         random_state=17,
     )
 

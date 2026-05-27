@@ -1,5 +1,4 @@
 import json
-from pathlib import Path
 import shutil
 
 from fastapi.testclient import TestClient
@@ -99,7 +98,9 @@ def test_checked_in_bundle_health_endpoint_reports_validated_optional_status() -
 
 def test_copied_checked_in_bundle_marks_invalid_optional_artifacts(tmp_path) -> None:
     settings = _copy_checked_in_runtime_bundle(tmp_path)
-    dice_path = settings.repo_root / "models" / "explainers" / "dice_explainer_monotonic.pkl"
+    dice_path = (
+        settings.repo_root / "models" / "explainers" / "dice_explainer_monotonic.pkl"
+    )
     dice_path.write_text("not-a-valid-dice-artifact", encoding="utf-8")
     app = create_app(settings)
 
@@ -130,7 +131,9 @@ def test_checked_in_bundle_global_importance_endpoint_serves_saved_payload() -> 
     assert payload.items[0].rank == 1
 
 
-def test_checked_in_bundle_fairness_endpoint_serves_refreshed_governance_payload() -> None:
+def test_checked_in_bundle_fairness_endpoint_serves_refreshed_governance_payload() -> (
+    None
+):
     settings = _repo_settings()
     app = create_app(settings)
 
@@ -167,7 +170,9 @@ def test_checked_in_bundle_score_endpoint_appends_to_runtime_log_path() -> None:
     else:
         assert isinstance(parsed.counterfactual_actions, list)
     assert all(item.display_name for item in parsed.explanation)
-    assert all(action.estimated_score_gain >= 0 for action in parsed.counterfactual_actions)
+    assert all(
+        action.estimated_score_gain >= 0 for action in parsed.counterfactual_actions
+    )
     assert log_path.is_file()
     assert log_path.parent == REQUEST_LOG_PATH.parent
 

@@ -155,9 +155,13 @@ def extract_nlp_features(text: str) -> dict[str, float | np.ndarray]:
             "_embedding_raw": np.zeros(RAW_EMBEDDING_DIM, dtype=float),
         }
 
-    sentiment = _extract_sentiment(text=text, normalized_text=normalized_text, tokens=tokens)
+    sentiment = _extract_sentiment(
+        text=text, normalized_text=normalized_text, tokens=tokens
+    )
     agency_score = _extract_agency_score(text=text, tokens=tokens)
-    problem_solving_flag = _extract_problem_solving_flag(normalized_text=normalized_text, tokens=tokens)
+    problem_solving_flag = _extract_problem_solving_flag(
+        normalized_text=normalized_text, tokens=tokens
+    )
     raw_embedding = extract_raw_text_embedding(text)
 
     return {
@@ -188,7 +192,9 @@ def extract_raw_text_embedding(text: str) -> np.ndarray:
     return _hashed_embedding(text)
 
 
-def extract_nlp_feature_batch(texts: Sequence[str]) -> tuple[list[dict[str, float]], np.ndarray]:
+def extract_nlp_feature_batch(
+    texts: Sequence[str],
+) -> tuple[list[dict[str, float]], np.ndarray]:
     """Extract the interpretable NLP features and raw embeddings for many texts."""
 
     feature_rows: list[dict[str, float]] = []
@@ -264,14 +270,19 @@ def _extract_agency_score(text: str, tokens: Sequence[str]) -> float:
     victim_hits = 0
 
     for index, token in enumerate(tokens):
-        is_verb_like = token in _AGENCY_VERBS or token in _VICTIM_TOKENS or token.endswith(("ed", "ing"))
+        is_verb_like = (
+            token in _AGENCY_VERBS
+            or token in _VICTIM_TOKENS
+            or token.endswith(("ed", "ing"))
+        )
         if not is_verb_like:
             continue
         total_verbs += 1
         if token in _VICTIM_TOKENS:
             victim_hits += 1
         if token in _AGENCY_VERBS and any(
-            previous_token in _FIRST_PERSON_TOKENS for previous_token in tokens[max(0, index - 3): index]
+            previous_token in _FIRST_PERSON_TOKENS
+            for previous_token in tokens[max(0, index - 3) : index]
         ):
             active_verbs += 1
 
@@ -338,12 +349,12 @@ def _validate_text_quality(text: str, tokens: list[str]) -> bool:
         char_counts: dict[str, int] = {}
         for char in cleaned_char_text:
             char_counts[char] = char_counts.get(char, 0) + 1
-        
+
         most_common_char = max(char_counts, key=char_counts.get)
         max_char_count = char_counts[most_common_char]
         max_char_ratio = max_char_count / len(cleaned_char_text)
-        
-        # Apply checks: 
+
+        # Apply checks:
         # A high ratio is allowed for short strings if the character is a common English vowel (avoiding false positives like "I had a bad day").
         # If it's a consonant or is extremely long, apply standard spam limits.
         if len(cleaned_char_text) > 10:

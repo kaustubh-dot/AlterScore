@@ -34,7 +34,9 @@ def validate_synthetic_dataset(
 ) -> dict[str, float | int]:
     """Run the required validation gates for the synthetic dataset."""
 
-    feature_list = list(ALL_MODEL_FEATURES if model_features is None else model_features)
+    feature_list = list(
+        ALL_MODEL_FEATURES if model_features is None else model_features
+    )
 
     assert_required_columns_present(dataset)
     assert_row_count(dataset, expected_row_count=expected_row_count)
@@ -57,12 +59,16 @@ def validate_synthetic_dataset(
 
 
 def assert_required_columns_present(dataset: pd.DataFrame) -> None:
-    missing_columns = [column for column in REQUIRED_DATASET_COLUMNS if column not in dataset.columns]
+    missing_columns = [
+        column for column in REQUIRED_DATASET_COLUMNS if column not in dataset.columns
+    ]
     if missing_columns:
         raise ValueError(f"Dataset is missing required columns: {missing_columns}")
 
 
-def assert_row_count(dataset: pd.DataFrame, expected_row_count: int = EXPECTED_ROW_COUNT) -> None:
+def assert_row_count(
+    dataset: pd.DataFrame, expected_row_count: int = EXPECTED_ROW_COUNT
+) -> None:
     if len(dataset) != expected_row_count:
         raise ValueError(
             f"Dataset row count must be {expected_row_count:,}; found {len(dataset):,}."
@@ -94,7 +100,9 @@ def assert_valid_cohort_months(dataset: pd.DataFrame) -> None:
     observed_months = set(dataset["cohort_month"].tolist())
     invalid_months = sorted(observed_months - VALID_COHORT_MONTHS)
     if invalid_months:
-        raise ValueError(f"Cohort month values must be between 1 and 12; found {invalid_months}.")
+        raise ValueError(
+            f"Cohort month values must be between 1 and 12; found {invalid_months}."
+        )
 
 
 def assert_minimum_test_rows(
@@ -109,19 +117,29 @@ def assert_minimum_test_rows(
     return test_rows
 
 
-def assert_protected_attributes_not_in_model_features(model_features: Sequence[str]) -> None:
+def assert_protected_attributes_not_in_model_features(
+    model_features: Sequence[str],
+) -> None:
     overlap = sorted(set(model_features) & set(PROTECTED_FEATURES))
     if overlap:
-        raise ValueError(f"Protected attributes cannot appear in model features: {overlap}")
+        raise ValueError(
+            f"Protected attributes cannot appear in model features: {overlap}"
+        )
 
 
-def assert_temporal_metadata_not_in_model_features(model_features: Sequence[str]) -> None:
+def assert_temporal_metadata_not_in_model_features(
+    model_features: Sequence[str],
+) -> None:
     overlap = sorted(set(model_features) & set(TEMPORAL_METADATA))
     if overlap:
-        raise ValueError(f"Temporal metadata cannot appear in model features: {overlap}")
+        raise ValueError(
+            f"Temporal metadata cannot appear in model features: {overlap}"
+        )
 
 
-def assert_target_not_in_model_features(model_features: Sequence[str], target: str = TARGET) -> None:
+def assert_target_not_in_model_features(
+    model_features: Sequence[str], target: str = TARGET
+) -> None:
     if target in model_features:
         raise ValueError(f"Target column '{target}' cannot appear in model features.")
 

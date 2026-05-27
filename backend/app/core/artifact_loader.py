@@ -79,7 +79,8 @@ RUNTIME_MODEL_CANDIDATES: Final[tuple[RuntimeModelCandidate, ...]] = (
     ),
 )
 RUNTIME_MODEL_CANDIDATE_FILENAMES: Final[dict[str, str]] = {
-    candidate.model_name: candidate.artifact_path.name for candidate in RUNTIME_MODEL_CANDIDATES
+    candidate.model_name: candidate.artifact_path.name
+    for candidate in RUNTIME_MODEL_CANDIDATES
 }
 SCORING_CRITICAL_ARTIFACTS: Final[tuple[str, ...]] = (
     "runtime_model",
@@ -200,7 +201,9 @@ def _load_runtime_artifact_bundle_impl(
     fairness_report_path = base_report.resolved_paths.get("fairness_report")
     psi_report_path = base_report.resolved_paths.get("psi_report")
     global_importance_path = base_report.resolved_paths.get("global_importance")
-    population_percentiles_path = base_report.resolved_paths.get("population_percentiles")
+    population_percentiles_path = base_report.resolved_paths.get(
+        "population_percentiles"
+    )
 
     model = _load_validated_artifact(
         artifact_key="runtime_model",
@@ -423,8 +426,6 @@ def _load_runtime_artifact_bundle_impl(
     )
 
 
-
-
 def _resolve_artifact_state(
     settings: Settings | None,
 ) -> tuple[ArtifactLoadReport, ProductionManifest | None]:
@@ -574,7 +575,8 @@ def _select_runtime_model_candidate(repo_root: Path) -> RuntimeModelCandidate | 
 
     metric_scores = _load_candidate_test_auc_by_model(repo_root)
     candidate_priority = {
-        candidate.model_name: index for index, candidate in enumerate(RUNTIME_MODEL_CANDIDATES)
+        candidate.model_name: index
+        for index, candidate in enumerate(RUNTIME_MODEL_CANDIDATES)
     }
 
     return min(
@@ -600,13 +602,16 @@ def _infer_runtime_model_metadata(
     return runtime_model_path.stem, "unknown"
 
 
-def _resolve_runtime_model_candidates(repo_root: Path) -> tuple[RuntimeModelCandidate, ...]:
+def _resolve_runtime_model_candidates(
+    repo_root: Path,
+) -> tuple[RuntimeModelCandidate, ...]:
     return tuple(
         RuntimeModelCandidate(
             model_name=candidate.model_name,
             model_type=candidate.model_type,
             artifact_path=resolve_repo_path(
-                Path("models/artifacts") / RUNTIME_MODEL_CANDIDATE_FILENAMES[candidate.model_name],
+                Path("models/artifacts")
+                / RUNTIME_MODEL_CANDIDATE_FILENAMES[candidate.model_name],
                 repo_root,
             ),
         )
@@ -692,7 +697,8 @@ def _finalize_artifact_report(
         invalid_artifacts=tuple(sorted(invalid_artifacts)),
         artifact_errors=dict(sorted(artifact_errors.items())),
         scoring_ready=all(
-            artifact_key in loaded_artifacts for artifact_key in required_scoring_artifacts
+            artifact_key in loaded_artifacts
+            for artifact_key in required_scoring_artifacts
         ),
     )
 
@@ -702,7 +708,9 @@ def _format_scoring_ready_error(
     *,
     required_artifacts: tuple[str, ...] | None = None,
 ) -> str:
-    required_scoring_artifacts = required_artifacts or _required_scoring_artifacts(report)
+    required_scoring_artifacts = required_artifacts or _required_scoring_artifacts(
+        report
+    )
     critical_missing = [
         artifact_key
         for artifact_key in required_scoring_artifacts
@@ -740,8 +748,6 @@ def _required_scoring_artifacts(report: ArtifactLoadReport) -> tuple[str, ...]:
 
 def _load_joblib(path: Path) -> Any:
     return joblib.load(path)
-
-
 
 
 def _load_json(path: Path) -> Any:
@@ -785,12 +791,16 @@ def _validate_stacking_config(payload: Any) -> None:
 
     base_model_order = payload.get("base_model_order")
     if not isinstance(base_model_order, list) or not base_model_order:
-        raise ValueError("stacking config must contain a non-empty base_model_order list.")
+        raise ValueError(
+            "stacking config must contain a non-empty base_model_order list."
+        )
     if any(
         not isinstance(model_name, str) or not model_name
         for model_name in base_model_order
     ):
-        raise ValueError("stacking config base_model_order entries must be non-empty strings.")
+        raise ValueError(
+            "stacking config base_model_order entries must be non-empty strings."
+        )
     if len(set(base_model_order)) != len(base_model_order):
         raise ValueError("stacking config base_model_order entries must be unique.")
 
@@ -910,7 +920,6 @@ def _validate_probability_matrix(model_name: str, probabilities: Any) -> None:
         raise ValueError(f"{model_name} predict_proba output must stay within [0, 1].")
 
 
-
 def _resolve_population_percentiles_payload(
     payload: Any | None,
     *,
@@ -928,7 +937,10 @@ def _resolve_population_percentiles_payload(
         if isinstance(runtime_model_name, str) and runtime_model_name in model_payloads
         else payload.get("default_model_name")
     )
-    if not isinstance(selected_model_name, str) or selected_model_name not in model_payloads:
+    if (
+        not isinstance(selected_model_name, str)
+        or selected_model_name not in model_payloads
+    ):
         return payload
 
     selected_payload = model_payloads.get(selected_model_name)

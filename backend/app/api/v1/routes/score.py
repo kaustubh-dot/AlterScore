@@ -13,7 +13,6 @@ from fastapi.responses import JSONResponse
 from backend.app.schemas.common import ErrorResponse
 from backend.app.schemas.score import ScoreRequest, ScoreResponse
 
-
 router = APIRouter(tags=["score"])
 logger = logging.getLogger(__name__)
 
@@ -26,7 +25,9 @@ logger = logging.getLogger(__name__)
         500: {"model": ErrorResponse},
     },
 )
-def score_request(request: Request, payload: ScoreRequest) -> ScoreResponse | JSONResponse:
+def score_request(
+    request: Request, payload: ScoreRequest
+) -> ScoreResponse | JSONResponse:
     scoring_service = request.app.state.scoring_service
     request_logging_service = request.app.state.request_logging_service
     request_id = payload.session_id
@@ -42,8 +43,12 @@ def score_request(request: Request, payload: ScoreRequest) -> ScoreResponse | JS
             ),
             request_id=request_id,
             details={
-                "missing_artifacts": list(request.app.state.artifact_bundle.report.missing_artifacts),
-                "invalid_artifacts": list(request.app.state.artifact_bundle.report.invalid_artifacts),
+                "missing_artifacts": list(
+                    request.app.state.artifact_bundle.report.missing_artifacts
+                ),
+                "invalid_artifacts": list(
+                    request.app.state.artifact_bundle.report.invalid_artifacts
+                ),
                 "artifact_errors": dict(
                     request.app.state.artifact_bundle.report.artifact_errors
                 ),
@@ -102,7 +107,9 @@ def score_request(request: Request, payload: ScoreRequest) -> ScoreResponse | JS
         500: {"model": ErrorResponse},
     },
 )
-def debug_score_request(request: Request, payload: ScoreRequest) -> dict[str, Any] | JSONResponse:
+def debug_score_request(
+    request: Request, payload: ScoreRequest
+) -> dict[str, Any] | JSONResponse:
     settings = request.app.state.settings
     if settings.environment != "local":
         return _error_response(
@@ -125,8 +132,12 @@ def debug_score_request(request: Request, payload: ScoreRequest) -> dict[str, An
             ),
             request_id=request_id,
             details={
-                "missing_artifacts": list(request.app.state.artifact_bundle.report.missing_artifacts),
-                "invalid_artifacts": list(request.app.state.artifact_bundle.report.invalid_artifacts),
+                "missing_artifacts": list(
+                    request.app.state.artifact_bundle.report.missing_artifacts
+                ),
+                "invalid_artifacts": list(
+                    request.app.state.artifact_bundle.report.invalid_artifacts
+                ),
                 "artifact_errors": dict(
                     request.app.state.artifact_bundle.report.artifact_errors
                 ),
@@ -144,7 +155,6 @@ def debug_score_request(request: Request, payload: ScoreRequest) -> dict[str, An
             request_id=request_id,
             details={"error_type": type(exc).__name__},
         )
-
 
 
 def _error_response(
@@ -166,7 +176,9 @@ def _error_response(
             }
         }
     )
-    return JSONResponse(status_code=status_code, content=payload.model_dump(mode="json"))
+    return JSONResponse(
+        status_code=status_code, content=payload.model_dump(mode="json")
+    )
 
 
 def _log_success(

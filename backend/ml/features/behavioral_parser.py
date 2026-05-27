@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any, Final
 
-
 BEHAVIORAL_FEATURES: Final[list[str]] = [
     "avg_response_time_ms",
     "answer_change_rate",
@@ -31,7 +30,9 @@ VALID_DEVICE_TYPES: Final[set[str]] = {
 }
 
 
-def parse_behavioral(behavioral: Mapping[str, Any] | Any) -> dict[str, float | int | str]:
+def parse_behavioral(
+    behavioral: Mapping[str, Any] | Any,
+) -> dict[str, float | int | str]:
     """Coerce raw telemetry into the canonical 9 behavioral model features."""
 
     values = _coerce_behavioral_mapping(behavioral)
@@ -145,8 +146,7 @@ def _coerce_categorical(
     normalized_value = str(value).strip().lower()
     if normalized_value not in valid_values:
         raise ValueError(
-            f"{field_name} must be one of {sorted(valid_values)}; "
-            f"found {value!r}."
+            f"{field_name} must be one of {sorted(valid_values)}; " f"found {value!r}."
         )
     return normalized_value
 

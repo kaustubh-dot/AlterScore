@@ -73,15 +73,18 @@ def test_load_settings_supports_environment_overrides(tmp_path: Path) -> None:
     assert settings.environment == "test"
     assert settings.api_version == "9.9.9"
     assert settings.repo_root == tmp_path.resolve()
-    assert settings.model_manifest_path == (
-        tmp_path / "models" / "registry" / "test_manifest.json"
-    ).resolve()
-    assert settings.runtime_model_path == (
-        tmp_path / "models" / "artifacts" / "logistic_best.pkl"
-    ).resolve()
-    assert settings.request_log_path == (
-        tmp_path / "runtime" / "logs" / "test_requests.jsonl"
-    ).resolve()
+    assert (
+        settings.model_manifest_path
+        == (tmp_path / "models" / "registry" / "test_manifest.json").resolve()
+    )
+    assert (
+        settings.runtime_model_path
+        == (tmp_path / "models" / "artifacts" / "logistic_best.pkl").resolve()
+    )
+    assert (
+        settings.request_log_path
+        == (tmp_path / "runtime" / "logs" / "test_requests.jsonl").resolve()
+    )
     assert settings.log_level == "DEBUG"
     assert settings.cors_origins == (
         "http://localhost:5173",

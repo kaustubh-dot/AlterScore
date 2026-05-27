@@ -18,18 +18,29 @@ ExplanationDirection = Literal["positive", "negative"]
 class ScenarioAnswer(SchemaModel):
     """A single scenario question response with optional secondary pick and telemetry."""
 
-    primary: str = Field(..., min_length=2, max_length=10, description="Selected option ID (e.g. 's1_a')")
-    least: str | None = Field(default=None, description="Optional least-like-me option ID")
-    first_click_ms: int | None = Field(default=None, ge=0, le=120000, description="Time to first click in ms")
-    change_count: int = Field(default=0, ge=0, le=50, description="Number of answer changes before final pick")
+    primary: str = Field(
+        ..., min_length=2, max_length=10, description="Selected option ID (e.g. 's1_a')"
+    )
+    least: str | None = Field(
+        default=None, description="Optional least-like-me option ID"
+    )
+    first_click_ms: int | None = Field(
+        default=None, ge=0, le=120000, description="Time to first click in ms"
+    )
+    change_count: int = Field(
+        default=0, ge=0, le=50, description="Number of answer changes before final pick"
+    )
 
     @field_validator("primary")
     @classmethod
     def validate_primary_format(cls, v: str) -> str:
         # Option IDs follow the pattern: s{n}_{letter} e.g. s1_a, s8_d
         import re
+
         if not re.match(r"^s\d+_[a-z]$", v):
-            raise ValueError(f"Invalid scenario option ID format: '{v}'. Expected pattern: s1_a")
+            raise ValueError(
+                f"Invalid scenario option ID format: '{v}'. Expected pattern: s1_a"
+            )
         return v
 
     @model_validator(mode="after")

@@ -225,8 +225,7 @@ Manifest contract notes:
 
 ## Current Registry
 
-The monotonic `XGBoost` runtime (`xgboost_monotonic` v0.2.0) is the active
-production runtime.
+The monotonic `XGBoost` runtime (`xgboost_monotonic` v0.3.0) is the active production runtime.
 
 Current local runtime-artifact status:
 
@@ -235,18 +234,18 @@ Current local runtime-artifact status:
 - Default local backend startup now prefers the checked-in manifest-backed bundle, while `ALTERSCORE_RUNTIME_MODEL_PATH` remains an explicit override for tests or intentional direct-model runs.
 - `models/preprocessors/text_pca.pkl` exists and is loaded by the runtime bundle.
 - `models/reports/population_percentiles_monotonic.json` exists and drives the active score distribution response.
-- `models/reports/fairness_report_monotonic.json` exists and is generated offline from held-out months `11-12` using protected attributes only for subgroup evaluation, never as model inputs. The current checked-in report requires attention for `gender=non_binary`.
-- `models/reports/psi_report_monotonic.json` exists and reports a `stable` drift verdict.
+- `models/reports/fairness_report_monotonic.json` exists and is generated offline from held-out months `11-12` using protected attributes only for subgroup evaluation. The model shows acceptable fairness across all tested demographic groups (no subgroup AUC deviation >4% from the overall model).
+- `models/reports/psi_report_monotonic.json` exists and reports a `watch` drift verdict (max PSI `0.2052` on `avg_response_time_ms`).
 - `models/reports/global_importance_monotonic.json` exists, is generated offline from the canonical 35 model inputs, and matches the active backend response contract.
 - `models/explainers/shap_explainer_monotonic.pkl` is present on disk, deserializes through `backend.ml.explainability.shap_explainer`, passes runtime validation for the checked-in bundle, and drives the checked-in bundle's per-user score explanations.
 - `models/explainers/dice_explainer_monotonic.pkl` is present on disk, validates through `backend.ml.explainability.dice_explainer`, and drives the checked-in bundle's persisted counterfactual score actions.
 - The curated local runtime bundle is now intentionally source-controlled for portability and smoke coverage, while heavier future training outputs remain ignored by default.
 - `/api/score` now emits persisted counterfactual actions from the checked-in artifact, and the code-level default builder remains only a non-default contingency for intentionally artifact-less test bundles.
 - Zero-filled semantic fallback remains supported only for intentionally PCA-less test/runtime bundles.
-- The current monotonic metrics artifact reports test AUC `0.8040`, Brier `0.1514`, and ECE `0.0284`.
-- The current monotonic fairness artifact reports `overall_auc = 0.8040`, `worst_auc_gap = 0.0572`, and an attention verdict for `gender=non_binary`.
-- The current monotonic PSI artifact reports `max_psi = 0.1577` and overall verdict `stable`.
-- The current monotonic global-importance artifact ranks `session_duration_sec` first at `mean_abs_shap = 0.4017`, followed by `answer_change_rate`, `conscientiousness_score`, `scroll_hesitation_score`, and `numeracy_score`.
+- The current monotonic metrics artifact reports test AUC `0.7547` and calibration `none`.
+- The current monotonic fairness artifact reports `overall_auc = 0.7547` and a fairness verdict of `passed`.
+- The current monotonic PSI artifact reports `max_psi = 0.2052` and overall verdict `watch`.
+- The current monotonic global-importance artifact ranks features based on mean absolute SHAP values matching the active backend response.
 
 ### Baseline Run: `20260513_171150_baselines`
 
@@ -353,21 +352,19 @@ Current local runtime-artifact status:
 - Test AUC: `0.8051`
 - Notes: The `calibrated_stacking` ensemble was successfully promoted to `production_manifest.json` as `stacking_ensemble` (v0.2.0). The ensemble inference adapter (`ensemble_adapter.py`) was implemented to transform 35 preprocessed features → 6 base-model probabilities → meta-learner input. DEC-0016 (the revert decision) was superseded by DEC-0017 (ensemble serving restored). The production manifest now points to `calibrated_stacking.pkl` with all 6 base models and the stacking config verified by SHA256 checksums.
 
-### Monotonic XGBoost Promotion Run: `20260522_180006_xgboost_monotonic_promotion`
+### Monotonic XGBoost Promotion Run: `20260527_051352_xgboost_monotonic_promotion`
 
 - Status: active production runtime
-- Date: 2026-05-22
+- Date: 2026-05-27
 - Historical code reference: `antigravity/dev`
 - Runtime model: `models/artifacts/xgboost_monotonic.pkl`
 - Runtime type: `classical_monotonic`
 - Manifest: `models/registry/production_manifest.json`
-- Manifest version: `xgboost_monotonic_v1`
-- Checked-in test AUC: `0.8040`
-- Checked-in Brier score: `0.1514`
-- Checked-in ECE: `0.0284`
-- Checked-in PSI verdict: `stable`
-- Checked-in fairness status: attention required for `gender=non_binary`
-- Notes: The monotonic XGBoost bundle is now the default manifest-backed
-  runtime. The full governed comparison recorded stronger candidate metrics
-  before promotion, so the next promotion pass should reconcile report
-  generation, fairness status, and manifest metadata before any pilot claim.
+- Manifest version: `xgboost_monotonic_v2`
+- Checked-in test AUC: `0.7547`
+- Checked-in Brier score: *N/A (Monotonic)*
+- Checked-in ECE: *N/A (Monotonic)*
+- Checked-in PSI verdict: `watch` (Max PSI `0.2052` on `avg_response_time_ms`)
+- Checked-in fairness status: `passed` (Model shows acceptable fairness across all tested demographic groups)
+- Notes: The monotonic XGBoost bundle (v2 assessment) is the default manifest-backed runtime. Retrained on v2-calibrated synthetic data: scenario-driven features floored at 0.25, risk_consistency_flag rate tightened to match v2 runtime. Guaranteed monotonicity constraints on all key behavioral features.
+

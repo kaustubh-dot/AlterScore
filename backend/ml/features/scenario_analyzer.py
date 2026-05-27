@@ -122,10 +122,16 @@ def analyze_scenario_responses(
             first_click_times.append(first_click_ms)
 
         if option_id is None or option_id not in _OPTION_CODEBOOK:
-            logger.debug("Scenario analyzer: unknown option_id '%s' for '%s'", option_id, scenario_id)
+            logger.debug(
+                "Scenario analyzer: unknown option_id '%s' for '%s'",
+                option_id,
+                scenario_id,
+            )
             continue
 
-        primary_feature, primary_value, secondary_feature, secondary_value = _OPTION_CODEBOOK[option_id]
+        primary_feature, primary_value, secondary_feature, secondary_value = (
+            _OPTION_CODEBOOK[option_id]
+        )
 
         for feature, value, weight in (
             (primary_feature, primary_value, _PRIMARY_WEIGHT),
@@ -177,13 +183,15 @@ def compute_scenario_enriched_features(
     consistency = analysis["scenario_consistency_score"]
 
     # Features that come from objective questions — never overridden by scenarios
-    OBJECTIVE_FEATURES = frozenset({
-        "numeracy_score",
-        "CRT_score",
-        "financial_literacy_score",
-        "honesty_score",
-        "risk_consistency_flag",    # no direct v2 question but not scenario-driven either
-    })
+    OBJECTIVE_FEATURES = frozenset(
+        {
+            "numeracy_score",
+            "CRT_score",
+            "financial_literacy_score",
+            "honesty_score",
+            "risk_consistency_flag",  # no direct v2 question but not scenario-driven either
+        }
+    )
 
     # Neutral prior sentinel: answer_parser sets 0.5 for features without a direct question
     NEUTRAL_PRIOR = 0.5
@@ -209,7 +217,6 @@ def compute_scenario_enriched_features(
     enriched["scenario_fast_gaming"] = float(analysis["fast_pattern_gaming"])
 
     return enriched
-
 
 
 def _compute_consistency_score(answer_values: dict[str, Any]) -> float:
@@ -274,9 +281,15 @@ def _extract_option_id(
         option_id = raw.get("primary")
         first_click_ms = raw.get("first_click_ms")
         option_id = str(option_id) if option_id else None
-        first_click_ms = float(first_click_ms) if isinstance(first_click_ms, (int, float)) else None
+        first_click_ms = (
+            float(first_click_ms) if isinstance(first_click_ms, (int, float)) else None
+        )
         return option_id, first_click_ms
-    logger.warning("Scenario analyzer: unexpected answer type '%s' for '%s'", type(raw).__name__, scenario_id)
+    logger.warning(
+        "Scenario analyzer: unexpected answer type '%s' for '%s'",
+        type(raw).__name__,
+        scenario_id,
+    )
     return None, None
 
 
@@ -285,7 +298,9 @@ def _coerce_mapping(value: Any) -> dict[str, Any]:
         return dict(value.model_dump())
     if isinstance(value, Mapping):
         return dict(value)
-    raise TypeError(f"answers must be a mapping or expose model_dump(), got {type(value).__name__}")
+    raise TypeError(
+        f"answers must be a mapping or expose model_dump(), got {type(value).__name__}"
+    )
 
 
 __all__ = [

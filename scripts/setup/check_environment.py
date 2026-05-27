@@ -6,7 +6,6 @@ import shutil
 import subprocess
 import sys
 
-
 SUPPORTED_PYTHON = (3, 12)
 MIN_NODE_MAJOR = 18
 
@@ -37,7 +36,9 @@ def main() -> int:
 
     node_path = shutil.which("node")
     if node_path is None:
-        warnings.append("Node.js was not found on PATH. Install Node.js 18+ for the frontend.")
+        warnings.append(
+            "Node.js was not found on PATH. Install Node.js 18+ for the frontend."
+        )
     else:
         try:
             completed = subprocess.run(
@@ -77,7 +78,9 @@ def main() -> int:
     else:
         print("- Node.js 18+ detected or not required for this step.")
     if sys.platform.startswith("win"):
-        print("- On Windows PowerShell, prefer `npm.cmd` instead of `npm` if script execution is blocked.")
+        print(
+            "- On Windows PowerShell, prefer `npm.cmd` instead of `npm` if script execution is blocked."
+        )
     return 0
 
 

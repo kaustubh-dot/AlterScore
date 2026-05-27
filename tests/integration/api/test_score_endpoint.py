@@ -20,7 +20,9 @@ def _load_valid_score_payload() -> dict:
     )
 
 
-def test_score_endpoint_returns_schema_valid_runtime_response(trained_model_dir) -> None:
+def test_score_endpoint_returns_schema_valid_runtime_response(
+    trained_model_dir,
+) -> None:
     settings = build_runtime_settings(trained_model_dir)
     payload = _load_valid_score_payload()
     app = create_app(settings)
@@ -36,7 +38,9 @@ def test_score_endpoint_returns_schema_valid_runtime_response(trained_model_dir)
     assert 0 <= parsed.percentile <= 100
     assert parsed.explanation == []
     assert parsed.counterfactual_actions
-    assert all(action.estimated_score_gain >= 0 for action in parsed.counterfactual_actions)
+    assert all(
+        action.estimated_score_gain >= 0 for action in parsed.counterfactual_actions
+    )
     assert parsed.loan_eligibility.band == parsed.risk_band
     assert parsed.improvement_tips
 
@@ -80,8 +84,14 @@ def test_debug_score_endpoint_returns_pipeline_breakdown(trained_model_dir) -> N
 
     assert response.status_code == 200
     parsed = response.json()
-    assert parsed["raw_input"]["answers"]["numeracy_q1"] == payload["answers"]["numeracy_q1"]
-    assert parsed["validated_request"]["behavioral"]["device_type"] == payload["behavioral"]["device_type"]
+    assert (
+        parsed["raw_input"]["answers"]["numeracy_q1"]
+        == payload["answers"]["numeracy_q1"]
+    )
+    assert (
+        parsed["validated_request"]["behavioral"]["device_type"]
+        == payload["behavioral"]["device_type"]
+    )
     assert parsed["feature_names"]
     assert parsed["preprocessing"]["transformed_feature_vector"]
     assert parsed["model_debug"]["repayment_probability"] >= 0.0
@@ -89,7 +99,10 @@ def test_debug_score_endpoint_returns_pipeline_breakdown(trained_model_dir) -> N
         assert "runtime_mitigation" in parsed["model_debug"]
         assert "ensemble_probabilities_before_mitigation" in parsed["model_debug"]
     assert parsed["score_mapping"]["final_credit_score"] >= 300
-    assert parsed["final_score"]["credit_score"] == parsed["score_mapping"]["final_credit_score"]
+    assert (
+        parsed["final_score"]["credit_score"]
+        == parsed["score_mapping"]["final_credit_score"]
+    )
     assert "explanation_generation_inputs" in parsed
 
 
@@ -112,7 +125,9 @@ def test_debug_score_endpoint_returns_404_in_production(trained_model_dir) -> No
     assert parsed["error"]["code"] == "DEBUG_NOT_AVAILABLE"
 
 
-def test_score_endpoint_returns_sanitized_500_and_logs_failure(trained_model_dir) -> None:
+def test_score_endpoint_returns_sanitized_500_and_logs_failure(
+    trained_model_dir,
+) -> None:
     class FailingScoringService:
         def score_request(self, payload) -> ScoreResponse:
             raise RuntimeError("boom")
@@ -141,7 +156,9 @@ def test_score_endpoint_returns_sanitized_500_and_logs_failure(trained_model_dir
     assert entries[0]["details"] == {"error_type": "RuntimeError"}
 
 
-def test_score_endpoint_returns_structured_503_when_artifacts_are_missing(tmp_path) -> None:
+def test_score_endpoint_returns_structured_503_when_artifacts_are_missing(
+    tmp_path,
+) -> None:
     settings = load_settings(
         {
             "ALTERSCORE_REPO_ROOT": str(tmp_path),

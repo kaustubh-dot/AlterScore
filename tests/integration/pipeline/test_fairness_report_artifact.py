@@ -1,7 +1,6 @@
-import pytest
-pytestmark = pytest.mark.slow
-
 import json
+
+import pytest
 
 from backend.app.core.artifact_loader import load_runtime_artifact_bundle
 from backend.app.core.settings import load_settings
@@ -10,6 +9,8 @@ from backend.ml.data_generation.generator import generate_synthetic_dataset
 from backend.ml.preprocessing.feature_registry import PROTECTED_FEATURES
 from backend.ml.training.classical.baselines import train_baselines
 from backend.ml.training.classical.train_classical import train_classical_models
+
+pytestmark = pytest.mark.slow
 
 
 def test_train_baselines_persists_fairness_report_with_guarded_subgroup_metrics(
@@ -65,7 +66,13 @@ def test_train_baselines_persists_fairness_report_with_guarded_subgroup_metrics(
         for _, _, group_metrics in subgroup_rows
     )
     assert report.worst_auc_gap == max(
-        [0.0, *[group_metrics.auc_gap_from_overall for _, _, group_metrics in subgroup_rows]]
+        [
+            0.0,
+            *[
+                group_metrics.auc_gap_from_overall
+                for _, _, group_metrics in subgroup_rows
+            ],
+        ]
     )
     assert sorted(report.flagged_groups) == expected_flagged_groups
     assert set(report.calibration_parity.groups) == set(PROTECTED_FEATURES)
@@ -134,7 +141,9 @@ def test_train_classical_models_persists_fairness_report_and_runtime_loading_sti
         logistic_artifact_path=model_root / "artifacts" / "logistic_best.pkl",
         baseline_metrics_path=model_root / "reports" / "baseline_metrics.json",
         metrics_path=model_root / "reports" / "metrics.json",
-        population_percentiles_path=model_root / "reports" / "population_percentiles.json",
+        population_percentiles_path=model_root
+        / "reports"
+        / "population_percentiles.json",
         psi_report_path=model_root / "reports" / "psi_report.json",
         fairness_report_path=model_root / "reports" / "fairness_report.json",
         global_importance_path=model_root / "reports" / "global_importance.json",

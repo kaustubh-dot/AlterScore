@@ -100,10 +100,12 @@ def build_ensemble_meta_features(
         meta_features_list.append(positive_class_probability)
 
     raw_meta_features_matrix = np.column_stack(meta_features_list)
-    adjusted_meta_features_matrix, mitigation_debug = _apply_tabnet_disagreement_mitigation(
-        raw_meta_features_matrix,
-        base_model_order=bundle.base_model_order,
-        stacking_config=bundle.stacking_config,
+    adjusted_meta_features_matrix, mitigation_debug = (
+        _apply_tabnet_disagreement_mitigation(
+            raw_meta_features_matrix,
+            base_model_order=bundle.base_model_order,
+            stacking_config=bundle.stacking_config,
+        )
     )
     return EnsembleMetaFeatures(
         raw_base_probabilities=raw_base_probabilities,
@@ -128,7 +130,9 @@ def predict_ensemble_proba(
     """
     meta_features = build_ensemble_meta_features(bundle, processed_features)
     return np.asarray(
-        bundle.stacking_model.predict_proba(meta_features.adjusted_meta_features_matrix),
+        bundle.stacking_model.predict_proba(
+            meta_features.adjusted_meta_features_matrix
+        ),
         dtype=float,
     )
 
@@ -140,7 +144,9 @@ def _apply_tabnet_disagreement_mitigation(
     stacking_config: dict[str, Any],
 ) -> tuple[np.ndarray, dict[str, Any]]:
     config = _resolve_tabnet_mitigation_config(stacking_config)
-    adjusted_meta_features_matrix = np.asarray(raw_meta_features_matrix, dtype=float).copy()
+    adjusted_meta_features_matrix = np.asarray(
+        raw_meta_features_matrix, dtype=float
+    ).copy()
 
     if "tabnet" not in base_model_order:
         return adjusted_meta_features_matrix, {
@@ -149,7 +155,9 @@ def _apply_tabnet_disagreement_mitigation(
         }
 
     tabnet_index = base_model_order.index("tabnet")
-    peer_indices = [index for index, name in enumerate(base_model_order) if name != "tabnet"]
+    peer_indices = [
+        index for index, name in enumerate(base_model_order) if name != "tabnet"
+    ]
     peer_meta_features = adjusted_meta_features_matrix[:, peer_indices]
     peer_mean_probability = np.mean(peer_meta_features, axis=1)
     raw_tabnet_probability = adjusted_meta_features_matrix[:, tabnet_index].copy()
@@ -197,7 +205,9 @@ def _apply_tabnet_disagreement_mitigation(
     }
 
 
-def _resolve_tabnet_mitigation_config(stacking_config: dict[str, Any]) -> TabNetMitigationConfig:
+def _resolve_tabnet_mitigation_config(
+    stacking_config: dict[str, Any],
+) -> TabNetMitigationConfig:
     mitigation_payload = stacking_config.get("tabnet_mitigation")
     if not isinstance(mitigation_payload, dict):
         return TabNetMitigationConfig()
@@ -205,7 +215,9 @@ def _resolve_tabnet_mitigation_config(stacking_config: dict[str, Any]) -> TabNet
     return TabNetMitigationConfig(
         enabled=bool(mitigation_payload.get("enabled", True)),
         min_peer_confidence=float(mitigation_payload.get("min_peer_confidence", 0.80)),
-        disagreement_threshold=float(mitigation_payload.get("disagreement_threshold", 0.25)),
+        disagreement_threshold=float(
+            mitigation_payload.get("disagreement_threshold", 0.25)
+        ),
         max_blend_weight=float(mitigation_payload.get("max_blend_weight", 0.75)),
     )
 
@@ -219,7 +231,9 @@ def _extract_positive_class_probability(
         return probabilities[:, 1]
     if probabilities.ndim == 1:
         return probabilities
-    raise ValueError(f"Unexpected probability shape {probabilities.shape} from {model_name}.")
+    raise ValueError(
+        f"Unexpected probability shape {probabilities.shape} from {model_name}."
+    )
 
 
 def predict_base_model_proba(model: Any, processed_features: np.ndarray) -> np.ndarray:
@@ -236,7 +250,9 @@ def predict_base_model_proba(model: Any, processed_features: np.ndarray) -> np.n
             device = next(model.parameters()).device
         except StopIteration:
             device = torch.device("cpu")
-        tensor_features = torch.tensor(processed_features, dtype=torch.float32).to(device)
+        tensor_features = torch.tensor(processed_features, dtype=torch.float32).to(
+            device
+        )
         with torch.no_grad():
             output = model(tensor_features)
             return output.cpu().numpy().astype(float)
@@ -245,6 +261,7 @@ def predict_base_model_proba(model: Any, processed_features: np.ndarray) -> np.n
         f"Base model of type {type(model).__name__} does not expose predict_proba() "
         "and is not a PyTorch Module."
     )
+
 
 __all__ = [
     "EnsembleInferenceBundle",

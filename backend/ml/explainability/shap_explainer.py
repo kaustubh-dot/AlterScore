@@ -28,7 +28,9 @@ class PersistedShapExplainer:
         default_factory=lambda: np.asarray([], dtype=float)
     )
     background_size: int = 0
-    coefficients: np.ndarray = field(default_factory=lambda: np.asarray([], dtype=float))
+    coefficients: np.ndarray = field(
+        default_factory=lambda: np.asarray([], dtype=float)
+    )
     shap_explainer: Any | None = None
 
     def validate(
@@ -39,17 +41,29 @@ class PersistedShapExplainer:
         """Raise ``ValueError`` if the persisted payload is not runtime-usable."""
 
         if not isinstance(self.model_name, str) or not self.model_name:
-            raise ValueError("Persisted SHAP explainer must define a non-empty model_name.")
+            raise ValueError(
+                "Persisted SHAP explainer must define a non-empty model_name."
+            )
         if not isinstance(self.algorithm, str) or not self.algorithm:
-            raise ValueError("Persisted SHAP explainer must define a non-empty algorithm.")
+            raise ValueError(
+                "Persisted SHAP explainer must define a non-empty algorithm."
+            )
 
         resolved_feature_names = tuple(self.feature_names)
         if not resolved_feature_names:
             raise ValueError("Persisted SHAP explainer must contain feature names.")
-        if any(not isinstance(feature_name, str) or not feature_name for feature_name in resolved_feature_names):
-            raise ValueError("Persisted SHAP explainer feature names must be non-empty strings.")
+        if any(
+            not isinstance(feature_name, str) or not feature_name
+            for feature_name in resolved_feature_names
+        ):
+            raise ValueError(
+                "Persisted SHAP explainer feature names must be non-empty strings."
+            )
 
-        if expected_feature_names is not None and tuple(expected_feature_names) != resolved_feature_names:
+        if (
+            expected_feature_names is not None
+            and tuple(expected_feature_names) != resolved_feature_names
+        ):
             raise ValueError(
                 "Persisted SHAP explainer feature names do not match the canonical feature order."
             )
@@ -73,7 +87,9 @@ class PersistedShapExplainer:
         if not np.isfinite(coefficients).all():
             raise ValueError("Persisted SHAP explainer coefficients must be finite.")
         if int(self.background_size) < 1:
-            raise ValueError("Persisted SHAP explainer background_size must be at least 1.")
+            raise ValueError(
+                "Persisted SHAP explainer background_size must be at least 1."
+            )
 
         if self.algorithm == "exact_linear_shap":
             return
@@ -83,13 +99,17 @@ class PersistedShapExplainer:
                 "Unsupported persisted SHAP algorithm without a backing explainer object."
             )
 
-    def explain_processed_row(self, processed_row: Sequence[float] | np.ndarray) -> np.ndarray:
+    def explain_processed_row(
+        self, processed_row: Sequence[float] | np.ndarray
+    ) -> np.ndarray:
         """Return per-feature SHAP-like contributions for one processed row."""
 
         self.validate()
         processed = np.asarray(processed_row, dtype=float)
         if processed.ndim != 1:
-            raise ValueError("Processed SHAP explanation input must be one-dimensional.")
+            raise ValueError(
+                "Processed SHAP explanation input must be one-dimensional."
+            )
         if len(processed) != len(self.feature_names):
             raise ValueError(
                 "Processed SHAP explanation input does not match the persisted feature count."
@@ -111,7 +131,9 @@ class PersistedShapExplainer:
         self.validate()
         processed = np.asarray(processed_features, dtype=float)
         if processed.ndim != 2:
-            raise ValueError("Processed SHAP explanation input must be two-dimensional.")
+            raise ValueError(
+                "Processed SHAP explanation input must be two-dimensional."
+            )
         if processed.shape[1] != len(self.feature_names):
             raise ValueError(
                 "Processed SHAP explanation matrix does not match the persisted feature count."
@@ -119,9 +141,9 @@ class PersistedShapExplainer:
         if not np.isfinite(processed).all():
             raise ValueError("Processed SHAP explanation matrix must be finite.")
 
-        return (
-            processed - np.asarray(self.background_mean, dtype=float)
-        ) * np.asarray(self.coefficients, dtype=float)
+        return (processed - np.asarray(self.background_mean, dtype=float)) * np.asarray(
+            self.coefficients, dtype=float
+        )
 
 
 def load_persisted_shap_explainer(

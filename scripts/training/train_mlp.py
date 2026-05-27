@@ -33,11 +33,21 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--dataset-path", type=Path, default=DEFAULT_DATASET_PATH)
     parser.add_argument("--expected-row-count", type=int, default=None)
     parser.add_argument("--minimum-test-rows", type=int, default=1_000)
-    parser.add_argument("--preprocessor-path", type=Path, default=DEFAULT_PREPROCESSOR_ARTIFACT_PATH)
-    parser.add_argument("--text-pca-path", type=Path, default=DEFAULT_TEXT_PCA_ARTIFACT_PATH)
-    parser.add_argument("--mlp-model-path", type=Path, default=DEFAULT_MLP_ARTIFACT_PATH)
+    parser.add_argument(
+        "--preprocessor-path", type=Path, default=DEFAULT_PREPROCESSOR_ARTIFACT_PATH
+    )
+    parser.add_argument(
+        "--text-pca-path", type=Path, default=DEFAULT_TEXT_PCA_ARTIFACT_PATH
+    )
+    parser.add_argument(
+        "--mlp-model-path", type=Path, default=DEFAULT_MLP_ARTIFACT_PATH
+    )
     parser.add_argument("--metrics-path", type=Path, default=DEFAULT_METRICS_PATH)
-    parser.add_argument("--population-percentiles-path", type=Path, default=DEFAULT_POPULATION_PERCENTILES_PATH)
+    parser.add_argument(
+        "--population-percentiles-path",
+        type=Path,
+        default=DEFAULT_POPULATION_PERCENTILES_PATH,
+    )
     parser.add_argument("--random-state", type=int, default=42)
     parser.add_argument("--max-epochs", type=int, default=_MLP_MAX_EPOCHS)
     parser.add_argument("--patience", type=int, default=_MLP_PATIENCE)
@@ -63,9 +73,19 @@ def main(argv: list[str] | None = None) -> int:
         json.dumps(
             {
                 "run_id": artifacts.run_id,
-                "mlp_artifact_path": str(artifacts.mlp_artifact_path) if artifacts.mlp_artifact_path else None,
-                "metrics_path": str(artifacts.metrics_path) if artifacts.metrics_path else None,
-                "population_percentiles_path": str(artifacts.population_percentiles_path) if artifacts.population_percentiles_path else None,
+                "mlp_artifact_path": (
+                    str(artifacts.mlp_artifact_path)
+                    if artifacts.mlp_artifact_path
+                    else None
+                ),
+                "metrics_path": (
+                    str(artifacts.metrics_path) if artifacts.metrics_path else None
+                ),
+                "population_percentiles_path": (
+                    str(artifacts.population_percentiles_path)
+                    if artifacts.population_percentiles_path
+                    else None
+                ),
                 "test_auc_roc": {
                     m["model_name"]: m["auc_roc"]
                     for m in artifacts.model_stats

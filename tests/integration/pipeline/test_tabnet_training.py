@@ -17,13 +17,11 @@ All tests use tmp_path so no artifacts escape to the real models/ directory.
 from __future__ import annotations
 
 import json
-from unittest.mock import patch
 
 import numpy as np
 import pytest
 
 from backend.ml.data_generation.generator import generate_synthetic_dataset
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -37,6 +35,7 @@ def _try_import_tabnet() -> bool:
     """Return True if pytorch-tabnet is importable in the current environment."""
     try:
         import pytorch_tabnet  # noqa: F401  # type: ignore[import]
+
         return True
     except ImportError:
         return False
@@ -47,7 +46,7 @@ pytestmark = [
     pytest.mark.skipif(
         not _try_import_tabnet(),
         reason="pytorch-tabnet is not installed; skipping neural training smoke tests.",
-    )
+    ),
 ]
 
 
@@ -75,7 +74,6 @@ def test_train_tabnet_smoke_roundtrip(tmp_path, monkeypatch) -> None:
         load_tabnet_model,
         train_tabnet,
     )
-    from backend.ml.preprocessing.pipeline import transform_features, fit_preprocessor
     from backend.ml.preprocessing.pipeline import (
         align_text_features_from_raw_text,
         prepare_temporal_data,
@@ -100,9 +98,9 @@ def test_train_tabnet_smoke_roundtrip(tmp_path, monkeypatch) -> None:
 
     # --- artifact paths and files ---
     assert artifacts.tabnet_artifact_path is not None
-    assert artifacts.tabnet_artifact_path.is_file(), (
-        f"Expected TabNet .zip at {artifacts.tabnet_artifact_path}"
-    )
+    assert (
+        artifacts.tabnet_artifact_path.is_file()
+    ), f"Expected TabNet .zip at {artifacts.tabnet_artifact_path}"
     assert artifacts.tabnet_artifact_path.suffix == ".zip"
 
     # --- probability arrays ---
@@ -127,11 +125,15 @@ def test_train_tabnet_smoke_roundtrip(tmp_path, monkeypatch) -> None:
     assert "test_months_11_12" in splits_present
 
     # --- threshold consistency: test split uses validation-derived threshold ---
-    val_row = next(r for r in artifacts.model_stats if r["split"] == "validation_months_9_10")
-    test_row = next(r for r in artifacts.model_stats if r["split"] == "test_months_11_12")
-    assert val_row["threshold"] == test_row["threshold"], (
-        "Test split must use the validation-derived threshold."
+    val_row = next(
+        r for r in artifacts.model_stats if r["split"] == "validation_months_9_10"
     )
+    test_row = next(
+        r for r in artifacts.model_stats if r["split"] == "test_months_11_12"
+    )
+    assert (
+        val_row["threshold"] == test_row["threshold"]
+    ), "Test split must use the validation-derived threshold."
 
     # --- metrics.json ---
     assert artifacts.metrics_path is not None
@@ -140,7 +142,9 @@ def test_train_tabnet_smoke_roundtrip(tmp_path, monkeypatch) -> None:
     assert "model_stats" in metrics_payload
     assert "evaluation_details" in metrics_payload
     tabnet_model_stats = [
-        r for r in metrics_payload["model_stats"] if r["model_name"] == TABNET_MODEL_NAME
+        r
+        for r in metrics_payload["model_stats"]
+        if r["model_name"] == TABNET_MODEL_NAME
     ]
     assert len(tabnet_model_stats) == 2
 
@@ -160,19 +164,20 @@ def test_train_tabnet_smoke_roundtrip(tmp_path, monkeypatch) -> None:
     aligned_dataset, raw_text_embeddings = align_text_features_from_raw_text(
         dataset.copy()
     )
-    prepared = prepare_temporal_data(
+    prepare_temporal_data(
         aligned_dataset,
         raw_text_embeddings=raw_text_embeddings,
         text_pca_random_state=_SEED,
         text_pca_artifact_path=None,
     )
     import joblib
+
     preprocessor = joblib.load(tmp_path / "preprocessor.pkl")
     import joblib as _jl
+
     text_pca = _jl.load(tmp_path / "text_pca.pkl")
     from backend.ml.preprocessing.pipeline import apply_text_pca
     from backend.ml.preprocessing.pipeline import (
-        DEFAULT_PREPROCESSOR_ARTIFACT_PATH,
         prepare_model_feature_frame,
     )
     from backend.ml.preprocessing.feature_registry import ALL_MODEL_FEATURES
@@ -331,8 +336,6 @@ def test_tabnet_save_produces_zip_artifact(tmp_path, monkeypatch) -> None:
 
 def test_train_tabnet_import_guard() -> None:
     """ImportError for pytorch-tabnet surfaces as a clear RuntimeError."""
-    import importlib
-    import sys
     import backend.ml.training.neural.train_tabnet as _mod
 
     original_assert = _mod._assert_tabnet_available

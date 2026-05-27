@@ -8,7 +8,6 @@ from fastapi import APIRouter, Request
 
 from backend.app.schemas.analytics import HealthResponse
 
-
 router = APIRouter(tags=["health"])
 
 
@@ -18,7 +17,11 @@ def get_health(request: Request) -> HealthResponse:
     artifact_bundle = request.app.state.artifact_bundle
     report = artifact_bundle.report
 
-    if report.scoring_ready and not report.missing_artifacts and not report.invalid_artifacts:
+    if (
+        report.scoring_ready
+        and not report.missing_artifacts
+        and not report.invalid_artifacts
+    ):
         status = "ok"
     elif report.scoring_ready:
         status = "degraded"

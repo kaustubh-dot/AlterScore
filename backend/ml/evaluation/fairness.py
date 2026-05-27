@@ -71,7 +71,9 @@ def build_fairness_report(
             "protected_frame row count must match the supplied targets and probabilities."
         )
     if ((y_prob_array < 0.0) | (y_prob_array > 1.0)).any():
-        raise ValueError("Fairness report probabilities must stay within the [0, 1] range.")
+        raise ValueError(
+            "Fairness report probabilities must stay within the [0, 1] range."
+        )
 
     overall_auc = _safe_roc_auc_score(y_true_array, y_prob_array)
     scores = np.asarray(
@@ -115,7 +117,9 @@ def build_fairness_report(
                 f"Protected fairness column '{attribute_name}' is missing from the dataset."
             )
 
-        attribute_values = protected_frame[attribute_name].fillna("__MISSING__").astype(str)
+        attribute_values = (
+            protected_frame[attribute_name].fillna("__MISSING__").astype(str)
+        )
         attribute_payload: dict[str, Any] = {}
 
         for group_value in sorted(attribute_values.unique().tolist()):
@@ -184,7 +188,10 @@ def build_fairness_report_for_candidate_probabilities(
         model_stats,
         candidate_model_names=set(candidate_probabilities),
     )
-    if selected_model_name is None or selected_model_name not in candidate_probabilities:
+    if (
+        selected_model_name is None
+        or selected_model_name not in candidate_probabilities
+    ):
         selected_model_name = sorted(candidate_probabilities)[0]
 
     return (
@@ -221,7 +228,9 @@ def build_calibration_parity_report(
     skipped_group_count = 0
 
     for attribute_name in PROTECTED_FEATURES:
-        attribute_values = protected_frame[attribute_name].fillna("__MISSING__").astype(str)
+        attribute_values = (
+            protected_frame[attribute_name].fillna("__MISSING__").astype(str)
+        )
         attribute_payload: dict[str, Any] = {}
 
         for group_value in sorted(attribute_values.unique().tolist()):
@@ -339,9 +348,9 @@ def build_individual_fairness_proxy(
     normalized_features = feature_matrix / row_norms[nonzero_mask, None]
     score_subset = score_array[sampled_positions][nonzero_mask]
     protected_subset = protected_frame.iloc[sampled_positions].reset_index(drop=True)
-    protected_subset = protected_subset.loc[nonzero_mask, PROTECTED_FEATURES].reset_index(
-        drop=True
-    )
+    protected_subset = protected_subset.loc[
+        nonzero_mask, PROTECTED_FEATURES
+    ].reset_index(drop=True)
 
     similarities = normalized_features @ normalized_features.T
     upper_triangle = np.triu(np.ones_like(similarities, dtype=bool), k=1)
@@ -483,7 +492,9 @@ def _validate_fairness_inputs(
             "protected_frame row count must match the supplied targets and probabilities."
         )
     if ((y_prob < 0.0) | (y_prob > 1.0)).any():
-        raise ValueError("Fairness report probabilities must stay within the [0, 1] range.")
+        raise ValueError(
+            "Fairness report probabilities must stay within the [0, 1] range."
+        )
     for attribute_name in PROTECTED_FEATURES:
         if attribute_name not in protected_frame.columns:
             raise ValueError(

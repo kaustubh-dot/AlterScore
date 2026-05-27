@@ -33,7 +33,10 @@ from backend.app.core.paths import (
     MODEL_REGISTRY_DIR,
     RAW_DATA_DIR,
 )
-from backend.ml.data_generation.validators import MINIMUM_TEST_ROWS, validate_synthetic_dataset
+from backend.ml.data_generation.validators import (
+    MINIMUM_TEST_ROWS,
+    validate_synthetic_dataset,
+)
 from backend.ml.evaluation.fairness import (
     build_fairness_report_for_candidate_probabilities,
     save_fairness_report,
@@ -55,7 +58,6 @@ from backend.ml.preprocessing.pipeline import (
 )
 from backend.ml.registry.production_manifest import compute_file_sha256
 from backend.ml.training.classical.baselines import (
-    DEFAULT_LOGISTIC_ARTIFACT_PATH,
     DEFAULT_METRICS_PATH,
     DEFAULT_POPULATION_PERCENTILES_PATH,
     train_baselines,
@@ -77,13 +79,19 @@ from backend.ml.training.neural.train_tabnet import train_tabnet
 # ---------------------------------------------------------------------------
 
 DEFAULT_DATASET_PATH: Final[Path] = RAW_DATA_DIR / "synthetic_dataset.csv"
-DEFAULT_STACKING_ARTIFACT_PATH: Final[Path] = MODEL_ARTIFACTS_DIR / "calibrated_stacking.pkl"
-DEFAULT_STACKING_CONFIG_PATH: Final[Path] = MODEL_ARTIFACTS_DIR / "calibrated_stacking_config.json"
+DEFAULT_STACKING_ARTIFACT_PATH: Final[Path] = (
+    MODEL_ARTIFACTS_DIR / "calibrated_stacking.pkl"
+)
+DEFAULT_STACKING_CONFIG_PATH: Final[Path] = (
+    MODEL_ARTIFACTS_DIR / "calibrated_stacking_config.json"
+)
 DEFAULT_PREPROCESSOR_PATH: Final[Path] = MODEL_PREPROCESSORS_DIR / "preprocessor.pkl"
 DEFAULT_TEXT_PCA_PATH: Final[Path] = MODEL_PREPROCESSORS_DIR / "text_pca.pkl"
 DEFAULT_SHAP_EXPLAINER_PATH: Final[Path] = MODEL_EXPLAINERS_DIR / "shap_explainer.pkl"
 DEFAULT_DICE_EXPLAINER_PATH: Final[Path] = MODEL_EXPLAINERS_DIR / "dice_explainer.pkl"
-DEFAULT_GLOBAL_IMPORTANCE_PATH: Final[Path] = MODEL_REPORTS_DIR / "global_importance.json"
+DEFAULT_GLOBAL_IMPORTANCE_PATH: Final[Path] = (
+    MODEL_REPORTS_DIR / "global_importance.json"
+)
 DEFAULT_FAIRNESS_REPORT_PATH: Final[Path] = MODEL_REPORTS_DIR / "fairness_report.json"
 DEFAULT_PSI_REPORT_PATH: Final[Path] = MODEL_REPORTS_DIR / "psi_report.json"
 DEFAULT_MANIFEST_PATH: Final[Path] = MODEL_REGISTRY_DIR / "production_manifest.json"
@@ -160,16 +168,42 @@ def promote_ensemble(
 
     validate_synthetic_dataset(
         dataset,
-        expected_row_count=expected_row_count if expected_row_count is not None else len(dataset),
+        expected_row_count=(
+            expected_row_count if expected_row_count is not None else len(dataset)
+        ),
         minimum_test_rows=minimum_test_rows,
     )
 
-    logi_path = Path(logistic_artifact_path) if logistic_artifact_path else MODEL_ARTIFACTS_DIR / "logistic_best.pkl"
-    rf_path = Path(random_forest_artifact_path) if random_forest_artifact_path else MODEL_ARTIFACTS_DIR / "rf_best.pkl"
-    xgb_path = Path(xgboost_artifact_path) if xgboost_artifact_path else MODEL_ARTIFACTS_DIR / "xgb_best.pkl"
-    lgbm_path = Path(lightgbm_artifact_path) if lightgbm_artifact_path else MODEL_ARTIFACTS_DIR / "lgbm_best.pkl"
-    tabnet_path = Path(tabnet_artifact_path) if tabnet_artifact_path else MODEL_ARTIFACTS_DIR / "tabnet_epoch_best.zip"
-    mlp_path = Path(mlp_artifact_path) if mlp_artifact_path else MODEL_ARTIFACTS_DIR / "mlp_best.pt"
+    logi_path = (
+        Path(logistic_artifact_path)
+        if logistic_artifact_path
+        else MODEL_ARTIFACTS_DIR / "logistic_best.pkl"
+    )
+    rf_path = (
+        Path(random_forest_artifact_path)
+        if random_forest_artifact_path
+        else MODEL_ARTIFACTS_DIR / "rf_best.pkl"
+    )
+    xgb_path = (
+        Path(xgboost_artifact_path)
+        if xgboost_artifact_path
+        else MODEL_ARTIFACTS_DIR / "xgb_best.pkl"
+    )
+    lgbm_path = (
+        Path(lightgbm_artifact_path)
+        if lightgbm_artifact_path
+        else MODEL_ARTIFACTS_DIR / "lgbm_best.pkl"
+    )
+    tabnet_path = (
+        Path(tabnet_artifact_path)
+        if tabnet_artifact_path
+        else MODEL_ARTIFACTS_DIR / "tabnet_epoch_best.zip"
+    )
+    mlp_path = (
+        Path(mlp_artifact_path)
+        if mlp_artifact_path
+        else MODEL_ARTIFACTS_DIR / "mlp_best.pt"
+    )
     baseline_metrics_path = MODEL_REPORTS_DIR / "baseline_metrics.json"
 
     # ------------------------------------------------------------------
@@ -330,17 +364,22 @@ def promote_ensemble(
     mlp_model.eval()
     with torch.no_grad():
         mlp_train_probs = (
-            mlp_model(torch.tensor(X_train, dtype=torch.float32)).cpu().numpy().astype(float)
+            mlp_model(torch.tensor(X_train, dtype=torch.float32))
+            .cpu()
+            .numpy()
+            .astype(float)
         )
 
-    train_meta_X = _build_meta_matrix({
-        "logistic_regression": log_train_probs,
-        "random_forest": rf_model.predict_proba(X_train)[:, 1],
-        "xgboost": xgb_model.predict_proba(X_train)[:, 1],
-        "lightgbm": lgbm_model.predict_proba(X_train)[:, 1],
-        "tabnet": tabnet_train_probs,
-        "residual_mlp": mlp_train_probs,
-    })
+    train_meta_X = _build_meta_matrix(
+        {
+            "logistic_regression": log_train_probs,
+            "random_forest": rf_model.predict_proba(X_train)[:, 1],
+            "xgboost": xgb_model.predict_proba(X_train)[:, 1],
+            "lightgbm": lgbm_model.predict_proba(X_train)[:, 1],
+            "tabnet": tabnet_train_probs,
+            "residual_mlp": mlp_train_probs,
+        }
+    )
     ensemble_train_probs = stacking_model.predict_proba(train_meta_X)[:, 1]
     surrogate_labels = (ensemble_train_probs >= 0.5).astype(int)
 
@@ -367,19 +406,25 @@ def promote_ensemble(
     # ------------------------------------------------------------------
     # 5. DICE counterfactual explainer (model-agnostic, predict_proba ready)
     # ------------------------------------------------------------------
-    dice_explainer = build_default_persisted_dice_explainer(model_name=ENSEMBLE_MODEL_NAME)
+    dice_explainer = build_default_persisted_dice_explainer(
+        model_name=ENSEMBLE_MODEL_NAME
+    )
     save_persisted_dice_explainer(dice_explainer, dice_explainer_path)
 
     # ------------------------------------------------------------------
     # 6. Refresh global-importance with best classical base model
     # ------------------------------------------------------------------
-    merged_stats = json.loads(Path(metrics_path).read_text(encoding="utf-8")).get("model_stats", [])
+    merged_stats = json.loads(Path(metrics_path).read_text(encoding="utf-8")).get(
+        "model_stats", []
+    )
     gi_report, _ = build_global_importance_report_for_candidate_models(
         {"random_forest": rf_model, "xgboost": xgb_model, "lightgbm": lgbm_model},
         train_processed_features=X_train,
         test_processed_features=X_test,
         model_stats=merged_stats,
-        candidate_model_types={n: "classical" for n in ("random_forest", "xgboost", "lightgbm")},
+        candidate_model_types={
+            n: "classical" for n in ("random_forest", "xgboost", "lightgbm")
+        },
     )
     save_global_importance_report(gi_report, global_importance_path)
 
@@ -399,18 +444,37 @@ def promote_ensemble(
     # 8. Compute SHA256 checksums; write manifest
     # ------------------------------------------------------------------
     artifact_spec: dict[str, tuple[Path, str]] = {
-        "runtime_model": (Path(stacking_artifact_path), "models/artifacts/calibrated_stacking.pkl"),
-        "preprocessor": (Path(preprocessor_path), "models/preprocessors/preprocessor.pkl"),
+        "runtime_model": (
+            Path(stacking_artifact_path),
+            "models/artifacts/calibrated_stacking.pkl",
+        ),
+        "preprocessor": (
+            Path(preprocessor_path),
+            "models/preprocessors/preprocessor.pkl",
+        ),
         "text_pca": (Path(text_pca_path), "models/preprocessors/text_pca.pkl"),
         "shap_explainer": (resolved_shap_path, "models/explainers/shap_explainer.pkl"),
-        "dice_explainer": (Path(dice_explainer_path), "models/explainers/dice_explainer.pkl"),
+        "dice_explainer": (
+            Path(dice_explainer_path),
+            "models/explainers/dice_explainer.pkl",
+        ),
         "metrics": (Path(metrics_path), "models/reports/metrics.json"),
-        "baseline_metrics": (baseline_metrics_path, "models/reports/baseline_metrics.json"),
-        "fairness_report": (Path(fairness_report_path), "models/reports/fairness_report.json"),
+        "baseline_metrics": (
+            baseline_metrics_path,
+            "models/reports/baseline_metrics.json",
+        ),
+        "fairness_report": (
+            Path(fairness_report_path),
+            "models/reports/fairness_report.json",
+        ),
         "psi_report": (Path(psi_report_path), "models/reports/psi_report.json"),
-        "global_importance": (Path(global_importance_path), "models/reports/global_importance.json"),
+        "global_importance": (
+            Path(global_importance_path),
+            "models/reports/global_importance.json",
+        ),
         "population_percentiles": (
-            Path(population_percentiles_path), "models/reports/population_percentiles.json"
+            Path(population_percentiles_path),
+            "models/reports/population_percentiles.json",
         ),
     }
     artifacts_block = {
@@ -419,9 +483,10 @@ def promote_ensemble(
         if p.is_file()
     }
 
-    fairness_payload = json.loads(Path(fairness_report_path).read_text(encoding="utf-8"))
+    fairness_payload = json.loads(
+        Path(fairness_report_path).read_text(encoding="utf-8")
+    )
     run_id = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_ensemble_promotion")
-
 
     # Build base_models section
     base_model_specs = {
@@ -437,12 +502,16 @@ def promote_ensemble(
         for name, (p, rel) in base_model_specs.items()
         if p.is_file()
     }
-    
+
     stacking_config_p = Path(stacking_config_path)
-    stacking_config_block = {
-        "path": "models/artifacts/calibrated_stacking_config.json",
-        "sha256": compute_file_sha256(stacking_config_p)
-    } if stacking_config_p.is_file() else None
+    stacking_config_block = (
+        {
+            "path": "models/artifacts/calibrated_stacking_config.json",
+            "sha256": compute_file_sha256(stacking_config_p),
+        }
+        if stacking_config_p.is_file()
+        else None
+    )
 
     manifest: dict[str, Any] = {
         "manifest_schema_version": MANIFEST_SCHEMA_VERSION,
@@ -464,7 +533,6 @@ def promote_ensemble(
         "artifacts": artifacts_block,
         "base_models": base_models_block,
         "stacking_config": stacking_config_block,
-
         "metrics_summary": {
             "test_split": "test_months_11_12",
             "test_auc_roc": round(float(test_auc), 4),

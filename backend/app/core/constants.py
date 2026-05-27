@@ -1,6 +1,6 @@
 """Centralized governance and platform constants for AlterScore."""
 
-from typing import Any, Final, Mapping
+from typing import Any, Final
 
 SCORE_MIN: Final[int] = 300
 SCORE_MAX: Final[int] = 850

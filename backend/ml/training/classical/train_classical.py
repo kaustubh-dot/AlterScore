@@ -13,13 +13,16 @@ import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 
-from backend.app.core.paths import MODEL_ARTIFACTS_DIR, MODEL_REPORTS_DIR, RAW_DATA_DIR
+from backend.app.core.paths import MODEL_ARTIFACTS_DIR, RAW_DATA_DIR
 from backend.ml.explainability.dice_explainer import (
     DEFAULT_DICE_EXPLAINER_PATH,
     build_default_persisted_dice_explainer,
     save_persisted_dice_explainer,
 )
-from backend.ml.data_generation.validators import MINIMUM_TEST_ROWS, validate_synthetic_dataset
+from backend.ml.data_generation.validators import (
+    MINIMUM_TEST_ROWS,
+    validate_synthetic_dataset,
+)
 from backend.ml.evaluation.drift import (
     DEFAULT_PSI_REPORT_PATH,
     build_psi_report_from_prepared_data,
@@ -116,7 +119,9 @@ def train_classical_models(
     logistic_artifact_path: str | Path | None = DEFAULT_LOGISTIC_ARTIFACT_PATH,
     baseline_metrics_path: str | Path | None = DEFAULT_BASELINE_METRICS_PATH,
     metrics_path: str | Path | None = DEFAULT_METRICS_PATH,
-    population_percentiles_path: str | Path | None = DEFAULT_POPULATION_PERCENTILES_PATH,
+    population_percentiles_path: (
+        str | Path | None
+    ) = DEFAULT_POPULATION_PERCENTILES_PATH,
     psi_report_path: str | Path | None = DEFAULT_PSI_REPORT_PATH,
     fairness_report_path: str | Path | None = DEFAULT_FAIRNESS_REPORT_PATH,
     global_importance_path: str | Path | None = DEFAULT_GLOBAL_IMPORTANCE_PATH,
@@ -127,7 +132,9 @@ def train_classical_models(
 
     np.random.seed(random_state)
     resolved_dataset, resolved_dataset_path = _load_dataset(dataset, dataset_path)
-    aligned_dataset, raw_text_embeddings = align_text_features_from_raw_text(resolved_dataset)
+    aligned_dataset, raw_text_embeddings = align_text_features_from_raw_text(
+        resolved_dataset
+    )
     validate_synthetic_dataset(
         aligned_dataset,
         expected_row_count=(
@@ -251,7 +258,9 @@ def train_classical_models(
             "logistic_regression",
             logistic_model.predict_proba(X_test_processed)[:, 1],
         )
-        fairness_candidate_test_probabilities["logistic_regression"] = logistic_test_probs
+        fairness_candidate_test_probabilities["logistic_regression"] = (
+            logistic_test_probs
+        )
         importance_model_types["logistic_regression"] = CLASSICAL_MODEL_TYPE
         logistic_validation_threshold = optimal_threshold(
             y_validation,
@@ -524,9 +533,7 @@ def _load_existing_population_payload(
         resolved_population_percentiles_path.read_text(encoding="utf-8")
     )
     if not isinstance(payload, dict):
-        raise ValueError(
-            "population_percentiles.json payload must be a JSON object."
-        )
+        raise ValueError("population_percentiles.json payload must be a JSON object.")
     return payload
 
 
@@ -603,7 +610,9 @@ def _resolve_population_default_model_name(
     if selected_model_name is not None:
         return selected_model_name
 
-    existing_default = None if existing_payload is None else existing_payload.get("default_model_name")
+    existing_default = (
+        None if existing_payload is None else existing_payload.get("default_model_name")
+    )
     if isinstance(existing_default, str) and existing_default in available_model_names:
         return existing_default
 

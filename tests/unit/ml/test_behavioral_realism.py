@@ -1,8 +1,5 @@
-import pytest
-import numpy as np
-
 from backend.ml.inference.feature_assembly import _apply_timing_realism_transforms
-from backend.ml.nlp.extractor import _validate_text_quality, extract_nlp_features
+from backend.ml.nlp.extractor import _validate_text_quality
 from backend.ml.inference.score_mapper import probability_to_score
 from backend.app.services.scoring import _calculate_governance_multiplier
 
@@ -23,12 +20,12 @@ def test_u_shaped_timing_transforms() -> None:
     fast_inputs = {
         "avg_response_time_ms": 500.0,
         "session_duration_sec": 30.0,
-        "typing_speed_wpm": 200.0, # copy-pasting / bot typing
+        "typing_speed_wpm": 200.0,  # copy-pasting / bot typing
     }
     transformed_fast = _apply_timing_realism_transforms(fast_inputs)
-    assert transformed_fast["avg_response_time_ms"] > 100000.0 # heavily inflated
-    assert transformed_fast["session_duration_sec"] > 4000.0 # heavily inflated
-    assert transformed_fast["typing_speed_wpm"] == 0.0 # penalized WPM
+    assert transformed_fast["avg_response_time_ms"] > 100000.0  # heavily inflated
+    assert transformed_fast["session_duration_sec"] > 4000.0  # heavily inflated
+    assert transformed_fast["typing_speed_wpm"] == 0.0  # penalized WPM
 
 
 def test_text_quality_validation() -> None:
@@ -56,10 +53,10 @@ def test_text_quality_validation() -> None:
 def test_score_saturation_fix() -> None:
     # Under old logic, 0.968 mapped to 850. Let's verify our new wider logistic mapping:
     high_prob_score = probability_to_score(0.968)
-    assert high_prob_score < 850 # should not saturate early
-    
+    assert high_prob_score < 850  # should not saturate early
+
     super_elite_score = probability_to_score(0.995)
-    assert super_elite_score == 850 # perfect score remains reachable but difficult
+    assert super_elite_score == 850  # perfect score remains reachable but difficult
 
 
 def test_post_model_governance_multiplier() -> None:
@@ -76,11 +73,11 @@ def test_post_model_governance_multiplier() -> None:
 
     # 2. Highly Gaming/Anomalous Profile
     gaming_row = {
-        "impulsivity_index": 3.20, # highly impulsive
-        "honesty_score": 0.40, # fails honesty check
-        "dropout_count": 5, # switched tabs repeatedly
+        "impulsivity_index": 3.20,  # highly impulsive
+        "honesty_score": 0.40,  # fails honesty check
+        "dropout_count": 5,  # switched tabs repeatedly
         "answer_change_rate": 0.45,
     }
     mult_game, reasons_game = _calculate_governance_multiplier(gaming_row)
-    assert mult_game < 0.80 # heavily penalized
+    assert mult_game < 0.80  # heavily penalized
     assert len(reasons_game) > 2

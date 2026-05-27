@@ -16,8 +16,8 @@ def test_known_correct_numeracy_answers_produce_high_numeracy_score() -> None:
 def test_crt_trap_answers_produce_low_crt_score() -> None:
     """The CRT instinctive wrong answers (10 and 100) should produce a zero CRT score."""
     trap_answers = _base_answers() | {
-        "CRT_q1": 10,   # instinctive wrong answer (correct is 5)
-        "CRT_q2": 24,   # instinctive wrong answer (correct is 47)
+        "CRT_q1": 10,  # instinctive wrong answer (correct is 5)
+        "CRT_q2": 24,  # instinctive wrong answer (correct is 47)
     }
 
     features = parse_answers(trap_answers)
@@ -29,7 +29,8 @@ def test_social_desirability_trap_agreement_lowers_honesty_score() -> None:
     """Agreeing strongly with implausible universals should reduce honesty score."""
     baseline_features = parse_answers(_base_answers())
     suspicious_features = parse_answers(
-        _base_answers() | {
+        _base_answers()
+        | {
             "honesty_trap_q1": 5,
         }
     )
@@ -78,9 +79,9 @@ def test_features_without_v2_direct_questions_default_to_neutral_prior() -> None
         "reciprocity_norm",
     ]
     for feature_name in neutral_prior_features:
-        assert features[feature_name] == 0.5, (
-            f"Expected 0.5 neutral prior for '{feature_name}', got {features[feature_name]}"
-        )
+        assert (
+            features[feature_name] == 0.5
+        ), f"Expected 0.5 neutral prior for '{feature_name}', got {features[feature_name]}"
 
 
 def test_risk_consistency_flag_defaults_to_zero_in_v2() -> None:
@@ -90,25 +91,27 @@ def test_risk_consistency_flag_defaults_to_zero_in_v2() -> None:
 
 
 def _base_answers() -> dict[str, int | float | str | dict]:
-    _scenario = lambda opt: {
-        'primary': opt,
-        'least': None,
-        'first_click_ms': 4000,
-        'change_count': 0
-    }
+    def _scenario(opt):
+        return {
+            "primary": opt,
+            "least": None,
+            "first_click_ms": 4000,
+            "change_count": 0,
+        }
+
     return {
-        'numeracy_q1': 6600,
-        'numeracy_q2': 1120,
-        'financial_literacy_q1': 1,
-        'CRT_q1': 5,
-        'CRT_q2': 47,
-        'scenario_s1': _scenario('s1_b'),
-        'scenario_s2': _scenario('s2_b'),
-        'scenario_s3': _scenario('s3_b'),
-        'scenario_s4': _scenario('s4_b'),
-        'scenario_s5': _scenario('s5_b'),
-        'scenario_s6': _scenario('s6_c'),
-        'honesty_trap_q1': 2,
-        'scenario_s8': _scenario('s8_b'),
-        'open_response_text': 'I reduced expenses and found extra work.',
+        "numeracy_q1": 6600,
+        "numeracy_q2": 1120,
+        "financial_literacy_q1": 1,
+        "CRT_q1": 5,
+        "CRT_q2": 47,
+        "scenario_s1": _scenario("s1_b"),
+        "scenario_s2": _scenario("s2_b"),
+        "scenario_s3": _scenario("s3_b"),
+        "scenario_s4": _scenario("s4_b"),
+        "scenario_s5": _scenario("s5_b"),
+        "scenario_s6": _scenario("s6_c"),
+        "honesty_trap_q1": 2,
+        "scenario_s8": _scenario("s8_b"),
+        "open_response_text": "I reduced expenses and found extra work.",
     }

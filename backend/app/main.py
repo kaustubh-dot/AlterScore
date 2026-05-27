@@ -9,7 +9,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.api.v1.router import api_router
-from backend.app.core.artifact_loader import LoadedArtifactBundle, load_runtime_artifact_bundle
+from backend.app.core.artifact_loader import (
+    LoadedArtifactBundle,
+    load_runtime_artifact_bundle,
+)
 from backend.app.core.settings import Settings, get_settings
 from backend.app.services.analytics import AnalyticsService
 from backend.app.services.request_logging import RequestLoggingService

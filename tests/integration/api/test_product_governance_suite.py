@@ -1,13 +1,12 @@
 import json
-import pytest
 from pathlib import Path
 from fastapi.testclient import TestClient
 
 from backend.app.main import create_app
-from backend.app.schemas.common import ErrorResponse
 from backend.app.schemas.score import ScoreResponse
 from tests.integration.api._support import build_runtime_settings
 from backend.ml.evaluation.fairness import RED_AUC_GAP_THRESHOLD
+
 
 def evaluate_fairness_gate(fairness_report: dict) -> dict:
     flagged_groups = list(fairness_report.get("flagged_groups", []))
@@ -22,20 +21,23 @@ def evaluate_fairness_gate(fairness_report: dict) -> dict:
 
 
 def _load_base_payload() -> dict:
-  return json.loads(
-    (
-      Path(__file__).resolve().parents[2]
-      / "fixtures"
-      / "score_request_valid.json"
-    ).read_text(encoding="utf-8")
-  )
+    return json.loads(
+        (
+            Path(__file__).resolve().parents[2]
+            / "fixtures"
+            / "score_request_valid.json"
+        ).read_text(encoding="utf-8")
+    )
 
 
 # ---------------------------------------------------------------------------
 # 1. Monotonic Score Constraint Verification
 # ---------------------------------------------------------------------------
 
-def test_score_endpoint_enforces_monotonicity_on_literacy_answers(trained_model_dir) -> None:
+
+def test_score_endpoint_enforces_monotonicity_on_literacy_answers(
+    trained_model_dir,
+) -> None:
     """Verifies that correct numeracy answers yield a score >= incorrect answers."""
     settings = build_runtime_settings(trained_model_dir)
     app = create_app(settings)
@@ -69,6 +71,7 @@ def test_score_endpoint_enforces_monotonicity_on_literacy_answers(trained_model_
 # 2. Subgroup Fairness Checks Validation
 # ---------------------------------------------------------------------------
 
+
 def test_fairness_gate_evaluator_correctly_flags_exceeding_gaps() -> None:
     """Verifies that the fairness gate logic correctly flags groups with large gaps."""
     # Case A: Within bounds (worst AUC gap is within limit, no flagged groups)
@@ -98,6 +101,7 @@ def test_fairness_gate_evaluator_correctly_flags_exceeding_gaps() -> None:
 # 3. Input Payload Validation Guardrails
 # ---------------------------------------------------------------------------
 
+
 def test_score_endpoint_rejects_out_of_bound_inputs(trained_model_dir) -> None:
     """Verifies that the API triggers validation errors for schema out-of-bound entries."""
     settings = build_runtime_settings(trained_model_dir)
@@ -112,7 +116,7 @@ def test_score_endpoint_rejects_out_of_bound_inputs(trained_model_dir) -> None:
 
     # Must return 422 Unprocessable Entity
     assert response.status_code == 422
-    
+
     # Detail trace check
     details = response.json().get("detail", [])
     assert len(details) > 0

@@ -8,9 +8,7 @@ troubleshooting, and contributor onboarding.
 - Backend runtime is manifest-backed and loads the checked-in monotonic
   `XGBoost` production bundle.
 - Borrower frontend is implemented and can submit to `/api/score`.
-- Dashboard analytics panels are partially wired to the report-backed API; the
-  confusion-matrix view, independent panel states, and browser QA evidence are
-  still pending.
+- Evaluator dashboard analytics panels, confusion-matrix view, independent panel states, and async loaders are fully implemented and verified.
 - The earlier calibrated stacking ensemble remains available as a benchmark and
   rollback/reference artifact, but it is not the default manifest runtime.
 
@@ -33,28 +31,32 @@ Not recommended for this repo's normal local setup:
 Run from the repository root unless a step says otherwise.
 
 ```powershell
-# 1. Verify toolchain
-& 'C:\Users\Kaustubh\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe' scripts\setup\check_environment.py
+# 1. Create a Python 3.12 virtual environment at the repository root
+python -m venv venv
 
-# 2. Create a fresh Python environment
-& 'C:\Users\Kaustubh\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe' -m venv backend\.venv-cleanup
+# 2. Activate the virtual environment
+# Windows (PowerShell):
+.\venv\Scripts\Activate.ps1
+# macOS/Linux (Bash):
+source venv/bin/activate
 
-# 3. Install backend runtime dependencies
-backend\.venv-cleanup\Scripts\python.exe -m pip install -r backend\requirements.txt
+# 3. Upgrade pip and install core dependencies
+python -m pip install --upgrade pip
+python -m pip install -r backend/requirements.txt
 
 # 4. Optional: install backend test dependencies
-backend\.venv-cleanup\Scripts\python.exe -m pip install -r backend\requirements-dev.txt
+python -m pip install -r backend/requirements-dev.txt
 
 # 5. Start the backend from the repo root
-backend\.venv-cleanup\Scripts\python.exe -m uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000
+python -m uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 In a second terminal:
 
 ```powershell
 cd frontend
-& 'C:\Program Files\nodejs\npm.cmd' install
-& 'C:\Program Files\nodejs\npm.cmd' run dev -- --host 127.0.0.1 --port 5173
+npm install
+npm run dev -- --host 127.0.0.1 --port 5173
 ```
 
 ## Validation Checklist
@@ -109,13 +111,9 @@ Frontend:
 
 ## Known Current Issues
 
-- The evaluator dashboard consumes most analytics endpoints, but still needs a
-  confusion-matrix panel, independent panel-level loading/error states, and
-  browser QA evidence.
-- Frontend test coverage is still lighter than backend and pipeline coverage.
+- Minor mobile overflow handling for charts/tables on extremely narrow viewports (e.g., mobile devices below 360px width).
+- Frontend unit/component test coverage is lighter than backend and pipeline coverage.
 - The WebGL/R3F frontend build may emit a non-critical bundle-size warning.
-- Fresh `npm install` currently reports 5 dependency vulnerabilities in
-  transitive frontend packages.
-- Fresh backend dependency installation in this synced Windows workspace hit a
-  local file-lock issue during validation, even after dependency resolution
-  succeeded.
+- Fresh `npm install` currently reports a few dependency vulnerabilities in transitive frontend packages.
+- Fresh backend dependency installation in this synced Windows workspace may hit a local file-lock issue during validation, which can be resolved by restarting editor/antivirus or running outside sync-sensitive folders.
+

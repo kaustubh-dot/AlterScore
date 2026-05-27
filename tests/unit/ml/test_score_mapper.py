@@ -1,5 +1,3 @@
-import pytest
-
 from backend.ml.inference.score_mapper import (
     compute_percentile,
     get_loan_eligibility,

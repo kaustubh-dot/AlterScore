@@ -14,7 +14,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any, Final
 
-
 PSYCHOMETRIC_FEATURES: Final[list[str]] = [
     "numeracy_score",
     "CRT_score",
@@ -70,8 +69,12 @@ def parse_answers(answers: Mapping[str, Any] | Any) -> dict[str, float]:
     # --- CRT (2 questions) ------------------------------------------------
     crt_score = _mean(
         [
-            _score_with_tolerance(answer_values.get("CRT_q1"), target=5.0, tight_tolerance=2.0),
-            _score_with_tolerance(answer_values.get("CRT_q2"), target=47.0, tight_tolerance=1.0),
+            _score_with_tolerance(
+                answer_values.get("CRT_q1"), target=5.0, tight_tolerance=2.0
+            ),
+            _score_with_tolerance(
+                answer_values.get("CRT_q2"), target=47.0, tight_tolerance=1.0
+            ),
         ]
     )
 
@@ -145,13 +148,10 @@ def _compute_honesty_score(
 
     # Implausibility: agreeing with both traps + high cognitive score = likely faking
     implausibility_flag = float(
-        suspicious_traps >= 1
-        and numeracy_score >= 0.5
-        and crt_score >= 0.5
+        suspicious_traps >= 1 and numeracy_score >= 0.5 and crt_score >= 0.5
     )
     honesty = (1.0 - social_desirability_penalty) * (1.0 - 0.20 * implausibility_flag)
     return _clip01(honesty)
-
 
 
 def _coerce_answer_mapping(answers: Mapping[str, Any] | Any) -> dict[str, Any]:

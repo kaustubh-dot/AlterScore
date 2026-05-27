@@ -1,9 +1,7 @@
-import pytest
-pytestmark = pytest.mark.slow
-
 import json
 
 import numpy as np
+import pytest
 
 from backend.ml.data_generation.generator import generate_synthetic_dataset
 from backend.ml.training.classical.baselines import train_baselines
@@ -12,6 +10,8 @@ from backend.ml.training.classical.train_classical import (
     NUMERIC_METRIC_FIELDS,
     train_classical_models,
 )
+
+pytestmark = pytest.mark.slow
 
 
 def test_train_classical_models_saves_artifacts_and_merges_metrics(tmp_path) -> None:
@@ -41,7 +41,10 @@ def test_train_classical_models_saves_artifacts_and_merges_metrics(tmp_path) -> 
         baseline_metrics_path=baseline_artifacts.baseline_metrics_path,
         metrics_path=baseline_artifacts.metrics_path,
         population_percentiles_path=baseline_artifacts.population_percentiles_path,
-        psi_report_path=None, fairness_report_path=None, global_importance_path=None, dice_explainer_path=None,
+        psi_report_path=None,
+        fairness_report_path=None,
+        global_importance_path=None,
+        dice_explainer_path=None,
         random_state=17,
     )
 
@@ -88,7 +91,9 @@ def test_train_classical_models_saves_artifacts_and_merges_metrics(tmp_path) -> 
     assert len(test_rows) == len(CLASSICAL_MODEL_ORDER)
     for row in test_rows:
         assert row["model_type"] == "classical"
-        assert np.isfinite([row[field_name] for field_name in NUMERIC_METRIC_FIELDS]).all()
+        assert np.isfinite(
+            [row[field_name] for field_name in NUMERIC_METRIC_FIELDS]
+        ).all()
         validation_row = next(
             item
             for item in metrics_payload["model_stats"]

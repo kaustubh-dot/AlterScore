@@ -12,10 +12,16 @@ from backend.ml.preprocessing.feature_registry import (
     TARGET,
     TEMPORAL_METADATA,
 )
-from backend.ml.preprocessing.pipeline import fit_preprocessor, fit_text_pca, transform_features
+from backend.ml.preprocessing.pipeline import (
+    fit_preprocessor,
+    fit_text_pca,
+    transform_features,
+)
 
 
-def test_assemble_request_features_builds_canonical_feature_frame_with_train_fitted_pca() -> None:
+def test_assemble_request_features_builds_canonical_feature_frame_with_train_fitted_pca() -> (
+    None
+):
     requests = _build_score_requests()
     train_embeddings = np.vstack(
         [
@@ -49,7 +55,9 @@ def test_assemble_request_features_builds_canonical_feature_frame_with_train_fit
     )
 
 
-def test_assemble_request_features_neutralizes_device_and_time_inputs_for_model_scoring() -> None:
+def test_assemble_request_features_neutralizes_device_and_time_inputs_for_model_scoring() -> (
+    None
+):
     requests = _build_score_requests()
     train_embeddings = np.vstack(
         [
@@ -111,7 +119,9 @@ def test_assemble_request_features_can_require_train_fitted_text_pca() -> None:
     except ValueError as exc:
         assert "text_pca" in str(exc)
     else:
-        raise AssertionError("Expected require_text_pca=True to reject a missing PCA artifact.")
+        raise AssertionError(
+            "Expected require_text_pca=True to reject a missing PCA artifact."
+        )
 
 
 def _build_score_requests() -> list[ScoreRequest]:
@@ -139,7 +149,7 @@ def _build_score_requests() -> list[ScoreRequest]:
                     "primary": "s1_a",
                     "least": "s1_b",
                     "first_click_ms": 3000,
-                    "change_count": 0
+                    "change_count": 0,
                 },
                 "open_response_text": (
                     "I felt stuck at first, but I asked for help and started "
@@ -180,28 +190,31 @@ def _build_score_requests() -> list[ScoreRequest]:
 
 
 def _base_answers() -> dict[str, int | float | str | dict]:
-    _scenario = lambda opt: {
-        'primary': opt,
-        'least': None,
-        'first_click_ms': 4000,
-        'change_count': 0
-    }
+    def _scenario(opt):
+        return {
+            "primary": opt,
+            "least": None,
+            "first_click_ms": 4000,
+            "change_count": 0,
+        }
+
     return {
-        'numeracy_q1': 6600,
-        'numeracy_q2': 1120,
-        'financial_literacy_q1': 1,
-        'CRT_q1': 5,
-        'CRT_q2': 47,
-        'scenario_s1': _scenario('s1_b'),
-        'scenario_s2': _scenario('s2_b'),
-        'scenario_s3': _scenario('s3_b'),
-        'scenario_s4': _scenario('s4_b'),
-        'scenario_s5': _scenario('s5_b'),
-        'scenario_s6': _scenario('s6_c'),
-        'honesty_trap_q1': 2,
-        'scenario_s8': _scenario('s8_b'),
-        'open_response_text': 'I reduced expenses and found extra work.',
+        "numeracy_q1": 6600,
+        "numeracy_q2": 1120,
+        "financial_literacy_q1": 1,
+        "CRT_q1": 5,
+        "CRT_q2": 47,
+        "scenario_s1": _scenario("s1_b"),
+        "scenario_s2": _scenario("s2_b"),
+        "scenario_s3": _scenario("s3_b"),
+        "scenario_s4": _scenario("s4_b"),
+        "scenario_s5": _scenario("s5_b"),
+        "scenario_s6": _scenario("s6_c"),
+        "honesty_trap_q1": 2,
+        "scenario_s8": _scenario("s8_b"),
+        "open_response_text": "I reduced expenses and found extra work.",
     }
+
 
 def _base_behavioral() -> dict[str, float | int | str]:
     return {

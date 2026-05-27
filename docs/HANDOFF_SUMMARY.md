@@ -1,73 +1,73 @@
-# Handoff Summary: Stabilized Before Scoring Audit
+# Handoff Summary: Front-End UI Developer Focus
 
-**Date:** May 22, 2026
-**Status:** Repository cleanup and setup normalization completed; scoring audit next
-**Target Audience:** Contributors preparing for the scoring/debugging phase
+**Date:** May 27, 2026  
+**Status:** Monotonic XGBoost v2 serving stable; Borrower flow and Evaluator dashboard fully implemented; ready for styling/UI iterations.  
+**Target Audience:** UI Developers working on frontend design, responsiveness, and WebGL asset optimization.
 
 ## Backend Status
 
-The backend runtime, API routes, checked-in artifacts, and manifest-backed
-startup path should be treated as stable during this handoff phase. Do not
-change scoring-critical files or the production manifest as part of cleanup-only
-work.
+The backend service is stable and serves the manifest-backed `xgboost_monotonic_v2` model. All scoring endpoints and analytical reports are fully operational.
+* **Production Manifest:** `models/registry/production_manifest.json`
+* **Test AUC:** `0.7547` (governed with strict monotonicity constraints on key behavioral features)
 
-## Stable API Surface
+## API Surface (Stable & Fully Operational)
 
-- `GET /api/health`
-- `POST /api/score`
-- `GET /api/model-stats`
-- `GET /api/baseline-comparison`
-- `GET /api/fairness-report`
-- `GET /api/drift-report`
-- `GET /api/global-importance`
-- `GET /api/score-distribution`
-- `GET /api/roc-data`
-- `GET /api/pr-curve`
-- `GET /api/calibration-curve`
-- `GET /api/confusion-matrix`
+- `GET /api/health` — System status, loaded models, and artifact diagnostics.
+- `POST /api/score` — Primary borrower submission path (scores psychometrics & telemetry).
+- `GET /api/model-stats` — General metrics.
+- `GET /api/baseline-comparison` — Performance compared to simulated loan officer and baseline model.
+- `GET /api/fairness-report` — Demographics fairness indicators.
+- `GET /api/drift-report` — Feature population stability index (PSI) tables.
+- `GET /api/global-importance` — Population-wide feature SHAP rankings.
+- `GET /api/score-distribution` — Population score histogram ranges.
+- `GET /api/roc-data` — ROC curve coordinate arrays.
+- `GET /api/pr-curve` — Precision-Recall curve coordinate arrays.
+- `GET /api/calibration-curve` — Reliability calibration curves.
+- `GET /api/confusion-matrix` — 2x2 prediction outcome matrix (True Positive, False Positive, etc.).
 
 ## Frontend Status
 
-Implemented:
+### Completed & Wired
+- **Borrower Flow**: Landing page, psychometrics assessment cards (coerced inputs, WPM trackers, and copy-paste warnings), processing ticker animation screen, and local results summary (score reveal gauge, SHAP explanation list, counterfactual suggestion actions, loan limits, and improvement tips).
+- **Evaluator Dashboard**: All analytics panels (drift, fairness, curves, ROC/PR, percentiles, baseline comparison) are integrated with independent panel wrappers, localized async loaders, and boundary error views. The confusion matrix rendering is fully wired to `/api/confusion-matrix`.
 
-- landing
-- assessment
-- processing
-- results
-- retry-safe submission
-- sharing/export
-- dashboard analytics panels for most report-backed endpoints
+### Next Recommended UI Tasks
+1. **Layout & Responsiveness**: Verify CSS/overflow alignments at `375px` mobile, tablet, and widescreen viewports (particularly tables and charts in the Evaluator Dashboard).
+2. **styling & Aesthetics**: Iterate on custom glassmorphism styles, ambient backdrops, transitions, and three.js/WebGL particle configurations.
+3. **WebGL/Bundle Optimization**: Check WebGL bundle size warnings and assess whether further chunks can be optimized.
 
-Pending:
+## Local Quick Start
 
-- dashboard confusion-matrix rendering and independent panel states
-- focused frontend tests
-- formal browser QA evidence
-
-## Local Startup
+You can launch both services concurrently from the repository root:
 
 ```powershell
-# Terminal 1 - backend, from the repository root
-backend\.venv-cleanup\Scripts\python.exe -m uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000
-
-# Terminal 2 - frontend
-cd frontend
-& 'C:\Program Files\nodejs\npm.cmd' run dev -- --host 127.0.0.1 --port 5173
+.\scripts\setup\start_alterscore.ps1
 ```
 
-Health target: `http://127.0.0.1:8000/api/health`
+Or start them manually in separate shells:
 
-## Validation Note
+**Terminal 1 (Backend)**:
+```powershell
+# Activate virtual environment
+.\venv\Scripts\Activate.ps1
+# Start server
+python -m uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000
+```
 
-During this cleanup pass, a fresh Python 3.12 dependency resolution succeeded,
-but the synced Windows workspace hit a local file-lock error during backend
-installation before a full clean-room startup could be completed in the
-temporary venv.
+**Terminal 2 (Frontend)**:
+```powershell
+cd frontend
+npm install
+npm run dev -- --host 127.0.0.1 --port 5173
+```
+
+- Frontend URL: `http://127.0.0.1:5173`
+- Backend URL: `http://127.0.0.1:8000/api`
+- Backend Docs: `http://127.0.0.1:8000/docs`
 
 ## Read Next
 
-- `docs/SETUP.md`
-- `docs/API_CONTRACTS.md`
-- `docs/BACKEND_RUNTIME_ARCHITECTURE.md`
-- `docs/TESTING_STRATEGY.md`
-- `docs/ROADMAP.md`
+- [docs/SETUP.md](file:///c:/Kaustubh/Projects/AlterScore/docs/SETUP.md) — Step-by-step developer environment setup.
+- [docs/frontend_architecture.md](file:///c:/Kaustubh/Projects/AlterScore/docs/frontend_architecture.md) — Modular frontend directory structure and layout shell architecture.
+- [docs/frontend_handoff.md](file:///c:/Kaustubh/Projects/AlterScore/docs/frontend_handoff.md) — In-depth mapping of JSON structures, pacing boundaries, and telemetry parameters.
+

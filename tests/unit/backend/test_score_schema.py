@@ -9,12 +9,15 @@ from backend.app.schemas.score import AnswerPayload, ScoreRequest, ScoreResponse
 
 def build_valid_score_request_payload() -> dict:
     """Build a minimal valid v2 ScoreRequest payload for schema testing."""
-    _scenario = lambda option_id: {
-        "primary": option_id,
-        "least": None,
-        "first_click_ms": 8000,
-        "change_count": 0,
-    }
+
+    def _scenario(option_id):
+        return {
+            "primary": option_id,
+            "least": None,
+            "first_click_ms": 8000,
+            "change_count": 0,
+        }
+
     return {
         "answers": {
             # Section A — Financial Reasoning

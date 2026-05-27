@@ -23,7 +23,10 @@ from backend.ml.explainability.dice_explainer import (
     build_default_persisted_dice_explainer,
     save_persisted_dice_explainer,
 )
-from backend.ml.data_generation.validators import MINIMUM_TEST_ROWS, validate_synthetic_dataset
+from backend.ml.data_generation.validators import (
+    MINIMUM_TEST_ROWS,
+    validate_synthetic_dataset,
+)
 from backend.ml.evaluation.drift import (
     DEFAULT_PSI_REPORT_PATH,
     build_psi_report_from_prepared_data,
@@ -93,7 +96,9 @@ class MajorityClassBaseline:
     def __init__(self) -> None:
         self._repay_probability = 1.0
 
-    def fit(self, y_train: pd.Series | np.ndarray | list[int]) -> "MajorityClassBaseline":
+    def fit(
+        self, y_train: pd.Series | np.ndarray | list[int]
+    ) -> "MajorityClassBaseline":
         values = np.asarray(y_train, dtype=int)
         repay_rate = float(values.mean()) if values.size else 1.0
         self._repay_probability = 1.0 if repay_rate >= 0.5 else 0.0
@@ -165,7 +170,9 @@ def train_baselines(
     logistic_artifact_path: str | Path | None = DEFAULT_LOGISTIC_ARTIFACT_PATH,
     baseline_metrics_path: str | Path | None = DEFAULT_BASELINE_METRICS_PATH,
     metrics_path: str | Path | None = DEFAULT_METRICS_PATH,
-    population_percentiles_path: str | Path | None = DEFAULT_POPULATION_PERCENTILES_PATH,
+    population_percentiles_path: (
+        str | Path | None
+    ) = DEFAULT_POPULATION_PERCENTILES_PATH,
     psi_report_path: str | Path | None = DEFAULT_PSI_REPORT_PATH,
     fairness_report_path: str | Path | None = DEFAULT_FAIRNESS_REPORT_PATH,
     global_importance_path: str | Path | None = DEFAULT_GLOBAL_IMPORTANCE_PATH,
@@ -176,10 +183,14 @@ def train_baselines(
 
     np.random.seed(random_state)
     resolved_dataset, resolved_dataset_path = _load_dataset(dataset, dataset_path)
-    aligned_dataset, raw_text_embeddings = align_text_features_from_raw_text(resolved_dataset)
+    aligned_dataset, raw_text_embeddings = align_text_features_from_raw_text(
+        resolved_dataset
+    )
     validate_synthetic_dataset(
         aligned_dataset,
-        expected_row_count=len(aligned_dataset) if expected_row_count is None else expected_row_count,
+        expected_row_count=(
+            len(aligned_dataset) if expected_row_count is None else expected_row_count
+        ),
         minimum_test_rows=minimum_test_rows,
     )
 
@@ -207,13 +218,17 @@ def train_baselines(
         solver="liblinear",
     )
     logistic_model.fit(X_train_processed, prepared.train.y.to_numpy(dtype=int))
-    simulated_model = SimulatedLoanOfficer(random_state=random_state).fit(prepared.train.X)
+    simulated_model = SimulatedLoanOfficer(random_state=random_state).fit(
+        prepared.train.X
+    )
 
     if logistic_artifact_path is not None:
         _save_joblib(logistic_model, logistic_artifact_path)
 
     logistic_train_probs = logistic_model.predict_proba(X_train_processed)[:, 1]
-    logistic_validation_probs = logistic_model.predict_proba(X_validation_processed)[:, 1]
+    logistic_validation_probs = logistic_model.predict_proba(X_validation_processed)[
+        :, 1
+    ]
     logistic_test_probs = logistic_model.predict_proba(X_test_processed)[:, 1]
     logistic_population_probs = logistic_model.predict_proba(X_full_processed)[:, 1]
 
@@ -361,13 +376,25 @@ def train_baselines(
     return BaselineTrainingArtifacts(
         run_id=run_id,
         dataset_path=resolved_dataset_path,
-        preprocessor_path=None if preprocessor_artifact_path is None else Path(preprocessor_artifact_path),
-        text_pca_path=None if text_pca_artifact_path is None else Path(text_pca_artifact_path),
-        logistic_model_path=None if logistic_artifact_path is None else Path(logistic_artifact_path),
-        baseline_metrics_path=None if baseline_metrics_path is None else Path(baseline_metrics_path),
+        preprocessor_path=(
+            None
+            if preprocessor_artifact_path is None
+            else Path(preprocessor_artifact_path)
+        ),
+        text_pca_path=(
+            None if text_pca_artifact_path is None else Path(text_pca_artifact_path)
+        ),
+        logistic_model_path=(
+            None if logistic_artifact_path is None else Path(logistic_artifact_path)
+        ),
+        baseline_metrics_path=(
+            None if baseline_metrics_path is None else Path(baseline_metrics_path)
+        ),
         metrics_path=None if metrics_path is None else Path(metrics_path),
         population_percentiles_path=(
-            None if population_percentiles_path is None else Path(population_percentiles_path)
+            None
+            if population_percentiles_path is None
+            else Path(population_percentiles_path)
         ),
         psi_report_path=None if psi_report_path is None else Path(psi_report_path),
         fairness_report_path=(

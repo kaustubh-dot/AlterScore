@@ -76,7 +76,9 @@ MONOTONIC_TREE_ACTIVE_FEATURES: Final[tuple[str, ...]] = tuple(
 )
 
 
-def neutralize_operational_metadata_for_training(feature_frame: pd.DataFrame) -> pd.DataFrame:
+def neutralize_operational_metadata_for_training(
+    feature_frame: pd.DataFrame,
+) -> pd.DataFrame:
     """Set operational metadata to neutral values for constrained-tree training."""
 
     updated = feature_frame.copy()
@@ -117,7 +119,9 @@ def build_monotonic_constraint_vector(
 ) -> tuple[int, ...]:
     """Return one monotonic constraint integer per transformed model feature."""
 
-    return tuple(int(direction_map.get(feature_name, 0)) for feature_name in feature_names)
+    return tuple(
+        int(direction_map.get(feature_name, 0)) for feature_name in feature_names
+    )
 
 
 __all__ = [

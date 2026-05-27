@@ -41,7 +41,9 @@ def test_high_agency_text_scores_above_low_agency_text() -> None:
 
     assert low_agency_result["text_agency_score"] < 0.2
     assert low_agency_result["text_sentiment_compound"] < 0.0
-    assert high_agency_result["text_agency_score"] > low_agency_result["text_agency_score"]
+    assert (
+        high_agency_result["text_agency_score"] > low_agency_result["text_agency_score"]
+    )
 
 
 def test_problem_solving_keywords_trigger_flag() -> None:
@@ -54,8 +56,12 @@ def test_problem_solving_keywords_trigger_flag() -> None:
 
 
 def test_raw_embedding_is_deterministic_and_has_expected_shape() -> None:
-    first_embedding = extract_raw_text_embedding("I built a repayment plan and found extra work.")
-    second_embedding = extract_raw_text_embedding("I built a repayment plan and found extra work.")
+    first_embedding = extract_raw_text_embedding(
+        "I built a repayment plan and found extra work."
+    )
+    second_embedding = extract_raw_text_embedding(
+        "I built a repayment plan and found extra work."
+    )
 
     assert first_embedding.shape == (RAW_EMBEDDING_DIM,)
     np.testing.assert_allclose(first_embedding, second_embedding)

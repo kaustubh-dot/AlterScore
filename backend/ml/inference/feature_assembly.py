@@ -57,16 +57,22 @@ def assemble_request_features(
     # This blends scenario option values (60% existing / 40% scenario) and
     # adds scenario_consistency_score + scenario_fast_gaming to the dict.
     answers_dict = _coerce_mapping(answers_payload, component_name="answers")
-    psychometric_features = compute_scenario_enriched_features(base_psychometric, answers_dict)
+    psychometric_features = compute_scenario_enriched_features(
+        base_psychometric, answers_dict
+    )
 
     # Remove scenario-specific auxiliary signals before passing to model
     # (they're used only in governance logic, not in the 35-feature ML space)
-    scenario_consistency_score = psychometric_features.pop("scenario_consistency_score", 0.5)
+    scenario_consistency_score = psychometric_features.pop(
+        "scenario_consistency_score", 0.5
+    )
     scenario_fast_gaming = psychometric_features.pop("scenario_fast_gaming", 0.0)
 
     # Step 3: Behavioral telemetry
     raw_behavioral_features = parse_behavioral(behavioral_payload)
-    behavioral_features = _neutralize_contextual_behavioral_features(raw_behavioral_features)
+    behavioral_features = _neutralize_contextual_behavioral_features(
+        raw_behavioral_features
+    )
     behavioral_features = _apply_timing_realism_transforms(behavioral_features)
 
     # Inject scenario governance signals into behavioral features for downstream use
@@ -140,11 +146,17 @@ def _extract_request_components(
         try:
             return request["answers"], request["behavioral"]
         except KeyError as exc:
-            raise ValueError("request mapping must contain 'answers' and 'behavioral'.") from exc
-    raise TypeError("request must be a mapping or expose answers/behavioral attributes.")
+            raise ValueError(
+                "request mapping must contain 'answers' and 'behavioral'."
+            ) from exc
+    raise TypeError(
+        "request must be a mapping or expose answers/behavioral attributes."
+    )
 
 
-def _coerce_mapping(component: Mapping[str, Any] | Any, *, component_name: str) -> dict[str, Any]:
+def _coerce_mapping(
+    component: Mapping[str, Any] | Any, *, component_name: str
+) -> dict[str, Any]:
     if hasattr(component, "model_dump"):
         return dict(component.model_dump())
     if isinstance(component, Mapping):
@@ -160,7 +172,9 @@ def _project_text_embedding(
 ) -> dict[str, float]:
     if text_pca is None:
         if require_text_pca:
-            raise ValueError("A train-fitted text_pca artifact is required for semantic features.")
+            raise ValueError(
+                "A train-fitted text_pca artifact is required for semantic features."
+            )
         return {
             TEXT_PCA_FEATURES[0]: 0.0,
             TEXT_PCA_FEATURES[1]: 0.0,
@@ -170,7 +184,9 @@ def _project_text_embedding(
         text_pca.transform(raw_embedding.reshape(1, -1))[0],
         dtype=float,
     )
-    if projected_embedding.ndim != 1 or projected_embedding.shape[0] != len(TEXT_PCA_FEATURES):
+    if projected_embedding.ndim != 1 or projected_embedding.shape[0] != len(
+        TEXT_PCA_FEATURES
+    ):
         raise ValueError(
             "text_pca transform output must match the two canonical semantic dimensions."
         )
@@ -204,12 +220,16 @@ def _apply_timing_realism_transforms(
     # 1. avg_response_time_ms (U-Shaped pacing curve)
     raw_time = float(transformed.get("avg_response_time_ms", 5200.0))
     if raw_time < 4000.0:
-        transformed["avg_response_time_ms"] = raw_time + ((4000.0 - raw_time) ** 2) / 100.0
+        transformed["avg_response_time_ms"] = (
+            raw_time + ((4000.0 - raw_time) ** 2) / 100.0
+        )
 
     # 2. session_duration_sec (U-Shaped session pacing curve)
     raw_duration = float(transformed.get("session_duration_sec", 180.0))
     if raw_duration < 120.0:
-        transformed["session_duration_sec"] = raw_duration + ((120.0 - raw_duration) ** 2) / 2.0
+        transformed["session_duration_sec"] = (
+            raw_duration + ((120.0 - raw_duration) ** 2) / 2.0
+        )
 
     # 3. typing_speed_wpm (U-Shaped physical typing limit check)
     raw_wpm = float(transformed.get("typing_speed_wpm", 0.0))

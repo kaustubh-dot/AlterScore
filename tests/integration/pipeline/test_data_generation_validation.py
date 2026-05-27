@@ -60,8 +60,14 @@ def test_later_cohorts_are_faster_and_have_higher_typing_speed_on_average() -> N
     early_cohorts = dataset[dataset["cohort_month"].between(1, 4)]
     later_cohorts = dataset[dataset["cohort_month"].between(9, 12)]
 
-    assert later_cohorts["avg_response_time_ms"].mean() < early_cohorts["avg_response_time_ms"].mean()
-    assert later_cohorts["typing_speed_wpm"].mean() > early_cohorts["typing_speed_wpm"].mean()
+    assert (
+        later_cohorts["avg_response_time_ms"].mean()
+        < early_cohorts["avg_response_time_ms"].mean()
+    )
+    assert (
+        later_cohorts["typing_speed_wpm"].mean()
+        > early_cohorts["typing_speed_wpm"].mean()
+    )
 
 
 def test_repaired_synthetic_supervision_matches_behavioral_directionality() -> None:
@@ -71,10 +77,12 @@ def test_repaired_synthetic_supervision_matches_behavioral_directionality() -> N
     assert dataset["engagement_score"].corr(dataset[TARGET]) > 0.25
 
     low_hesitation = dataset[
-        dataset["scroll_hesitation_score"] <= dataset["scroll_hesitation_score"].quantile(0.2)
+        dataset["scroll_hesitation_score"]
+        <= dataset["scroll_hesitation_score"].quantile(0.2)
     ][TARGET].mean()
     high_hesitation = dataset[
-        dataset["scroll_hesitation_score"] >= dataset["scroll_hesitation_score"].quantile(0.8)
+        dataset["scroll_hesitation_score"]
+        >= dataset["scroll_hesitation_score"].quantile(0.8)
     ][TARGET].mean()
     assert low_hesitation > high_hesitation
 

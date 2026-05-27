@@ -21,8 +21,11 @@ from typing import Any, Final
 import numpy as np
 import pandas as pd
 
-from backend.app.core.paths import MODEL_ARTIFACTS_DIR, MODEL_REPORTS_DIR, RAW_DATA_DIR
-from backend.ml.data_generation.validators import MINIMUM_TEST_ROWS, validate_synthetic_dataset
+from backend.app.core.paths import MODEL_ARTIFACTS_DIR, RAW_DATA_DIR
+from backend.ml.data_generation.validators import (
+    MINIMUM_TEST_ROWS,
+    validate_synthetic_dataset,
+)
 from backend.ml.evaluation.metrics import (
     build_population_percentiles_payload,
     build_split_evaluation_details,
@@ -41,7 +44,6 @@ from backend.ml.preprocessing.pipeline import (
     transform_features,
 )
 from backend.ml.training.classical.baselines import (
-    DEFAULT_BASELINE_METRICS_PATH,
     DEFAULT_METRICS_PATH,
     DEFAULT_POPULATION_PERCENTILES_PATH,
     DEFAULT_RANDOM_STATE,
@@ -52,7 +54,9 @@ from backend.ml.training.classical.baselines import (
 # ---------------------------------------------------------------------------
 
 DEFAULT_DATASET_PATH: Final[Path] = RAW_DATA_DIR / "synthetic_dataset.csv"
-DEFAULT_TABNET_ARTIFACT_PATH: Final[Path] = MODEL_ARTIFACTS_DIR / "tabnet_epoch_best.zip"
+DEFAULT_TABNET_ARTIFACT_PATH: Final[Path] = (
+    MODEL_ARTIFACTS_DIR / "tabnet_epoch_best.zip"
+)
 TABNET_MODEL_TYPE: Final[str] = "neural"
 TABNET_MODEL_NAME: Final[str] = "tabnet"
 
@@ -121,7 +125,9 @@ def train_tabnet(
     text_pca_artifact_path: str | Path | None = DEFAULT_TEXT_PCA_ARTIFACT_PATH,
     tabnet_artifact_path: str | Path | None = DEFAULT_TABNET_ARTIFACT_PATH,
     metrics_path: str | Path | None = DEFAULT_METRICS_PATH,
-    population_percentiles_path: str | Path | None = DEFAULT_POPULATION_PERCENTILES_PATH,
+    population_percentiles_path: (
+        str | Path | None
+    ) = DEFAULT_POPULATION_PERCENTILES_PATH,
     random_state: int = DEFAULT_RANDOM_STATE,
     max_epochs: int = _TABNET_MAX_EPOCHS,
     patience: int = _TABNET_PATIENCE,
@@ -172,7 +178,9 @@ def train_tabnet(
     # Data loading and preprocessing (fully reused infrastructure)
     # ------------------------------------------------------------------
     resolved_dataset, resolved_dataset_path = _load_dataset(dataset, dataset_path)
-    aligned_dataset, raw_text_embeddings = align_text_features_from_raw_text(resolved_dataset)
+    aligned_dataset, raw_text_embeddings = align_text_features_from_raw_text(
+        resolved_dataset
+    )
     validate_synthetic_dataset(
         aligned_dataset,
         expected_row_count=(
@@ -300,7 +308,9 @@ def train_tabnet(
     # ------------------------------------------------------------------
     if metrics_path is not None:
         existing_payload = _load_existing_metrics_payload(metrics_path)
-        existing_model_stats: list[dict[str, Any]] = existing_payload.get("model_stats", [])
+        existing_model_stats: list[dict[str, Any]] = existing_payload.get(
+            "model_stats", []
+        )
         merged_model_stats = _merge_model_stats(
             existing_model_stats=existing_model_stats,
             updated_model_stats=model_stats,
@@ -340,9 +350,9 @@ def train_tabnet(
             merged_model_stats
             if metrics_path is not None
             else _merge_model_stats(
-                existing_model_stats=_load_existing_metrics_payload(
-                    metrics_path
-                ).get("model_stats", []),
+                existing_model_stats=_load_existing_metrics_payload(metrics_path).get(
+                    "model_stats", []
+                ),
                 updated_model_stats=model_stats,
             )
         )

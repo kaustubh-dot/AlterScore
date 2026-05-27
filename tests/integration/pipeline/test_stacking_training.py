@@ -12,9 +12,6 @@ Test structure (6 tests mirroring TabNet/MLP pattern):
 """
 
 from __future__ import annotations
-import pytest
-pytestmark = pytest.mark.slow
-
 
 import json
 import numpy as np
@@ -33,6 +30,7 @@ from backend.ml.training.ensemble.train_stacking import (
     train_stacking,
 )
 
+pytestmark = pytest.mark.slow
 
 _SMALL_ROW_COUNT = 1_800
 _SEED = 7
@@ -62,6 +60,7 @@ def _patch_base_epochs(monkeypatch: pytest.MonkeyPatch) -> None:
     """Reduce neural base model epochs for fast smoke tests."""
     import backend.ml.training.neural.train_tabnet as _tn
     import backend.ml.training.neural.train_mlp as _mlp
+
     monkeypatch.setattr(_tn, "_TABNET_MAX_EPOCHS", 2)
     monkeypatch.setattr(_tn, "_TABNET_PATIENCE", 2)
     monkeypatch.setattr(_tn, "_TABNET_BATCH_SIZE", 256)
@@ -132,7 +131,10 @@ def test_train_stacking_smoke_roundtrip(tmp_path) -> None:
     loaded = load_stacking_model(artifact_path)
     rt_probs = predict_stacking_proba(loaded, inputs.test_probabilities)
     np.testing.assert_allclose(
-        rt_probs, art.test_probabilities, rtol=1e-6, atol=1e-6,
+        rt_probs,
+        art.test_probabilities,
+        rtol=1e-6,
+        atol=1e-6,
         err_msg="Loaded stacking model must reproduce identical probabilities.",
     )
 
@@ -157,6 +159,7 @@ def test_train_stacking_merges_into_existing_metrics(tmp_path) -> None:
     from backend.ml.training.classical.train_classical import train_classical_models
     import backend.ml.training.neural.train_tabnet as _tn
     import backend.ml.training.neural.train_mlp as _mlp
+
     # Patch epochs
     _tn._TABNET_MAX_EPOCHS = 2
     _tn._TABNET_PATIENCE = 2
@@ -169,19 +172,25 @@ def test_train_stacking_merges_into_existing_metrics(tmp_path) -> None:
     dataset = generate_synthetic_dataset(row_count=_SMALL_ROW_COUNT, seed=_SEED)
 
     bl = train_baselines(
-        dataset, expected_row_count=_SMALL_ROW_COUNT, minimum_test_rows=200,
+        dataset,
+        expected_row_count=_SMALL_ROW_COUNT,
+        minimum_test_rows=200,
         preprocessor_artifact_path=tmp_path / "preprocessor.pkl",
         text_pca_artifact_path=tmp_path / "text_pca.pkl",
         logistic_artifact_path=tmp_path / "logistic_best.pkl",
         baseline_metrics_path=tmp_path / "baseline_metrics.json",
         metrics_path=tmp_path / "metrics.json",
         population_percentiles_path=tmp_path / "population_percentiles.json",
-        psi_report_path=None, fairness_report_path=None,
-        global_importance_path=None, dice_explainer_path=None,
+        psi_report_path=None,
+        fairness_report_path=None,
+        global_importance_path=None,
+        dice_explainer_path=None,
     )
 
     cl = train_classical_models(
-        dataset, expected_row_count=_SMALL_ROW_COUNT, minimum_test_rows=200,
+        dataset,
+        expected_row_count=_SMALL_ROW_COUNT,
+        minimum_test_rows=200,
         preprocessor_artifact_path=tmp_path / "preprocessor.pkl",
         text_pca_artifact_path=tmp_path / "text_pca.pkl",
         random_forest_artifact_path=tmp_path / "rf_best.pkl",
@@ -191,13 +200,17 @@ def test_train_stacking_merges_into_existing_metrics(tmp_path) -> None:
         baseline_metrics_path=bl.baseline_metrics_path,
         metrics_path=bl.metrics_path,
         population_percentiles_path=bl.population_percentiles_path,
-        psi_report_path=None, fairness_report_path=None,
-        global_importance_path=None, dice_explainer_path=None,
+        psi_report_path=None,
+        fairness_report_path=None,
+        global_importance_path=None,
+        dice_explainer_path=None,
         random_state=_SEED,
     )
 
     tn = train_tabnet(
-        dataset, expected_row_count=_SMALL_ROW_COUNT, minimum_test_rows=200,
+        dataset,
+        expected_row_count=_SMALL_ROW_COUNT,
+        minimum_test_rows=200,
         preprocessor_artifact_path=tmp_path / "preprocessor.pkl",
         text_pca_artifact_path=tmp_path / "text_pca.pkl",
         tabnet_artifact_path=None,
@@ -207,7 +220,9 @@ def test_train_stacking_merges_into_existing_metrics(tmp_path) -> None:
     )
 
     mlp_art = train_mlp(
-        dataset, expected_row_count=_SMALL_ROW_COUNT, minimum_test_rows=200,
+        dataset,
+        expected_row_count=_SMALL_ROW_COUNT,
+        minimum_test_rows=200,
         preprocessor_artifact_path=tmp_path / "preprocessor.pkl",
         text_pca_artifact_path=tmp_path / "text_pca.pkl",
         mlp_artifact_path=None,
@@ -218,13 +233,18 @@ def test_train_stacking_merges_into_existing_metrics(tmp_path) -> None:
 
     # Build StackingInputs from already-trained artifacts
     from backend.ml.preprocessing.pipeline import (
-        align_text_features_from_raw_text, prepare_temporal_data, transform_features,
+        align_text_features_from_raw_text,
+        prepare_temporal_data,
+        transform_features,
     )
     import joblib
+
     aligned, raw_emb = align_text_features_from_raw_text(dataset.copy())
     prepared = prepare_temporal_data(
-        aligned, raw_text_embeddings=raw_emb,
-        text_pca_random_state=_SEED, text_pca_artifact_path=None,
+        aligned,
+        raw_text_embeddings=raw_emb,
+        text_pca_random_state=_SEED,
+        text_pca_artifact_path=None,
     )
     y_val = prepared.validation.y.to_numpy(dtype=int)
     y_test_arr = prepared.test.y.to_numpy(dtype=int)
@@ -287,8 +307,10 @@ def test_stacking_save_produces_pkl_artifact(tmp_path) -> None:
     art = train_stacking(
         stacking_inputs=inputs,
         stacking_artifact_path=tmp_path / "stacking.pkl",
-        stacking_config_path=None, metrics_path=None,
-        population_percentiles_path=None, random_state=_SEED,
+        stacking_config_path=None,
+        metrics_path=None,
+        population_percentiles_path=None,
+        random_state=_SEED,
     )
     assert art.stacking_artifact_path is not None
     assert art.stacking_artifact_path.suffix == ".pkl"
@@ -313,8 +335,10 @@ def test_train_stacking_temporal_split_integrity() -> None:
     inputs = _make_fake_stacking_inputs()
     art = train_stacking(
         stacking_inputs=inputs,
-        stacking_artifact_path=None, stacking_config_path=None,
-        metrics_path=None, population_percentiles_path=None,
+        stacking_artifact_path=None,
+        stacking_config_path=None,
+        metrics_path=None,
+        population_percentiles_path=None,
         random_state=_SEED,
     )
     assert len(art.model_stats) == 2
@@ -333,8 +357,10 @@ def test_train_stacking_missing_base_model_raises() -> None:
     with pytest.raises(ValueError, match="Missing base model"):
         train_stacking(
             stacking_inputs=inputs,
-            stacking_artifact_path=None, stacking_config_path=None,
-            metrics_path=None, population_percentiles_path=None,
+            stacking_artifact_path=None,
+            stacking_config_path=None,
+            metrics_path=None,
+            population_percentiles_path=None,
         )
 
 

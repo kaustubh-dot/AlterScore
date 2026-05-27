@@ -30,7 +30,9 @@ from backend.ml.preprocessing.feature_registry import (
 )
 
 DEFAULT_DATASET_OUTPUT_PATH: Final[Path] = RAW_DATA_DIR / "synthetic_dataset.csv"
-DEFAULT_VALIDATION_SUMMARY_PATH: Final[Path] = DATA_VALIDATION_DIR / "validation_summary.json"
+DEFAULT_VALIDATION_SUMMARY_PATH: Final[Path] = (
+    DATA_VALIDATION_DIR / "validation_summary.json"
+)
 WEAK_FEATURE_CORRELATION_THRESHOLD: Final[float] = 0.05
 LEAKAGE_CORRELATION_THRESHOLD: Final[float] = 0.65
 PROTECTED_CORRELATION_THRESHOLD: Final[float] = 0.15
@@ -63,7 +65,9 @@ def materialize_synthetic_dataset(
     )
 
     resolved_dataset_path = Path(dataset_path or DEFAULT_DATASET_OUTPUT_PATH)
-    resolved_summary_path = Path(validation_summary_path or DEFAULT_VALIDATION_SUMMARY_PATH)
+    resolved_summary_path = Path(
+        validation_summary_path or DEFAULT_VALIDATION_SUMMARY_PATH
+    )
     resolved_dataset_path.parent.mkdir(parents=True, exist_ok=True)
     resolved_summary_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -92,12 +96,18 @@ def build_validation_summary(
 
     validation = validate_synthetic_dataset(
         dataset,
-        expected_row_count=len(dataset) if expected_row_count is None else expected_row_count,
+        expected_row_count=(
+            len(dataset) if expected_row_count is None else expected_row_count
+        ),
         minimum_test_rows=minimum_test_rows,
     )
     numeric_correlations = _compute_numeric_feature_label_correlations(dataset)
-    categorical_correlations = _compute_dummy_label_correlations(dataset, CATEGORICAL_FEATURES)
-    protected_correlations = _compute_dummy_label_correlations(dataset, PROTECTED_FEATURES)
+    categorical_correlations = _compute_dummy_label_correlations(
+        dataset, CATEGORICAL_FEATURES
+    )
+    protected_correlations = _compute_dummy_label_correlations(
+        dataset, PROTECTED_FEATURES
+    )
 
     weak_features = [
         feature_name
@@ -122,12 +132,20 @@ def build_validation_summary(
         "months_11_12_rows": validation["test_rows"],
         "month_count": validation["month_count"],
         "split_row_counts": {
-            "train": int(dataset["cohort_month"].isin(TEMPORAL_SPLIT_MONTHS["train"]).sum()),
-            "validation": int(dataset["cohort_month"].isin(TEMPORAL_SPLIT_MONTHS["validation"]).sum()),
-            "test": int(dataset["cohort_month"].isin(TEMPORAL_SPLIT_MONTHS["test"]).sum()),
+            "train": int(
+                dataset["cohort_month"].isin(TEMPORAL_SPLIT_MONTHS["train"]).sum()
+            ),
+            "validation": int(
+                dataset["cohort_month"].isin(TEMPORAL_SPLIT_MONTHS["validation"]).sum()
+            ),
+            "test": int(
+                dataset["cohort_month"].isin(TEMPORAL_SPLIT_MONTHS["test"]).sum()
+            ),
         },
         "shape": [int(dataset.shape[0]), int(dataset.shape[1])],
-        "dtypes": {column_name: str(dtype) for column_name, dtype in dataset.dtypes.items()},
+        "dtypes": {
+            column_name: str(dtype) for column_name, dtype in dataset.dtypes.items()
+        },
         "missing_values": {
             column_name: int(count)
             for column_name, count in dataset.isnull().sum().items()
@@ -150,7 +168,9 @@ def build_validation_summary(
     }
 
 
-def _compute_numeric_feature_stats(dataset: pd.DataFrame) -> dict[str, dict[str, float]]:
+def _compute_numeric_feature_stats(
+    dataset: pd.DataFrame,
+) -> dict[str, dict[str, float]]:
     stats: dict[str, dict[str, float]] = {}
     for feature_name in NUMERIC_FEATURES:
         feature_series = pd.to_numeric(dataset[feature_name], errors="coerce")
@@ -164,7 +184,9 @@ def _compute_numeric_feature_stats(dataset: pd.DataFrame) -> dict[str, dict[str,
     return stats
 
 
-def _compute_numeric_feature_label_correlations(dataset: pd.DataFrame) -> dict[str, float]:
+def _compute_numeric_feature_label_correlations(
+    dataset: pd.DataFrame,
+) -> dict[str, float]:
     label = pd.to_numeric(dataset[TARGET], errors="coerce")
     correlations: dict[str, float] = {}
     for feature_name in NUMERIC_FEATURES:

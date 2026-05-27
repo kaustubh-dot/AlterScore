@@ -7,13 +7,11 @@ from pathlib import Path
 from typing import Mapping
 
 from backend.app.core.paths import (
-    PRODUCTION_MANIFEST_PATH,
     PRODUCTION_MANIFEST_RELATIVE_PATH,
     REPO_ROOT,
     REQUEST_LOG_RELATIVE_PATH,
     resolve_repo_path,
 )
-
 
 DEFAULT_CORS_ORIGINS = (
     "http://localhost:5173",
@@ -43,9 +41,11 @@ def _split_csv(value: str | None) -> tuple[str, ...]:
 def load_settings(env: Mapping[str, str] | None = None) -> Settings:
     """Load settings from environment variables without side effects."""
     source = environ if env is None else env
-    repo_root = Path(source["ALTERSCORE_REPO_ROOT"]).resolve() if source.get(
-        "ALTERSCORE_REPO_ROOT"
-    ) else REPO_ROOT
+    repo_root = (
+        Path(source["ALTERSCORE_REPO_ROOT"]).resolve()
+        if source.get("ALTERSCORE_REPO_ROOT")
+        else REPO_ROOT
+    )
     manifest_value = source.get("ALTERSCORE_MODEL_MANIFEST")
     model_manifest_path = (
         resolve_repo_path(manifest_value, repo_root)

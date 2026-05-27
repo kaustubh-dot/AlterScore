@@ -41,7 +41,9 @@ TEXT_INTERPRETABLE_FEATURES: Final[tuple[str, ...]] = (
 )
 TEXT_PCA_COMPONENTS: Final[int] = 2
 TEXT_PCA_RANDOM_STATE: Final[int] = 42
-DEFAULT_PREPROCESSOR_ARTIFACT_PATH: Final[Path] = MODEL_PREPROCESSORS_DIR / "preprocessor.pkl"
+DEFAULT_PREPROCESSOR_ARTIFACT_PATH: Final[Path] = (
+    MODEL_PREPROCESSORS_DIR / "preprocessor.pkl"
+)
 DEFAULT_TEXT_PCA_ARTIFACT_PATH: Final[Path] = MODEL_PREPROCESSORS_DIR / "text_pca.pkl"
 TEXT_SOURCE_COLUMN: Final[str] = RAW_TEXT_RESPONSE_COLUMN
 SYNTHETIC_TEXT_SOURCE_COLUMNS: Final[tuple[str, ...]] = (
@@ -55,7 +57,9 @@ SYNTHETIC_TEXT_SOURCE_COLUMNS: Final[tuple[str, ...]] = (
     "honesty_score",
 )
 NON_DERIVED_MODEL_FEATURES: Final[list[str]] = [
-    feature_name for feature_name in ALL_MODEL_FEATURES if feature_name not in DERIVED_FEATURES
+    feature_name
+    for feature_name in ALL_MODEL_FEATURES
+    if feature_name not in DERIVED_FEATURES
 ]
 
 
@@ -124,8 +128,14 @@ def prepare_temporal_data(
     """Split a dataset by cohort month and inject train-fitted text PCA features."""
 
     _assert_required_dataset_columns(dataset)
-    feature_source_columns = [column_name for column_name in dataset.columns if column_name in ALL_MODEL_FEATURES]
-    feature_frame = prepare_model_feature_frame(dataset.loc[:, feature_source_columns].copy())
+    feature_source_columns = [
+        column_name
+        for column_name in dataset.columns
+        if column_name in ALL_MODEL_FEATURES
+    ]
+    feature_frame = prepare_model_feature_frame(
+        dataset.loc[:, feature_source_columns].copy()
+    )
     _assert_feature_exclusions(feature_frame.columns)
 
     train_mask = dataset["cohort_month"].isin(TEMPORAL_SPLIT_MONTHS["train"])
@@ -135,7 +145,9 @@ def prepare_temporal_data(
 
     text_pca: PCA | None = None
     if raw_text_embeddings is not None:
-        _assert_embedding_shape(raw_text_embeddings=raw_text_embeddings, expected_rows=len(dataset))
+        _assert_embedding_shape(
+            raw_text_embeddings=raw_text_embeddings, expected_rows=len(dataset)
+        )
         text_pca = fit_text_pca(
             raw_text_embeddings[train_mask.to_numpy()],
             n_components=text_pca_components,
@@ -263,16 +275,22 @@ def prepare_model_feature_frame(feature_frame: pd.DataFrame) -> pd.DataFrame:
 
     updated_feature_frame = feature_frame.copy()
     missing_derived_features = [
-        feature_name for feature_name in DERIVED_FEATURES if feature_name not in updated_feature_frame.columns
+        feature_name
+        for feature_name in DERIVED_FEATURES
+        if feature_name not in updated_feature_frame.columns
     ]
     if missing_derived_features:
         updated_feature_frame = add_derived_features(updated_feature_frame)
 
     missing_columns = [
-        feature_name for feature_name in ALL_MODEL_FEATURES if feature_name not in updated_feature_frame.columns
+        feature_name
+        for feature_name in ALL_MODEL_FEATURES
+        if feature_name not in updated_feature_frame.columns
     ]
     if missing_columns:
-        raise ValueError(f"Feature frame is missing required model features: {missing_columns}")
+        raise ValueError(
+            f"Feature frame is missing required model features: {missing_columns}"
+        )
 
     return updated_feature_frame.loc[:, ALL_MODEL_FEATURES].copy()
 
@@ -305,8 +323,15 @@ def _build_split(
 
 
 def _assert_required_dataset_columns(dataset: pd.DataFrame) -> None:
-    required_columns = [*NON_DERIVED_MODEL_FEATURES, *PROTECTED_FEATURES, *TEMPORAL_METADATA, TARGET]
-    missing_columns = [column for column in required_columns if column not in dataset.columns]
+    required_columns = [
+        *NON_DERIVED_MODEL_FEATURES,
+        *PROTECTED_FEATURES,
+        *TEMPORAL_METADATA,
+        TARGET,
+    ]
+    missing_columns = [
+        column for column in required_columns if column not in dataset.columns
+    ]
     if missing_columns:
         raise ValueError(f"Dataset is missing required columns: {missing_columns}")
 
@@ -325,12 +350,18 @@ def _assert_temporal_masks(
     test_mask: pd.Series,
 ) -> None:
     if not train_mask.any() or not validation_mask.any() or not test_mask.any():
-        raise ValueError("Temporal split must produce non-empty train, validation, and test splits.")
+        raise ValueError(
+            "Temporal split must produce non-empty train, validation, and test splits."
+        )
 
     month_series = dataset["cohort_month"]
     if month_series.loc[train_mask].max() > max(TEMPORAL_SPLIT_MONTHS["train"]):
         raise ValueError("Train split includes rows outside months 1-8.")
-    if not month_series.loc[validation_mask].isin(TEMPORAL_SPLIT_MONTHS["validation"]).all():
+    if (
+        not month_series.loc[validation_mask]
+        .isin(TEMPORAL_SPLIT_MONTHS["validation"])
+        .all()
+    ):
         raise ValueError("Validation split includes rows outside months 9-10.")
     if month_series.loc[test_mask].min() < min(TEMPORAL_SPLIT_MONTHS["test"]):
         raise ValueError("Test split includes rows outside months 11-12.")
@@ -339,7 +370,9 @@ def _assert_temporal_masks(
         train_mask.astype(int) + validation_mask.astype(int) + test_mask.astype(int)
     )
     if not (combined_counts == 1).all():
-        raise ValueError("Temporal split masks must be disjoint and cover the full dataset.")
+        raise ValueError(
+            "Temporal split masks must be disjoint and cover the full dataset."
+        )
 
 
 def _assert_embedding_shape(
@@ -389,16 +422,20 @@ def _build_synthetic_resilience_text(row: Any) -> str:
     sentiment_clause = (
         "I stayed optimistic and calm while dealing with the setback."
         if float(row.text_sentiment_compound) >= 0.25
-        else "I stayed cautious but steady while dealing with the setback."
-        if float(row.text_sentiment_compound) >= -0.15
-        else "I felt stressed and uncertain while dealing with the setback."
+        else (
+            "I stayed cautious but steady while dealing with the setback."
+            if float(row.text_sentiment_compound) >= -0.15
+            else "I felt stressed and uncertain while dealing with the setback."
+        )
     )
     agency_clause = (
         "I took action early and handled the problem myself."
         if float(row.text_agency_score) >= 0.65
-        else "I tried to respond and make decisions as the situation changed."
-        if float(row.text_agency_score) >= 0.40
-        else "I felt stuck for a while before reacting."
+        else (
+            "I tried to respond and make decisions as the situation changed."
+            if float(row.text_agency_score) >= 0.40
+            else "I felt stuck for a while before reacting."
+        )
     )
     problem_solving_clause = (
         "I reduced expenses, adjusted my budget, and looked for extra work."

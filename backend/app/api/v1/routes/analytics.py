@@ -28,7 +28,6 @@ from backend.app.services.analytics import (
     AnalyticsPayloadError,
 )
 
-
 router = APIRouter(tags=["analytics"])
 logger = logging.getLogger(__name__)
 
@@ -54,7 +53,9 @@ def get_model_stats(request: Request) -> ModelStatsResponse | JSONResponse:
             ),
             details={
                 "missing_artifacts": [exc.artifact_key],
-                "artifact_path": None if exc.artifact_path is None else str(exc.artifact_path),
+                "artifact_path": (
+                    None if exc.artifact_path is None else str(exc.artifact_path)
+                ),
             },
         )
     except AnalyticsPayloadError as exc:
@@ -75,7 +76,9 @@ def get_model_stats(request: Request) -> ModelStatsResponse | JSONResponse:
         500: {"model": ErrorResponse},
     },
 )
-def get_baseline_comparison(request: Request) -> BaselineComparisonResponse | JSONResponse:
+def get_baseline_comparison(
+    request: Request,
+) -> BaselineComparisonResponse | JSONResponse:
     analytics_service = request.app.state.analytics_service
 
     try:
@@ -89,7 +92,9 @@ def get_baseline_comparison(request: Request) -> BaselineComparisonResponse | JS
             ),
             details={
                 "missing_artifacts": [exc.artifact_key],
-                "artifact_path": None if exc.artifact_path is None else str(exc.artifact_path),
+                "artifact_path": (
+                    None if exc.artifact_path is None else str(exc.artifact_path)
+                ),
             },
         )
     except AnalyticsPayloadError as exc:
@@ -165,7 +170,9 @@ def get_global_importance(request: Request) -> GlobalImportanceResponse | JSONRe
         500: {"model": ErrorResponse},
     },
 )
-def get_score_distribution(request: Request) -> ScoreDistributionResponse | JSONResponse:
+def get_score_distribution(
+    request: Request,
+) -> ScoreDistributionResponse | JSONResponse:
     analytics_service = request.app.state.analytics_service
 
     try:
@@ -179,7 +186,9 @@ def get_score_distribution(request: Request) -> ScoreDistributionResponse | JSON
             ),
             details={
                 "missing_artifacts": [exc.artifact_key],
-                "artifact_path": None if exc.artifact_path is None else str(exc.artifact_path),
+                "artifact_path": (
+                    None if exc.artifact_path is None else str(exc.artifact_path)
+                ),
             },
         )
     except AnalyticsPayloadError as exc:
@@ -298,7 +307,9 @@ def _execute_analytics_request(
             message=missing_message,
             details={
                 "missing_artifacts": [exc.artifact_key],
-                "artifact_path": None if exc.artifact_path is None else str(exc.artifact_path),
+                "artifact_path": (
+                    None if exc.artifact_path is None else str(exc.artifact_path)
+                ),
             },
         )
     except AnalyticsPayloadError as exc:
@@ -329,7 +340,9 @@ def _analytics_error_response(
             }
         }
     )
-    return JSONResponse(status_code=status_code, content=payload.model_dump(mode="json"))
+    return JSONResponse(
+        status_code=status_code, content=payload.model_dump(mode="json")
+    )
 
 
 __all__ = ["router"]

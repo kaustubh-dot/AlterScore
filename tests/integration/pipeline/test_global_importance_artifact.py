@@ -1,9 +1,7 @@
-import pytest
-pytestmark = pytest.mark.slow
-
 import json
 
 import numpy as np
+import pytest
 
 from backend.app.core.artifact_loader import load_runtime_artifact_bundle
 from backend.app.core.settings import load_settings
@@ -17,6 +15,8 @@ from backend.ml.preprocessing.feature_registry import (
 )
 from backend.ml.training.classical.baselines import train_baselines
 from backend.ml.training.classical.train_classical import train_classical_models
+
+pytestmark = pytest.mark.slow
 
 
 def test_train_baselines_persists_global_importance_report_for_canonical_model_inputs(
@@ -59,7 +59,9 @@ def test_train_baselines_persists_global_importance_report_for_canonical_model_i
     assert np.isfinite(importance_values).all()
     assert np.all(importance_values >= 0.0)
     assert np.any(importance_values > 0.0)
-    assert importance_values.tolist() == sorted(importance_values.tolist(), reverse=True)
+    assert importance_values.tolist() == sorted(
+        importance_values.tolist(), reverse=True
+    )
     assert [row.rank for row in report.items] == list(range(1, len(report.items) + 1))
     assert {row.category for row in report.items} == {
         "psychometric",
@@ -119,7 +121,9 @@ def test_train_classical_models_persists_global_importance_and_runtime_loading_s
         logistic_artifact_path=model_root / "artifacts" / "logistic_best.pkl",
         baseline_metrics_path=model_root / "reports" / "baseline_metrics.json",
         metrics_path=model_root / "reports" / "metrics.json",
-        population_percentiles_path=model_root / "reports" / "population_percentiles.json",
+        population_percentiles_path=model_root
+        / "reports"
+        / "population_percentiles.json",
         psi_report_path=model_root / "reports" / "psi_report.json",
         fairness_report_path=model_root / "reports" / "fairness_report.json",
         global_importance_path=model_root / "reports" / "global_importance.json",
@@ -138,7 +142,10 @@ def test_train_classical_models_persists_global_importance_and_runtime_loading_s
         baseline_metrics_path=baseline_artifacts.baseline_metrics_path,
         metrics_path=baseline_artifacts.metrics_path,
         population_percentiles_path=baseline_artifacts.population_percentiles_path,
-        global_importance_path=baseline_artifacts.global_importance_path, psi_report_path=None, fairness_report_path=None, dice_explainer_path=None,
+        global_importance_path=baseline_artifacts.global_importance_path,
+        psi_report_path=None,
+        fairness_report_path=None,
+        dice_explainer_path=None,
         random_state=17,
     )
 
@@ -156,7 +163,9 @@ def test_train_classical_models_persists_global_importance_and_runtime_loading_s
 
     assert artifacts.global_importance_path.is_file()
     assert report.items[0].mean_abs_shap >= report.items[-1].mean_abs_shap
-    assert report.model_name == _best_supported_model_name(metrics_payload["model_stats"])
+    assert report.model_name == _best_supported_model_name(
+        metrics_payload["model_stats"]
+    )
     assert bundle.report.scoring_ready is True
     assert "global_importance" in bundle.report.artifacts_loaded
 

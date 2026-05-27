@@ -28,6 +28,7 @@ import joblib
 import numpy as np
 import pandas as pd
 from sklearn.calibration import CalibratedClassifierCV
+
 try:
     from sklearn.frozen import FrozenEstimator
 except ImportError:
@@ -35,7 +36,9 @@ except ImportError:
 from sklearn.linear_model import LogisticRegression
 
 from backend.app.core.paths import MODEL_ARTIFACTS_DIR, RAW_DATA_DIR
-from backend.ml.data_generation.validators import MINIMUM_TEST_ROWS, validate_synthetic_dataset
+from backend.ml.data_generation.validators import (
+    MINIMUM_TEST_ROWS,
+)
 from backend.ml.evaluation.metrics import (
     build_population_percentiles_payload,
     build_split_evaluation_details,
@@ -55,7 +58,6 @@ from backend.ml.preprocessing.pipeline import (
 )
 from backend.ml.training.classical.baselines import (
     DEFAULT_BASELINE_METRICS_PATH,
-    DEFAULT_LOGISTIC_ARTIFACT_PATH,
     DEFAULT_METRICS_PATH,
     DEFAULT_POPULATION_PERCENTILES_PATH,
     DEFAULT_RANDOM_STATE,
@@ -91,9 +93,16 @@ BASE_MODEL_ORDER: Final[tuple[str, ...]] = (
 )
 
 NUMERIC_METRIC_FIELDS: Final[tuple[str, ...]] = (
-    "auc_roc", "auc_pr", "ks_statistic", "brier_score",
-    "expected_calibration_error", "accuracy", "precision",
-    "recall", "f1", "threshold",
+    "auc_roc",
+    "auc_pr",
+    "ks_statistic",
+    "brier_score",
+    "expected_calibration_error",
+    "accuracy",
+    "precision",
+    "recall",
+    "f1",
+    "threshold",
 )
 
 _META_LEARNER_C: Final[float] = 1.0
@@ -109,8 +118,9 @@ _META_LEARNER_SOLVER: Final[str] = "lbfgs"
 @dataclass
 class StackingInputs:
     """Probability arrays from all base models on the same temporal split."""
+
     validation_probabilities: dict[str, np.ndarray]  # model_name -> (n_val,)
-    test_probabilities: dict[str, np.ndarray]         # model_name -> (n_test,)
+    test_probabilities: dict[str, np.ndarray]  # model_name -> (n_test,)
     y_validation: np.ndarray
     y_test: np.ndarray
 
@@ -145,7 +155,9 @@ def train_stacking(
     stacking_artifact_path: str | Path | None = DEFAULT_STACKING_ARTIFACT_PATH,
     stacking_config_path: str | Path | None = DEFAULT_STACKING_CONFIG_PATH,
     metrics_path: str | Path | None = DEFAULT_METRICS_PATH,
-    population_percentiles_path: str | Path | None = DEFAULT_POPULATION_PERCENTILES_PATH,
+    population_percentiles_path: (
+        str | Path | None
+    ) = DEFAULT_POPULATION_PERCENTILES_PATH,
     random_state: int = DEFAULT_RANDOM_STATE,
     max_epochs: int | None = None,
     patience: int | None = None,
@@ -285,29 +297,41 @@ def train_stacking(
     # ------------------------------------------------------------------
     model_stats = [
         compute_binary_classification_metrics(
-            y_val, val_probs,
-            model_name=ENSEMBLE_MODEL_NAME, model_type=ENSEMBLE_MODEL_TYPE,
-            split="validation_months_9_10", threshold=val_threshold,
+            y_val,
+            val_probs,
+            model_name=ENSEMBLE_MODEL_NAME,
+            model_type=ENSEMBLE_MODEL_TYPE,
+            split="validation_months_9_10",
+            threshold=val_threshold,
         ),
         compute_binary_classification_metrics(
-            y_test, test_probs,
-            model_name=ENSEMBLE_MODEL_NAME, model_type=ENSEMBLE_MODEL_TYPE,
-            split="test_months_11_12", threshold=val_threshold,
+            y_test,
+            test_probs,
+            model_name=ENSEMBLE_MODEL_NAME,
+            model_type=ENSEMBLE_MODEL_TYPE,
+            split="test_months_11_12",
+            threshold=val_threshold,
         ),
     ]
     eval_details: dict[str, dict[str, Any]] = {
         "validation_months_9_10": {
             ENSEMBLE_MODEL_NAME: build_split_evaluation_details(
-                y_val, val_probs,
-                model_name=ENSEMBLE_MODEL_NAME, model_type=ENSEMBLE_MODEL_TYPE,
-                split="validation_months_9_10", threshold=val_threshold,
+                y_val,
+                val_probs,
+                model_name=ENSEMBLE_MODEL_NAME,
+                model_type=ENSEMBLE_MODEL_TYPE,
+                split="validation_months_9_10",
+                threshold=val_threshold,
             )
         },
         "test_months_11_12": {
             ENSEMBLE_MODEL_NAME: build_split_evaluation_details(
-                y_test, test_probs,
-                model_name=ENSEMBLE_MODEL_NAME, model_type=ENSEMBLE_MODEL_TYPE,
-                split="test_months_11_12", threshold=val_threshold,
+                y_test,
+                test_probs,
+                model_name=ENSEMBLE_MODEL_NAME,
+                model_type=ENSEMBLE_MODEL_TYPE,
+                split="test_months_11_12",
+                threshold=val_threshold,
             )
         },
     }
@@ -332,8 +356,17 @@ def train_stacking(
             updated_model_stats=model_stats,
         )
         metrics_out: dict[str, Any] = {
-            **{k: v for k, v in existing.items()
-               if k not in {"run_id", "split_row_counts", "model_stats", "evaluation_details"}},
+            **{
+                k: v
+                for k, v in existing.items()
+                if k
+                not in {
+                    "run_id",
+                    "split_row_counts",
+                    "model_stats",
+                    "evaluation_details",
+                }
+            },
             "run_id": run_id,
             "split_row_counts": {
                 "validation": int(len(y_val)),
@@ -543,6 +576,7 @@ def _build_stacking_inputs(
         and bl.logistic_model_path.is_file()
     ):
         import joblib as _jl
+
         _pre = _jl.load(str(preprocessor_artifact_path))
         _log = _jl.load(str(bl.logistic_model_path))
         _Xv = transform_features(_pre, prepared.validation.X)
@@ -552,6 +586,7 @@ def _build_stacking_inputs(
     else:
         # Fallback: fit logistic inline on the prepared split
         from sklearn.linear_model import LogisticRegression as _LR
+
         _pre2 = fit_preprocessor(prepared.train.X, artifact_path=None)
         _Xtr = transform_features(_pre2, prepared.train.X)
         _Xv2 = transform_features(_pre2, prepared.validation.X)
@@ -640,7 +675,8 @@ def _save_json(payload: Any, path: str | Path) -> None:
 
 
 def _merge_model_stats(
-    *, existing_model_stats: list[dict[str, Any]],
+    *,
+    existing_model_stats: list[dict[str, Any]],
     updated_model_stats: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
     lookup = {(r["model_name"], r["split"]): r for r in updated_model_stats}
@@ -663,7 +699,8 @@ def _merge_model_stats(
 
 
 def _resolve_default_model_name(
-    *, model_stats: list[dict[str, Any]],
+    *,
+    model_stats: list[dict[str, Any]],
     existing_payload: dict[str, Any] | None,
     updated_payloads: dict[str, dict[str, Any]],
 ) -> str:
@@ -671,11 +708,15 @@ def _resolve_default_model_name(
     if isinstance(existing_payload, dict):
         em = existing_payload.get("models")
         if isinstance(em, dict):
-            available.update(n for n, p in em.items() if isinstance(n, str) and isinstance(p, dict))
+            available.update(
+                n for n, p in em.items() if isinstance(n, str) and isinstance(p, dict)
+            )
     selected = select_best_test_auc_model(model_stats, candidate_model_names=available)
     if selected is not None:
         return selected
-    ed = None if existing_payload is None else existing_payload.get("default_model_name")
+    ed = (
+        None if existing_payload is None else existing_payload.get("default_model_name")
+    )
     if isinstance(ed, str) and ed in available:
         return ed
     if available:
@@ -684,8 +725,14 @@ def _resolve_default_model_name(
 
 
 __all__ = [
-    "BASE_MODEL_ORDER", "DEFAULT_STACKING_ARTIFACT_PATH",
-    "DEFAULT_STACKING_CONFIG_PATH", "ENSEMBLE_MODEL_NAME", "ENSEMBLE_MODEL_TYPE",
-    "StackingInputs", "StackingTrainingArtifacts",
-    "load_stacking_model", "predict_stacking_proba", "train_stacking",
+    "BASE_MODEL_ORDER",
+    "DEFAULT_STACKING_ARTIFACT_PATH",
+    "DEFAULT_STACKING_CONFIG_PATH",
+    "ENSEMBLE_MODEL_NAME",
+    "ENSEMBLE_MODEL_TYPE",
+    "StackingInputs",
+    "StackingTrainingArtifacts",
+    "load_stacking_model",
+    "predict_stacking_proba",
+    "train_stacking",
 ]

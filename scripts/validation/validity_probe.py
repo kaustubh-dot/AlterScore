@@ -38,14 +38,23 @@ def probe_synthetic_data_distribution() -> None:
     elif default_rate > 0.45:
         print("  [FAIL] Default rate too high (> 45%). Model may be too pessimistic.")
     else:
-        print(f"  [PASS] Default rate {default_rate:.1%} is in the target range [30%, 45%].")
+        print(
+            f"  [PASS] Default rate {default_rate:.1%} is in the target range [30%, 45%]."
+        )
 
     print()
     print("  Feature statistics:")
     key_features = [
-        "numeracy_score", "CRT_score", "honesty_score", "resilience_score",
-        "conscientiousness_score", "future_orientation", "psychological_credit_index",
-        "engagement_score", "impulsivity_index", "behavioral_trust_score",
+        "numeracy_score",
+        "CRT_score",
+        "honesty_score",
+        "resilience_score",
+        "conscientiousness_score",
+        "future_orientation",
+        "psychological_credit_index",
+        "engagement_score",
+        "impulsivity_index",
+        "behavioral_trust_score",
     ]
     for col in key_features:
         mean = df[col].mean()
@@ -108,8 +117,14 @@ def probe_random_answer_profile() -> None:
     print()
     for feature_name, values in all_features.items():
         arr = np.array(values)
-        status = "[PASS]" if arr.mean() < 0.40 else ("[WARN]" if arr.mean() < 0.55 else "[FAIL]")
-        print(f"    {status:8s} {feature_name:35s}: mean={arr.mean():.3f}  std={arr.std():.3f}")
+        status = (
+            "[PASS]"
+            if arr.mean() < 0.40
+            else ("[WARN]" if arr.mean() < 0.55 else "[FAIL]")
+        )
+        print(
+            f"    {status:8s} {feature_name:35s}: mean={arr.mean():.3f}  std={arr.std():.3f}"
+        )
     print()
 
 
@@ -121,8 +136,24 @@ def probe_score_mapping() -> None:
 
     from backend.ml.inference.score_mapper import probability_to_score, get_risk_band
 
-    probabilities = [0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.65, 0.70, 0.75,
-                     0.80, 0.85, 0.90, 0.95, 0.97, 0.98, 0.99]
+    probabilities = [
+        0.10,
+        0.20,
+        0.30,
+        0.40,
+        0.50,
+        0.60,
+        0.65,
+        0.70,
+        0.75,
+        0.80,
+        0.85,
+        0.90,
+        0.95,
+        0.97,
+        0.98,
+        0.99,
+    ]
     print(f"  {'Probability':>12s}  {'Score':>6s}  {'Band':>10s}")
     print(f"  {'-'*12}  {'-'*6}  {'-'*10}")
     for prob in probabilities:
@@ -202,12 +233,14 @@ def probe_governance_multiplier() -> None:
         band = get_risk_band(score)
         print(f"\n  {profile_name}:")
         print(f"    Multiplier: {multiplier:.3f}")
-        print(f"    If base P=0.95 -> adjusted P={adjusted:.3f} -> score={score} ({band})")
+        print(
+            f"    If base P=0.95 -> adjusted P={adjusted:.3f} -> score={score} ({band})"
+        )
         if reasons:
             for reason in reasons:
                 print(f"    [WARN] {reason}")
         else:
-            print(f"    [PASS] No governance penalties triggered")
+            print("    [PASS] No governance penalties triggered")
     print()
 
 

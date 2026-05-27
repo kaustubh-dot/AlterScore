@@ -5,7 +5,6 @@ import json
 from pathlib import Path
 import sys
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
@@ -111,26 +110,56 @@ def main(argv: list[str] | None = None) -> int:
         json.dumps(
             {
                 "run_id": artifacts.run_id,
-                "dataset_path": None if artifacts.dataset_path is None else str(artifacts.dataset_path),
-                "preprocessor_path": None if artifacts.preprocessor_path is None else str(artifacts.preprocessor_path),
-                "text_pca_path": None if artifacts.text_pca_path is None else str(artifacts.text_pca_path),
-                "logistic_model_path": None if artifacts.logistic_model_path is None else str(artifacts.logistic_model_path),
-                "baseline_metrics_path": None if artifacts.baseline_metrics_path is None else str(artifacts.baseline_metrics_path),
-                "population_percentiles_path": None
-                if artifacts.population_percentiles_path is None
-                else str(artifacts.population_percentiles_path),
-                "psi_report_path": None
-                if artifacts.psi_report_path is None
-                else str(artifacts.psi_report_path),
-                "fairness_report_path": None
-                if artifacts.fairness_report_path is None
-                else str(artifacts.fairness_report_path),
-                "global_importance_path": None
-                if artifacts.global_importance_path is None
-                else str(artifacts.global_importance_path),
-                "dice_explainer_path": None
-                if artifacts.dice_explainer_path is None
-                else str(artifacts.dice_explainer_path),
+                "dataset_path": (
+                    None
+                    if artifacts.dataset_path is None
+                    else str(artifacts.dataset_path)
+                ),
+                "preprocessor_path": (
+                    None
+                    if artifacts.preprocessor_path is None
+                    else str(artifacts.preprocessor_path)
+                ),
+                "text_pca_path": (
+                    None
+                    if artifacts.text_pca_path is None
+                    else str(artifacts.text_pca_path)
+                ),
+                "logistic_model_path": (
+                    None
+                    if artifacts.logistic_model_path is None
+                    else str(artifacts.logistic_model_path)
+                ),
+                "baseline_metrics_path": (
+                    None
+                    if artifacts.baseline_metrics_path is None
+                    else str(artifacts.baseline_metrics_path)
+                ),
+                "population_percentiles_path": (
+                    None
+                    if artifacts.population_percentiles_path is None
+                    else str(artifacts.population_percentiles_path)
+                ),
+                "psi_report_path": (
+                    None
+                    if artifacts.psi_report_path is None
+                    else str(artifacts.psi_report_path)
+                ),
+                "fairness_report_path": (
+                    None
+                    if artifacts.fairness_report_path is None
+                    else str(artifacts.fairness_report_path)
+                ),
+                "global_importance_path": (
+                    None
+                    if artifacts.global_importance_path is None
+                    else str(artifacts.global_importance_path)
+                ),
+                "dice_explainer_path": (
+                    None
+                    if artifacts.dice_explainer_path is None
+                    else str(artifacts.dice_explainer_path)
+                ),
                 "logistic_test_auc": next(
                     metric["auc_roc"]
                     for metric in artifacts.model_stats

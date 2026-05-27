@@ -23,7 +23,9 @@ def test_build_fairness_report_marks_empty_audit_as_inconclusive() -> None:
 
     assert report["flagged_groups"] == []
     assert "inconclusive" in report["verdict"]
-    assert all(not report["groups"][feature_name] for feature_name in PROTECTED_FEATURES)
+    assert all(
+        not report["groups"][feature_name] for feature_name in PROTECTED_FEATURES
+    )
 
 
 def test_calibration_parity_computes_group_curves_and_ece_gaps() -> None:
@@ -90,7 +92,10 @@ def test_build_fairness_report_includes_governance_detail_sections() -> None:
         gender=["female", "female", "female", "female", "male", "male", "male", "male"],
     )
     feature_frame = _psychometric_feature_frame(
-        [[0.65 + index * 0.01] * len(PSYCHOMETRIC_SIMILARITY_FEATURES) for index in range(8)]
+        [
+            [0.65 + index * 0.01] * len(PSYCHOMETRIC_SIMILARITY_FEATURES)
+            for index in range(8)
+        ]
     )
 
     report = build_fairness_report(

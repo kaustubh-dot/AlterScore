@@ -150,7 +150,9 @@ def test_score_request_with_loaded_bundle_returns_schema_valid_runtime_response(
         assert response.counterfactual_actions
     else:
         assert isinstance(response.counterfactual_actions, list)
-    assert all(action.estimated_score_gain >= 0 for action in response.counterfactual_actions)
+    assert all(
+        action.estimated_score_gain >= 0 for action in response.counterfactual_actions
+    )
     assert response.loan_eligibility.band == response.risk_band
     assert response.improvement_tips
 
@@ -203,7 +205,9 @@ def test_load_runtime_artifact_bundle_fails_clearly_for_malformed_manifest(
     artifact_paths = _prepare_runtime_bundle(tmp_path, include_shap_explainer=True)
     manifest_path = _write_manifest(tmp_path, artifact_paths)
     manifest_payload = json.loads(manifest_path.read_text(encoding="utf-8"))
-    manifest_payload["artifacts"]["runtime_model"] = "models/artifacts/logistic_best.pkl"
+    manifest_payload["artifacts"][
+        "runtime_model"
+    ] = "models/artifacts/logistic_best.pkl"
     manifest_path.write_text(
         json.dumps(manifest_payload, indent=2),
         encoding="utf-8",
@@ -293,9 +297,10 @@ def test_load_runtime_artifact_bundle_rejects_stale_ensemble_base_order(
 
     assert bundle.report.scoring_ready is False
     assert "base_models" in bundle.report.invalid_artifacts
-    assert "must match stacking_config base_model_order" in bundle.report.artifact_errors[
-        "base_models"
-    ]
+    assert (
+        "must match stacking_config base_model_order"
+        in bundle.report.artifact_errors["base_models"]
+    )
 
 
 def test_production_manifest_requires_ensemble_dependency_sections(tmp_path) -> None:
@@ -334,7 +339,9 @@ def _prepare_runtime_bundle(
         "fairness_report": model_root / "reports" / "fairness_report.json",
         "psi_report": model_root / "reports" / "psi_report.json",
         "global_importance": model_root / "reports" / "global_importance.json",
-        "population_percentiles": model_root / "reports" / "population_percentiles.json",
+        "population_percentiles": model_root
+        / "reports"
+        / "population_percentiles.json",
         "dice_explainer": model_root / "explainers" / "dice_explainer.pkl",
     }
 
@@ -404,7 +411,9 @@ def _prepare_minimal_ensemble_bundle(
         "fairness_report": model_root / "reports" / "fairness_report.json",
         "psi_report": model_root / "reports" / "psi_report.json",
         "global_importance": model_root / "reports" / "global_importance.json",
-        "population_percentiles": model_root / "reports" / "population_percentiles.json",
+        "population_percentiles": model_root
+        / "reports"
+        / "population_percentiles.json",
         "stacking_config": model_root / "artifacts" / "calibrated_stacking_config.json",
         "base_models": {
             model_name: model_root / "artifacts" / f"{model_name}.pkl"
@@ -412,9 +421,7 @@ def _prepare_minimal_ensemble_bundle(
         },
     }
     for artifact_path in [
-        value
-        for key, value in artifact_paths.items()
-        if key != "base_models"
+        value for key, value in artifact_paths.items() if key != "base_models"
     ]:
         artifact_path.parent.mkdir(parents=True, exist_ok=True)
     for artifact_path in artifact_paths["base_models"].values():
@@ -445,7 +452,9 @@ def _prepare_minimal_ensemble_bundle(
     artifact_paths["fairness_report"].write_text(json.dumps({}), encoding="utf-8")
     artifact_paths["psi_report"].write_text(json.dumps({}), encoding="utf-8")
     artifact_paths["global_importance"].write_text(json.dumps({}), encoding="utf-8")
-    artifact_paths["population_percentiles"].write_text(json.dumps({}), encoding="utf-8")
+    artifact_paths["population_percentiles"].write_text(
+        json.dumps({}), encoding="utf-8"
+    )
     artifact_paths["stacking_config"].write_text(
         json.dumps(
             {
@@ -461,7 +470,9 @@ def _prepare_minimal_ensemble_bundle(
     return artifact_paths
 
 
-def _write_minimal_ensemble_manifest(tmp_path, artifact_paths: dict[str, object]) -> Path:
+def _write_minimal_ensemble_manifest(
+    tmp_path, artifact_paths: dict[str, object]
+) -> Path:
     manifest_path = tmp_path / "models" / "registry" / "production_manifest.json"
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
     artifact_entries = {

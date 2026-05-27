@@ -17,10 +17,10 @@ from backend.ml.features.scenario_analyzer import (
     compute_scenario_enriched_features,
 )
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _full_scenario_answers(
     s1="s1_b",
@@ -34,13 +34,48 @@ def _full_scenario_answers(
 ) -> dict:
     """Build a complete scenario answer payload (all scenarios answered)."""
     return {
-        "scenario_s1": {"primary": s1, "least": None, "first_click_ms": first_click_ms, "change_count": 0},
-        "scenario_s2": {"primary": s2, "least": None, "first_click_ms": first_click_ms, "change_count": 0},
-        "scenario_s3": {"primary": s3, "least": None, "first_click_ms": first_click_ms, "change_count": 0},
-        "scenario_s4": {"primary": s4, "least": None, "first_click_ms": first_click_ms, "change_count": 0},
-        "scenario_s5": {"primary": s5, "least": None, "first_click_ms": first_click_ms, "change_count": 0},
-        "scenario_s6": {"primary": s6, "least": None, "first_click_ms": first_click_ms, "change_count": 0},
-        "scenario_s8": {"primary": s8, "least": None, "first_click_ms": first_click_ms, "change_count": 0},
+        "scenario_s1": {
+            "primary": s1,
+            "least": None,
+            "first_click_ms": first_click_ms,
+            "change_count": 0,
+        },
+        "scenario_s2": {
+            "primary": s2,
+            "least": None,
+            "first_click_ms": first_click_ms,
+            "change_count": 0,
+        },
+        "scenario_s3": {
+            "primary": s3,
+            "least": None,
+            "first_click_ms": first_click_ms,
+            "change_count": 0,
+        },
+        "scenario_s4": {
+            "primary": s4,
+            "least": None,
+            "first_click_ms": first_click_ms,
+            "change_count": 0,
+        },
+        "scenario_s5": {
+            "primary": s5,
+            "least": None,
+            "first_click_ms": first_click_ms,
+            "change_count": 0,
+        },
+        "scenario_s6": {
+            "primary": s6,
+            "least": None,
+            "first_click_ms": first_click_ms,
+            "change_count": 0,
+        },
+        "scenario_s8": {
+            "primary": s8,
+            "least": None,
+            "first_click_ms": first_click_ms,
+            "change_count": 0,
+        },
     }
 
 
@@ -67,6 +102,7 @@ def _neutral_psychometric() -> dict[str, float]:
 # ---------------------------------------------------------------------------
 # 1. Feature contribution mapping
 # ---------------------------------------------------------------------------
+
 
 class TestFeatureContributions:
     def test_high_conscientiousness_option_raises_conscientiousness(self):
@@ -98,14 +134,19 @@ class TestFeatureContributions:
         answers = _full_scenario_answers()
         result = analyze_scenario_responses(answers)
         for feature_name, value in result["feature_contributions"].items():
-            assert 0.0 <= value <= 1.0, (
-                f"Feature '{feature_name}' out of range: {value}"
-            )
+            assert (
+                0.0 <= value <= 1.0
+            ), f"Feature '{feature_name}' out of range: {value}"
 
     def test_unknown_option_id_skipped_gracefully(self):
         """Unknown option IDs should be skipped without raising exceptions."""
         answers = _full_scenario_answers()
-        answers["scenario_s1"] = {"primary": "s1_zzz", "least": None, "first_click_ms": 5000, "change_count": 0}
+        answers["scenario_s1"] = {
+            "primary": "s1_zzz",
+            "least": None,
+            "first_click_ms": 5000,
+            "change_count": 0,
+        }
         result = analyze_scenario_responses(answers)
         # Should complete without raising; s1 contribution simply skipped
         assert isinstance(result["feature_contributions"], dict)
@@ -128,6 +169,7 @@ class TestFeatureContributions:
 # ---------------------------------------------------------------------------
 # 2. Consistency score computation
 # ---------------------------------------------------------------------------
+
 
 class TestConsistencyScore:
     def test_matching_s1_s8_pair_returns_high_score(self):
@@ -163,12 +205,15 @@ class TestConsistencyScore:
         result = analyze_scenario_responses(answers)
         assert result["scenario_consistency_score"] == 0.5
 
-    @pytest.mark.parametrize("pair", [
-        ("s1_a", "s8_a"),
-        ("s1_b", "s8_b"),
-        ("s1_c", "s8_c"),
-        ("s1_d", "s8_d"),
-    ])
+    @pytest.mark.parametrize(
+        "pair",
+        [
+            ("s1_a", "s8_a"),
+            ("s1_b", "s8_b"),
+            ("s1_c", "s8_c"),
+            ("s1_d", "s8_d"),
+        ],
+    )
     def test_all_consistent_pairs_return_1_0(self, pair):
         """All four S1/S8 semantic mirror pairs should return 1.0 consistency."""
         s1, s8 = pair
@@ -180,6 +225,7 @@ class TestConsistencyScore:
 # ---------------------------------------------------------------------------
 # 3. Fast-pattern gaming detection
 # ---------------------------------------------------------------------------
+
 
 class TestFastPatternGaming:
     def test_normal_response_times_not_flagged(self):
@@ -223,12 +269,15 @@ class TestFastPatternGaming:
 # 4. Feature blending
 # ---------------------------------------------------------------------------
 
+
 class TestFeatureBlending:
     def test_blend_raises_low_prior_when_scenario_high(self):
         """If psychometric prior is 0.3 and scenario says 1.0, blend should be > 0.3."""
         base = _neutral_psychometric()
         base["conscientiousness_score"] = 0.3
-        answers = _full_scenario_answers(s1="s1_b", s6="s6_b")  # high conscientiousness picks
+        answers = _full_scenario_answers(
+            s1="s1_b", s6="s6_b"
+        )  # high conscientiousness picks
         enriched = compute_scenario_enriched_features(base, answers)
         assert enriched["conscientiousness_score"] > 0.3
 
@@ -266,9 +315,9 @@ class TestFeatureBlending:
         enriched = compute_scenario_enriched_features(base, answers)
         for feature_name, value in enriched.items():
             if isinstance(value, float):
-                assert 0.0 <= value <= 1.0, (
-                    f"Enriched feature '{feature_name}' out of range: {value}"
-                )
+                assert (
+                    0.0 <= value <= 1.0
+                ), f"Enriched feature '{feature_name}' out of range: {value}"
 
     def test_scenario_consistency_score_present_in_output(self):
         """compute_scenario_enriched_features should expose scenario_consistency_score."""
@@ -290,6 +339,7 @@ class TestFeatureBlending:
 # ---------------------------------------------------------------------------
 # 5. Empty / degenerate input
 # ---------------------------------------------------------------------------
+
 
 class TestDegenerateInput:
     def test_empty_answers_returns_empty_contributions(self):

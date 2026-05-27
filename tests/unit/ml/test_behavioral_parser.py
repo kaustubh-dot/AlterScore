@@ -51,7 +51,9 @@ def test_parse_behavioral_accepts_pydantic_payloads() -> None:
         ("time_of_day", "late_night"),
     ],
 )
-def test_parse_behavioral_rejects_unknown_categories(field_name: str, bad_value: str) -> None:
+def test_parse_behavioral_rejects_unknown_categories(
+    field_name: str, bad_value: str
+) -> None:
     payload = _base_behavioral_payload() | {field_name: bad_value}
 
     with pytest.raises(ValueError):

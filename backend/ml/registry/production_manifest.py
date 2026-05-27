@@ -235,7 +235,9 @@ def _require_mapping(
 ) -> dict[str, Any]:
     value = payload.get(field_name)
     if not isinstance(value, dict):
-        raise ValueError(f"production manifest '{field_name}' field must be a JSON object.")
+        raise ValueError(
+            f"production manifest '{field_name}' field must be a JSON object."
+        )
     return value
 
 
@@ -247,7 +249,9 @@ def _require_non_empty_string(
 ) -> str:
     value = payload.get(field_name)
     if not isinstance(value, str) or not value.strip():
-        raise ValueError(f"{context} missing required non-empty string field '{field_name}'.")
+        raise ValueError(
+            f"{context} missing required non-empty string field '{field_name}'."
+        )
     return value.strip()
 
 

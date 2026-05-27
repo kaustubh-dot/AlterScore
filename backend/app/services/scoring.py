@@ -63,7 +63,9 @@ class ScoringService:
             self.ensemble_bundle = EnsembleInferenceBundle(
                 stacking_model=artifacts.model,
                 base_models=artifacts.base_models,
-                base_model_order=tuple(artifacts.stacking_config.get("base_model_order", [])),
+                base_model_order=tuple(
+                    artifacts.stacking_config.get("base_model_order", [])
+                ),
                 preprocessor=artifacts.preprocessor,
                 stacking_config=artifacts.stacking_config,
             )
@@ -77,7 +79,9 @@ class ScoringService:
             )
         return pipeline_result.response
 
-    def score_request_debug(self, request: ScoreRequest | dict[str, Any]) -> dict[str, Any]:
+    def score_request_debug(
+        self, request: ScoreRequest | dict[str, Any]
+    ) -> dict[str, Any]:
         pipeline_result = self._run_scoring_pipeline(request)
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug(
@@ -96,7 +100,9 @@ class ScoringService:
             )
 
         score_request = (
-            request if isinstance(request, ScoreRequest) else ScoreRequest.model_validate(request)
+            request
+            if isinstance(request, ScoreRequest)
+            else ScoreRequest.model_validate(request)
         )
         assembled = assemble_request_features(
             score_request,
@@ -119,8 +125,12 @@ class ScoringService:
         repayment_probability = float(model_debug["repayment_probability"])
 
         # Apply Post-Model Governance Multiplier Layer
-        gov_multiplier, gov_reasons = _calculate_governance_multiplier(assembled.feature_row)
-        adjusted_probability = max(0.01, min(0.99, repayment_probability * gov_multiplier))
+        gov_multiplier, gov_reasons = _calculate_governance_multiplier(
+            assembled.feature_row
+        )
+        adjusted_probability = max(
+            0.01, min(0.99, repayment_probability * gov_multiplier)
+        )
 
         score_mapping_debug = _build_score_mapping_debug(adjusted_probability)
         credit_score = int(score_mapping_debug["final_credit_score"])
@@ -163,15 +173,15 @@ class ScoringService:
                 "repayment_probability": round(adjusted_probability, 4),
                 "percentile": percentile,
                 "explanation": [
-                    explanation.model_dump(mode="json") for explanation in explanation_items
+                    explanation.model_dump(mode="json")
+                    for explanation in explanation_items
                 ],
                 "counterfactual_actions": [
                     action.model_dump(mode="json") for action in counterfactual_actions
                 ],
                 "loan_eligibility": get_loan_eligibility(credit_score),
                 "improvement_tips": [
-                    tip.model_dump(mode="json")
-                    for tip in improvement_tips
+                    tip.model_dump(mode="json") for tip in improvement_tips
                 ],
                 "timestamp": datetime.now(timezone.utc),
             }
@@ -184,7 +194,9 @@ class ScoringService:
                 "applied_realism_reasons": gov_reasons,
             },
             "raw_input": _to_jsonable(
-                request if isinstance(request, dict) else request.model_dump(mode="json")
+                request
+                if isinstance(request, dict)
+                else request.model_dump(mode="json")
             ),
             "validated_request": score_request.model_dump(mode="json"),
             "psychometric_features": _to_jsonable(assembled.psychometric_features),
@@ -247,7 +259,9 @@ def _predict_repayment_probability(
     else:
         probabilities = np.asarray(model.predict_proba(processed_features), dtype=float)
     if probabilities.ndim != 2 or probabilities.shape[1] < 2:
-        raise ValueError("Runtime model predict_proba output must have at least two columns.")
+        raise ValueError(
+            "Runtime model predict_proba output must have at least two columns."
+        )
 
     repayment_probability = float(np.clip(probabilities[0, 1], 0.0, 1.0))
     if np.isnan(repayment_probability):
@@ -265,19 +279,31 @@ def _build_preprocessor_debug(preprocessor: Any, feature_frame: Any) -> dict[str
     categorical_input = feature_frame.loc[:, categorical_features]
     numeric_imputed = numeric_pipeline.named_steps["imputer"].transform(numeric_input)
     numeric_scaled = numeric_pipeline.named_steps["scaler"].transform(numeric_imputed)
-    categorical_imputed = categorical_pipeline.named_steps["imputer"].transform(categorical_input)
-    categorical_encoded = categorical_pipeline.named_steps["encoder"].transform(categorical_imputed)
+    categorical_imputed = categorical_pipeline.named_steps["imputer"].transform(
+        categorical_input
+    )
+    categorical_encoded = categorical_pipeline.named_steps["encoder"].transform(
+        categorical_imputed
+    )
     transformed = preprocessor.transform(feature_frame)
 
     return {
         "numeric_features": numeric_features,
         "categorical_features": categorical_features,
-        "numeric_input": _row_mapping(numeric_features, numeric_input.to_numpy(dtype=float)[0]),
+        "numeric_input": _row_mapping(
+            numeric_features, numeric_input.to_numpy(dtype=float)[0]
+        ),
         "numeric_imputed": _row_mapping(numeric_features, numeric_imputed[0]),
         "numeric_scaled": _row_mapping(numeric_features, numeric_scaled[0]),
-        "categorical_input": _row_mapping(categorical_features, categorical_input.iloc[0].tolist()),
-        "categorical_imputed": _row_mapping(categorical_features, categorical_imputed[0]),
-        "categorical_encoded": _row_mapping(categorical_features, categorical_encoded[0]),
+        "categorical_input": _row_mapping(
+            categorical_features, categorical_input.iloc[0].tolist()
+        ),
+        "categorical_imputed": _row_mapping(
+            categorical_features, categorical_imputed[0]
+        ),
+        "categorical_encoded": _row_mapping(
+            categorical_features, categorical_encoded[0]
+        ),
         "categorical_encoder_categories": {
             feature_name: list(categories)
             for feature_name, categories in zip(
@@ -286,7 +312,9 @@ def _build_preprocessor_debug(preprocessor: Any, feature_frame: Any) -> dict[str
                 strict=True,
             )
         },
-        "transformed_feature_vector": _to_jsonable(np.asarray(transformed, dtype=float)[0]),
+        "transformed_feature_vector": _to_jsonable(
+            np.asarray(transformed, dtype=float)[0]
+        ),
         "transformed_feature_names": [*numeric_features, *categorical_features],
     }
 
@@ -319,11 +347,15 @@ def _build_model_debug(
         )
         base_model_outputs[model_name] = {
             "raw_output": _to_jsonable(raw_output),
-            "positive_probability": float(meta_features.raw_base_probabilities[model_name][0]),
+            "positive_probability": float(
+                meta_features.raw_base_probabilities[model_name][0]
+            ),
         }
 
     raw_meta_features = np.asarray(meta_features.raw_meta_features_matrix, dtype=float)
-    adjusted_meta_features = np.asarray(meta_features.adjusted_meta_features_matrix, dtype=float)
+    adjusted_meta_features = np.asarray(
+        meta_features.adjusted_meta_features_matrix, dtype=float
+    )
     raw_probabilities = np.asarray(
         ensemble_bundle.stacking_model.predict_proba(raw_meta_features),
         dtype=float,
@@ -337,12 +369,16 @@ def _build_model_debug(
     calibration_details: dict[str, Any] = {
         "stacking_model_type": type(ensemble_bundle.stacking_model).__name__,
     }
-    calibrated_classifiers = getattr(ensemble_bundle.stacking_model, "calibrated_classifiers_", None)
+    calibrated_classifiers = getattr(
+        ensemble_bundle.stacking_model, "calibrated_classifiers_", None
+    )
     if calibrated_classifiers:
         calibrated_classifier = calibrated_classifiers[0]
         estimator = getattr(calibrated_classifier, "estimator", None)
         if estimator is not None and hasattr(estimator, "predict_proba"):
-            raw_meta_probability = float(estimator.predict_proba(adjusted_meta_features)[0, 1])
+            raw_meta_probability = float(
+                estimator.predict_proba(adjusted_meta_features)[0, 1]
+            )
         calibrators = getattr(calibrated_classifier, "calibrators", None)
         if calibrators is not None:
             calibration_details["calibrators"] = [
@@ -478,10 +514,7 @@ def _build_counterfactual_actions(
         current_credit_score=current_credit_score,
         shap_contributions=shap_contributions,
     )
-    return [
-        CounterfactualAction.model_validate(action)
-        for action in raw_actions
-    ]
+    return [CounterfactualAction.model_validate(action) for action in raw_actions]
 
 
 def _row_mapping(feature_names: list[str], values: Any) -> dict[str, Any]:
@@ -548,7 +581,9 @@ def _build_improvement_tips(feature_row: dict[str, Any]) -> list[ImprovementTip]
     ]
 
 
-def _calculate_governance_multiplier(feature_row: dict[str, Any]) -> tuple[float, list[str]]:
+def _calculate_governance_multiplier(
+    feature_row: dict[str, Any],
+) -> tuple[float, list[str]]:
     """Compute a bounded post-model multiplier [0.65, 1.0] and return warning logs."""
     reasons = []
     multiplier = 1.0
@@ -581,7 +616,9 @@ def _calculate_governance_multiplier(feature_row: dict[str, Any]) -> tuple[float
     if change_rate > 0.30:
         penalty = min(0.08, (change_rate - 0.30) * 0.2)
         multiplier -= penalty
-        reasons.append(f"Erratic answer modification pattern (changes: {change_rate:.1%})")
+        reasons.append(
+            f"Erratic answer modification pattern (changes: {change_rate:.1%})"
+        )
 
     # 5. Cognitive Floor Penalty
     # Near-zero numeracy AND CRT indicates careless/random responding.
@@ -607,9 +644,7 @@ def _calculate_governance_multiplier(feature_row: dict[str, Any]) -> tuple[float
     if avg_time < 2000.0:
         penalty = min(0.15, (2000.0 - avg_time) / 10000.0)
         multiplier -= penalty
-        reasons.append(
-            f"Suspiciously fast response pacing (avg: {avg_time:.0f}ms)"
-        )
+        reasons.append(f"Suspiciously fast response pacing (avg: {avg_time:.0f}ms)")
 
     # 8. Scenario Behavioral Inconsistency Penalty (v2)
     # Low consistency between S1 and S8 (the consistency-trap scenario pair)
@@ -630,7 +665,9 @@ def _calculate_governance_multiplier(feature_row: dict[str, Any]) -> tuple[float
     if scenario_fast_gaming >= 1.0:
         penalty = 0.08
         multiplier -= penalty
-        reasons.append("Scenario section completed at mechanically fast pace (possible pattern-gaming)")
+        reasons.append(
+            "Scenario section completed at mechanically fast pace (possible pattern-gaming)"
+        )
 
     final_multiplier = max(0.40, min(1.0, multiplier))
     return final_multiplier, reasons

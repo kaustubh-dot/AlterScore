@@ -2,9 +2,11 @@ import joblib
 import numpy as np
 import pandas as pd
 
-from backend.ml.data_generation.generator import TEMPORAL_SPLIT_MONTHS, generate_synthetic_dataset
+from backend.ml.data_generation.generator import (
+    TEMPORAL_SPLIT_MONTHS,
+    generate_synthetic_dataset,
+)
 from backend.ml.features.answer_parser import parse_answers
-from backend.ml.features.derived_features import build_model_feature_row
 from backend.ml.nlp.extractor import extract_nlp_features
 from backend.ml.nlp.extractor import RAW_EMBEDDING_DIM
 from backend.ml.preprocessing.feature_registry import (
@@ -24,7 +26,9 @@ from backend.ml.preprocessing.pipeline import (
 )
 
 
-def test_prepare_temporal_data_uses_documented_splits_and_train_only_text_pca(tmp_path) -> None:
+def test_prepare_temporal_data_uses_documented_splits_and_train_only_text_pca(
+    tmp_path,
+) -> None:
     dataset = generate_synthetic_dataset(row_count=1_200, seed=11)
     raw_embeddings = _build_embedding_matrix(dataset)
 
@@ -35,18 +39,17 @@ def test_prepare_temporal_data_uses_documented_splits_and_train_only_text_pca(tm
     )
 
     assert prepared.train.cohort_months.max() <= max(TEMPORAL_SPLIT_MONTHS["train"])
-    assert prepared.validation.cohort_months.isin(TEMPORAL_SPLIT_MONTHS["validation"]).all()
+    assert prepared.validation.cohort_months.isin(
+        TEMPORAL_SPLIT_MONTHS["validation"]
+    ).all()
     assert prepared.test.cohort_months.min() >= min(TEMPORAL_SPLIT_MONTHS["test"])
 
     assert prepared.train.indices.intersection(prepared.validation.indices).empty
     assert prepared.train.indices.intersection(prepared.test.indices).empty
     assert prepared.validation.indices.intersection(prepared.test.indices).empty
-    assert (
-        len(prepared.train.indices)
-        + len(prepared.validation.indices)
-        + len(prepared.test.indices)
-        == len(dataset)
-    )
+    assert len(prepared.train.indices) + len(prepared.validation.indices) + len(
+        prepared.test.indices
+    ) == len(dataset)
 
     assert prepared.train.X.columns.tolist() == ALL_MODEL_FEATURES
     assert prepared.validation.X.columns.tolist() == ALL_MODEL_FEATURES
@@ -60,17 +63,23 @@ def test_prepare_temporal_data_uses_documented_splits_and_train_only_text_pca(tm
     assert not np.allclose(prepared.text_pca.mean_, raw_embeddings.mean(axis=0))
     assert (tmp_path / "text_pca.pkl").is_file()
     loaded_text_pca = joblib.load(tmp_path / "text_pca.pkl")
-    np.testing.assert_allclose(loaded_text_pca.components_, prepared.text_pca.components_)
+    np.testing.assert_allclose(
+        loaded_text_pca.components_, prepared.text_pca.components_
+    )
 
     original_semantic_values = dataset.loc[:, list(TEXT_PCA_FEATURES)].to_numpy()
-    prepared_semantic_values = prepared.train.X.loc[:, list(TEXT_PCA_FEATURES)].to_numpy()
+    prepared_semantic_values = prepared.train.X.loc[
+        :, list(TEXT_PCA_FEATURES)
+    ].to_numpy()
     assert not np.allclose(
         original_semantic_values[prepared.train.indices.to_numpy()],
         prepared_semantic_values,
     )
 
 
-def test_fit_preprocessor_transforms_all_splits_and_imputes_missing_values(tmp_path) -> None:
+def test_fit_preprocessor_transforms_all_splits_and_imputes_missing_values(
+    tmp_path,
+) -> None:
     dataset = generate_synthetic_dataset(row_count=1_200, seed=29)
     raw_embeddings = _build_embedding_matrix(dataset)
     prepared = prepare_temporal_data(dataset, raw_text_embeddings=raw_embeddings)
@@ -81,7 +90,9 @@ def test_fit_preprocessor_transforms_all_splits_and_imputes_missing_values(tmp_p
 
     train_features.iloc[0, train_features.columns.get_loc("numeracy_score")] = np.nan
     train_features.iloc[1, train_features.columns.get_loc("device_type")] = np.nan
-    validation_features.iloc[0, validation_features.columns.get_loc("time_of_day")] = np.nan
+    validation_features.iloc[0, validation_features.columns.get_loc("time_of_day")] = (
+        np.nan
+    )
     test_features.iloc[0, test_features.columns.get_loc("typing_speed_wpm")] = np.nan
 
     preprocessor = fit_preprocessor(
@@ -95,7 +106,10 @@ def test_fit_preprocessor_transforms_all_splits_and_imputes_missing_values(tmp_p
 
     expected_feature_count = len(ALL_MODEL_FEATURES)
     assert transformed_train.shape == (len(train_features), expected_feature_count)
-    assert transformed_validation.shape == (len(validation_features), expected_feature_count)
+    assert transformed_validation.shape == (
+        len(validation_features),
+        expected_feature_count,
+    )
     assert transformed_test.shape == (len(test_features), expected_feature_count)
     assert not np.isnan(transformed_train).any()
     assert not np.isnan(transformed_validation).any()
@@ -137,14 +151,14 @@ def test_answer_parser_and_derived_features_flow_into_preprocessing() -> None:
                 "honesty_trap_q1": 4,
             },
         ),
-        ]:
-            answers = _answer_payload() | answer_overrides
-            psychometric_features = parse_answers(answers)
-            nlp_features = extract_nlp_features(text)
-            raw_embeddings.append(np.asarray(nlp_features["_embedding_raw"], dtype=float))
-            feature_rows.append(
-                {
-                    **psychometric_features,
+    ]:
+        answers = _answer_payload() | answer_overrides
+        psychometric_features = parse_answers(answers)
+        nlp_features = extract_nlp_features(text)
+        raw_embeddings.append(np.asarray(nlp_features["_embedding_raw"], dtype=float))
+        feature_rows.append(
+            {
+                **psychometric_features,
                 **{
                     "avg_response_time_ms": response_time_ms,
                     "answer_change_rate": 0.08,
@@ -156,13 +170,19 @@ def test_answer_parser_and_derived_features_flow_into_preprocessing() -> None:
                     "device_type": device_type,
                     "time_of_day": time_of_day,
                 },
-                **{key: value for key, value in nlp_features.items() if key != "_embedding_raw"},
-                }
-            )
+                **{
+                    key: value
+                    for key, value in nlp_features.items()
+                    if key != "_embedding_raw"
+                },
+            }
+        )
 
     raw_embedding_matrix = np.vstack(raw_embeddings)
     text_pca = fit_text_pca(raw_embedding_matrix)
-    feature_frame = apply_text_pca(pd.DataFrame(feature_rows), raw_embedding_matrix, text_pca)
+    feature_frame = apply_text_pca(
+        pd.DataFrame(feature_rows), raw_embedding_matrix, text_pca
+    )
     feature_frame = prepare_model_feature_frame(feature_frame)
     preprocessor = fit_preprocessor(feature_frame)
     transformed = transform_features(preprocessor, feature_frame)
@@ -186,25 +206,27 @@ def _build_embedding_matrix(dataset) -> np.ndarray:
 
 
 def _answer_payload() -> dict[str, int | float | str | dict]:
-    _scenario = lambda opt: {
-        'primary': opt,
-        'least': None,
-        'first_click_ms': 4000,
-        'change_count': 0
-    }
+    def _scenario(opt):
+        return {
+            "primary": opt,
+            "least": None,
+            "first_click_ms": 4000,
+            "change_count": 0,
+        }
+
     return {
-        'numeracy_q1': 6600,
-        'numeracy_q2': 1120,
-        'financial_literacy_q1': 1,
-        'CRT_q1': 5,
-        'CRT_q2': 47,
-        'scenario_s1': _scenario('s1_b'),
-        'scenario_s2': _scenario('s2_b'),
-        'scenario_s3': _scenario('s3_b'),
-        'scenario_s4': _scenario('s4_b'),
-        'scenario_s5': _scenario('s5_b'),
-        'scenario_s6': _scenario('s6_c'),
-        'honesty_trap_q1': 2,
-        'scenario_s8': _scenario('s8_b'),
-        'open_response_text': 'I reduced expenses and found extra work.',
+        "numeracy_q1": 6600,
+        "numeracy_q2": 1120,
+        "financial_literacy_q1": 1,
+        "CRT_q1": 5,
+        "CRT_q2": 47,
+        "scenario_s1": _scenario("s1_b"),
+        "scenario_s2": _scenario("s2_b"),
+        "scenario_s3": _scenario("s3_b"),
+        "scenario_s4": _scenario("s4_b"),
+        "scenario_s5": _scenario("s5_b"),
+        "scenario_s6": _scenario("s6_c"),
+        "honesty_trap_q1": 2,
+        "scenario_s8": _scenario("s8_b"),
+        "open_response_text": "I reduced expenses and found extra work.",
     }

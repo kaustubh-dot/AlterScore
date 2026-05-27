@@ -67,8 +67,14 @@ def main() -> int:
     print("Starting promotion of monotonic XGBoost candidate...")
 
     # Define paths
-    source_preprocessor = REPO_ROOT / "runtime/governed_reports/monotonic_tree_candidates/latest/monotonic_tree_preprocessor.pkl"
-    source_model = REPO_ROOT / "runtime/governed_reports/monotonic_tree_candidates/latest/artifacts/xgboost_monotonic.pkl"
+    source_preprocessor = (
+        REPO_ROOT
+        / "runtime/governed_reports/monotonic_tree_candidates/latest/monotonic_tree_preprocessor.pkl"
+    )
+    source_model = (
+        REPO_ROOT
+        / "runtime/governed_reports/monotonic_tree_candidates/latest/artifacts/xgboost_monotonic.pkl"
+    )
 
     dest_preprocessor = MODEL_PREPROCESSORS_DIR / "preprocessor_monotonic.pkl"
     dest_model = MODEL_ARTIFACTS_DIR / "xgboost_monotonic.pkl"
@@ -98,7 +104,7 @@ def main() -> int:
         text_pca_random_state=42,
         text_pca_artifact_path=None,
     )
-    
+
     train_mask = dataset["cohort_month"].isin(range(1, 9))
     print("Neutralizing operational metadata and applying feature masking...")
     policy_feature_frame = neutralize_operational_metadata_for_training(
@@ -113,18 +119,26 @@ def main() -> int:
     # Transform features with the promoted preprocessor
     print("Transforming features using the monotonic preprocessor...")
     preprocessor = joblib.load(str(dest_preprocessor))
-    X_processed = np.asarray(transform_features(preprocessor, policy_feature_frame), dtype=float)
+    X_processed = np.asarray(
+        transform_features(preprocessor, policy_feature_frame), dtype=float
+    )
 
     # Identify indices / masks
-    train_mask_series = pd.Series(original_prepared.feature_frame.index.isin(original_prepared.train.indices))
-    validation_mask_series = pd.Series(original_prepared.feature_frame.index.isin(original_prepared.validation.indices))
-    test_mask_series = pd.Series(original_prepared.feature_frame.index.isin(original_prepared.test.indices))
+    train_mask_series = pd.Series(
+        original_prepared.feature_frame.index.isin(original_prepared.train.indices)
+    )
+    validation_mask_series = pd.Series(
+        original_prepared.feature_frame.index.isin(original_prepared.validation.indices)
+    )
+    test_mask_series = pd.Series(
+        original_prepared.feature_frame.index.isin(original_prepared.test.indices)
+    )
 
     X_train = X_processed[train_mask_series.to_numpy()]
     X_val = X_processed[validation_mask_series.to_numpy()]
     X_test = X_processed[test_mask_series.to_numpy()]
 
-    y_train = original_prepared.train.y.to_numpy(dtype=int)
+    original_prepared.train.y.to_numpy(dtype=int)
     y_val = original_prepared.validation.y.to_numpy(dtype=int)
     y_test = original_prepared.test.y.to_numpy(dtype=int)
 
@@ -171,42 +185,62 @@ def main() -> int:
     # 4. Build default persisted DiCE explainer
     dice_dest = MODEL_EXPLAINERS_DIR / "dice_explainer_monotonic.pkl"
     print(f"Building DiCE explainer and saving to {dice_dest}...")
-    dice_explainer = build_default_persisted_dice_explainer(model_name="xgboost_monotonic")
+    dice_explainer = build_default_persisted_dice_explainer(
+        model_name="xgboost_monotonic"
+    )
     save_persisted_dice_explainer(dice_explainer, dice_dest)
 
     # 5. Generate metrics and reports
     # a. Copy baseline_metrics.json and psi_report.json
     print("Generating baseline metrics and psi reports...")
-    shutil.copy2(MODEL_REPORTS_DIR / "baseline_metrics.json", MODEL_REPORTS_DIR / "baseline_metrics_monotonic.json")
-    shutil.copy2(MODEL_REPORTS_DIR / "psi_report.json", MODEL_REPORTS_DIR / "psi_report_monotonic.json")
+    shutil.copy2(
+        MODEL_REPORTS_DIR / "baseline_metrics.json",
+        MODEL_REPORTS_DIR / "baseline_metrics_monotonic.json",
+    )
+    shutil.copy2(
+        MODEL_REPORTS_DIR / "psi_report.json",
+        MODEL_REPORTS_DIR / "psi_report_monotonic.json",
+    )
 
     # b. metrics_monotonic.json
     print("Generating metrics_monotonic.json...")
     model_stats = [
         compute_binary_classification_metrics(
-            y_val, val_probs,
-            model_name="xgboost_monotonic", model_type="classical_monotonic",
-            split="validation_months_9_10", threshold=val_threshold,
+            y_val,
+            val_probs,
+            model_name="xgboost_monotonic",
+            model_type="classical_monotonic",
+            split="validation_months_9_10",
+            threshold=val_threshold,
         ),
         compute_binary_classification_metrics(
-            y_test, test_probs,
-            model_name="xgboost_monotonic", model_type="classical_monotonic",
-            split="test_months_11_12", threshold=val_threshold,
+            y_test,
+            test_probs,
+            model_name="xgboost_monotonic",
+            model_type="classical_monotonic",
+            split="test_months_11_12",
+            threshold=val_threshold,
         ),
     ]
     eval_details = {
         "validation_months_9_10": {
             "xgboost_monotonic": build_split_evaluation_details(
-                y_val, val_probs,
-                model_name="xgboost_monotonic", model_type="classical_monotonic",
-                split="validation_months_9_10", threshold=val_threshold,
+                y_val,
+                val_probs,
+                model_name="xgboost_monotonic",
+                model_type="classical_monotonic",
+                split="validation_months_9_10",
+                threshold=val_threshold,
             )
         },
         "test_months_11_12": {
             "xgboost_monotonic": build_split_evaluation_details(
-                y_test, test_probs,
-                model_name="xgboost_monotonic", model_type="classical_monotonic",
-                split="test_months_11_12", threshold=val_threshold,
+                y_test,
+                test_probs,
+                model_name="xgboost_monotonic",
+                model_type="classical_monotonic",
+                split="test_months_11_12",
+                threshold=val_threshold,
             )
         },
     }
@@ -234,13 +268,23 @@ def main() -> int:
                 merged[split].update(new_details[split])
         return merged
 
-    merged_stats = _merge_model_stats(existing_metrics.get("model_stats", []), model_stats)
-    merged_eval = _merge_eval_details(existing_metrics.get("evaluation_details"), eval_details)
+    merged_stats = _merge_model_stats(
+        existing_metrics.get("model_stats", []), model_stats
+    )
+    merged_eval = _merge_eval_details(
+        existing_metrics.get("evaluation_details"), eval_details
+    )
 
     metrics_out = {
-        **{k: v for k, v in existing_metrics.items()
-           if k not in {"run_id", "split_row_counts", "model_stats", "evaluation_details"}},
-        "run_id": datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_xgboost_monotonic_promotion"),
+        **{
+            k: v
+            for k, v in existing_metrics.items()
+            if k
+            not in {"run_id", "split_row_counts", "model_stats", "evaluation_details"}
+        },
+        "run_id": datetime.now(timezone.utc).strftime(
+            "%Y%m%d_%H%M%S_xgboost_monotonic_promotion"
+        ),
         "split_row_counts": {
             "validation": int(len(y_val)),
             "test": int(len(y_test)),
@@ -249,7 +293,9 @@ def main() -> int:
         "baselines": existing_metrics.get("baselines", []),
         "evaluation_details": merged_eval,
     }
-    (MODEL_REPORTS_DIR / "metrics_monotonic.json").write_text(json.dumps(metrics_out, indent=2), encoding="utf-8")
+    (MODEL_REPORTS_DIR / "metrics_monotonic.json").write_text(
+        json.dumps(metrics_out, indent=2), encoding="utf-8"
+    )
 
     # c. fairness_report_monotonic.json
     print("Generating fairness_report_monotonic.json...")
@@ -259,12 +305,16 @@ def main() -> int:
         original_prepared.test.protected.reset_index(drop=True),
         feature_frame=original_prepared.test.X.reset_index(drop=True),
     )
-    save_fairness_report(fairness_report, MODEL_REPORTS_DIR / "fairness_report_monotonic.json")
+    save_fairness_report(
+        fairness_report, MODEL_REPORTS_DIR / "fairness_report_monotonic.json"
+    )
 
     # d. global_importance_monotonic.json
     print("Generating global_importance_monotonic.json...")
     xgboost_stats = [
-        s for s in merged_stats if s["model_name"] == "xgboost_monotonic" and s["split"] == "test_months_11_12"
+        s
+        for s in merged_stats
+        if s["model_name"] == "xgboost_monotonic" and s["split"] == "test_months_11_12"
     ]
     gi_report, _ = build_global_importance_report_for_candidate_models(
         {"xgboost_monotonic": model},
@@ -274,7 +324,9 @@ def main() -> int:
         candidate_model_types={"xgboost_monotonic": "classical_monotonic"},
         feature_names=ALL_MODEL_FEATURES,
     )
-    save_global_importance_report(gi_report, MODEL_REPORTS_DIR / "global_importance_monotonic.json")
+    save_global_importance_report(
+        gi_report, MODEL_REPORTS_DIR / "global_importance_monotonic.json"
+    )
 
     # e. population_percentiles_monotonic.json
     print("Generating population_percentiles_monotonic.json...")
@@ -290,7 +342,7 @@ def main() -> int:
     merged_pop = merge_population_percentiles_reports(
         existing_pop,
         {"xgboost_monotonic": population_payload},
-        default_model_name="xgboost_monotonic"
+        default_model_name="xgboost_monotonic",
     )
     (MODEL_REPORTS_DIR / "population_percentiles_monotonic.json").write_text(
         json.dumps(merged_pop, indent=2), encoding="utf-8"
@@ -298,21 +350,43 @@ def main() -> int:
 
     # 6. Build the new production manifest and save it
     print("Generating serving manifest at production_manifest.json...")
-    
+
     # Calculate checksums on the actual destination files
     artifact_spec: dict[str, tuple[Path, str]] = {
         "runtime_model": (dest_model, "models/artifacts/xgboost_monotonic.pkl"),
-        "preprocessor": (dest_preprocessor, "models/preprocessors/preprocessor_monotonic.pkl"),
-        "text_pca": (MODEL_PREPROCESSORS_DIR / "text_pca.pkl", "models/preprocessors/text_pca.pkl"),
+        "preprocessor": (
+            dest_preprocessor,
+            "models/preprocessors/preprocessor_monotonic.pkl",
+        ),
+        "text_pca": (
+            MODEL_PREPROCESSORS_DIR / "text_pca.pkl",
+            "models/preprocessors/text_pca.pkl",
+        ),
         "shap_explainer": (shap_dest, "models/explainers/shap_explainer_monotonic.pkl"),
         "dice_explainer": (dice_dest, "models/explainers/dice_explainer_monotonic.pkl"),
-        "metrics": (MODEL_REPORTS_DIR / "metrics_monotonic.json", "models/reports/metrics_monotonic.json"),
-        "baseline_metrics": (MODEL_REPORTS_DIR / "baseline_metrics_monotonic.json", "models/reports/baseline_metrics_monotonic.json"),
-        "fairness_report": (MODEL_REPORTS_DIR / "fairness_report_monotonic.json", "models/reports/fairness_report_monotonic.json"),
-        "psi_report": (MODEL_REPORTS_DIR / "psi_report_monotonic.json", "models/reports/psi_report_monotonic.json"),
-        "global_importance": (MODEL_REPORTS_DIR / "global_importance_monotonic.json", "models/reports/global_importance_monotonic.json"),
+        "metrics": (
+            MODEL_REPORTS_DIR / "metrics_monotonic.json",
+            "models/reports/metrics_monotonic.json",
+        ),
+        "baseline_metrics": (
+            MODEL_REPORTS_DIR / "baseline_metrics_monotonic.json",
+            "models/reports/baseline_metrics_monotonic.json",
+        ),
+        "fairness_report": (
+            MODEL_REPORTS_DIR / "fairness_report_monotonic.json",
+            "models/reports/fairness_report_monotonic.json",
+        ),
+        "psi_report": (
+            MODEL_REPORTS_DIR / "psi_report_monotonic.json",
+            "models/reports/psi_report_monotonic.json",
+        ),
+        "global_importance": (
+            MODEL_REPORTS_DIR / "global_importance_monotonic.json",
+            "models/reports/global_importance_monotonic.json",
+        ),
         "population_percentiles": (
-            MODEL_REPORTS_DIR / "population_percentiles_monotonic.json", "models/reports/population_percentiles_monotonic.json"
+            MODEL_REPORTS_DIR / "population_percentiles_monotonic.json",
+            "models/reports/population_percentiles_monotonic.json",
         ),
     }
 
@@ -323,10 +397,12 @@ def main() -> int:
             return 1
         artifacts_block[key] = {
             "path": rel_path,
-            "sha256": compute_file_sha256(file_path)
+            "sha256": compute_file_sha256(file_path),
         }
 
-    run_id = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_xgboost_monotonic_promotion")
+    run_id = datetime.now(timezone.utc).strftime(
+        "%Y%m%d_%H%M%S_xgboost_monotonic_promotion"
+    )
     test_auc_val = float(xgboost_stats[0]["auc_roc"]) if xgboost_stats else 0.8090
 
     manifest = {
@@ -354,7 +430,9 @@ def main() -> int:
         },
         "fairness_summary": {
             "overall_auc": round(test_auc_val, 4),
-            "verdict": fairness_report.get("verdict", "see fairness_report_monotonic.json"),
+            "verdict": fairness_report.get(
+                "verdict", "see fairness_report_monotonic.json"
+            ),
         },
         "drift_summary": {
             "verdict": "see psi_report_monotonic.json",

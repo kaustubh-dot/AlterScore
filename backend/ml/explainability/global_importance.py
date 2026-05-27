@@ -16,9 +16,7 @@ DEFAULT_GLOBAL_IMPORTANCE_PATH: Final[Path] = (
     MODEL_REPORTS_DIR / "global_importance.json"
 )
 GLOBAL_IMPORTANCE_DECIMALS: Final[int] = 4
-EXACT_LINEAR_IMPORTANCE_PREFERENCE: Final[tuple[str, ...]] = (
-    "logistic_regression",
-)
+EXACT_LINEAR_IMPORTANCE_PREFERENCE: Final[tuple[str, ...]] = ("logistic_regression",)
 NATIVE_IMPORTANCE_PREFERENCE: Final[tuple[str, ...]] = (
     "xgboost",
     "lightgbm",
@@ -128,7 +126,9 @@ def build_global_importance_report_for_candidate_models(
     """Build the dashboard-ready global-importance payload for the best source model."""
 
     if not candidate_models:
-        raise ValueError("At least one candidate model is required for global importance.")
+        raise ValueError(
+            "At least one candidate model is required for global importance."
+        )
 
     resolved_feature_names = list(feature_names)
     resolved_model_types = candidate_model_types or {}
@@ -284,14 +284,20 @@ def _compute_exact_linear_importance(
     if coefficients.ndim == 2:
         coefficients = coefficients[-1]
     if coefficients.ndim != 1:
-        raise ValueError("Linear global-importance model coefficients must be one-dimensional.")
+        raise ValueError(
+            "Linear global-importance model coefficients must be one-dimensional."
+        )
     if len(coefficients) != feature_count:
         raise ValueError(
             "Linear global-importance coefficients do not match the canonical feature count."
         )
 
-    train_array = _as_feature_matrix(train_processed_features, feature_count=feature_count)
-    test_array = _as_feature_matrix(test_processed_features, feature_count=feature_count)
+    train_array = _as_feature_matrix(
+        train_processed_features, feature_count=feature_count
+    )
+    test_array = _as_feature_matrix(
+        test_processed_features, feature_count=feature_count
+    )
     background_reference = train_array.mean(axis=0)
     local_contributions = (test_array - background_reference) * coefficients
     importance_values = np.mean(np.abs(local_contributions), axis=0)

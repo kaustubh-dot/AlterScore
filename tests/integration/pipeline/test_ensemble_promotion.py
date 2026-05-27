@@ -9,9 +9,6 @@ Test plan (5 tests):
 """
 
 from __future__ import annotations
-import pytest
-pytestmark = pytest.mark.slow
-
 
 import json
 import numpy as np
@@ -22,9 +19,13 @@ from backend.ml.explainability.shap_explainer import load_persisted_shap_explain
 from backend.ml.explainability.dice_explainer import load_persisted_dice_explainer
 from backend.ml.preprocessing.feature_registry import ALL_MODEL_FEATURES
 from backend.ml.registry.production_manifest import load_production_manifest
-from backend.ml.training.ensemble.promote_ensemble import PromotionArtifacts, promote_ensemble
+from backend.ml.training.ensemble.promote_ensemble import (
+    PromotionArtifacts,
+    promote_ensemble,
+)
 from backend.ml.training.ensemble.train_stacking import ENSEMBLE_MODEL_NAME
 
+pytestmark = pytest.mark.slow
 
 _SMALL_ROW_COUNT = 1_800
 _SEED = 7
@@ -34,6 +35,7 @@ def _fast_promote(tmp_path, monkeypatch) -> PromotionArtifacts:
     """Run promote_ensemble with 2-epoch neural patches and small dataset."""
     import backend.ml.training.neural.train_tabnet as _tn
     import backend.ml.training.neural.train_mlp as _mlp
+
     monkeypatch.setattr(_tn, "_TABNET_MAX_EPOCHS", 2)
     monkeypatch.setattr(_tn, "_TABNET_PATIENCE", 2)
     monkeypatch.setattr(_tn, "_TABNET_BATCH_SIZE", 256)
@@ -102,7 +104,9 @@ def test_promote_ensemble_smoke_roundtrip(tmp_path, monkeypatch) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_shap_explainer_validates_against_feature_registry(tmp_path, monkeypatch) -> None:
+def test_shap_explainer_validates_against_feature_registry(
+    tmp_path, monkeypatch
+) -> None:
     """SHAP explainer loads and passes validate() with canonical feature names."""
     art = _fast_promote(tmp_path, monkeypatch)
     explainer = load_persisted_shap_explainer(
@@ -166,5 +170,6 @@ def test_manifest_loads_via_production_manifest(tmp_path, monkeypatch) -> None:
     sha256 = m.artifact_checksum("runtime_model")
     assert len(sha256) == 64 and sha256.islower()
     from backend.ml.registry.production_manifest import compute_file_sha256
+
     actual = compute_file_sha256(art.stacking_artifact_path)
     assert sha256 == actual

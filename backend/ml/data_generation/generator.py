@@ -8,7 +8,12 @@ import numpy as np
 import pandas as pd
 
 from backend.ml.nlp.extractor import RAW_TEXT_RESPONSE_COLUMN
-from backend.ml.features.scenario_analyzer import _OPTION_CODEBOOK, _SCENARIO_IDS, _PRIMARY_WEIGHT, _SECONDARY_WEIGHT
+from backend.ml.features.scenario_analyzer import (
+    _OPTION_CODEBOOK,
+    _SCENARIO_IDS,
+    _PRIMARY_WEIGHT,
+    _SECONDARY_WEIGHT,
+)
 from backend.ml.preprocessing.feature_registry import (
     ALL_MODEL_FEATURES,
     PROTECTED_FEATURES,
@@ -108,16 +113,19 @@ def generate_synthetic_dataset(
     integrity = 0.20 * discipline + 0.18 * stability + rng.normal(0.0, 0.94, row_count)
     social = 0.18 * discipline + 0.28 * stability + rng.normal(0.0, 0.93, row_count)
 
-    numeracy_score = _clip01(_sigmoid(0.95 * capacity + 0.18 * discipline + rng.normal(0.0, 0.55, row_count)))
-    crt_score = _clip01(_sigmoid(0.82 * capacity + 0.12 * discipline + rng.normal(0.0, 0.58, row_count)))
+    numeracy_score = _clip01(
+        _sigmoid(0.95 * capacity + 0.18 * discipline + rng.normal(0.0, 0.55, row_count))
+    )
+    crt_score = _clip01(
+        _sigmoid(0.82 * capacity + 0.12 * discipline + rng.normal(0.0, 0.58, row_count))
+    )
     financial_literacy_score = _clip01(
         _sigmoid(0.58 * capacity + 0.30 * discipline + rng.normal(0.0, 0.56, row_count))
     )
 
-    
     # --- Scenario-driven features (Discrete sampling via Codebook) ---
     # We simulate users picking options from the scenario codebook based on their latent traits.
-    
+
     # Initialize zero arrays
     feature_accumulators = {
         "future_orientation": np.zeros(row_count),
@@ -127,10 +135,10 @@ def generate_synthetic_dataset(
         "resilience_score": np.zeros(row_count),
         "loss_aversion_score": np.zeros(row_count),
         "reciprocity_norm": np.zeros(row_count),
-        "honesty_score": np.zeros(row_count)
+        "honesty_score": np.zeros(row_count),
     }
     feature_counts = {k: np.zeros(row_count) for k in feature_accumulators}
-    
+
     latent_prefs = {
         "future_orientation": _sigmoid(0.62 * discipline + 0.24 * stability),
         "conscientiousness_score": _sigmoid(0.58 * discipline + 0.16 * stability),
@@ -139,22 +147,26 @@ def generate_synthetic_dataset(
         "resilience_score": _sigmoid(0.54 * stability + 0.22 * social),
         "loss_aversion_score": _sigmoid(0.22 * stability - 0.12 * capacity),
         "reciprocity_norm": _sigmoid(0.56 * social + 0.20 * integrity),
-        "honesty_score": _sigmoid(0.72 * integrity + 0.18 * discipline)
+        "honesty_score": _sigmoid(0.72 * integrity + 0.18 * discipline),
     }
-    
+
     for s_id in _SCENARIO_IDS:
-        prefix = s_id.split('_')[1]
+        prefix = s_id.split("_")[1]
         options = [k for k in _OPTION_CODEBOOK.keys() if k.startswith(prefix)]
-        
+
         affinities = []
         for opt in options:
             p_feat, p_val, s_feat, s_val = _OPTION_CODEBOOK[opt]
-            aff = p_val * latent_prefs[p_feat] + s_val * latent_prefs[s_feat] + rng.normal(0, 0.2, row_count)
+            aff = (
+                p_val * latent_prefs[p_feat]
+                + s_val * latent_prefs[s_feat]
+                + rng.normal(0, 0.2, row_count)
+            )
             affinities.append(aff)
-            
+
         affinities = np.array(affinities)
         best_opt_indices = np.argmax(affinities, axis=0)
-        
+
         for i in range(row_count):
             chosen_opt = options[best_opt_indices[i]]
             p_feat, p_val, s_feat, s_val = _OPTION_CODEBOOK[chosen_opt]
@@ -164,10 +176,12 @@ def generate_synthetic_dataset(
             feature_counts[s_feat][i] += _SECONDARY_WEIGHT
 
     for f in feature_accumulators:
-        avg_contributions = np.where(feature_counts[f] > 0, feature_accumulators[f] / feature_counts[f], 0.5)
+        avg_contributions = np.where(
+            feature_counts[f] > 0, feature_accumulators[f] / feature_counts[f], 0.5
+        )
         feature_accumulators[f] = 0.5 * 0.40 + avg_contributions * 0.60
         feature_accumulators[f] = np.clip(feature_accumulators[f], 0.0, 1.0)
-        
+
     future_orientation = feature_accumulators["future_orientation"]
     conscientiousness_score = feature_accumulators["conscientiousness_score"]
     social_capital_score = feature_accumulators["social_capital_score"]
@@ -178,8 +192,11 @@ def generate_synthetic_dataset(
     honesty_score = feature_accumulators["honesty_score"]
 
     delay_discounting_rate = np.clip(
-        0.68 * future_orientation + 0.12 * _sigmoid(0.35 * discipline) + rng.normal(0.0, 0.08, row_count),
-        0.20, 1.0,
+        0.68 * future_orientation
+        + 0.12 * _sigmoid(0.35 * discipline)
+        + rng.normal(0.0, 0.08, row_count),
+        0.20,
+        1.0,
     )
     risk_attitude = np.clip(
         0.52 + 0.10 * capacity - 0.06 * discipline + rng.normal(0.0, 0.16, row_count),
@@ -191,8 +208,9 @@ def generate_synthetic_dataset(
         0.02,
         0.18,
     )
-    risk_consistency_flag = (rng.random(row_count) < risk_consistency_probability).astype(int)
-
+    risk_consistency_flag = (
+        rng.random(row_count) < risk_consistency_probability
+    ).astype(int)
 
     device_type = rng.choice(
         np.array(["mobile", "desktop", "tablet"], dtype=object),
@@ -264,7 +282,8 @@ def generate_synthetic_dataset(
         85.0,
     )
     session_duration_sec = np.clip(
-        (avg_response_time_ms * 27.0 / 1_000.0) * (1.08 + 0.55 * scroll_hesitation_score + 0.20 * answer_change_rate)
+        (avg_response_time_ms * 27.0 / 1_000.0)
+        * (1.08 + 0.55 * scroll_hesitation_score + 0.20 * answer_change_rate)
         + dropout_count * 24.0
         + rng.normal(0.0, 22.0, row_count),
         120.0,
@@ -298,7 +317,9 @@ def generate_synthetic_dataset(
         0.05,
         0.95,
     )
-    text_problem_solving_flag = (rng.random(row_count) < problem_solving_probability).astype(int)
+    text_problem_solving_flag = (
+        rng.random(row_count) < problem_solving_probability
+    ).astype(int)
     text_semantic_dim1 = (
         1.35 * (text_agency_score - 0.5)
         + 0.95 * (resilience_score - 0.5)
@@ -337,7 +358,9 @@ def generate_synthetic_dataset(
         5.0,
     )
     cognitive_load_index = np.clip(
-        (avg_response_time_ms / 4_500.0) * (1.0 + answer_change_rate) * (1.0 + dropout_count * 0.2),
+        (avg_response_time_ms / 4_500.0)
+        * (1.0 + answer_change_rate)
+        * (1.0 + dropout_count * 0.2),
         0.0,
         None,
     )
@@ -397,7 +420,7 @@ def generate_synthetic_dataset(
         - 0.7 * answer_change_rate
         - 0.12 * dropout_count
         + rng.normal(0.0, 0.42, row_count)
-         + 0.75
+        + 0.75
     )
     repayment_probability = _sigmoid(repayment_logit)
     repayment_label = (rng.random(row_count) < repayment_probability).astype(int)
@@ -483,7 +506,9 @@ def _build_cohort_months(row_count: int) -> np.ndarray:
     )
 
 
-def _build_application_dates(cohort_month: np.ndarray, rng: np.random.Generator) -> list[str]:
+def _build_application_dates(
+    cohort_month: np.ndarray, rng: np.random.Generator
+) -> list[str]:
     days = [
         int(rng.integers(1, _MONTH_LENGTHS[int(month) - 1] + 1))
         for month in cohort_month

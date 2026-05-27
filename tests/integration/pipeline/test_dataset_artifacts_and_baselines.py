@@ -8,7 +8,9 @@ from backend.ml.training.classical.baselines import (
 )
 
 
-def test_materialize_synthetic_dataset_saves_csv_and_validation_summary(tmp_path) -> None:
+def test_materialize_synthetic_dataset_saves_csv_and_validation_summary(
+    tmp_path,
+) -> None:
     artifacts = materialize_synthetic_dataset(
         row_count=2_400,
         seed=7,
@@ -26,12 +28,19 @@ def test_materialize_synthetic_dataset_saves_csv_and_validation_summary(tmp_path
     assert summary["row_count"] == 2_400
     assert summary["months_11_12_rows"] >= 300
     assert sum(summary["split_row_counts"].values()) == 2_400
-    assert summary["feature_list_checks"]["protected_attributes_excluded_from_model_features"] is True
+    assert (
+        summary["feature_list_checks"][
+            "protected_attributes_excluded_from_model_features"
+        ]
+        is True
+    )
     assert "numeracy_score" in summary["numeric_feature_stats"]
     assert "device_type_mobile" in summary["categorical_feature_label_correlations"]
 
 
-def test_train_baselines_saves_preprocessor_model_and_metrics_artifacts(tmp_path) -> None:
+def test_train_baselines_saves_preprocessor_model_and_metrics_artifacts(
+    tmp_path,
+) -> None:
     dataset = generate_synthetic_dataset(row_count=2_400, seed=13)
 
     artifacts = train_baselines(
@@ -50,7 +59,9 @@ def test_train_baselines_saves_preprocessor_model_and_metrics_artifacts(tmp_path
         dice_explainer_path=None,
     )
 
-    baseline_metrics = json.loads(artifacts.baseline_metrics_path.read_text(encoding="utf-8"))
+    baseline_metrics = json.loads(
+        artifacts.baseline_metrics_path.read_text(encoding="utf-8")
+    )
     metrics_payload = json.loads(artifacts.metrics_path.read_text(encoding="utf-8"))
     population_percentiles = json.loads(
         artifacts.population_percentiles_path.read_text(encoding="utf-8")
@@ -62,7 +73,9 @@ def test_train_baselines_saves_preprocessor_model_and_metrics_artifacts(tmp_path
     assert artifacts.baseline_metrics_path.is_file()
     assert artifacts.metrics_path.is_file()
     assert artifacts.population_percentiles_path.is_file()
-    assert [item["model_name"] for item in baseline_metrics] == list(BASELINE_MODEL_ORDER)
+    assert [item["model_name"] for item in baseline_metrics] == list(
+        BASELINE_MODEL_ORDER
+    )
     assert baseline_metrics[0]["auc_roc"] == 0.5
     assert baseline_metrics[1]["auc_roc"] > baseline_metrics[0]["auc_roc"]
     assert baseline_metrics[2]["lift_vs_loan_officer"] == 0.0
@@ -77,9 +90,9 @@ def test_train_baselines_saves_preprocessor_model_and_metrics_artifacts(tmp_path
         and row["split"] == "validation_months_9_10"
     )
     assert (
-        metrics_payload["evaluation_details"]["test_months_11_12"]["logistic_regression"][
-            "confusion_matrix"
-        ]["threshold"]
+        metrics_payload["evaluation_details"]["test_months_11_12"][
+            "logistic_regression"
+        ]["confusion_matrix"]["threshold"]
         == validation_row["threshold"]
     )
     assert population_percentiles["default_model_name"] == "logistic_regression"
