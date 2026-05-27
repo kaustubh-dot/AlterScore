@@ -940,6 +940,161 @@ button:disabled {
   line-height: 1.6;
 }
 
+/* Scenario card modifier — slightly more relaxed h1 size for longer scenario text */
+.assessment-question--scenario h1 {
+  font-size: clamp(1.5rem, 3.5vw, 2.4rem);
+  line-height: 1.18;
+}
+
+/* ---------------------------------------------------------------------------
+   Scenario Dilemma Card
+   --------------------------------------------------------------------------- */
+
+.scenario-card {
+  margin-top: 1.8rem;
+}
+
+.scenario-options {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.scenario-option {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  width: 100%;
+  min-height: 56px;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md);
+  background: rgba(244, 248, 255, 0.03);
+  color: var(--text-secondary);
+  text-align: left;
+  line-height: 1.5;
+  transition:
+    background 200ms ease,
+    border-color 200ms ease,
+    color 200ms ease,
+    transform 200ms ease;
+}
+
+.scenario-option:hover {
+  transform: translateY(-2px);
+  border-color: rgba(212, 168, 83, 0.35);
+  background: rgba(212, 168, 83, 0.05);
+  color: var(--text-primary);
+}
+
+/* Primary selection — gold accent */
+.scenario-option--primary {
+  transform: translateY(-2px);
+  border-color: rgba(212, 168, 83, 0.55);
+  background: rgba(212, 168, 83, 0.1);
+  color: var(--text-primary);
+}
+
+/* Least selection — muted red accent */
+.scenario-option--least {
+  border-color: rgba(255, 77, 94, 0.35);
+  background: rgba(255, 77, 94, 0.05);
+  color: var(--text-secondary);
+}
+
+.scenario-option__text {
+  flex: 1;
+  font-size: 0.97rem;
+}
+
+.scenario-option__badge {
+  flex-shrink: 0;
+  align-self: flex-start;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.scenario-option__badge--most {
+  border: 1px solid rgba(212, 168, 83, 0.5);
+  background: rgba(212, 168, 83, 0.12);
+  color: var(--accent-gold);
+}
+
+.scenario-option__badge--least {
+  border: 1px solid rgba(255, 77, 94, 0.4);
+  background: rgba(255, 77, 94, 0.1);
+  color: var(--status-poor, #ff4d5e);
+}
+
+/* Least-Like-Me soft nudge section */
+.scenario-least-nudge {
+  margin-top: 1.4rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--border-dim);
+  animation: fade-up 0.35s var(--ease-out-expo) both;
+}
+
+.scenario-least-nudge__label {
+  margin: 0 0 0.8rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.scenario-least-nudge__label em {
+  font-style: italic;
+  color: var(--text-secondary);
+}
+
+.scenario-least-options {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.scenario-least-option {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md);
+  background: rgba(244, 248, 255, 0.02);
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  text-align: left;
+  line-height: 1.4;
+  transition: border-color 180ms ease, background 180ms ease, color 180ms ease;
+}
+
+.scenario-least-option:hover {
+  border-color: rgba(255, 77, 94, 0.3);
+  background: rgba(255, 77, 94, 0.04);
+  color: var(--text-primary);
+}
+
+.scenario-least-option--active {
+  border-color: rgba(255, 77, 94, 0.45);
+  background: rgba(255, 77, 94, 0.08);
+  color: var(--text-primary);
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .answer-options {
   display: grid;
   gap: 0.8rem;

@@ -8,38 +8,32 @@ from backend.app.schemas.score import AnswerPayload, ScoreRequest, ScoreResponse
 
 
 def build_valid_score_request_payload() -> dict:
+    """Build a minimal valid v2 ScoreRequest payload for schema testing."""
+    _scenario = lambda option_id: {
+        "primary": option_id,
+        "least": None,
+        "first_click_ms": 8000,
+        "change_count": 0,
+    }
     return {
         "answers": {
+            # Section A — Financial Reasoning
             "numeracy_q1": 6600,
             "numeracy_q2": 1120,
-            "numeracy_q3": 14400,
             "financial_literacy_q1": 1,
-            "financial_literacy_q2": 1,
-            "conscientiousness_q1": 4,
             "CRT_q1": 5,
-            "CRT_q2": 5,
-            "CRT_q3": 47,
-            "future_orient_q1": 1,
-            "future_orient_q2": 1,
-            "future_orient_q3": 4,
-            "risk_q1": 0,
-            "risk_q2": 1,
-            "locus_q1": 0,
-            "locus_q2": 1,
-            "locus_q3": 4,
-            "social_capital_q1": 2,
-            "social_capital_q2": 0,
-            "social_capital_q3": 0,
-            "resilience_q1": 4,
-            "resilience_q2": 4,
-            "resilience_q3": 0,
-            "loss_aversion_q1": 0,
+            "CRT_q2": 47,
+            # Section B — Decision Scenarios
+            "scenario_s1": _scenario("s1_b"),
+            "scenario_s2": _scenario("s2_b"),
+            "scenario_s3": _scenario("s3_b"),
+            "scenario_s4": _scenario("s4_b"),
+            "scenario_s5": _scenario("s5_b"),
+            "scenario_s6": _scenario("s6_c"),
             "honesty_trap_q1": 2,
-            "honesty_trap_q2": 3,
-            "future_orient_repeat": 1,
-            "locus_repeat": 0,
-            "reciprocity_q1": 4,
-            "reciprocity_q2": 0,
+            "honesty_trap_q2": 2,
+            "scenario_s8": _scenario("s8_b"),
+            # Section C — Open Text
             "q27_resilience_text": (
                 "When my income fell, I reduced expenses, found extra work, "
                 "and made a repayment plan."
@@ -63,6 +57,7 @@ def test_valid_score_request_payload_parses_successfully() -> None:
     request = ScoreRequest.model_validate(build_valid_score_request_payload())
 
     assert request.answers.numeracy_q1 == 6600
+    assert request.answers.scenario_s1.primary == "s1_b"
     assert request.behavioral.time_of_day == "afternoon"
     assert request.behavioral.device_type == "mobile"
     assert request.session_id

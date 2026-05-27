@@ -1,29 +1,32 @@
+// AlterScore v2 Question Bank
+// 14 questions: 5 reasoning + 8 behavioral scenarios + 1 open-text
+// Scenario options include pre-coded feature values for backend mapping.
+
 export const SECTIONS = [
   {
     id: "A",
-    title: "Financial Thinking",
-    kicker: "Numeracy, literacy, and planning discipline",
+    title: "Financial Reasoning",
+    kicker: "Numeracy, financial literacy, and cognitive reflection",
     icon: "Calculator",
   },
   {
     id: "B",
-    title: "Risk & Decisions",
-    kicker: "Reflection, time preference, and risk choices",
+    title: "Decision Scenarios",
+    kicker: "Real financial situations — what would you actually do?",
     icon: "Scale",
   },
   {
     id: "C",
-    title: "Character & Community",
-    kicker: "Locus, resilience, reciprocity, and social capital",
-    icon: "Users",
-  },
-  {
-    id: "D",
-    title: "Honesty & Reflection",
-    kicker: "Consistency checks and open-text resilience",
-    icon: "Shield",
+    title: "Your Story",
+    kicker: "A moment that shaped how you handle money",
+    icon: "BookOpen",
   },
 ];
+
+// ---------------------------------------------------------------------------
+// SECTION A — Financial Reasoning (5 questions)
+// Objective, correct-answer questions. Ungameable. Keep as-is.
+// ---------------------------------------------------------------------------
 
 export const QUESTIONS = [
   {
@@ -48,16 +51,6 @@ export const QUESTIONS = [
     isTrap: false,
   },
   {
-    id: "numeracy_q3",
-    section: "A",
-    type: "number",
-    question: "You save Rs. 800 every month for 18 months. What is the total saved?",
-    prefix: "Rs.",
-    correctAnswer: 14400,
-    isRiskQuestion: false,
-    isTrap: false,
-  },
-  {
     id: "financial_literacy_q1",
     section: "A",
     type: "mcq",
@@ -74,31 +67,8 @@ export const QUESTIONS = [
     isTrap: false,
   },
   {
-    id: "financial_literacy_q2",
-    section: "A",
-    type: "mcq",
-    question: "You invest Rs. 50,000 in a mutual fund. Is your principal guaranteed?",
-    options: [
-      "Yes, SEBI protects all investments",
-      "No, mutual funds carry market risk",
-      "Only if it is a bank mutual fund",
-    ],
-    correctIndex: 1,
-    isRiskQuestion: false,
-    isTrap: false,
-  },
-  {
-    id: "conscientiousness_q1",
-    section: "A",
-    type: "likert",
-    question: "I keep a written or digital record of my monthly income and expenses.",
-    scale: ["Never", "Rarely", "Sometimes", "Often", "Always"],
-    isRiskQuestion: false,
-    isTrap: false,
-  },
-  {
     id: "CRT_q1",
-    section: "B",
+    section: "A",
     type: "number",
     question:
       "A bat and a ball together cost Rs. 110. The bat costs Rs. 100 more than the ball. How much does the ball cost?",
@@ -110,18 +80,7 @@ export const QUESTIONS = [
   },
   {
     id: "CRT_q2",
-    section: "B",
-    type: "number",
-    question:
-      "5 machines take exactly 5 minutes to make 5 widgets. How many minutes would 100 machines take to make 100 widgets?",
-    suffix: "minutes",
-    correctAnswer: 5,
-    isRiskQuestion: false,
-    isTrap: false,
-  },
-  {
-    id: "CRT_q3",
-    section: "B",
+    section: "A",
     type: "number",
     question:
       "A lily pad patch doubles in size every day. It fills an entire lake in 48 days. How many days does it take to fill half the lake?",
@@ -130,237 +89,370 @@ export const QUESTIONS = [
     isRiskQuestion: false,
     isTrap: false,
   },
+
+  // ---------------------------------------------------------------------------
+  // SECTION B — Behavioral Decision Scenarios (8 questions)
+  // Scenario options carry pre-coded feature values for backend mapping.
+  // Each option: { text, featureSignals: { featureName: value [0.0–1.0] } }
+  // The consistency trap (S8) mirrors S1 in semantic intent.
+  // Two honesty-trap Likerts are embedded here (not labeled as a separate section).
+  // ---------------------------------------------------------------------------
+
   {
-    id: "future_orient_q1",
+    id: "scenario_s1",
     section: "B",
-    type: "binary_choice",
-    question: "Which do you prefer?",
-    options: ["Rs. 500 right now", "Rs. 720 in exactly 4 weeks"],
-    isRiskQuestion: false,
-    isTrap: false,
-  },
-  {
-    id: "future_orient_q2",
-    section: "B",
-    type: "binary_choice",
-    question: "Which do you prefer?",
-    options: ["Rs. 2,000 today", "Rs. 3,200 in 3 months"],
-    isRiskQuestion: false,
-    isTrap: false,
-  },
-  {
-    id: "future_orient_q3",
-    section: "B",
-    type: "likert",
-    question: "I am willing to sacrifice today's comfort to secure a better future for myself.",
-    scale: ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"],
-    isRiskQuestion: false,
-    isTrap: false,
-  },
-  {
-    id: "risk_q1",
-    section: "B",
-    type: "binary_choice",
-    question: "Which do you prefer?",
-    options: ["A guaranteed Rs. 400", "A 60% chance of winning Rs. 800"],
-    isRiskQuestion: true,
-    isTrap: false,
-  },
-  {
-    id: "risk_q2",
-    section: "B",
-    type: "binary_choice",
-    question: "If both options were available tomorrow, which would you choose?",
-    options: ["The predictable smaller amount", "The higher upside with a real chance of nothing"],
-    isRiskQuestion: true,
-    isTrap: false,
-    contractNote: "Backend-required risk consistency signal.",
-  },
-  {
-    id: "loss_aversion_q1",
-    section: "B",
-    type: "mcq",
-    question: "Your small business has been losing Rs. 1,200 a month for 5 months. What do you do?",
-    options: [
-      "Close it now and cut further losses",
-      "Give it 3 more months because things might turn around",
-      "Invest more money to try to recover the losses",
-    ],
-    isRiskQuestion: false,
-    isTrap: false,
-  },
-  {
-    id: "locus_q1",
-    section: "C",
-    type: "mcq",
-    question: "Financial success in life is mostly determined by:",
-    options: [
-      "Hard work, discipline, and smart decisions",
-      "Luck, connections, and who you know",
-      "The circumstances you were born into",
-    ],
-    isRiskQuestion: false,
-    isTrap: false,
-  },
-  {
-    id: "locus_q2",
-    section: "C",
-    type: "mcq",
-    question: "If you struggled to repay a loan, it would most likely be because of:",
-    options: [
-      "My own financial mismanagement",
-      "Unexpected external events or bad luck",
-      "The lender setting unfair terms",
-    ],
-    isRiskQuestion: false,
-    isTrap: false,
-  },
-  {
-    id: "locus_q3",
-    section: "C",
-    type: "likert",
-    question: "I feel that I am the main author of my own financial story.",
-    scale: ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"],
-    isRiskQuestion: false,
-    isTrap: false,
-  },
-  {
-    id: "social_capital_q1",
-    section: "C",
-    type: "mcq",
+    type: "scenario",
     question:
-      "How many people in your neighbourhood or community could lend you Rs. 1,000 today if you needed it urgently, with no paperwork?",
-    options: ["No one", "1 or 2 people", "3 to 5 people", "More than 5 people"],
+      "Your supplier is offering a 15% bulk discount on stock — but only if you pay within 2 days. Your next EMI is due in 5 days, and paying both would wipe out your buffer entirely.",
     isRiskQuestion: false,
     isTrap: false,
-  },
-  {
-    id: "social_capital_q2",
-    section: "C",
-    type: "mcq",
-    question: "Have you ever lent money to someone who repaid you fully and on time?",
-    options: ["Yes, multiple times", "Yes, once", "No, they did not repay"],
-    isRiskQuestion: false,
-    isTrap: false,
-  },
-  {
-    id: "social_capital_q3",
-    section: "C",
-    type: "mcq",
-    question: "If you borrowed money from a friend and were struggling to repay, what would you do?",
     options: [
-      "Tell them immediately and work out a new plan together",
-      "Wait a bit longer and hope the situation improves",
-      "Avoid bringing it up until I have the money",
+      {
+        id: "s1_a",
+        text: "Take the supplier deal — the discount more than covers the short-term pressure",
+        featureSignals: {
+          primary: { feature: "future_orientation", value: 0.7 },
+          secondary: { feature: "conscientiousness_score", value: 0.3 },
+        },
+      },
+      {
+        id: "s1_b",
+        text: "Skip the deal — protecting the EMI comes first, no exceptions",
+        featureSignals: {
+          primary: { feature: "conscientiousness_score", value: 1.0 },
+          secondary: { feature: "future_orientation", value: 0.5 },
+        },
+      },
+      {
+        id: "s1_c",
+        text: "Negotiate with the supplier — can I pay half now and half next week?",
+        featureSignals: {
+          primary: { feature: "conscientiousness_score", value: 0.8 },
+          secondary: { feature: "future_orientation", value: 0.8 },
+        },
+      },
+      {
+        id: "s1_d",
+        text: "Ask a trusted contact to bridge the gap and repay them within the week",
+        featureSignals: {
+          primary: { feature: "social_capital_score", value: 0.8 },
+          secondary: { feature: "conscientiousness_score", value: 0.6 },
+        },
+      },
     ],
-    isRiskQuestion: false,
-    isTrap: false,
   },
+
   {
-    id: "resilience_q1",
-    section: "C",
-    type: "likert",
-    question: "When things get very difficult financially, I find new ways to solve the problem.",
-    scale: ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"],
-    isRiskQuestion: false,
-    isTrap: false,
-  },
-  {
-    id: "resilience_q2",
-    section: "C",
-    type: "likert",
-    question: "I finish what I start, even when it gets much harder than expected.",
-    scale: ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"],
-    isRiskQuestion: false,
-    isTrap: false,
-  },
-  {
-    id: "resilience_q3",
-    section: "C",
-    type: "mcq",
-    question: "When you face a major financial setback, your first instinct is to:",
-    options: [
-      "Find a new income source or way to earn more",
-      "Cut expenses immediately to a minimum",
-      "Reach out to trusted people for support",
-      "Feel overwhelmed and unsure where to start",
-    ],
-    isRiskQuestion: false,
-    isTrap: false,
-  },
-  {
-    id: "reciprocity_q1",
-    section: "C",
-    type: "likert",
+    id: "scenario_s2",
+    section: "B",
+    type: "scenario",
     question:
-      "If someone helped me financially in the past, I feel a strong sense of obligation to help others in similar situations.",
-    scale: ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"],
+      "A key client owes you Rs. 12,000 and has gone silent for 3 weeks. Your own rent is due in 10 days and you're cutting it close.",
     isRiskQuestion: false,
     isTrap: false,
-  },
-  {
-    id: "reciprocity_q2",
-    section: "C",
-    type: "mcq",
-    question: "If a neighbour helped you during a hard month, how would you respond once stable?",
     options: [
-      "Look for a practical way to return the help",
-      "Thank them but wait until they ask",
-      "Move on because it was their choice",
+      {
+        id: "s2_a",
+        text: "Call them repeatedly until I get a response — I need that money",
+        featureSignals: {
+          primary: { feature: "locus_of_control", value: 0.8 },
+          secondary: { feature: "resilience_score", value: 0.6 },
+        },
+      },
+      {
+        id: "s2_b",
+        text: "Send a clear written message giving them a firm deadline before escalating",
+        featureSignals: {
+          primary: { feature: "locus_of_control", value: 1.0 },
+          secondary: { feature: "conscientiousness_score", value: 0.9 },
+        },
+      },
+      {
+        id: "s2_c",
+        text: "Reach out to someone in my network who might spot me until the client pays",
+        featureSignals: {
+          primary: { feature: "social_capital_score", value: 0.9 },
+          secondary: { feature: "locus_of_control", value: 0.6 },
+        },
+      },
+      {
+        id: "s2_d",
+        text: "Wait a bit longer — pushing too hard might damage the relationship",
+        featureSignals: {
+          primary: { feature: "locus_of_control", value: 0.2 },
+          secondary: { feature: "resilience_score", value: 0.3 },
+        },
+      },
     ],
+  },
+
+  {
+    id: "scenario_s3",
+    section: "B",
+    type: "scenario",
+    question:
+      "You receive Rs. 8,000 unexpectedly — a client paid an overdue invoice you had nearly written off. You have no urgent debts. What do you do with it?",
     isRiskQuestion: false,
     isTrap: false,
-    contractNote: "Backend-required reciprocity signal.",
-  },
-  {
-    id: "future_orient_repeat",
-    section: "D",
-    type: "binary_choice",
-    question: "In a similar situation, which feels more like your usual choice?",
-    options: ["Take a smaller benefit immediately", "Wait longer for a meaningfully better outcome"],
-    isRiskQuestion: false,
-    isTrap: true,
-    contractNote: "Consistency check.",
-  },
-  {
-    id: "locus_repeat",
-    section: "D",
-    type: "mcq",
-    question: "When your finances improve, what usually explains it most?",
     options: [
-      "My own decisions and follow-through",
-      "A mix of my choices and outside events",
-      "Mostly luck or circumstances",
+      {
+        id: "s3_a",
+        text: "Keep it in cash — you never know when an emergency will come",
+        featureSignals: {
+          primary: { feature: "future_orientation", value: 0.5 },
+          secondary: { feature: "loss_aversion_score", value: 0.7 },
+        },
+      },
+      {
+        id: "s3_b",
+        text: "Put most of it into savings or a small investment, keep a small buffer",
+        featureSignals: {
+          primary: { feature: "future_orientation", value: 1.0 },
+          secondary: { feature: "conscientiousness_score", value: 0.9 },
+        },
+      },
+      {
+        id: "s3_c",
+        text: "Use it to clear a small debt early even though it's not overdue yet",
+        featureSignals: {
+          primary: { feature: "conscientiousness_score", value: 1.0 },
+          secondary: { feature: "future_orientation", value: 0.8 },
+        },
+      },
+      {
+        id: "s3_d",
+        text: "Treat myself and the family — this kind of windfall is rare",
+        featureSignals: {
+          primary: { feature: "future_orientation", value: 0.1 },
+          secondary: { feature: "conscientiousness_score", value: 0.2 },
+        },
+      },
     ],
-    isRiskQuestion: false,
-    isTrap: true,
-    contractNote: "Consistency check.",
   },
+
+  {
+    id: "scenario_s4",
+    section: "B",
+    type: "scenario",
+    question:
+      "Your small business has been losing Rs. 1,500 a month for 4 months. You've tried adjustments, but the trend hasn't reversed yet.",
+    isRiskQuestion: false,
+    isTrap: false,
+    options: [
+      {
+        id: "s4_a",
+        text: "Close it now and cut further losses — it's better to preserve what's left",
+        featureSignals: {
+          primary: { feature: "loss_aversion_score", value: 0.3 },
+          secondary: { feature: "resilience_score", value: 0.4 },
+        },
+      },
+      {
+        id: "s4_b",
+        text: "Give it a fixed window — say 2 more months — with a clear decision point",
+        featureSignals: {
+          primary: { feature: "resilience_score", value: 0.9 },
+          secondary: { feature: "conscientiousness_score", value: 0.9 },
+        },
+      },
+      {
+        id: "s4_c",
+        text: "Double down with more investment — I believe this can turn around",
+        featureSignals: {
+          primary: { feature: "future_orientation", value: 0.6 },
+          secondary: { feature: "loss_aversion_score", value: 0.1 },
+        },
+      },
+      {
+        id: "s4_d",
+        text: "Pivot the business model rather than closing or investing more",
+        featureSignals: {
+          primary: { feature: "resilience_score", value: 1.0 },
+          secondary: { feature: "locus_of_control", value: 0.9 },
+        },
+      },
+    ],
+  },
+
+  {
+    id: "scenario_s5",
+    section: "B",
+    type: "scenario",
+    question:
+      "A neighbour you know reasonably well asks if you can lend them Rs. 3,000. You have it, but it's your emergency buffer. They say they'll return it in two weeks.",
+    isRiskQuestion: false,
+    isTrap: false,
+    options: [
+      {
+        id: "s5_a",
+        text: "Lend it — relationships matter and two weeks isn't long",
+        featureSignals: {
+          primary: { feature: "social_capital_score", value: 0.9 },
+          secondary: { feature: "reciprocity_norm", value: 1.0 },
+        },
+      },
+      {
+        id: "s5_b",
+        text: "Offer a smaller amount I can genuinely afford to lose",
+        featureSignals: {
+          primary: { feature: "honesty_score", value: 0.9 },
+          secondary: { feature: "social_capital_score", value: 0.7 },
+        },
+      },
+      {
+        id: "s5_c",
+        text: "Say I don't have it right now — I can't risk my emergency buffer",
+        featureSignals: {
+          primary: { feature: "conscientiousness_score", value: 0.8 },
+          secondary: { feature: "honesty_score", value: 0.6 },
+        },
+      },
+      {
+        id: "s5_d",
+        text: "Ask what the money is for before deciding",
+        featureSignals: {
+          primary: { feature: "honesty_score", value: 1.0 },
+          secondary: { feature: "locus_of_control", value: 0.8 },
+        },
+      },
+    ],
+  },
+
+  // Honesty trap: embedded naturally among scenarios — not in a labeled section
   {
     id: "honesty_trap_q1",
-    section: "D",
+    section: "B",
     type: "likert",
     question: "I have never told even a small lie in my entire life.",
     scale: ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"],
     isRiskQuestion: false,
     isTrap: true,
   },
+
+  {
+    id: "scenario_s6",
+    section: "B",
+    type: "scenario",
+    question:
+      "Your family expects you to contribute Rs. 15,000 to a wedding celebration. Doing so would mean pausing your planned savings for 2 months.",
+    isRiskQuestion: false,
+    isTrap: false,
+    options: [
+      {
+        id: "s6_a",
+        text: "Contribute what they're expecting — family obligations come first",
+        featureSignals: {
+          primary: { feature: "locus_of_control", value: 0.2 },
+          secondary: { feature: "future_orientation", value: 0.3 },
+        },
+      },
+      {
+        id: "s6_b",
+        text: "Contribute a smaller amount I can genuinely afford without breaking my plan",
+        featureSignals: {
+          primary: { feature: "conscientiousness_score", value: 0.9 },
+          secondary: { feature: "locus_of_control", value: 0.7 },
+        },
+      },
+      {
+        id: "s6_c",
+        text: "Have an honest conversation with the family about my current financial situation",
+        featureSignals: {
+          primary: { feature: "honesty_score", value: 1.0 },
+          secondary: { feature: "locus_of_control", value: 0.9 },
+        },
+      },
+      {
+        id: "s6_d",
+        text: "Stick to my savings plan — I can't let social expectations derail my finances",
+        featureSignals: {
+          primary: { feature: "locus_of_control", value: 1.0 },
+          secondary: { feature: "future_orientation", value: 0.9 },
+        },
+      },
+    ],
+  },
+
+  // Honesty trap: second one, also embedded naturally
   {
     id: "honesty_trap_q2",
-    section: "D",
+    section: "B",
     type: "likert",
     question: "Without fail, I always repay every single debt completely on time.",
     scale: ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"],
     isRiskQuestion: false,
     isTrap: true,
   },
+
+  // S8 — CONSISTENCY TRAP: mirrors S1 (EMI vs. opportunity).
+  // Reframed with different context and amounts. Cross-check divergence
+  // vs. S1 response generates scenario_consistency_score in backend.
+  {
+    id: "scenario_s8",
+    section: "B",
+    type: "scenario",
+    question:
+      "You hear about a 2-day flash sale from your supplier — 12% off on an order that could keep you stocked for 3 months. But your account is tight and you'd have little left for unexpected costs.",
+    hint: "There's no right or wrong answer — choose what genuinely feels most like you.",
+    isRiskQuestion: false,
+    isTrap: true, // marks it as a consistency check, not displayed to user
+    consistencyPair: "scenario_s1",
+    options: [
+      {
+        id: "s8_a",
+        text: "Go for it — the savings are real and the math makes sense",
+        featureSignals: {
+          primary: { feature: "future_orientation", value: 0.7 },
+          secondary: { feature: "conscientiousness_score", value: 0.3 },
+        },
+        // mirrors s1_a
+        consistencyMatch: "s1_a",
+      },
+      {
+        id: "s8_b",
+        text: "Hold off — I never buy when my buffer is this low",
+        featureSignals: {
+          primary: { feature: "conscientiousness_score", value: 1.0 },
+          secondary: { feature: "future_orientation", value: 0.5 },
+        },
+        // mirrors s1_b
+        consistencyMatch: "s1_b",
+      },
+      {
+        id: "s8_c",
+        text: "Buy a smaller portion of the order, keeping a meaningful buffer",
+        featureSignals: {
+          primary: { feature: "conscientiousness_score", value: 0.8 },
+          secondary: { feature: "future_orientation", value: 0.8 },
+        },
+        // mirrors s1_c
+        consistencyMatch: "s1_c",
+      },
+      {
+        id: "s8_d",
+        text: "See if someone can front the money while I repay them within the week",
+        featureSignals: {
+          primary: { feature: "social_capital_score", value: 0.8 },
+          secondary: { feature: "conscientiousness_score", value: 0.6 },
+        },
+        // mirrors s1_d
+        consistencyMatch: "s1_d",
+      },
+    ],
+  },
+
+  // ---------------------------------------------------------------------------
+  // SECTION C — Open Text (1 question)
+  // NLP pipeline: sentiment, agency, problem-solving, embeddings
+  // ---------------------------------------------------------------------------
+
   {
     id: "q27_resilience_text",
-    section: "D",
+    section: "C",
     type: "text",
     question:
-      "Briefly describe a time you faced a serious financial difficulty. What happened, what did you do, and what did you learn from it?",
-    hint: "Write 2-5 sentences. This helps us understand how you handle real challenges.",
+      "Tell us about a time your finances were under real pressure — what happened, and how did you handle it?",
+    hint: "Write 2–5 sentences. Be specific about what you did, not just how you felt.",
     minWords: 10,
     maxLength: 1000,
     isRiskQuestion: false,
@@ -368,8 +460,11 @@ export const QUESTIONS = [
   },
 ];
 
-export const CORE_PRD_QUESTION_COUNT = 27;
-export const API_CONTRACT_FIELD_COUNT = QUESTIONS.length;
+// ---------------------------------------------------------------------------
+// Constants and helpers
+// ---------------------------------------------------------------------------
+
+export const CORE_QUESTION_COUNT = QUESTIONS.length;
 
 export function getSectionById(sectionId) {
   return SECTIONS.find((section) => section.id === sectionId);
@@ -377,4 +472,15 @@ export function getSectionById(sectionId) {
 
 export function getSectionQuestions(sectionId) {
   return QUESTIONS.filter((question) => question.section === sectionId);
+}
+
+/** Returns true if a question uses the scenario interaction type. */
+export function isScenarioQuestion(question) {
+  return question.type === "scenario";
+}
+
+/** Returns the consistency pair question ID for a given scenario, if any. */
+export function getConsistencyPair(questionId) {
+  const question = QUESTIONS.find((q) => q.id === questionId);
+  return question?.consistencyPair ?? null;
 }

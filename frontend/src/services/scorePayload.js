@@ -22,13 +22,38 @@ export function coerceAnswerValue(question, value) {
   if (question.type === "text") {
     return String(value || "").slice(0, question.maxLength || 1000);
   }
+  if (question.type === "scenario") {
+    // Scenario answers are option IDs (strings like "s1_a")
+    return typeof value === "string" ? value : "";
+  }
   return Number(value);
 }
 
-export function buildAnswersPayload(answers) {
+/**
+ * Build the answers payload to send to the backend.
+ *
+ * For scenario questions: serialise as { primary: optionId, least: optionId|null }
+ * so the backend scenario_analyzer can reconstruct feature values.
+ *
+ * @param {Record<string, any>} answers - Raw answer state keyed by question ID
+ * @param {Record<string, { firstClickMs, changeCount, leastId }>} scenarioTelemetry
+ */
+export function buildAnswersPayload(answers, scenarioTelemetry = {}) {
   return QUESTIONS.reduce((payload, question) => {
     const value = answers[question.id];
-    payload[question.id] = coerceAnswerValue(question, value);
+
+    if (question.type === "scenario") {
+      const tel = scenarioTelemetry[question.id] ?? {};
+      payload[question.id] = {
+        primary: typeof value === "string" ? value : null,
+        least: tel.leastId ?? null,
+        first_click_ms: typeof tel.firstClickMs === "number" ? Math.round(tel.firstClickMs) : null,
+        change_count: typeof tel.changeCount === "number" ? tel.changeCount : 0,
+      };
+    } else {
+      payload[question.id] = coerceAnswerValue(question, value);
+    }
+
     return payload;
   }, {});
 }
@@ -38,8 +63,11 @@ export function buildBehavioralPayload({ telemetry, answers, sessionStartTime, s
   const times = Object.values(responseTimes).map(Number).filter((value) => Number.isFinite(value));
   const avgResponseTimeMs = clip(mean(times, 5200), 100, 120000);
   const changedQuestionCount = Object.values(telemetry.changeCounts).filter((count) => count > 0).length;
-  const riskTimes = QUESTIONS.filter((question) => question.isRiskQuestion)
-    .map((question) => responseTimes[question.id])
+
+  // Use scenario questions for risk-speed ratio (they are the most deliberate section)
+  const scenarioQuestions = QUESTIONS.filter((q) => q.type === "scenario");
+  const scenarioTimes = scenarioQuestions
+    .map((q) => responseTimes[q.id])
     .filter((value) => Number.isFinite(value));
 
   return {
@@ -51,10 +79,20 @@ export function buildBehavioralPayload({ telemetry, answers, sessionStartTime, s
       clip(Object.keys(telemetry.scrollHesitations).length / QUESTIONS.length, 0, 1),
       4,
     ),
-    risk_response_speed_ratio: round(clip(mean(riskTimes, avgResponseTimeMs) / avgResponseTimeMs, 0, 5), 4),
+    // risk_response_speed_ratio: ratio of avg scenario section time to overall avg
+    risk_response_speed_ratio: round(
+      clip(mean(scenarioTimes, avgResponseTimeMs) / avgResponseTimeMs, 0, 5),
+      4,
+    ),
     time_of_day: getTimeOfDay(),
     device_type: getDeviceType(),
-    typing_speed_wpm: round(clip(computeTypingSpeed(answers.q27_resilience_text, responseTimes.q27_resilience_text), 0, 200)),
+    typing_speed_wpm: round(
+      clip(
+        computeTypingSpeed(answers.q27_resilience_text, responseTimes.q27_resilience_text),
+        0,
+        200,
+      ),
+    ),
   };
 }
 

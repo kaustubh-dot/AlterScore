@@ -611,6 +611,27 @@ def _calculate_governance_multiplier(feature_row: dict[str, Any]) -> tuple[float
             f"Suspiciously fast response pacing (avg: {avg_time:.0f}ms)"
         )
 
+    # 8. Scenario Behavioral Inconsistency Penalty (v2)
+    # Low consistency between S1 and S8 (the consistency-trap scenario pair)
+    # indicates self-presentation variance or random responding.
+    scenario_consistency = float(feature_row.get("scenario_consistency_score", 0.5))
+    if scenario_consistency < 0.4:
+        penalty = min(0.10, (0.4 - scenario_consistency) * 0.25)
+        multiplier -= penalty
+        reasons.append(
+            f"Behavioral inconsistency detected across scenario responses "
+            f"(consistency: {scenario_consistency:.2f})"
+        )
+
+    # 9. Scenario Fast-Pattern Gaming Penalty (v2)
+    # If the scenario analyzer flagged suspiciously fast mechanical completion
+    # of the scenario section (avg first-click < 4000ms across scenarios).
+    scenario_fast_gaming = float(feature_row.get("scenario_fast_gaming", 0.0))
+    if scenario_fast_gaming >= 1.0:
+        penalty = 0.08
+        multiplier -= penalty
+        reasons.append("Scenario section completed at mechanically fast pace (possible pattern-gaming)")
+
     final_multiplier = max(0.40, min(1.0, multiplier))
     return final_multiplier, reasons
 

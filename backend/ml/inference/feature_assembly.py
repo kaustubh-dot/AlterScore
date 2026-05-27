@@ -12,6 +12,7 @@ import pandas as pd
 from backend.ml.features.answer_parser import parse_answers
 from backend.ml.features.behavioral_parser import parse_behavioral
 from backend.ml.features.derived_features import build_model_feature_row
+from backend.ml.features.scenario_analyzer import compute_scenario_enriched_features
 from backend.ml.nlp.extractor import extract_nlp_features
 from backend.ml.preprocessing.feature_registry import ALL_MODEL_FEATURES
 from backend.ml.preprocessing.pipeline import TEXT_PCA_FEATURES
@@ -38,18 +39,43 @@ def assemble_request_features(
     text_pca: Any | None = None,
     require_text_pca: bool = False,
 ) -> AssembledRequestFeatures:
-    """Assemble one score request into the canonical ordered model feature row."""
+    """Assemble one score request into the canonical ordered model feature row.
 
+    Pipeline:
+    1. parse_answers()          → base psychometric features (objective questions)
+    2. compute_scenario_enriched_features() → blend scenario signals into psychometric
+    3. parse_behavioral()       → behavioral telemetry features
+    4. extract_nlp_features()   → NLP + text embedding features
+    5. build_model_feature_row() → merge all + derived features → ordered 35-feature row
+    """
     answers_payload, behavioral_payload = _extract_request_components(request)
-    psychometric_features = parse_answers(answers_payload)
+
+    # Step 1: Base psychometric features from objective questions
+    base_psychometric = parse_answers(answers_payload)
+
+    # Step 2: Enrich with scenario-derived feature contributions
+    # This blends scenario option values (60% existing / 40% scenario) and
+    # adds scenario_consistency_score + scenario_fast_gaming to the dict.
+    answers_dict = _coerce_mapping(answers_payload, component_name="answers")
+    psychometric_features = compute_scenario_enriched_features(base_psychometric, answers_dict)
+
+    # Remove scenario-specific auxiliary signals before passing to model
+    # (they're used only in governance logic, not in the 35-feature ML space)
+    scenario_consistency_score = psychometric_features.pop("scenario_consistency_score", 0.5)
+    scenario_fast_gaming = psychometric_features.pop("scenario_fast_gaming", 0.0)
+
+    # Step 3: Behavioral telemetry
     raw_behavioral_features = parse_behavioral(behavioral_payload)
     behavioral_features = _neutralize_contextual_behavioral_features(raw_behavioral_features)
     behavioral_features = _apply_timing_realism_transforms(behavioral_features)
 
-    answer_values = _coerce_mapping(answers_payload, component_name="answers")
-    nlp_output = extract_nlp_features(str(answer_values.get("q27_resilience_text", "")))
-    raw_embedding = np.asarray(nlp_output.pop("_embedding_raw"), dtype=float)
+    # Inject scenario governance signals into behavioral features for downstream use
+    behavioral_features["scenario_consistency_score"] = scenario_consistency_score
+    behavioral_features["scenario_fast_gaming"] = scenario_fast_gaming
 
+    # Step 4: NLP features from open-text response
+    nlp_output = extract_nlp_features(str(answers_dict.get("q27_resilience_text", "")))
+    raw_embedding = np.asarray(nlp_output.pop("_embedding_raw"), dtype=float)
     nlp_features = {key: float(value) for key, value in nlp_output.items()}
     nlp_features.update(
         _project_text_embedding(
@@ -59,6 +85,7 @@ def assemble_request_features(
         )
     )
 
+    # Step 5: Merge into canonical feature row
     feature_row = build_model_feature_row(
         psychometric_features=psychometric_features,
         behavioral_features=behavioral_features,
@@ -175,22 +202,16 @@ def _apply_timing_realism_transforms(
     transformed = dict(behavioral_features)
 
     # 1. avg_response_time_ms (U-Shaped pacing curve)
-    # Healthy thoughtful window is 4000ms - 15000ms.
-    # If < 4000ms, apply a smooth quadratic penalty by inflating the response time.
     raw_time = float(transformed.get("avg_response_time_ms", 5200.0))
     if raw_time < 4000.0:
         transformed["avg_response_time_ms"] = raw_time + ((4000.0 - raw_time) ** 2) / 100.0
 
     # 2. session_duration_sec (U-Shaped session pacing curve)
-    # Healthy thoughtful session is at least 120 seconds.
-    # If < 120s, inflate the session duration to apply the negative monotonic constraint.
     raw_duration = float(transformed.get("session_duration_sec", 180.0))
     if raw_duration < 120.0:
         transformed["session_duration_sec"] = raw_duration + ((120.0 - raw_duration) ** 2) / 2.0
 
     # 3. typing_speed_wpm (U-Shaped physical typing limit check)
-    # Human typing limit is around 85 WPM. If higher (e.g. copy-pasting / bot injection),
-    # reverse the value to scale WPM down, penalizing the positive WPM constraint.
     raw_wpm = float(transformed.get("typing_speed_wpm", 0.0))
     if raw_wpm > 85.0:
         transformed["typing_speed_wpm"] = max(0.0, 85.0 - (raw_wpm - 85.0) * 2.0)

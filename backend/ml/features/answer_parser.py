@@ -1,4 +1,13 @@
-"""Parse raw assessment answers into AlterScore psychometric features."""
+"""Parse raw assessment answers into AlterScore psychometric features.
+
+v2 assessment: 5 reasoning + 8 behavioral scenarios + 1 open-text.
+Scenario questions are handled by scenario_analyzer.py; this module
+handles the objective reasoning questions (numeracy, CRT, financial literacy)
+and the embedded honesty traps.
+
+The scenario_analyzer enrichment is applied in feature_assembly.py after
+this parser produces the base psychometric features.
+"""
 
 from __future__ import annotations
 
@@ -25,139 +34,75 @@ PSYCHOMETRIC_FEATURES: Final[list[str]] = [
 
 _FINANCIAL_LITERACY_CORRECT_ANSWERS: Final[dict[str, int]] = {
     "financial_literacy_q1": 1,
-    "financial_literacy_q2": 1,
-}
-_LOCUS_SCORE_MAP: Final[dict[int, float]] = {
-    0: 1.0,
-    1: 0.5,
-    2: 0.0,
-}
-_LOSS_AVERSION_SCORE_MAP: Final[dict[int, float]] = {
-    0: 0.0,
-    1: 0.5,
-    2: 1.0,
-}
-_SOCIAL_CAPITAL_Q1_SCORE_MAP: Final[dict[int, float]] = {
-    0: 0.0,
-    1: 0.33,
-    2: 0.67,
-    3: 1.0,
-}
-_SOCIAL_CAPITAL_Q2_SCORE_MAP: Final[dict[int, float]] = {
-    0: 1.0,
-    1: 0.5,
-    2: 0.0,
-}
-_SOCIAL_CAPITAL_Q3_SCORE_MAP: Final[dict[int, float]] = {
-    0: 1.0,
-    1: 0.4,
-    2: 0.0,
-}
-_RESILIENCE_Q3_SCORE_MAP: Final[dict[int, float]] = {
-    0: 1.0,
-    1: 0.6,
-    2: 0.35,
-    3: 0.0,
-}
-_RECIPROCITY_Q2_SCORE_MAP: Final[dict[int, float]] = {
-    0: 1.0,
-    1: 0.5,
-    2: 0.0,
 }
 
 
 def parse_answers(answers: Mapping[str, Any] | Any) -> dict[str, float]:
-    """Map raw answer payloads into the 14 psychometric model features."""
+    """Map raw answer payloads into the 14 psychometric model features.
 
+    Produces base values from the objective reasoning questions only.
+    Scenario-derived enrichments are applied separately by
+    compute_scenario_enriched_features() in feature_assembly.py.
+
+    Features that have no direct source in the v2 question bank
+    (risk_attitude, loss_aversion_score, etc.) are set to neutral
+    priors (0.5) and then enriched by scenario signals downstream.
+    """
     answer_values = _coerce_answer_mapping(answers)
 
+    # --- Numeracy (2 questions) -------------------------------------------
     numeracy_score = _mean(
         [
-            _score_with_tolerance(answer_values.get("numeracy_q1"), target=6600.0, tight_tolerance=100.0, partial_tolerance=300.0),
-            _score_with_tolerance(answer_values.get("numeracy_q2"), target=1120.0, tight_tolerance=50.0),
-            _score_with_tolerance(answer_values.get("numeracy_q3"), target=14400.0, tight_tolerance=200.0),
+            _score_with_tolerance(
+                answer_values.get("numeracy_q1"),
+                target=6600.0,
+                tight_tolerance=100.0,
+                partial_tolerance=300.0,
+            ),
+            _score_with_tolerance(
+                answer_values.get("numeracy_q2"),
+                target=1120.0,
+                tight_tolerance=50.0,
+            ),
         ]
     )
+
+    # --- CRT (2 questions) ------------------------------------------------
     crt_score = _mean(
         [
             _score_with_tolerance(answer_values.get("CRT_q1"), target=5.0, tight_tolerance=2.0),
-            _score_with_tolerance(answer_values.get("CRT_q2"), target=5.0, tight_tolerance=1.0),
-            _score_with_tolerance(answer_values.get("CRT_q3"), target=47.0, tight_tolerance=1.0),
+            _score_with_tolerance(answer_values.get("CRT_q2"), target=47.0, tight_tolerance=1.0),
         ]
     )
+
+    # --- Financial Literacy (1 question) ----------------------------------
     financial_literacy_score = _mean(
         [
-            1.0 if answer_values.get(question_id) == correct_answer else 0.0
-            for question_id, correct_answer in _FINANCIAL_LITERACY_CORRECT_ANSWERS.items()
+            1.0 if answer_values.get(q_id) == correct else 0.0
+            for q_id, correct in _FINANCIAL_LITERACY_CORRECT_ANSWERS.items()
         ]
     )
 
-    future_choice_share = _mean(
-        [
-            _binary_choice_score(answer_values.get("future_orient_q1")),
-            _binary_choice_score(answer_values.get("future_orient_q2")),
-        ]
-    )
-    future_orientation = _clip01(
-        0.6 * future_choice_share + 0.4 * _normalize_likert(answer_values.get("future_orient_q3"))
-    )
-    delay_discounting_rate = future_choice_share
-
-    risk_choice_share = _mean(
-        [
-            _binary_choice_score(answer_values.get("risk_q1")),
-            _binary_choice_score(answer_values.get("risk_q2")),
-        ]
-    )
-    risk_consistency_flag = float(
-        _coerce_int(answer_values.get("risk_q1"), default=0) != _coerce_int(answer_values.get("risk_q2"), default=0)
-    )
-    loss_aversion_score = _LOSS_AVERSION_SCORE_MAP.get(
-        _coerce_int(answer_values.get("loss_aversion_q1"), default=-1),
-        0.0,
-    )
-
-    locus_of_control = _clip01(
-        _mean(
-            [
-                _LOCUS_SCORE_MAP.get(_coerce_int(answer_values.get("locus_q1"), default=-1), 0.0),
-                _LOCUS_SCORE_MAP.get(_coerce_int(answer_values.get("locus_q2"), default=-1), 0.0),
-                _normalize_likert(answer_values.get("locus_q3")),
-            ]
-        )
-    )
-    conscientiousness_score = _normalize_likert(answer_values.get("conscientiousness_q1"))
-    social_capital_score = _clip01(
-        _mean(
-            [
-                _SOCIAL_CAPITAL_Q1_SCORE_MAP.get(_coerce_int(answer_values.get("social_capital_q1"), default=-1), 0.0),
-                _SOCIAL_CAPITAL_Q2_SCORE_MAP.get(_coerce_int(answer_values.get("social_capital_q2"), default=-1), 0.0),
-                _SOCIAL_CAPITAL_Q3_SCORE_MAP.get(_coerce_int(answer_values.get("social_capital_q3"), default=-1), 0.0),
-            ]
-        )
-    )
+    # --- Honesty (embedded traps: honesty_trap_q1, honesty_trap_q2) -------
     honesty_score = _compute_honesty_score(
         answers=answer_values,
         numeracy_score=numeracy_score,
         crt_score=crt_score,
     )
-    resilience_score = _clip01(
-        _mean(
-            [
-                _normalize_likert(answer_values.get("resilience_q1")),
-                _normalize_likert(answer_values.get("resilience_q2")),
-                _RESILIENCE_Q3_SCORE_MAP.get(_coerce_int(answer_values.get("resilience_q3"), default=-1), 0.0),
-            ]
-        )
-    )
-    reciprocity_norm = _clip01(
-        _mean(
-            [
-                _normalize_likert(answer_values.get("reciprocity_q1")),
-                _RECIPROCITY_Q2_SCORE_MAP.get(_coerce_int(answer_values.get("reciprocity_q2"), default=-1), 0.0),
-            ]
-        )
-    )
+
+    # --- Features with no direct v2 question source -----------------------
+    # Set to neutral priors. Scenario enrichment in feature_assembly.py will
+    # blend scenario-derived values into these using a 60/40 weighting.
+    future_orientation = 0.5
+    delay_discounting_rate = 0.5
+    risk_attitude = 0.5
+    risk_consistency_flag = 0.0  # No risk pair in v2; set to no-conflict
+    loss_aversion_score = 0.5
+    locus_of_control = 0.5
+    conscientiousness_score = 0.5
+    social_capital_score = 0.5
+    resilience_score = 0.5
+    reciprocity_norm = 0.5
 
     return {
         "numeracy_score": numeracy_score,
@@ -165,7 +110,7 @@ def parse_answers(answers: Mapping[str, Any] | Any) -> dict[str, float]:
         "financial_literacy_score": financial_literacy_score,
         "future_orientation": future_orientation,
         "delay_discounting_rate": delay_discounting_rate,
-        "risk_attitude": risk_choice_share,
+        "risk_attitude": risk_attitude,
         "risk_consistency_flag": risk_consistency_flag,
         "loss_aversion_score": loss_aversion_score,
         "locus_of_control": locus_of_control,
@@ -183,30 +128,25 @@ def _compute_honesty_score(
     numeracy_score: float,
     crt_score: float,
 ) -> float:
-    future_inconsistency = abs(
-        _coerce_int(answers.get("future_orient_q1"), default=0)
-        - _coerce_int(answers.get("future_orient_repeat"), default=0)
-    )
-    locus_inconsistency = abs(
-        _coerce_int(answers.get("locus_q1"), default=0)
-        - _coerce_int(answers.get("locus_repeat"), default=0)
-    ) / 2.0
-    inconsistency_ratio = (future_inconsistency + locus_inconsistency) / 2.0
+    """Compute honesty score from embedded social-desirability traps.
 
+    Uses honesty_trap_q1 and honesty_trap_q2 (both embedded in Section B).
+    High agreement with implausible universals (e.g. 'I have never lied')
+    triggers a social-desirability penalty proportional to cognitive score.
+    """
     suspicious_traps = sum(
-        _coerce_int(answers.get(question_id), default=3) >= 3
-        for question_id in ("honesty_trap_q1", "honesty_trap_q2")
+        _coerce_int(answers.get(q_id), default=3) >= 3
+        for q_id in ("honesty_trap_q1", "honesty_trap_q2")
     )
     social_desirability_penalty = 0.35 * suspicious_traps
 
+    # Implausibility: high cognitive score + high social desirability = likely faking
     implausibility_flag = float(
-        suspicious_traps == 2 and numeracy_score >= (2.0 / 3.0) and crt_score >= (2.0 / 3.0)
+        suspicious_traps == 2
+        and numeracy_score >= (1.0 / 2.0)  # adjusted for 2-question numeracy
+        and crt_score >= (1.0 / 2.0)        # adjusted for 2-question CRT
     )
-    honesty = (
-        (1.0 - inconsistency_ratio)
-        * (1.0 - social_desirability_penalty)
-        * (1.0 - 0.25 * implausibility_flag)
-    )
+    honesty = (1.0 - social_desirability_penalty) * (1.0 - 0.25 * implausibility_flag)
     return _clip01(honesty)
 
 
@@ -240,10 +180,6 @@ def _score_with_tolerance(
 def _normalize_likert(value: Any, *, default: int = 3) -> float:
     coerced = _coerce_int(value, default=default)
     return _clip01((coerced - 1) / 4.0)
-
-
-def _binary_choice_score(value: Any) -> float:
-    return float(_coerce_int(value, default=0) == 1)
 
 
 def _mean(values: list[float]) -> float:

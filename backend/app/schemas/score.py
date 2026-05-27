@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 from uuid import uuid4
 
-from pydantic import Field
+from pydantic import Field, field_validator, model_validator
 
 from backend.app.schemas.common import SchemaModel
 
@@ -15,42 +15,63 @@ DeviceType = Literal["mobile", "desktop", "tablet"]
 ExplanationDirection = Literal["positive", "negative"]
 
 
+class ScenarioAnswer(SchemaModel):
+    """A single scenario question response with optional secondary pick and telemetry."""
+
+    primary: str = Field(..., min_length=2, max_length=10, description="Selected option ID (e.g. 's1_a')")
+    least: str | None = Field(default=None, description="Optional least-like-me option ID")
+    first_click_ms: int | None = Field(default=None, ge=0, le=120000, description="Time to first click in ms")
+    change_count: int = Field(default=0, ge=0, le=50, description="Number of answer changes before final pick")
+
+    @field_validator("primary")
+    @classmethod
+    def validate_primary_format(cls, v: str) -> str:
+        # Option IDs follow the pattern: s{n}_{letter} e.g. s1_a, s8_d
+        import re
+        if not re.match(r"^s\d+_[a-z]$", v):
+            raise ValueError(f"Invalid scenario option ID format: '{v}'. Expected pattern: s1_a")
+        return v
+
+    @model_validator(mode="after")
+    def validate_least_differs_from_primary(self) -> "ScenarioAnswer":
+        if self.least is not None and self.least == self.primary:
+            raise ValueError("'least' option cannot be the same as 'primary' option.")
+        return self
+
+
 class AnswerPayload(SchemaModel):
+    # -----------------------------------------------------------------------
+    # Section A — Financial Reasoning (5 questions)
+    # -----------------------------------------------------------------------
     numeracy_q1: int = Field(..., ge=0, le=10000)
     numeracy_q2: float = Field(..., ge=0, le=10000)
-    numeracy_q3: float = Field(..., ge=0, le=100000)
     financial_literacy_q1: int = Field(..., ge=0, le=3)
-    financial_literacy_q2: int = Field(..., ge=0, le=2)
-    conscientiousness_q1: int = Field(..., ge=1, le=5)
-
     CRT_q1: float = Field(..., ge=0, le=1000)
-    CRT_q2: float = Field(..., ge=0, le=1000)
-    CRT_q3: int = Field(..., ge=1, le=48)
-    future_orient_q1: int = Field(..., ge=0, le=1)
-    future_orient_q2: int = Field(..., ge=0, le=1)
-    future_orient_q3: int = Field(..., ge=1, le=5)
-    risk_q1: int = Field(..., ge=0, le=1)
-    risk_q2: int = Field(..., ge=0, le=1)
+    CRT_q2: int = Field(..., ge=1, le=48)
 
-    locus_q1: int = Field(..., ge=0, le=2)
-    locus_q2: int = Field(..., ge=0, le=2)
-    locus_q3: int = Field(..., ge=1, le=5)
-    social_capital_q1: int = Field(..., ge=0, le=3)
-    social_capital_q2: int = Field(..., ge=0, le=2)
-    social_capital_q3: int = Field(..., ge=0, le=2)
-    resilience_q1: int = Field(..., ge=1, le=5)
-    resilience_q2: int = Field(..., ge=1, le=5)
-    resilience_q3: int = Field(..., ge=0, le=3)
-    loss_aversion_q1: int = Field(..., ge=0, le=2)
-
+    # -----------------------------------------------------------------------
+    # Section B — Behavioral Decision Scenarios (6 main + 2 honesty traps)
+    # Scenario answers are rich objects with option ID + optional telemetry.
+    # Honesty traps remain as Likert integers (embedded, not labeled).
+    # -----------------------------------------------------------------------
+    scenario_s1: ScenarioAnswer
+    scenario_s2: ScenarioAnswer
+    scenario_s3: ScenarioAnswer
+    scenario_s4: ScenarioAnswer
+    scenario_s5: ScenarioAnswer
+    scenario_s6: ScenarioAnswer
     honesty_trap_q1: int = Field(..., ge=1, le=5)
     honesty_trap_q2: int = Field(..., ge=1, le=5)
-    future_orient_repeat: int = Field(..., ge=0, le=1)
-    locus_repeat: int = Field(..., ge=0, le=2)
-    reciprocity_q1: int = Field(..., ge=1, le=5)
-    reciprocity_q2: int = Field(..., ge=0, le=2)
+    scenario_s8: ScenarioAnswer  # Consistency trap — mirrors S1
 
+    # -----------------------------------------------------------------------
+    # Section C — Open Text (1 question)
+    # -----------------------------------------------------------------------
     q27_resilience_text: str = Field(..., max_length=1000)
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a plain dict suitable for passing to parsers and analyzers."""
+        return self.model_dump()
 
 
 class BehavioralPayload(SchemaModel):
@@ -123,6 +144,7 @@ __all__ = [
     "ExplanationItem",
     "ImprovementTip",
     "LoanEligibility",
+    "ScenarioAnswer",
     "ScoreRequest",
     "ScoreResponse",
     "TimeOfDay",

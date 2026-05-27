@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 import OptionCard from "../components/assessment/OptionCard.jsx";
 import ProgressDots from "../components/assessment/ProgressDots.jsx";
+import ScenarioDilemmaCard from "../components/assessment/ScenarioDilemmaCard.jsx";
 import TelemetryOptIn from "../components/assessment/TelemetryOptIn.jsx";
 import ProcessingScreen from "../components/processing/ProcessingScreen.jsx";
 import { QUESTIONS, getSectionById } from "../data/questions.js";
@@ -18,7 +19,10 @@ import {
 const storedSessionId = window.sessionStorage.getItem("alterscore_session_id") || createSessionId();
 window.sessionStorage.setItem("alterscore_session_id", storedSessionId);
 
-const choiceTypes = new Set(["mcq", "binary_choice", "likert"]);
+// Question types that auto-advance after a pick (no explicit Continue button)
+const AUTO_ADVANCE_TYPES = new Set(["mcq", "binary_choice", "likert"]);
+// Question types that need an explicit Continue button
+const MANUAL_ADVANCE_TYPES = new Set(["number", "text", "scenario"]);
 
 function wait(ms) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
@@ -43,6 +47,10 @@ export default function Assessment() {
       return {};
     }
   });
+
+  // scenarioTelemetry: per-scenario { firstClickMs, changeCount, leastId }
+  const [scenarioTelemetry, setScenarioTelemetry] = useState({});
+
   const [telemetry, setTelemetry] = useState({
     responseTimes: {},
     changeCounts: {},
@@ -66,12 +74,26 @@ export default function Assessment() {
   const currentSection = getSectionById(question.section);
   const isFirst = currentIndex === 0;
   const isLast = currentIndex === QUESTIONS.length - 1;
-  const progressLabel = `${currentSection.title.toUpperCase()} · Q${currentIndex + 1} OF ${QUESTIONS.length}`;
+
+  // Human-readable label, hide section for scenario section to feel conversational
+  const progressLabel =
+    question.section === "B"
+      ? `SCENARIO · ${currentIndex + 1} OF ${QUESTIONS.length}`
+      : `${currentSection.title.toUpperCase()} · ${currentIndex + 1} OF ${QUESTIONS.length}`;
 
   const hasAnswer = useMemo(() => {
     const value = answers[question.id];
     if (question.type === "text") {
-      return String(value || "").trim().split(/\s+/).filter(Boolean).length >= (question.minWords || 10);
+      return (
+        String(value || "")
+          .trim()
+          .split(/\s+/)
+          .filter(Boolean).length >= (question.minWords || 10)
+      );
+    }
+    if (question.type === "scenario") {
+      // Primary pick required; secondary is optional
+      return typeof value === "string" && value.length > 0;
     }
     return value !== undefined && value !== null && value !== "";
   }, [answers, question]);
@@ -127,34 +149,30 @@ export default function Assessment() {
     };
   }, [question.id, consented]);
 
-  // Keyboard Navigation Helpers
+  // Keyboard navigation (only for non-scenario, non-text types)
   useEffect(() => {
-    if (!consented || isSubmitting) return;
+    if (!consented || isSubmitting || question.type === "scenario" || question.type === "text")
+      return;
 
     const handleKeyDown = (event) => {
       const activeElement = document.activeElement;
-      if (activeElement && (activeElement.tagName === "INPUT" || activeElement.tagName === "TEXTAREA")) {
-        // Allow normal typing inside writing questions
+      if (
+        activeElement &&
+        (activeElement.tagName === "INPUT" || activeElement.tagName === "TEXTAREA")
+      ) {
         return;
       }
 
       if (question.type === "likert") {
         const num = Number(event.key);
-        if (num >= 1 && num <= 5) {
-          recordAnswer(num);
-        }
+        if (num >= 1 && num <= 5) recordAnswer(num);
       } else if (question.type === "binary_choice") {
-        if (event.key === "1") {
-          recordAnswer(0);
-        } else if (event.key === "2") {
-          recordAnswer(1);
-        }
+        if (event.key === "1") recordAnswer(0);
+        else if (event.key === "2") recordAnswer(1);
       } else if (question.type === "mcq") {
         const num = Number(event.key);
         const optionsCount = question.options?.length || 0;
-        if (num >= 1 && num <= optionsCount) {
-          recordAnswer(num - 1);
-        }
+        if (num >= 1 && num <= optionsCount) recordAnswer(num - 1);
       }
 
       if (event.key === "ArrowLeft" || event.key === "Backspace") {
@@ -185,7 +203,7 @@ export default function Assessment() {
       },
     }));
 
-    if (choiceTypes.has(question.type)) {
+    if (AUTO_ADVANCE_TYPES.has(question.type)) {
       window.clearTimeout(autoTimerRef.current);
       autoTimerRef.current = window.setTimeout(() => {
         if (isLast) {
@@ -195,6 +213,31 @@ export default function Assessment() {
         }
       }, 600);
     }
+  }
+
+  /**
+   * Handler for ScenarioDilemmaCard — receives optionId + per-scenario telemetry.
+   */
+  function recordScenarioAnswer(optionId, cardTelemetry) {
+    const responseTime = Date.now() - questionStartTime;
+
+    setAnswers((state) => ({ ...state, [question.id]: optionId }));
+    setScenarioTelemetry((state) => ({
+      ...state,
+      [question.id]: {
+        firstClickMs: cardTelemetry.firstClickMs ?? state[question.id]?.firstClickMs ?? null,
+        changeCount: cardTelemetry.changeCount,
+        leastId: cardTelemetry.leastId ?? null,
+      },
+    }));
+    setTelemetry((state) => ({
+      ...state,
+      responseTimes: { ...state.responseTimes, [question.id]: responseTime },
+      changeCounts: {
+        ...state.changeCounts,
+        [question.id]: cardTelemetry.changeCount,
+      },
+    }));
   }
 
   function goForward(fromAuto = false) {
@@ -215,7 +258,10 @@ export default function Assessment() {
   }
 
   function goBack() {
+    // Disallow back navigation within scenario section to prevent answer-revision gaming
     if (isFirst || isSubmitting) return;
+    if (question.section === "B") return;
+
     window.clearTimeout(autoTimerRef.current);
     gsap.to(questionRef.current, {
       autoAlpha: 0,
@@ -228,17 +274,20 @@ export default function Assessment() {
   }
 
   function handleStartOver() {
-    if (window.confirm("Are you sure you want to start over? All your current progress will be lost.")) {
+    if (
+      window.confirm("Are you sure you want to start over? All your current progress will be lost.")
+    ) {
       window.sessionStorage.removeItem("alterscore_answers");
       window.sessionStorage.removeItem("alterscore_session_id");
       window.sessionStorage.removeItem("alterscore_score_result");
       window.sessionStorage.removeItem("alterscore_pending_payload");
-      
+
       const newSessionId = createSessionId();
       window.sessionStorage.setItem("alterscore_session_id", newSessionId);
-      
+
       setAnswers({});
       setCurrentIndex(0);
+      setScenarioTelemetry({});
       setTelemetry({
         responseTimes: {},
         changeCounts: {},
@@ -265,7 +314,7 @@ export default function Assessment() {
     if (!payload) {
       payload = {
         session_id: storedSessionId,
-        answers: buildAnswersPayload(nextAnswers),
+        answers: buildAnswersPayload(nextAnswers, scenarioTelemetry),
         behavioral: buildBehavioralPayload({ telemetry, answers: nextAnswers, sessionStartTime }),
       };
     }
@@ -284,12 +333,27 @@ export default function Assessment() {
       window.sessionStorage.removeItem("alterscore_pending_payload");
       navigate("/results", { state: result });
     } catch (err) {
-      setError(err.status === 422 ? "The score contract rejected one field. Your answers are still saved." : "Network failed. Retry will reuse the same payload.");
+      setError(
+        err.status === 422
+          ? "The score contract rejected one field. Your answers are still saved."
+          : "Network failed. Retry will reuse the same payload.",
+      );
       setIsSubmitting(false);
     }
   }
 
   function renderAnswerControl() {
+    // SCENARIO type — full card with options
+    if (question.type === "scenario") {
+      return (
+        <ScenarioDilemmaCard
+          question={question}
+          selectedId={answers[question.id] ?? null}
+          onAnswer={recordScenarioAnswer}
+        />
+      );
+    }
+
     if (question.type === "number") {
       return (
         <div className="number-answer">
@@ -309,7 +373,10 @@ export default function Assessment() {
     }
 
     if (question.type === "text") {
-      const wordsCount = String(answers[question.id] || "").trim().split(/\s+/).filter(Boolean).length;
+      const wordsCount = String(answers[question.id] || "")
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean).length;
       const minWords = question.minWords || 10;
       const progressPercent = Math.min((wordsCount / minWords) * 100, 100);
       const metMin = wordsCount >= minWords;
@@ -332,49 +399,75 @@ export default function Assessment() {
               fontSize: "1rem",
               lineHeight: "1.6",
               outline: "none",
-              transition: "border-color 0.2s"
+              transition: "border-color 0.2s",
             }}
           />
-          
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "0.5rem", fontSize: "0.8rem" }}>
-            <span style={{ color: metMin ? "var(--accent-green)" : "var(--accent-red)", fontWeight: "500" }}>
+
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginTop: "0.5rem",
+              fontSize: "0.8rem",
+            }}
+          >
+            <span
+              style={{
+                color: metMin ? "var(--accent-green)" : "var(--accent-red)",
+                fontWeight: "500",
+              }}
+            >
               {wordsCount} words {metMin ? "✓ Minimum met" : `(needs at least ${minWords} words)`}
             </span>
-            <span style={{ color: "var(--soft)" }}>
-              Max {question.maxLength || 1000} characters
-            </span>
+            <span style={{ color: "var(--soft)" }}>Max {question.maxLength || 1000} characters</span>
           </div>
 
-          <div style={{ width: "100%", height: "4px", background: "rgba(255,255,255,0.05)", borderRadius: "2px", marginTop: "0.5rem", overflow: "hidden" }}>
-            <div style={{
-              width: `${progressPercent}%`,
-              height: "100%",
-              background: metMin ? "var(--accent-green)" : "var(--accent-red)",
-              transition: "width 0.3s ease, background-color 0.3s ease"
-            }} />
+          <div
+            style={{
+              width: "100%",
+              height: "4px",
+              background: "rgba(255,255,255,0.05)",
+              borderRadius: "2px",
+              marginTop: "0.5rem",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                width: `${progressPercent}%`,
+                height: "100%",
+                background: metMin ? "var(--accent-green)" : "var(--accent-red)",
+                transition: "width 0.3s ease, background-color 0.3s ease",
+              }}
+            />
           </div>
 
-          <div className="resilience-helper-card" style={{
-            marginTop: "1.5rem",
-            padding: "1rem",
-            background: "rgba(255,255,255,0.02)",
-            borderLeft: "2px solid var(--accent)",
-            borderRadius: "0",
-            fontSize: "0.85rem",
-            lineHeight: "1.5",
-            color: "var(--text-muted)"
-          }}>
+          <div
+            className="resilience-helper-card"
+            style={{
+              marginTop: "1.5rem",
+              padding: "1rem",
+              background: "rgba(255,255,255,0.02)",
+              borderLeft: "2px solid var(--accent)",
+              borderRadius: "0",
+              fontSize: "0.85rem",
+              lineHeight: "1.5",
+              color: "var(--text-muted)",
+            }}
+          >
             <strong>Suggestion guide</strong>
             <ul style={{ margin: "0.5rem 0 0 0", paddingLeft: "1.2rem" }}>
-              <li>What was the specific event or challenge? (e.g. startup, business trial, financial plan)</li>
-              <li>What did you plan or design as an adjustment?</li>
-              <li>What concrete actions did you execute to resolve the conflict?</li>
+              <li>What was the specific challenge? (e.g. cash shortfall, lost income, debt)</li>
+              <li>What did you decide to do about it?</li>
+              <li>What concrete actions did you take?</li>
             </ul>
           </div>
         </div>
       );
     }
 
+    // Likert / MCQ / binary_choice — option cards
     const options = question.type === "likert" ? question.scale : question.options;
     return (
       <div className="answer-options">
@@ -396,7 +489,11 @@ export default function Assessment() {
 
   if (!consented) {
     return (
-      <main className="assessment-experience" data-section style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "80vh" }}>
+      <main
+        className="assessment-experience"
+        data-section
+        style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "80vh" }}
+      >
         <TelemetryOptIn
           onConsent={() => {
             window.sessionStorage.setItem("alterscore_telemetry_consented", "true");
@@ -410,17 +507,21 @@ export default function Assessment() {
 
   if (isSubmitting) return <ProcessingScreen />;
 
+  const isScenario = question.type === "scenario";
+  const canGoBack = !isFirst && !isSubmitting && question.section !== "B";
+
   return (
     <main className="assessment-experience" data-section>
       <ProgressDots total={QUESTIONS.length} current={currentIndex} />
 
       {halfwayPulse && (
-        <div className="halfway-pulse">
-          Halfway there. Your profile is taking shape.
-        </div>
+        <div className="halfway-pulse">Halfway there. Your profile is taking shape.</div>
       )}
 
-      <section ref={questionRef} className="assessment-question">
+      <section
+        ref={questionRef}
+        className={`assessment-question${isScenario ? " assessment-question--scenario" : ""}`}
+      >
         <p className="question-category">{progressLabel}</p>
         <h1>{question.question}</h1>
         {question.hint && <p className="question-hint">{question.hint}</p>}
@@ -437,7 +538,7 @@ export default function Assessment() {
 
       <div className="assessment-controls">
         <div style={{ display: "flex", gap: "0.8rem", pointerEvents: "auto" }}>
-          <button type="button" onClick={goBack} disabled={isFirst} data-magnetic>
+          <button type="button" onClick={goBack} disabled={!canGoBack} data-magnetic>
             Back
           </button>
           {Object.keys(answers).length > 0 && (
@@ -454,8 +555,13 @@ export default function Assessment() {
             </button>
           )}
         </div>
-        {!choiceTypes.has(question.type) && (
-          <button type="button" onClick={() => goForward(false)} disabled={!hasAnswer} data-magnetic>
+        {MANUAL_ADVANCE_TYPES.has(question.type) && (
+          <button
+            type="button"
+            onClick={() => goForward(false)}
+            disabled={!hasAnswer}
+            data-magnetic
+          >
             {isLast ? "Submit profile" : "Continue"}
           </button>
         )}
