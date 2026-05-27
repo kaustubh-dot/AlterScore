@@ -1,0 +1,50 @@
+name: Deploy to Hugging Face Spaces
+
+on:
+  push:
+    branches:
+      - main
+      - feat/ipsative-forced-choice-triads
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - name: Install Git LFS
+        run: git lfs install
+
+      - name: Prepend Hugging Face Spaces YAML Metadata
+        run: |
+          cat << 'EOF' > README.tmp
+          ---
+          title: AlterScore Backend
+          emoji: 📊
+          colorFrom: green
+          colorTo: blue
+          sdk: docker
+          app_port: 7860
+          pinned: false
+          ---
+          
+          EOF
+          cat README.md >> README.tmp
+          mv README.tmp README.md
+
+      - name: Commit and Push to Hugging Face Spaces
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git config --global user.email "bot@alterscore.ai"
+          git config --global user.name "AlterScore Deployment Bot"
+          # Stage the modified README.md
+          git add README.md
+          # Create a deployment commit
+          git commit -m "deploy(hf): inject metadata frontmatter and package for Space runtime"
+          # Push directly to Hugging Face Space repository main branch
+          git push https://coolbot22:$HF_TOKEN@huggingface.co/spaces/coolbot22/alterscore-backend HEAD:refs/heads/main --force
