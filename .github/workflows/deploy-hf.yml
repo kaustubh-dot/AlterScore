@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - feat/ipsative-forced-choice-triads
 
 jobs:
   deploy:
