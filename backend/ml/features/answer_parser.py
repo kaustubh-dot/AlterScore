@@ -130,24 +130,31 @@ def _compute_honesty_score(
 ) -> float:
     """Compute honesty score from embedded social-desirability traps.
 
-    Uses honesty_trap_q1 and honesty_trap_q2 (both embedded in Section B).
-    High agreement with implausible universals (e.g. 'I have never lied')
-    triggers a social-desirability penalty proportional to cognitive score.
+    v2 uses only honesty_trap_q1 as the active frontend trap.
+    honesty_trap_q2 was removed from the question bank (frontend no longer
+    sends it; schema defaults to 3 = neutral). The backend still reads both
+    fields for backward compatibility, but the active signal is from q1.
+
+    Honesty trap: "I have never told even a small lie in my entire life."
+    Agreeing (≥4) with an implausible universal triggers a penalty.
     """
+    # q2 will be 3 (neutral) from schema default — counts as 0 suspicious traps
     suspicious_traps = sum(
-        _coerce_int(answers.get(q_id), default=3) >= 3
+        _coerce_int(answers.get(q_id), default=3) >= 4
         for q_id in ("honesty_trap_q1", "honesty_trap_q2")
     )
-    social_desirability_penalty = 0.35 * suspicious_traps
+    # 1 suspicious trap = 0.25 penalty (max from q1 alone); 2 = 0.45 (legacy compat)
+    social_desirability_penalty = 0.25 * suspicious_traps if suspicious_traps == 1 else 0.45 * suspicious_traps
 
-    # Implausibility: high cognitive score + high social desirability = likely faking
+    # Implausibility: agreeing with both traps + high cognitive score = likely faking
     implausibility_flag = float(
-        suspicious_traps == 2
-        and numeracy_score >= (1.0 / 2.0)  # adjusted for 2-question numeracy
-        and crt_score >= (1.0 / 2.0)        # adjusted for 2-question CRT
+        suspicious_traps >= 1
+        and numeracy_score >= 0.5
+        and crt_score >= 0.5
     )
-    honesty = (1.0 - social_desirability_penalty) * (1.0 - 0.25 * implausibility_flag)
+    honesty = (1.0 - social_desirability_penalty) * (1.0 - 0.20 * implausibility_flag)
     return _clip01(honesty)
+
 
 
 def _coerce_answer_mapping(answers: Mapping[str, Any] | Any) -> dict[str, Any]:

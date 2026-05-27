@@ -79,7 +79,20 @@ def generate_synthetic_dataset(
     row_count: int = DEFAULT_ROW_COUNT,
     seed: int = DEFAULT_SEED,
 ) -> pd.DataFrame:
-    """Generate a deterministic in-memory synthetic dataset."""
+    """Generate a deterministic in-memory synthetic dataset.
+
+    v2 assessment calibration notes (updated for scenario-based question bank):
+    - Scenario-driven features (conscientiousness, locus_of_control, future_orientation,
+      resilience, social_capital, reciprocity, loss_aversion) are clipped to [0.25, 1.0].
+      In v2, the worst realistic multi-scenario average is ~0.25 (picking the lowest-coded
+      option across all 7 scenarios), so the old [0.0, 1.0] floor was too pessimistic.
+    - risk_consistency_flag probability is tightened to [0.02, 0.18].
+      In v2, there are no direct risk-pair questions, so the flag defaults to 0 at runtime
+      for most users. The generator now reflects the much lower conflict rate.
+    - delay_discounting_rate floor raised to 0.20 to match future_orientation floor.
+    - All other features (numeracy, CRT, financial_literacy, honesty, behavioral telemetry,
+      NLP features) retain their original distributions — these are unchanged in v2.
+    """
 
     if row_count <= 0:
         raise ValueError("row_count must be a positive integer.")
@@ -99,30 +112,56 @@ def generate_synthetic_dataset(
     financial_literacy_score = _clip01(
         _sigmoid(0.58 * capacity + 0.30 * discipline + rng.normal(0.0, 0.56, row_count))
     )
-    future_orientation = _clip01(_sigmoid(0.62 * discipline + 0.24 * stability + rng.normal(0.0, 0.60, row_count)))
-    delay_discounting_rate = _clip01(
-        0.68 * future_orientation + 0.12 * _sigmoid(0.35 * discipline) + rng.normal(0.0, 0.08, row_count)
+
+    # --- Scenario-driven features: floor at 0.25 to match v2 codebook minimum ---
+    # In v2, all these features come exclusively from scenario analysis.
+    # The worst realistic average across 7 scenarios is ~0.25 (all low-coded options).
+    future_orientation = np.clip(
+        _sigmoid(0.62 * discipline + 0.24 * stability + rng.normal(0.0, 0.60, row_count)),
+        0.25, 1.0,
+    )
+    delay_discounting_rate = np.clip(
+        0.68 * future_orientation + 0.12 * _sigmoid(0.35 * discipline) + rng.normal(0.0, 0.08, row_count),
+        0.20, 1.0,
     )
     risk_attitude = np.clip(
         0.52 + 0.10 * capacity - 0.06 * discipline + rng.normal(0.0, 0.16, row_count),
         0.02,
         0.98,
     )
+    # risk_consistency_flag: tightened to [0.02, 0.18] — v2 has no risk-pair questions,
+    # so almost all runtime users will have flag=0. Generator matches this.
     risk_consistency_probability = np.clip(
-        0.32 - 0.09 * discipline - 0.07 * capacity + rng.normal(0.0, 0.05, row_count),
-        0.04,
-        0.55,
+        0.08 - 0.04 * discipline - 0.03 * capacity + rng.normal(0.0, 0.03, row_count),
+        0.02,
+        0.18,
     )
     risk_consistency_flag = (rng.random(row_count) < risk_consistency_probability).astype(int)
-    loss_aversion_score = _clip01(_sigmoid(0.22 * stability - 0.12 * capacity + rng.normal(0.0, 0.66, row_count)))
-    locus_of_control = _clip01(_sigmoid(0.56 * stability + 0.18 * discipline + rng.normal(0.0, 0.58, row_count)))
-    conscientiousness_score = _clip01(
-        _sigmoid(0.58 * discipline + 0.16 * stability + rng.normal(0.0, 0.56, row_count))
+    loss_aversion_score = np.clip(
+        _sigmoid(0.22 * stability - 0.12 * capacity + rng.normal(0.0, 0.66, row_count)),
+        0.25, 1.0,
     )
-    social_capital_score = _clip01(_sigmoid(0.64 * social + 0.18 * integrity + rng.normal(0.0, 0.60, row_count)))
+    locus_of_control = np.clip(
+        _sigmoid(0.56 * stability + 0.18 * discipline + rng.normal(0.0, 0.58, row_count)),
+        0.25, 1.0,
+    )
+    conscientiousness_score = np.clip(
+        _sigmoid(0.58 * discipline + 0.16 * stability + rng.normal(0.0, 0.56, row_count)),
+        0.25, 1.0,
+    )
+    social_capital_score = np.clip(
+        _sigmoid(0.64 * social + 0.18 * integrity + rng.normal(0.0, 0.60, row_count)),
+        0.25, 1.0,
+    )
     honesty_score = _clip01(_sigmoid(0.72 * integrity + 0.18 * discipline + rng.normal(0.0, 0.58, row_count)))
-    resilience_score = _clip01(_sigmoid(0.54 * stability + 0.22 * social + rng.normal(0.0, 0.60, row_count)))
-    reciprocity_norm = _clip01(_sigmoid(0.56 * social + 0.20 * integrity + rng.normal(0.0, 0.62, row_count)))
+    resilience_score = np.clip(
+        _sigmoid(0.54 * stability + 0.22 * social + rng.normal(0.0, 0.60, row_count)),
+        0.25, 1.0,
+    )
+    reciprocity_norm = np.clip(
+        _sigmoid(0.56 * social + 0.20 * integrity + rng.normal(0.0, 0.62, row_count)),
+        0.25, 1.0,
+    )
 
     device_type = rng.choice(
         np.array(["mobile", "desktop", "tablet"], dtype=object),

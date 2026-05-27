@@ -331,12 +331,12 @@ def main() -> int:
 
     manifest = {
         "manifest_schema_version": "1.0.0",
-        "manifest_version": "xgboost_monotonic_v1",
-        "model_version": "0.2.0",
+        "manifest_version": "xgboost_monotonic_v2",
+        "model_version": "0.3.0",
         "run_id": run_id,
         "created_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "code_ref": "antigravity/dev",
-        "data_version": "synthetic_v0.1.0",
+        "data_version": "synthetic_v2.0.0",
         "feature_registry_version": "0.1.0",
         "runtime_model_name": "xgboost_monotonic",
         "runtime_model_type": "classical_monotonic",
@@ -362,9 +362,10 @@ def main() -> int:
         },
         "promotion_status": "promoted",
         "promotion_notes": (
-            "Monotonic XGBoost candidate promoted to production. "
-            "Guaranteed monotonicity constraints on key behavioral features. "
-            "Removes unconstrained TabNet complexity and PyTorch runtime dependency."
+            "Monotonic XGBoost candidate promoted to production (v2 assessment). "
+            "Retrained on v2-calibrated synthetic data: scenario-driven features "
+            "floored at 0.25, risk_consistency_flag rate tightened to match v2 runtime. "
+            "Guaranteed monotonicity constraints on all key behavioral features."
         ),
     }
 
