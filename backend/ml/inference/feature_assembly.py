@@ -224,14 +224,18 @@ def _apply_timing_realism_transforms(
     # If < 4000ms, apply a smooth quadratic penalty by inflating the response time.
     raw_time = float(transformed.get("avg_response_time_ms", 5200.0))
     if raw_time < 4000.0:
-        transformed["avg_response_time_ms"] = raw_time + ((4000.0 - raw_time) ** 2) / 100.0
+        transformed["avg_response_time_ms"] = (
+            raw_time + ((4000.0 - raw_time) ** 2) / 100.0
+        )
 
     # 2. session_duration_sec (U-Shaped session pacing curve)
     # Healthy thoughtful session is at least 120 seconds.
     # If < 120s, inflate the session duration to apply the negative monotonic constraint.
     raw_duration = float(transformed.get("session_duration_sec", 180.0))
     if raw_duration < 120.0:
-        transformed["session_duration_sec"] = raw_duration + ((120.0 - raw_duration) ** 2) / 2.0
+        transformed["session_duration_sec"] = (
+            raw_duration + ((120.0 - raw_duration) ** 2) / 2.0
+        )
 
     # 3. typing_speed_wpm (U-Shaped physical typing limit check)
     # Human typing limit is around 85 WPM. If higher (e.g. copy-pasting / bot typing),

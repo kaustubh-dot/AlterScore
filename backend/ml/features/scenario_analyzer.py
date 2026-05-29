@@ -138,7 +138,9 @@ def analyze_scenario_responses(
             (primary_feature, primary_value, _PRIMARY_WEIGHT),
             (secondary_feature, secondary_value, _SECONDARY_WEIGHT),
         ):
-            feature_accumulator[feature] = feature_accumulator.get(feature, 0.0) + value * weight
+            feature_accumulator[feature] = (
+                feature_accumulator.get(feature, 0.0) + value * weight
+            )
             weight_accumulator[feature] = weight_accumulator.get(feature, 0.0) + weight
 
     # True weighted average blended with 0.5 prior (60/40 ratio) to match training

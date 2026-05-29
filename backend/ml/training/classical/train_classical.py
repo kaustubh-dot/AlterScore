@@ -421,6 +421,7 @@ def _build_classical_models(*, random_state: int) -> dict[str, Any]:
 
     import os
     import sys
+
     is_test = os.environ.get("ALTERSCORE_ENV") == "test" or "pytest" in sys.modules
     n_est_rf = 3 if is_test else 300
     n_est_xgb_lgbm = 3 if is_test else 200

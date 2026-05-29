@@ -401,6 +401,7 @@ def _load_vader_analyzer() -> Any | None:
 def _load_spacy_model() -> Any | None:
     import os
     import sys
+
     if os.environ.get("ALTERSCORE_ENV") == "test" or "pytest" in sys.modules:
         return None
     try:
@@ -415,6 +416,7 @@ def _load_spacy_model() -> Any | None:
 def _load_sentence_transformer_model() -> Any | None:
     import os
     import sys
+
     if os.environ.get("ALTERSCORE_ENV") == "test" or "pytest" in sys.modules:
         return None
 

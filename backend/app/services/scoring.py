@@ -127,8 +127,12 @@ class ScoringService:
         # Apply Post-Model Governance Multiplier Layer
         governance_features = {
             **assembled.feature_row,
-            "scenario_consistency_score": assembled.behavioral_features.get("scenario_consistency_score", 0.5),
-            "scenario_fast_gaming": assembled.behavioral_features.get("scenario_fast_gaming", 0.0),
+            "scenario_consistency_score": assembled.behavioral_features.get(
+                "scenario_consistency_score", 0.5
+            ),
+            "scenario_fast_gaming": assembled.behavioral_features.get(
+                "scenario_fast_gaming", 0.0
+            ),
         }
         gov_multiplier, gov_reasons = _calculate_governance_multiplier(
             governance_features

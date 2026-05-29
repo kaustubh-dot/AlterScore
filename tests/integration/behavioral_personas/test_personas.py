@@ -8,6 +8,7 @@ from backend.app.core.settings import load_settings
 def runtime_artifacts(tmp_path):
     from backend.app.core.paths import REPO_ROOT
     import shutil
+
     model_directories = (
         "artifacts",
         "explainers",
