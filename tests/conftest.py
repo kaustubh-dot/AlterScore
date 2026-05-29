@@ -17,6 +17,14 @@ if str(REPO_ROOT) not in sys.path:
 
 
 @pytest.fixture(scope="session")
+def worker_id(request) -> str:
+    """Provide worker_id for xdist parallel runs or fallback to 'master' for serial runs."""
+    if hasattr(request.config, "workerinput"):
+        return request.config.workerinput["workerid"]
+    return "master"
+
+
+@pytest.fixture(scope="session")
 def session_trained_model_dir(tmp_path_factory, worker_id) -> Path:
     """Train the baseline model once per test session, shared across all xdist workers using a file lock."""
     # Find a shared base directory for all workers
