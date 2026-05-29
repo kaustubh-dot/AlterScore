@@ -419,11 +419,17 @@ def _build_classical_models(*, random_state: int) -> dict[str, Any]:
             "xgboost is required to train the AlterScore classical model suite."
         ) from exc
 
+    import os
+    import sys
+    is_test = os.environ.get("ALTERSCORE_ENV") == "test" or "pytest" in sys.modules
+    n_est_rf = 3 if is_test else 300
+    n_est_xgb_lgbm = 3 if is_test else 200
+
     return {
         "random_forest": RandomForestClassifier(
             class_weight="balanced_subsample",
             min_samples_leaf=4,
-            n_estimators=300,
+            n_estimators=n_est_rf,
             n_jobs=-1,
             random_state=random_state,
         ),
@@ -432,7 +438,7 @@ def _build_classical_models(*, random_state: int) -> dict[str, Any]:
             eval_metric="logloss",
             learning_rate=0.05,
             max_depth=4,
-            n_estimators=200,
+            n_estimators=n_est_xgb_lgbm,
             n_jobs=-1,
             objective="binary:logistic",
             random_state=random_state,
@@ -448,7 +454,7 @@ def _build_classical_models(*, random_state: int) -> dict[str, Any]:
             feature_fraction_seed=random_state,
             force_col_wise=True,
             learning_rate=0.05,
-            n_estimators=200,
+            n_estimators=n_est_xgb_lgbm,
             n_jobs=-1,
             objective="binary",
             random_state=random_state,

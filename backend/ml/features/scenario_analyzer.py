@@ -108,8 +108,9 @@ def analyze_scenario_responses(
     """
     answer_values = _coerce_mapping(answers)
 
-    # Accumulate weighted contributions per feature
-    feature_accumulator: dict[str, list[float]] = {}
+    # Accumulate weighted contributions and weights per feature
+    feature_accumulator: dict[str, float] = {}
+    weight_accumulator: dict[str, float] = {}
     first_click_times: list[float] = []
 
     for scenario_id in _SCENARIO_IDS:
@@ -137,14 +138,17 @@ def analyze_scenario_responses(
             (primary_feature, primary_value, _PRIMARY_WEIGHT),
             (secondary_feature, secondary_value, _SECONDARY_WEIGHT),
         ):
-            feature_accumulator.setdefault(feature, []).append(value * weight)
+            feature_accumulator[feature] = feature_accumulator.get(feature, 0.0) + value * weight
+            weight_accumulator[feature] = weight_accumulator.get(feature, 0.0) + weight
 
-    # Weighted average per feature
+    # True weighted average blended with 0.5 prior (60/40 ratio) to match training
     feature_contributions: dict[str, float] = {}
-    for feature_name, weighted_values in feature_accumulator.items():
-        # Normalize by the number of contributions scaled by primary weight
-        raw_avg = sum(weighted_values) / len(weighted_values)
-        feature_contributions[feature_name] = float(min(max(raw_avg, 0.0), 1.0))
+    for feature_name, sum_weighted in feature_accumulator.items():
+        sum_weights = weight_accumulator.get(feature_name, 0.0)
+        if sum_weights > 0:
+            weighted_avg = sum_weighted / sum_weights
+            blended_avg = 0.20 + 0.60 * weighted_avg
+            feature_contributions[feature_name] = float(min(max(blended_avg, 0.0), 1.0))
 
     # Consistency check: S1 vs S8
     scenario_consistency_score = _compute_consistency_score(answer_values)

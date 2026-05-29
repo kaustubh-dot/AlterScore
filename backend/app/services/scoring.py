@@ -125,8 +125,13 @@ class ScoringService:
         repayment_probability = float(model_debug["repayment_probability"])
 
         # Apply Post-Model Governance Multiplier Layer
+        governance_features = {
+            **assembled.feature_row,
+            "scenario_consistency_score": assembled.behavioral_features.get("scenario_consistency_score", 0.5),
+            "scenario_fast_gaming": assembled.behavioral_features.get("scenario_fast_gaming", 0.0),
+        }
         gov_multiplier, gov_reasons = _calculate_governance_multiplier(
-            assembled.feature_row
+            governance_features
         )
         adjusted_probability = max(
             0.01, min(0.99, repayment_probability * gov_multiplier)

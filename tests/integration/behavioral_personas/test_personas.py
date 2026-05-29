@@ -5,14 +5,31 @@ from backend.app.core.settings import load_settings
 
 
 @pytest.fixture
-def runtime_artifacts(trained_model_dir):
+def runtime_artifacts(tmp_path):
+    from backend.app.core.paths import REPO_ROOT
+    import shutil
+    model_directories = (
+        "artifacts",
+        "explainers",
+        "preprocessors",
+        "registry",
+        "reports",
+    )
+    for directory_name in model_directories:
+        source_dir = REPO_ROOT / "models" / directory_name
+        target_dir = tmp_path / "models" / directory_name
+        target_dir.mkdir(parents=True, exist_ok=True)
+        for source_path in source_dir.iterdir():
+            if source_path.name == ".gitkeep":
+                continue
+            shutil.copy2(source_path, target_dir / source_path.name)
+
     settings = load_settings(
         {
-            "ALTERSCORE_REPO_ROOT": str(trained_model_dir),
-            "ALTERSCORE_RUNTIME_MODEL_PATH": "models/artifacts/logistic_best.pkl",
+            "ALTERSCORE_REPO_ROOT": str(tmp_path),
         }
     )
-    return load_runtime_artifact_bundle(settings, strict=False)
+    return load_runtime_artifact_bundle(settings, strict=True)
 
 
 def _build_request(preset: dict) -> dict:
