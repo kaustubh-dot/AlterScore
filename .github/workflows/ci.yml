@@ -69,6 +69,10 @@ jobs:
           pip install -r backend/requirements.txt
           pip install -r backend/requirements-dev.txt
 
+      - name: Download spaCy English Model
+        run: |
+          python -m spacy download en_core_web_sm
+
       - name: Run Complete Pytest Suite
         env:
           ALTERSCORE_ENV: test
@@ -95,6 +99,10 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
+
+      - name: Download spaCy English Model
+        run: |
+          python -m spacy download en_core_web_sm
 
       - name: Run Reproducibility Check
         run: |
