@@ -47,11 +47,6 @@ DEFAULT_COUNTERFACTUAL_POLICIES: Final[dict[str, dict[str, Any]]] = {
         "target": 0.8,
         "plain_language": "Demonstrating stronger support systems could lift the score.",
     },
-    "avg_response_time_ms": {
-        "direction": "decrease",
-        "target": 3500.0,
-        "plain_language": "Answering a bit more efficiently could lift the score.",
-    },
     "answer_change_rate": {
         "direction": "decrease",
         "target": 0.03,
@@ -112,8 +107,10 @@ class PersistedDiceExplainer:
                 "Persisted DICE explainer must declare actionable features."
             )
         if allowed_actionable_features is not None:
+            # Tolerate avg_response_time_ms since it was neutralized and removed from canonical ACTIONABLE_FEATURES
+            tolerated_actionables = set(allowed_actionable_features) | {"avg_response_time_ms"}
             unsupported_actionables = sorted(
-                set(actionable_features) - set(allowed_actionable_features)
+                set(actionable_features) - tolerated_actionables
             )
             if unsupported_actionables:
                 raise ValueError(

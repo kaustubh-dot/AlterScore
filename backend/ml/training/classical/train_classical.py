@@ -426,6 +426,14 @@ def _build_classical_models(*, random_state: int) -> dict[str, Any]:
     n_est_rf = 3 if is_test else 300
     n_est_xgb_lgbm = 3 if is_test else 200
 
+    has_gpu = False
+    if not is_test:
+        try:
+            import torch
+            has_gpu = torch.cuda.is_available()
+        except ImportError:
+            pass
+
     return {
         "random_forest": RandomForestClassifier(
             class_weight="balanced_subsample",
@@ -445,6 +453,7 @@ def _build_classical_models(*, random_state: int) -> dict[str, Any]:
             random_state=random_state,
             subsample=1.0,
             tree_method="hist",
+            device="cuda" if has_gpu else "cpu",
             verbosity=0,
         ),
         "lightgbm": LGBMClassifier(
@@ -453,7 +462,8 @@ def _build_classical_models(*, random_state: int) -> dict[str, Any]:
             data_random_seed=random_state,
             deterministic=True,
             feature_fraction_seed=random_state,
-            force_col_wise=True,
+            force_col_wise=True if not has_gpu else False,
+            device="gpu" if has_gpu else "cpu",
             learning_rate=0.05,
             n_estimators=n_est_xgb_lgbm,
             n_jobs=-1,

@@ -68,7 +68,6 @@ ACTIONABLE_FEATURES: list[str] = [
     "conscientiousness_score",
     "social_capital_score",
     "engagement_score",
-    "avg_response_time_ms",
     "answer_change_rate",
     "text_agency_score",
 ]

@@ -1,12 +1,9 @@
 import { useState } from "react";
 
 const NEGATIVE_CONSTRAINED_FEATURES = new Set([
-  "avg_response_time_ms",
   "answer_change_rate",
-  "session_duration_sec",
   "dropout_count",
   "scroll_hesitation_score",
-  "risk_response_speed_ratio",
   "delay_discounting_rate",
   "risk_consistency_flag"
 ]);
@@ -22,7 +19,6 @@ const POSITIVE_CONSTRAINED_FEATURES = new Set([
   "honesty_score",
   "resilience_score",
   "reciprocity_norm",
-  "typing_speed_wpm",
   "text_sentiment_compound",
   "text_agency_score",
   "text_problem_solving_flag"

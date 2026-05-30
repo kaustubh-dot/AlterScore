@@ -16,56 +16,65 @@ RAW_EMBEDDING_DIM: Final[int] = 384
 MIN_TEXT_LENGTH: Final[int] = 10
 RAW_TEXT_RESPONSE_COLUMN: Final[str] = "open_response_text"
 
-_FIRST_PERSON_TOKENS: Final[set[str]] = {"i", "me", "my", "myself", "mine"}
+_FIRST_PERSON_TOKENS: Final[set[str]] = {"i", "me", "my", "myself", "mine", "we", "our", "us"}
+
+# ---------------------------------------------------------------------------
+# Agency verbs — expanded to ~130 words covering financial resilience actions
+# ---------------------------------------------------------------------------
 _AGENCY_VERBS: Final[set[str]] = {
-    "act",
-    "acted",
-    "adjust",
-    "analyzed",
-    "budget",
-    "budgeted",
-    "build",
-    "built",
-    "choose",
-    "chose",
-    "contingency",
-    "decide",
-    "decided",
-    "distributor",
-    "earn",
-    "earned",
-    "facing",
-    "find",
-    "found",
-    "handle",
-    "handled",
-    "held",
-    "implemented",
-    "learn",
-    "learned",
-    "manage",
-    "managed",
-    "negotiate",
-    "negotiated",
-    "plan",
-    "planned",
-    "recover",
-    "rebuild",
-    "rebuilt",
-    "reduce",
-    "reduced",
-    "renegotiated",
-    "resolved",
-    "save",
-    "saved",
-    "solve",
-    "solved",
-    "start",
-    "started",
-    "supplier",
-    "work",
-    "worked",
+    # Original core verbs
+    "act", "acted", "adjust", "adjusted", "analyzed", "budget", "budgeted",
+    "build", "built", "choose", "chose", "decide", "decided", "earn", "earned",
+    "find", "found", "handle", "handled", "held", "implemented", "learn",
+    "learned", "manage", "managed", "negotiate", "negotiated", "plan",
+    "planned", "recover", "rebuild", "rebuilt", "reduce", "reduced",
+    "renegotiated", "resolved", "save", "saved", "solve", "solved", "start",
+    "started", "work", "worked",
+    # Financial & economic actions
+    "pay", "paid", "repay", "repaid", "invest", "invested", "spend", "spent",
+    "calculate", "calculated", "deposit", "deposited", "withdraw", "borrow",
+    "lend", "lent", "purchase", "sell", "sold", "trade", "traded",
+    # Planning & organization
+    "organize", "organized", "prioritize", "prioritized", "schedule",
+    "scheduled", "arrange", "arranged", "prepare", "prepared", "research",
+    "researched", "evaluate", "evaluated", "assess", "assessed", "review",
+    "reviewed", "compare", "compared", "consider", "considered",
+    # Problem-solving & improvement
+    "fix", "fixed", "correct", "corrected", "repair", "repaired", "improve",
+    "improved", "adapt", "adapted", "modify", "modified", "change", "changed",
+    "switch", "switched", "create", "created", "develop", "developed",
+    "establish", "established", "maintain", "maintained", "sustain",
+    # Effort & persistence
+    "try", "tried", "attempt", "attempted", "pursue", "pursued", "persist",
+    "persisted", "continue", "continued", "endure", "endured", "strive",
+    "overcome", "overcame", "achieve", "achieved", "accomplish", "accomplished",
+    "complete", "completed", "finish", "finished", "succeed", "succeeded",
+    # Communication & help-seeking
+    "contact", "contacted", "apply", "applied", "ask", "asked", "request",
+    "requested", "discuss", "discussed", "explain", "explained", "inform",
+    "informed", "consult", "consulted", "seek", "sought",
+    # Control & discipline
+    "control", "controlled", "limit", "limited", "restrict", "restricted",
+    "avoid", "avoided", "prevent", "prevented", "stop", "stopped", "quit",
+    "eliminate", "eliminated", "cut", "minimize", "minimized",
+    # Support & contribution
+    "help", "helped", "support", "supported", "assist", "assisted", "guide",
+    "guided", "teach", "taught", "train", "trained", "educate", "contribute",
+    "contributed", "volunteer", "volunteered", "donate", "donated",
+    # Monitoring & tracking
+    "track", "tracked", "monitor", "monitored", "check", "checked", "ensure",
+    "ensured", "secure", "secured", "verify", "verified", "confirm",
+    # Settlement & resolution
+    "settle", "settled", "clear", "cleared", "resolve", "transfer",
+    "transferred", "move", "moved", "shift", "shifted",
+    # General positive actions
+    "keep", "kept", "set", "take", "took", "taken", "make", "made", "use",
+    "used", "give", "gave", "focus", "focused",
 }
+
+# ---------------------------------------------------------------------------
+# Victim / negative-outcome phrases and tokens
+# ---------------------------------------------------------------------------
 _VICTIM_PHRASES: Final[tuple[str, ...]] = (
     "bad things kept happening",
     "fell apart",
@@ -75,6 +84,11 @@ _VICTIM_PHRASES: Final[tuple[str, ...]] = (
     "kept happening",
     "unable to do anything",
     "was unable",
+    "could not do anything",
+    "nothing worked",
+    "no way out",
+    "no option",
+    "no options left",
 )
 _VICTIM_TOKENS: Final[set[str]] = {
     "failed",
@@ -84,77 +98,93 @@ _VICTIM_TOKENS: Final[set[str]] = {
     "stuck",
     "unable",
 }
+
+# ---------------------------------------------------------------------------
+# Solution keywords — expanded to ~80 words
+# ---------------------------------------------------------------------------
 _SOLUTION_KEYWORDS: Final[set[str]] = {
-    "act",
-    "analyzed",
-    "budget",
-    "contingency",
-    "cut",
-    "distributor",
-    "earn",
-    "find",
-    "freelance",
-    "handle",
-    "held",
-    "help",
-    "implemented",
-    "learn",
-    "manage",
-    "negotiate",
-    "plan",
-    "recover",
-    "rebuild",
-    "rebuilt",
-    "reduce",
-    "renegotiated",
-    "resolved",
-    "save",
-    "solve",
-    "strictly",
-    "supplier",
-    "work",
+    # Original
+    "act", "analyzed", "budget", "contingency", "cut", "earn", "find",
+    "freelance", "handle", "held", "help", "implemented", "learn", "manage",
+    "negotiate", "plan", "recover", "rebuild", "rebuilt", "reduce",
+    "renegotiated", "resolved", "save", "solve", "strictly", "work",
+    # Financial actions
+    "pay", "paid", "repay", "repaid", "invest", "invested", "deposit",
+    "calculate", "calculated",
+    # Planning & organization
+    "organize", "organized", "prioritize", "prioritized", "prepare",
+    "prepared", "research", "researched", "schedule", "scheduled",
+    "arrange", "arranged", "evaluate", "evaluated", "assess", "assessed",
+    "compare", "compared", "review", "reviewed", "consider", "considered",
+    # Problem-solving
+    "fix", "fixed", "correct", "corrected", "improve", "improved", "adapt",
+    "adapted", "develop", "developed", "create", "created", "establish",
+    "established", "maintain", "maintained", "adjust", "adjusted", "modify",
+    "modified", "change", "changed", "switch", "switched",
+    # Effort & persistence
+    "try", "tried", "attempt", "attempted", "pursue", "pursued", "persist",
+    "persisted", "continue", "continued", "overcome", "overcame", "achieve",
+    "achieved", "accomplish", "accomplished", "succeed", "succeeded",
+    # Control & discipline
+    "control", "controlled", "limit", "limited", "restrict", "restricted",
+    "avoid", "avoided", "prevent", "prevented", "stop", "stopped",
+    "eliminate", "eliminated", "minimize", "minimized",
+    # Communication
+    "contact", "contacted", "apply", "applied", "ask", "asked", "consult",
+    "consulted", "discuss", "discussed", "seek", "sought",
+    # Support
+    "support", "supported", "assist", "assisted", "guide", "guided",
+    # Monitoring
+    "track", "tracked", "monitor", "monitored", "check", "checked",
+    "ensure", "ensured", "secure", "secured",
+    # Settlement
+    "settle", "settled", "clear", "cleared", "transfer", "transferred",
+    # General action words
+    "sacrifice", "discipline", "responsible", "carefully", "systematically",
+    "proactively", "strategically", "focus", "focused",
 }
+
+# ---------------------------------------------------------------------------
+# Sentiment keyword sets — expanded
+# ---------------------------------------------------------------------------
 _POSITIVE_WORDS: Final[set[str]] = {
-    "act",
-    "better",
-    "budget",
-    "calm",
-    "confident",
-    "control",
-    "earn",
-    "found",
-    "freelance",
-    "good",
-    "grateful",
-    "handle",
-    "help",
-    "improve",
-    "learned",
-    "plan",
-    "recover",
-    "relief",
-    "resolved",
-    "save",
-    "stable",
-    "strictly",
-    "work",
+    # Original
+    "act", "better", "budget", "calm", "confident", "control", "earn",
+    "found", "freelance", "good", "grateful", "handle", "help", "improve",
+    "learned", "plan", "recover", "relief", "resolved", "save", "stable",
+    "strictly", "work",
+    # Expanded — character traits
+    "responsible", "disciplined", "careful", "steady", "consistent",
+    "reliable", "determined", "motivated", "hopeful", "optimistic",
+    "strong", "resilient", "patient", "focused", "proactive", "strategic",
+    "smart", "wise", "practical", "realistic", "balanced", "organized",
+    "prepared", "committed", "dedicated", "hardworking", "diligent",
+    "persistent",
+    # Expanded — outcomes and progress
+    "successful", "achieved", "progress", "growth", "improvement",
+    "opportunity", "solution", "overcome", "managed", "handled",
+    "accomplished", "settled", "cleared", "secured", "maintained",
+    "developed", "established", "positive", "fortunate", "proud",
+    "satisfied", "comfortable", "supported", "encouraged",
 }
+
 _NEGATIVE_WORDS: Final[set[str]] = {
-    "apart",
-    "bad",
-    "crisis",
-    "despair",
-    "failed",
-    "fell",
-    "loss",
-    "lost",
-    "nothing",
-    "stuck",
-    "unable",
-    "up",
-    "worse",
+    # Original (removed "up" — too generic, triggers on "set up", "came up")
+    "apart", "bad", "crisis", "despair", "failed", "fell", "loss",
+    "lost", "nothing", "stuck", "unable", "worse",
+    # Expanded
+    "hopeless", "helpless", "overwhelmed", "impossible", "terrible",
+    "awful", "horrible", "ruined", "destroyed", "collapsed", "suffering",
+    "painful", "devastated", "bankrupt", "defaulted", "foreclosure",
+    "eviction", "homeless", "starving",
 }
+
 _TOKEN_PATTERN: Final[re.Pattern[str]] = re.compile(r"[a-zA-Z']+")
+
+# ---------------------------------------------------------------------------
+# Agency detection window (tokens in either direction from verb)
+# ---------------------------------------------------------------------------
+_AGENCY_WINDOW: Final[int] = 8
 
 
 def extract_nlp_features(text: str) -> dict[str, float | np.ndarray]:
@@ -167,9 +197,10 @@ def extract_nlp_features(text: str) -> dict[str, float | np.ndarray]:
     tokens = _tokenize(normalized_text)
 
     if not _validate_text_quality(text, tokens):
+        # Softened penalty: neutral instead of harsh punishment
         return {
-            "text_sentiment_compound": -1.0,
-            "text_agency_score": 0.0,
+            "text_sentiment_compound": 0.0,
+            "text_agency_score": 0.2,
             "text_problem_solving_flag": 0.0,
             "_embedding_raw": np.zeros(RAW_EMBEDDING_DIM, dtype=float),
         }
@@ -182,6 +213,12 @@ def extract_nlp_features(text: str) -> dict[str, float | np.ndarray]:
         normalized_text=normalized_text, tokens=tokens
     )
     raw_embedding = extract_raw_text_embedding(text)
+
+    # Effort bonus: reward longer, more detailed responses (up to +0.15)
+    word_count = len(tokens)
+    if word_count >= 20:
+        effort_bonus = min(0.15, (word_count - 20) * 0.002)
+        agency_score = min(1.0, agency_score + effort_bonus)
 
     return {
         "text_sentiment_compound": sentiment,
@@ -261,6 +298,10 @@ def _extract_sentiment(text: str, normalized_text: str, tokens: Sequence[str]) -
 
 def _extract_agency_score(text: str, tokens: Sequence[str]) -> float:
     spacy_model = _load_spacy_model()
+    normalized_text = " ".join(text.strip().lower().split())
+    victim_hits = sum(token in _VICTIM_TOKENS for token in tokens)
+    victim_phrase_hits = sum(phrase in normalized_text for phrase in _VICTIM_PHRASES)
+
     if spacy_model is not None:
         try:
             doc = spacy_model(text)
@@ -272,21 +313,24 @@ def _extract_agency_score(text: str, tokens: Sequence[str]) -> float:
                 total_verbs += 1
                 if token.lemma_.lower() not in _AGENCY_VERBS:
                     continue
-                window_start = max(0, token.i - 3)
+                # Widened window: 8 tokens in EITHER direction
+                window_start = max(0, token.i - _AGENCY_WINDOW)
+                window_end = min(len(doc), token.i + _AGENCY_WINDOW + 1)
                 if any(
                     doc[index].text.lower() in _FIRST_PERSON_TOKENS
-                    for index in range(window_start, token.i + 1)
+                    for index in range(window_start, window_end)
                 ):
                     active_verbs += 1
 
             score = active_verbs / (total_verbs + 1)
-            return float(np.clip(score, 0.0, 1.0))
+            adjusted_score = score - 0.08 * victim_hits - 0.10 * victim_phrase_hits
+            return float(np.clip(adjusted_score, 0.0, 1.0))
         except Exception:
             pass
 
+    # Fallback: token-based heuristic with widened window
     total_verbs = 0
     active_verbs = 0
-    victim_hits = 0
 
     for index, token in enumerate(tokens):
         is_verb_like = (
@@ -297,24 +341,39 @@ def _extract_agency_score(text: str, tokens: Sequence[str]) -> float:
         if not is_verb_like:
             continue
         total_verbs += 1
-        if token in _VICTIM_TOKENS:
-            victim_hits += 1
-        if token in _AGENCY_VERBS and any(
-            previous_token in _FIRST_PERSON_TOKENS
-            for previous_token in tokens[max(0, index - 3) : index]
-        ):
-            active_verbs += 1
+        if token in _AGENCY_VERBS:
+            # Widened window: 8 tokens in EITHER direction
+            window_start = max(0, index - _AGENCY_WINDOW)
+            window_end = min(len(tokens), index + _AGENCY_WINDOW + 1)
+            if any(
+                tokens[j] in _FIRST_PERSON_TOKENS
+                for j in range(window_start, window_end)
+            ):
+                active_verbs += 1
 
     raw_score = active_verbs / (total_verbs + 1)
-    adjusted_score = raw_score - 0.08 * victim_hits
+    adjusted_score = raw_score - 0.08 * victim_hits - 0.10 * victim_phrase_hits
     return float(np.clip(adjusted_score, 0.0, 1.0))
 
 
-def _extract_problem_solving_flag(normalized_text: str, tokens: Sequence[str]) -> bool:
+def _extract_problem_solving_flag(normalized_text: str, tokens: Sequence[str]) -> float:
+    """Return a gradient score [0.0, 1.0] based on solution keyword density."""
     solution_hits = sum(token in _SOLUTION_KEYWORDS for token in tokens)
     victim_hits = sum(token in _VICTIM_TOKENS for token in tokens)
     victim_hits += sum(phrase in normalized_text for phrase in _VICTIM_PHRASES)
-    return solution_hits > 0 and solution_hits >= victim_hits
+
+    if solution_hits == 0:
+        return 0.0
+
+    # Net solution signal after subtracting victim language
+    net_solution = max(0, solution_hits - victim_hits)
+    if net_solution == 0:
+        return 0.0
+
+    # Gradient: scale relative to text length, saturating around 3-6 solution words
+    denominator = max(3, len(tokens) * 0.12)
+    score = net_solution / denominator
+    return float(np.clip(score, 0.0, 1.0))
 
 
 def _hashed_embedding(text: str) -> np.ndarray:
@@ -350,16 +409,17 @@ def _validate_text_quality(text: str, tokens: list[str]) -> bool:
     if len(tokens) < 3:
         return False
 
-    # 1. Lexical Diversity check (Total unique words / Total words)
+    # 1. Lexical Diversity check — softened from 0.60 to 0.40
+    # Natural text has repeated articles, pronouns, and prepositions
     unique_ratio = len(set(tokens)) / len(tokens)
-    if unique_ratio < 0.60:
+    if unique_ratio < 0.40:
         return False
 
-    # 2. Maximum Single Word Repetition check
+    # 2. Maximum Single Word Repetition check — raised from 3 to 5
     word_counts: dict[str, int] = {}
     for word in tokens:
         word_counts[word] = word_counts.get(word, 0) + 1
-    if any(count > 3 for count in word_counts.values()) and len(tokens) < 15:
+    if any(count > 5 for count in word_counts.values()) and len(tokens) < 15:
         return False
 
     # 3. Character Repetition check (keyboard spam)

@@ -31,11 +31,9 @@ DERIVED_FEATURE_REQUIREMENTS: Final[list[str]] = [
     "conscientiousness_score",
     "social_capital_score",
     "honesty_score",
-    "avg_response_time_ms",
     "answer_change_rate",
     "dropout_count",
     "scroll_hesitation_score",
-    "risk_response_speed_ratio",
 ]
 
 
@@ -72,13 +70,13 @@ def compute_derived_features(features: Mapping[str, Any]) -> dict[str, float]:
         upper=1.0,
     )
     impulsivity_index = _clip(
-        (values["risk_attitude"] * values["risk_response_speed_ratio"])
+        (values["risk_attitude"] * 1.0)
         / (values["CRT_score"] + 0.1),
         lower=0.0,
         upper=5.0,
     )
     cognitive_load_index = _clip(
-        (values["avg_response_time_ms"] / 4500.0)
+        1.0
         * (1.0 + values["answer_change_rate"])
         * (1.0 + values["dropout_count"] * 0.2),
         lower=0.0,
@@ -86,8 +84,7 @@ def compute_derived_features(features: Mapping[str, Any]) -> dict[str, float]:
     engagement_score = _clip(
         (1.0 - values["scroll_hesitation_score"])
         * (1.0 - values["answer_change_rate"])
-        * _clip(1.0 - values["dropout_count"] / 4.0, lower=0.0, upper=1.0)
-        * _clip(1.0 - values["risk_response_speed_ratio"] * 0.3, lower=0.0, upper=1.0),
+        * _clip(1.0 - values["dropout_count"] / 4.0, lower=0.0, upper=1.0),
         lower=0.0,
         upper=1.0,
     )

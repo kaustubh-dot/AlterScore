@@ -600,14 +600,6 @@ def _calculate_governance_multiplier(
     reasons = []
     multiplier = 1.0
 
-    # 1. Impulsivity Penalty
-    # Impulsivity index calculated via click times and CRT. Bounded penalty.
-    impulsivity = float(feature_row.get("impulsivity_index", 0.0))
-    if impulsivity > 1.5:
-        penalty = min(0.15, (impulsivity - 1.5) * 0.05)
-        multiplier -= penalty
-        reasons.append(f"High impulsivity detected (index: {impulsivity:.2f})")
-
     # 2 & 8. Contradiction Severity Tiers
     # Checked from consistency S1/S8 and self-desirability honesty traps.
     honesty = float(feature_row.get("honesty_score", 1.0))

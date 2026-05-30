@@ -353,12 +353,12 @@ def generate_synthetic_dataset(
         1.0,
     )
     impulsivity_index = np.clip(
-        (risk_attitude * risk_response_speed_ratio) / (crt_score + 0.1),
+        risk_attitude / (crt_score + 0.1),
         0.0,
         5.0,
     )
     cognitive_load_index = np.clip(
-        (avg_response_time_ms / 4_500.0)
+        1.0
         * (1.0 + answer_change_rate)
         * (1.0 + dropout_count * 0.2),
         0.0,
@@ -367,8 +367,7 @@ def generate_synthetic_dataset(
     engagement_score = np.clip(
         (1.0 - scroll_hesitation_score)
         * (1.0 - answer_change_rate)
-        * np.clip(1.0 - dropout_count / 4.0, 0.0, 1.0)
-        * np.clip(1.0 - risk_response_speed_ratio * 0.3, 0.0, 1.0),
+        * np.clip(1.0 - dropout_count / 4.0, 0.0, 1.0),
         0.0,
         1.0,
     )
@@ -401,10 +400,6 @@ def generate_synthetic_dataset(
     application_date = _build_application_dates(cohort_month, rng)
 
     risk_balance = 1.0 - np.clip(np.abs(risk_attitude - 0.55) / 0.55, 0.0, 1.0)
-    typing_signal = np.clip((typing_speed_wpm - 18.0) / 40.0, 0.0, 1.0)
-    response_burden = np.clip((avg_response_time_ms - 2_000.0) / 6_000.0, 0.0, 1.0)
-    load_signal = np.clip((cognitive_load_index - 0.8) / 1.6, 0.0, 2.0)
-    impulsivity_signal = np.clip((impulsivity_index - 0.8) / 1.6, 0.0, 2.5)
 
     repayment_logit = (
         2.8 * (psychological_credit_index - 0.52)
@@ -412,15 +407,11 @@ def generate_synthetic_dataset(
         + 1.4 * (engagement_score - 0.16)
         + 0.9 * (text_agency_score - 0.55)
         + 0.6 * text_problem_solving_flag
-        + 0.5 * (typing_signal - 0.35)
         + 0.4 * (risk_balance - 0.5)
-        - 1.5 * impulsivity_signal
-        - 1.1 * load_signal
-        - 0.5 * response_burden
         - 0.7 * answer_change_rate
         - 0.12 * dropout_count
         + rng.normal(0.0, 0.42, row_count)
-        + 0.75
+        - 0.60
     )
     repayment_probability = _sigmoid(repayment_logit)
     repayment_label = (rng.random(row_count) < repayment_probability).astype(int)
