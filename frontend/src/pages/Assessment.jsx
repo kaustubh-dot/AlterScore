@@ -432,9 +432,11 @@ export default function Assessment() {
             value={answers[question.id] ?? ""}
             onChange={(event) => recordAnswer(event.target.value)}
             onKeyDown={(event) => {
-              if (event.key === "Enter" && (event.ctrlKey || event.metaKey) && hasAnswer) {
+              if (event.key === "Enter" && !event.shiftKey) {
                 event.preventDefault();
-                goForward(false);
+                if (hasAnswer) {
+                  goForward(false);
+                }
               }
             }}
             placeholder="Write the moment, the action, and what changed after it."
