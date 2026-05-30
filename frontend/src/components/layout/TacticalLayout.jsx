@@ -23,8 +23,8 @@ export default function TacticalLayout() {
   return (
     <>
       <BackgroundLayer />
-      {/* Pinned 3D ScoreOrb canvas overlay */}
-      <HeroCanvas />
+      {/* Pinned 3D ScoreOrb canvas overlay - Removed as requested */}
+      {/* <HeroCanvas /> */}
       <GrainOverlay />
 
       {loading && <LoadingScreen onComplete={() => setLoading(false)} />}
