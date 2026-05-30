@@ -682,7 +682,7 @@ def _calculate_governance_multiplier(
 
     # 9. Scenario Fast-Pattern Gaming Penalty (v2)
     # If the scenario analyzer flagged suspiciously fast mechanical completion
-    # of the scenario section (avg first-click < 4000ms across scenarios).
+    # of the scenario section (avg first-click < 2000ms across scenarios).
     scenario_fast_gaming = float(feature_row.get("scenario_fast_gaming", 0.0))
     if scenario_fast_gaming >= 1.0:
         penalty = 0.08
@@ -702,7 +702,7 @@ def _calculate_governance_multiplier(
         text_problem = float(feature_row.get("text_problem_solving_flag", 1.0))
         consistency = float(feature_row.get("scenario_consistency_score", 0.5))
 
-        has_speed_evidence = (scenario_fast_gaming >= 1.0) or (avg_time < 3500.0)
+        has_speed_evidence = (scenario_fast_gaming >= 1.0) or (avg_time < 2000.0)
         has_low_effort_text = (text_agency < 0.2) or (text_problem == 0.0)
         has_inconsistency = consistency < 0.5
 

@@ -91,7 +91,7 @@ _SECONDARY_WEIGHT: Final[float] = 0.35
 
 # Scenario minimum first-click time for gaming detection (milliseconds)
 # Responses faster than this across ALL scenarios trigger the fast-pattern flag.
-_FAST_CLICK_THRESHOLD_MS: Final[float] = 4000.0
+_FAST_CLICK_THRESHOLD_MS: Final[float] = 2000.0
 
 
 def analyze_scenario_responses(
