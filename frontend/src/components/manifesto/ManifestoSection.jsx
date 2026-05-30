@@ -9,7 +9,10 @@ export default function ManifestoSection() {
   const progressRef = useRef(null);
 
   useEffect(() => {
-    const context = gsap.context(() => {
+    let mm = gsap.matchMedia();
+
+    // 1. Desktop Timeline (with Pinning)
+    mm.add("(min-width: 981px)", () => {
       const lines = gsap.utils.toArray(".manifesto-line");
       
       // 1. Initial State: massive y shift, strong blur, alternating x-offset
@@ -47,10 +50,43 @@ export default function ManifestoSection() {
         
         // Line 3 Reveal (Gradient final payoff)
         .to(lines[2], { autoAlpha: 1, y: 0, x: 0, scale: 1, filter: "blur(0px)", duration: 0.45 }, 0.78);
+    });
 
-    }, sectionRef);
+    // 2. Mobile/Tablet Timeline (Fluid scrolling, No Pinning)
+    mm.add("(max-width: 980px)", () => {
+      const lines = gsap.utils.toArray(".manifesto-line");
 
-    return () => context.revert();
+      gsap.set(lines, { autoAlpha: 0, y: 40, scale: 0.96, filter: "blur(8px)" });
+      gsap.set(progressRef.current, { scaleY: 0 });
+
+      const timeline = gsap.timeline({
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top 75%",
+          end: "bottom bottom",
+          scrub: false,
+        },
+      });
+
+      timeline
+        .to(progressRef.current, { 
+          scaleY: 1, 
+          transformOrigin: "top", 
+          duration: 0.6,
+          ease: "power2.out" 
+        })
+        .to(lines, {
+          autoAlpha: 1,
+          y: 0,
+          scale: 1,
+          filter: "blur(0px)",
+          stagger: 0.25,
+          duration: 0.8,
+          ease: "power3.out"
+        }, "-=0.3");
+    });
+
+    return () => mm.revert();
   }, []);
 
   return (

@@ -72,7 +72,10 @@ export default function PillarsSection() {
   const labelRef = useRef(null);
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
+    let mm = gsap.matchMedia();
+
+    // 1. Desktop Timeline (with Pinning)
+    mm.add("(min-width: 981px)", () => {
       const cards = gsap.utils.toArray(".pillar-card");
 
       // 1. Initial layout states
@@ -108,10 +111,40 @@ export default function PillarsSection() {
           borderColor: "rgba(212, 168, 83, 0.28)",
           duration: 0.15,
         }, 1.05);
+    });
 
-    }, containerRef);
+    // 2. Mobile/Tablet Timeline (Fluid scrolling, No Pinning)
+    mm.add("(max-width: 980px)", () => {
+      const cards = gsap.utils.toArray(".pillar-card");
 
-    return () => ctx.revert();
+      gsap.set(labelRef.current, { autoAlpha: 0, y: -15 });
+      gsap.set(cards, { autoAlpha: 0, y: 40, filter: "blur(6px)" });
+
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: containerRef.current,
+          start: "top 75%",
+          end: "bottom bottom",
+          scrub: false,
+        }
+      });
+
+      tl.to(labelRef.current, { autoAlpha: 1, y: 0, duration: 0.4 })
+        .to(cards, {
+          autoAlpha: 1,
+          y: 0,
+          filter: "blur(0px)",
+          stagger: 0.2,
+          duration: 0.65,
+          ease: "power2.out"
+        }, "-=0.2")
+        .to(cards, {
+          borderColor: "rgba(212, 168, 83, 0.28)",
+          duration: 0.4,
+        });
+    });
+
+    return () => mm.revert();
   }, []);
 
   return (

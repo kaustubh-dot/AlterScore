@@ -120,7 +120,7 @@ export default function ShapBars({ explanation }) {
                   }}
                   onClick={(e) => e.stopPropagation()} // Prevent closing when clicking drawer content
                 >
-                  <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr 1fr", gap: "1rem", marginBottom: "0.5rem" }}>
+                  <div className="shap-detail-grid">
                     <div>
                       <span className="mono-text" style={{ fontSize: "0.7rem", color: "var(--soft)", display: "block" }}>// FEATURE CODE</span>
                       <strong style={{ fontFamily: "var(--font-mono)", fontSize: "0.75rem" }}>{factor.feature}</strong>

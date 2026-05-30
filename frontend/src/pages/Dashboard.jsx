@@ -374,7 +374,7 @@ export default function Dashboard() {
       {/* Dynamic Tab Rendering */}
       {activeTab === "performance" && (
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", flexWrap: "wrap" }}>
+          <div className="dashboard-two-col">
             
             {/* Diagnostic Curves Panel */}
             <PanelWrapper 
@@ -470,13 +470,13 @@ export default function Dashboard() {
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: "2rem" }}>
                 {/* 2x2 Matrix Render */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "100px 1fr 1fr", gap: "0.5rem", textAlign: "center", fontWeight: "bold", fontSize: "0.75rem", color: "var(--soft)" }}>
+                  <div className="confusion-matrix-row" style={{ textAlign: "center", fontWeight: "bold", fontSize: "0.75rem", color: "var(--soft)" }}>
                     <div />
                     <div>PREDICTED DEFAULTER</div>
                     <div>PREDICTED REPAYER</div>
                   </div>
 
-                  <div style={{ display: "grid", gridTemplateColumns: "100px 1fr 1fr", gap: "0.5rem", alignItems: "stretch" }}>
+                  <div className="confusion-matrix-row" style={{ alignItems: "stretch" }}>
                     <div style={{ display: "flex", justifyContent: "center", alignItems: "center", fontWeight: "bold", fontSize: "0.75rem", color: "var(--soft)", textTransform: "uppercase", padding: "10px", textAlign: "right" }}>
                       Actual Defaulter
                     </div>
@@ -496,7 +496,7 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  <div style={{ display: "grid", gridTemplateColumns: "100px 1fr 1fr", gap: "0.5rem", alignItems: "stretch" }}>
+                  <div className="confusion-matrix-row" style={{ alignItems: "stretch" }}>
                     <div style={{ display: "flex", justifyContent: "center", alignItems: "center", fontWeight: "bold", fontSize: "0.75rem", color: "var(--soft)", textTransform: "uppercase", padding: "10px", textAlign: "right" }}>
                       Actual Repayer
                     </div>
@@ -519,7 +519,7 @@ export default function Dashboard() {
 
                 {/* Score Rates Panel */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "10px", justifyContent: "center" }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                  <div className="dashboard-metrics-subgrid">
                     <div style={{ background: "rgba(255,255,255,0.01)", border: "1px solid var(--line)", padding: "0.8rem", borderRadius: "4px" }}>
                       <span className="mono-text" style={{ fontSize: "0.65rem", color: "var(--soft)", display: "block" }}>// CLASSIFIED ACCURACY</span>
                       <strong style={{ fontSize: "1.2rem", color: "var(--text-strong)" }}>{(matrixItem.accuracy * 100).toFixed(2)}%</strong>
@@ -530,7 +530,7 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                  <div className="dashboard-metrics-subgrid">
                     <div style={{ background: "rgba(255,255,255,0.01)", border: "1px solid var(--line)", padding: "0.8rem", borderRadius: "4px" }}>
                       <span className="mono-text" style={{ fontSize: "0.65rem", color: "var(--soft)", display: "block" }}>// PRECISION RATE</span>
                       <strong style={{ fontSize: "1.2rem", color: "var(--text-strong)" }}>{(matrixItem.precision * 100).toFixed(2)}%</strong>
@@ -617,7 +617,7 @@ export default function Dashboard() {
           <h3 style={{ marginBottom: "1rem" }}>Protected Proxy-Group Fairness Breakdown</h3>
           {fairness && (
             <div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", marginBottom: "1.5rem", flexWrap: "wrap" }}>
+              <div className="dashboard-two-col" style={{ marginBottom: "1.5rem" }}>
                 <div>
                   <h4 style={{ color: "var(--text-strong)", fontSize: "0.95rem", marginBottom: "0.5rem" }}>Disparity Verification Result</h4>
                   <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", lineHeight: "1.5" }}>

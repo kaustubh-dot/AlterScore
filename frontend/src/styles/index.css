@@ -1677,16 +1677,74 @@ button:disabled {
 
   .assessment-controls {
     position: sticky;
-    left: auto;
-    right: auto;
-    bottom: 1rem;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: calc(100% + 2rem);
+    margin-left: -1rem;
+    margin-right: -1rem;
     margin-top: 2rem;
+    padding: 1.2rem 1.5rem;
+    background: rgba(8, 12, 24, 0.85);
+    backdrop-filter: blur(16px) saturate(1.8);
+    border-top: 1px solid var(--border-dim);
+    z-index: 60;
+    pointer-events: auto;
   }
 
   .panel-heading,
   .question-topline {
     align-items: flex-start;
     flex-direction: column;
+  }
+}
+
+/* Custom Responsive CSS Grids */
+.dashboard-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+@media (max-width: 980px) {
+  .dashboard-two-col {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+.dashboard-metrics-subgrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+@media (max-width: 400px) {
+  .dashboard-metrics-subgrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.confusion-matrix-row {
+  display: grid;
+  grid-template-columns: 100px 1fr 1fr;
+  gap: 0.5rem;
+}
+@media (max-width: 480px) {
+  .confusion-matrix-row {
+    grid-template-columns: 80px 1fr 1fr;
+    gap: 0.35rem;
+  }
+}
+
+.shap-detail-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+@media (max-width: 560px) {
+  .shap-detail-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
   }
 }
 
@@ -1710,6 +1768,42 @@ button:disabled {
   .result-actions button,
   .result-actions a {
     width: 100%;
+  }
+
+  .nav-links .nav-cta {
+    width: auto !important;
+  }
+
+  .scenario-option {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.85rem 1rem;
+  }
+
+  .scenario-option__badge {
+    align-self: flex-start;
+    margin-top: 0.2rem;
+  }
+
+  .assessment-controls {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+
+  .assessment-controls > div {
+    width: 100% !important;
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .assessment-controls button {
+    flex: 1;
+    text-align: center;
+    justify-content: center;
+    margin: 0 !important;
   }
 
   .assessment-question h1 {

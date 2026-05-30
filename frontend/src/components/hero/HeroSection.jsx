@@ -15,11 +15,11 @@ export default function HeroSection() {
   const scrollIndicatorRef = useRef(null);
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      // 1. Page Load Entrance Choreography (Zero scroll)
-      const entrance = gsap.timeline({ defaults: { ease: "power4.out" } });
+    let mm = gsap.matchMedia();
 
-      // Split words of logo for blur stagger rise
+    // 1. Desktop Animations (with Pinning)
+    mm.add("(min-width: 981px)", () => {
+      const entrance = gsap.timeline({ defaults: { ease: "power4.out" } });
       const logoSpans = logoRef.current.querySelectorAll(".logo-word");
       
       gsap.set(logoSpans, { y: 120, autoAlpha: 0, filter: "blur(14px)" });
@@ -66,19 +66,19 @@ export default function HeroSection() {
           duration: 0.8,
         }, 1.2);
 
-      // 2. Pinned Scroll-Triggered Timeline (Oryzo rotating/gradual reveals)
+      // Pinned Scroll-Triggered Timeline
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: containerRef.current,
           start: "top top",
-          end: "+=120%", // Clean pacing for gradual scroll reveal
+          end: "+=120%",
           scrub: 1.2,
           pin: true,
           pinSpacing: true,
         }
       });
 
-      // First part: Gradually show & rotate text/cards as user scrolls down
+      // First part: Gradually show & rotate text/cards
       tl.to(logoRef.current, {
         scale: 0.88,
         yPercent: -20,
@@ -110,7 +110,7 @@ export default function HeroSection() {
         ease: "none",
       }, 0);
 
-      // Second part: Transition them away cleanly into background
+      // Second part: Transition them away cleanly
       tl.to(logoRef.current, {
         opacity: 0.12,
         yPercent: -45,
@@ -129,10 +129,51 @@ export default function HeroSection() {
         rotate: -3,
         ease: "power1.in",
       }, 0.6);
+    });
 
-    }, containerRef);
+    // 2. Mobile/Tablet Animations (Fluid Scrolling, No Pinning)
+    mm.add("(max-width: 980px)", () => {
+      const entrance = gsap.timeline({ defaults: { ease: "power4.out" } });
+      const logoSpans = logoRef.current.querySelectorAll(".logo-word");
 
-    return () => ctx.revert();
+      gsap.set(logoSpans, { y: 60, autoAlpha: 0, filter: "blur(8px)" });
+      gsap.set(toplineRef.current, { autoAlpha: 0, y: -10 });
+      gsap.set(copyRef.current, { autoAlpha: 0, y: 30 });
+      gsap.set(actionsRef.current, { autoAlpha: 0, y: 30 });
+      gsap.set(cardRef.current, { autoAlpha: 0, y: 40, scale: 0.96 });
+
+      entrance
+        .to(logoSpans, {
+          y: 0,
+          autoAlpha: 1,
+          filter: "blur(0px)",
+          duration: 1.0,
+          stagger: 0.12,
+        }, 0.1)
+        .to(toplineRef.current, {
+          autoAlpha: 1,
+          y: 0,
+          duration: 0.8,
+        }, 0.4)
+        .to(copyRef.current, {
+          autoAlpha: 1,
+          y: 0,
+          duration: 0.8,
+        }, 0.6)
+        .to(actionsRef.current, {
+          autoAlpha: 1,
+          y: 0,
+          duration: 0.8,
+        }, 0.7)
+        .to(cardRef.current, {
+          autoAlpha: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.8,
+        }, 0.8);
+    });
+
+    return () => mm.revert();
   }, []);
 
   return (

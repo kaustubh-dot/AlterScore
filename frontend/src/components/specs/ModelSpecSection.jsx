@@ -18,7 +18,10 @@ export default function ModelSpecSection() {
   const boardRef = useRef(null);
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
+    let mm = gsap.matchMedia();
+
+    // 1. Desktop Timeline (with Pinning)
+    mm.add("(min-width: 981px)", () => {
       const trs = gsap.utils.toArray(".spec-table tr");
 
       // 1. Initial State
@@ -30,7 +33,7 @@ export default function ModelSpecSection() {
         scrollTrigger: {
           trigger: sectionRef.current,
           start: "top top",
-          end: "+=120%", // slow cinematic scroll scrub
+          end: "+=120%",
           pin: true,
           scrub: 1.2,
           pinSpacing: true,
@@ -50,10 +53,39 @@ export default function ModelSpecSection() {
           borderColor: "rgba(212, 168, 83, 0.32)",
           duration: 0.15,
         }, 0.85);
+    });
 
-    }, sectionRef);
+    // 2. Mobile/Tablet Timeline (Fluid scrolling, No Pinning)
+    mm.add("(max-width: 980px)", () => {
+      const trs = gsap.utils.toArray(".spec-table tr");
 
-    return () => ctx.revert();
+      gsap.set(boardRef.current, { autoAlpha: 0, y: 40, scale: 0.98 });
+      gsap.set(trs, { autoAlpha: 0, y: 20 });
+
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top 75%",
+          end: "bottom bottom",
+          scrub: false,
+        }
+      });
+
+      tl.to(boardRef.current, { autoAlpha: 1, y: 0, scale: 1, duration: 0.5, ease: "power2.out" })
+        .to(trs, {
+          autoAlpha: 1,
+          y: 0,
+          stagger: 0.08,
+          duration: 0.5,
+          ease: "power2.out"
+        }, "-=0.2")
+        .to(boardRef.current, {
+          borderColor: "rgba(212, 168, 83, 0.32)",
+          duration: 0.4,
+        });
+    });
+
+    return () => mm.revert();
   }, []);
 
   return (
