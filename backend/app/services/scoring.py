@@ -592,201 +592,6 @@ def _build_improvement_tips(feature_row: dict[str, Any]) -> list[ImprovementTip]
         )
     ]
 
-    return {
-        "model_type": "ensemble",
-        "processed_features_shape": list(processed_features.shape),
-        "base_model_order": list(ensemble_bundle.base_model_order),
-        "base_model_outputs": base_model_outputs,
-        "meta_feature_vector": {
-            model_name: float(raw_meta_features[0, index])
-            for index, model_name in enumerate(ensemble_bundle.base_model_order)
-        },
-        "adjusted_meta_feature_vector": {
-            model_name: float(adjusted_meta_features[0, index])
-            for index, model_name in enumerate(ensemble_bundle.base_model_order)
-        },
-        "meta_feature_matrix": _to_jsonable(raw_meta_features),
-        "adjusted_meta_feature_matrix": _to_jsonable(adjusted_meta_features),
-        "runtime_mitigation": _to_jsonable(meta_features.mitigation_debug),
-        "ensemble_probabilities_before_mitigation": _to_jsonable(raw_probabilities),
-        "raw_meta_probability": raw_meta_probability,
-        "calibrated_probabilities": _to_jsonable(calibrated_probabilities),
-        "repayment_probability": calibrated_probability,
-        "calibration_details": calibration_details,
-    }
-
-
-def _build_score_mapping_debug(repayment_probability: float) -> dict[str, Any]:
-    clipped_probability = float(np.clip(repayment_probability, 0.01, 0.99))
-    log_odds = float(np.log(clipped_probability / (1.0 - clipped_probability)))
-    raw_score = 500.0 + (log_odds * 80.0)
-    final_credit_score = int(np.clip(raw_score, 300, 850))
-    return {
-        "raw_repayment_probability": float(repayment_probability),
-        "clipped_probability_for_score_mapping": clipped_probability,
-        "log_odds": log_odds,
-        "raw_score_before_clamp": raw_score,
-        "final_credit_score": final_credit_score,
-    }
-
-
-def _compute_shap_contributions(
-    shap_explainer: Any | None,
-    processed_row: np.ndarray,
-) -> dict[str, float]:
-    if shap_explainer is None:
-        return {}
-
-    contributions = np.asarray(
-        shap_explainer.explain_processed_row(processed_row),
-        dtype=float,
-    )
-    if contributions.ndim != 1:
-        return {}
-
-    return {
-        feature_name: float(shap_value)
-        for feature_name, shap_value in zip(
-            tuple(shap_explainer.feature_names),
-            contributions.tolist(),
-            strict=True,
-        )
-    }
-
-
-def _build_explanation_items(
-    feature_row: dict[str, Any],
-    shap_contributions: dict[str, float],
-) -> list[ExplanationItem]:
-    if not shap_contributions:
-        return []
-
-    explanation_candidates: list[ExplanationItem] = []
-    for feature_name, shap_value in sorted(
-        shap_contributions.items(),
-        key=lambda item: (-abs(item[1]), item[0]),
-    ):
-        if abs(shap_value) < 1e-6:
-            continue
-
-        feature_value = _coerce_numeric_feature_value(feature_row.get(feature_name))
-        if feature_value is None:
-            continue
-
-        direction = "positive" if shap_value >= 0.0 else "negative"
-        display_name = FEATURE_DISPLAY_NAMES.get(
-            feature_name,
-            feature_name.replace("_", " ").title(),
-        )
-        explanation_candidates.append(
-            ExplanationItem(
-                feature=feature_name,
-                display_name=display_name,
-                shap_value=round(float(shap_value), 4),
-                direction=direction,
-                feature_value=round(feature_value, 4),
-                plain_language=_build_explanation_plain_language(
-                    display_name=display_name,
-                    direction=direction,
-                ),
-            )
-        )
-        if len(explanation_candidates) == MAX_EXPLANATION_ITEMS:
-            break
-
-    return explanation_candidates
-
-
-def _build_counterfactual_actions(
-    *,
-    dice_explainer: Any | None,
-    runtime_model_name: str | None,
-    model: Any,
-    preprocessor: Any,
-    feature_row: dict[str, Any],
-    feature_frame: Any,
-    current_credit_score: int,
-    current_probability: float,
-    shap_contributions: dict[str, float],
-) -> list[CounterfactualAction]:
-    explainer = dice_explainer or build_default_persisted_dice_explainer(
-        model_name=runtime_model_name or "logistic_regression",
-    )
-    raw_actions = explainer.generate_actions(
-        feature_row=feature_row,
-        feature_frame=feature_frame,
-        model=model,
-        preprocessor=preprocessor,
-        current_probability=current_probability,
-        current_credit_score=current_credit_score,
-        shap_contributions=shap_contributions,
-    )
-    return [CounterfactualAction.model_validate(action) for action in raw_actions]
-
-
-def _row_mapping(feature_names: list[str], values: Any) -> dict[str, Any]:
-    return {
-        feature_name: _to_jsonable(value)
-        for feature_name, value in zip(feature_names, list(values), strict=True)
-    }
-
-
-def _to_jsonable(value: Any) -> Any:
-    if isinstance(value, np.generic):
-        return value.item()
-    if isinstance(value, np.ndarray):
-        return [_to_jsonable(item) for item in value.tolist()]
-    if isinstance(value, dict):
-        return {str(key): _to_jsonable(item) for key, item in value.items()}
-    if isinstance(value, (list, tuple)):
-        return [_to_jsonable(item) for item in value]
-    return value
-
-
-def _coerce_numeric_feature_value(value: Any) -> float | None:
-    try:
-        numeric_value = float(value)
-    except (TypeError, ValueError):
-        return None
-
-    if not np.isfinite(numeric_value):
-        return None
-    return numeric_value
-
-
-def _build_explanation_plain_language(*, display_name: str, direction: str) -> str:
-    if direction == "positive":
-        return f"{display_name} is supporting the current score."
-    return f"{display_name} is pulling the current score down."
-
-
-def _build_improvement_tips(feature_row: dict[str, Any]) -> list[ImprovementTip]:
-    tips: list[ImprovementTip] = []
-    for feature_name, (title, body) in TIP_LIBRARY.items():
-        feature_value = float(feature_row.get(feature_name, 0.0))
-        if feature_value >= 0.6:
-            continue
-        tips.append(
-            ImprovementTip(
-                feature=feature_name,
-                title=title,
-                body=body,
-            )
-        )
-        if len(tips) == 3:
-            return tips
-
-    if tips:
-        return tips
-
-    return [
-        ImprovementTip(
-            feature="engagement_score",
-            title="Maintain consistent responses",
-            body="Clear, consistent answers and careful completion patterns help preserve strong scoring signals.",
-        )
-    ]
-
 
 def _calculate_governance_multiplier(
     feature_row: dict[str, Any],
@@ -816,7 +621,9 @@ def _calculate_governance_multiplier(
     avg_time = float(feature_row.get("avg_response_time_ms", 5000.0))
     change_rate = float(feature_row.get("answer_change_rate", 0.0))
     engagement = float(feature_row.get("engagement_score", 1.0))
-    is_malicious_telemetry = (avg_time < 2000.0) or (change_rate > 0.3) or (engagement < 0.3)
+    is_malicious_telemetry = (
+        (avg_time < 2000.0) or (change_rate > 0.3) or (engagement < 0.3)
+    )
 
     contradiction_penalty = 0.0
     reason_desc = ""
@@ -827,12 +634,16 @@ def _calculate_governance_multiplier(
         and is_malicious_telemetry
     ):
         contradiction_penalty = 0.18
-        reason_desc = "Impossible behavioral combination / gaming telemetry detected (Tier 4)"
+        reason_desc = (
+            "Impossible behavioral combination / gaming telemetry detected (Tier 4)"
+        )
     elif (hard_contradiction and honesty_triggered) or (
         faking_detected and (hard_contradiction or soft_contradiction)
     ):
         contradiction_penalty = 0.10
-        reason_desc = "Strong behavioral contradiction across traps and scenarios (Tier 3)"
+        reason_desc = (
+            "Strong behavioral contradiction across traps and scenarios (Tier 3)"
+        )
     elif hard_contradiction or (soft_contradiction and honesty_triggered):
         contradiction_penalty = 0.05
         reason_desc = "Repeated inconsistency in psychometric profile (Tier 2)"
@@ -883,7 +694,9 @@ def _calculate_governance_multiplier(
     # 10. Scenario Straight-Lining Penalty
     # If the user selected the same option position in >= 85% of scenario questions
     # and has supporting evidence of low engagement or fast pacing.
-    straight_lining_ratio = float(feature_row.get("scenario_straight_lining_ratio", 0.0))
+    straight_lining_ratio = float(
+        feature_row.get("scenario_straight_lining_ratio", 0.0)
+    )
     if straight_lining_ratio >= 0.85:
         text_agency = float(feature_row.get("text_agency_score", 0.3))
         text_problem = float(feature_row.get("text_problem_solving_flag", 1.0))

@@ -35,6 +35,8 @@ from backend.ml.registry.production_manifest import (
     compute_file_sha256,
     load_production_manifest,
 )
+
+
 def load_tabnet_model(artifact_path: str | Path) -> Any:
     """Load a saved TabNetClassifier from a .zip archive."""
     try:
@@ -47,9 +49,7 @@ def load_tabnet_model(artifact_path: str | Path) -> Any:
 
     resolved_path = Path(artifact_path)
     if not resolved_path.is_file():
-        raise FileNotFoundError(
-            f"TabNet artifact not found at {resolved_path}."
-        )
+        raise FileNotFoundError(f"TabNet artifact not found at {resolved_path}.")
     model = TabNetClassifier()
     model.load_model(str(resolved_path))
     return model
@@ -114,15 +114,12 @@ def load_mlp_model(artifact_path: str | Path) -> Any:
 
     resolved = Path(artifact_path)
     if not resolved.is_file():
-        raise FileNotFoundError(
-            f"MLP artifact not found at {resolved}."
-        )
+        raise FileNotFoundError(f"MLP artifact not found at {resolved}.")
     ckpt = torch.load(str(resolved), map_location="cpu", weights_only=False)
     model = _build_mlp_model(ckpt["config"], device=torch.device("cpu"))
     model.load_state_dict(ckpt["state_dict"])
     model.eval()
     return model
-
 
 
 @dataclass(frozen=True)

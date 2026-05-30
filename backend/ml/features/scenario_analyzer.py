@@ -225,7 +225,9 @@ def compute_scenario_enriched_features(
     # Expose governance signals for downstream use
     enriched["scenario_consistency_score"] = consistency
     enriched["scenario_fast_gaming"] = float(analysis["fast_pattern_gaming"])
-    enriched["scenario_straight_lining_ratio"] = float(analysis["scenario_straight_lining_ratio"])
+    enriched["scenario_straight_lining_ratio"] = float(
+        analysis["scenario_straight_lining_ratio"]
+    )
 
     return enriched
 

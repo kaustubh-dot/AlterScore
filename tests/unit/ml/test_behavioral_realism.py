@@ -90,7 +90,9 @@ def test_governance_does_not_apply_standalone_average_speed_penalty() -> None:
     assert not any("fast response" in reason.lower() for reason in reasons)
 
 
-def test_governance_does_not_penalize_single_honesty_trap_without_other_evidence() -> None:
+def test_governance_does_not_penalize_single_honesty_trap_without_other_evidence() -> (
+    None
+):
     honesty_only_row = {
         "impulsivity_index": 0.20,
         "honesty_score": 0.40,

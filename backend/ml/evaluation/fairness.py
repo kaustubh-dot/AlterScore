@@ -378,7 +378,9 @@ def build_post_governance_impact_report(
                     1,
                 ),
                 "mean_score_delta": round(
-                    float(subgroup_governed_scores.mean() - subgroup_model_scores.mean()),
+                    float(
+                        subgroup_governed_scores.mean() - subgroup_model_scores.mean()
+                    ),
                     1,
                 ),
                 "flag": flag,

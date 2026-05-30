@@ -80,7 +80,9 @@ def assemble_request_features(
     # Inject scenario governance signals into behavioral features for downstream use
     behavioral_features["scenario_consistency_score"] = scenario_consistency_score
     behavioral_features["scenario_fast_gaming"] = scenario_fast_gaming
-    behavioral_features["scenario_straight_lining_ratio"] = scenario_straight_lining_ratio
+    behavioral_features["scenario_straight_lining_ratio"] = (
+        scenario_straight_lining_ratio
+    )
 
     # Step 4: NLP features from open-text response
     nlp_output = extract_nlp_features(str(answers_dict.get("open_response_text", "")))
@@ -212,6 +214,7 @@ def _neutralize_contextual_behavioral_features(
     neutralized_features["device_type"] = NEUTRAL_DEVICE_TYPE
     neutralized_features["time_of_day"] = NEUTRAL_TIME_OF_DAY
     return neutralized_features
+
 
 __all__ = [
     "AssembledRequestFeatures",
