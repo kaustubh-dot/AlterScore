@@ -54,18 +54,17 @@ The current active production-track work centers on:
 
 Primary entrypoints:
 
-- [scripts/train_monotonic_tree_candidates.py](C:/Kaustubh/Projects/AlterScore/scripts/train_monotonic_tree_candidates.py)
-- [scripts/fairness_harden_xgboost_candidate.py](C:/Kaustubh/Projects/AlterScore/scripts/fairness_harden_xgboost_candidate.py)
-- [backend/ml/training/classical/monotonic_constraints.py](C:/Kaustubh/Projects/AlterScore/backend/ml/training/classical/monotonic_constraints.py)
-- [models/registry/production_manifest.json](C:/Kaustubh/Projects/AlterScore/models/registry/production_manifest.json)
+- [scripts/training/promote_monotonic_xgboost.py](file:///c:/Kaustubh/Projects/AlterScore/scripts/training/promote_monotonic_xgboost.py)
+- [scripts/training/train_baselines.py](file:///c:/Kaustubh/Projects/AlterScore/scripts/training/train_baselines.py)
+- [backend/ml/training/classical/monotonic_constraints.py](file:///c:/Kaustubh/Projects/AlterScore/backend/ml/training/classical/monotonic_constraints.py)
+- [models/registry/production_manifest.json](file:///c:/Kaustubh/Projects/AlterScore/models/registry/production_manifest.json)
 
 ## Research Archive
 
-TabNet repair and monotonicity experiments are preserved for:
+TabNet, MLP, Stacking Ensemble training modules, experiments, and associated integration tests are preserved under the repository-level archive for governance reference and benchmark comparison:
 
-- governance lessons learned
-- benchmark comparison
-- presentation material
-- future research reference
+- `archive/research_experiments/` (Archived training scripts and exploratory modules)
+- `archive/models/` (Legacy model binaries and report metrics)
+- `archive/tests/` (Archived test suites for legacy models)
 
-They are intentionally not part of the primary trusted production path.
+They are intentionally segregated and not part of the primary trusted production serving path.

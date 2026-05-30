@@ -130,6 +130,11 @@
       "status": "stable"
     },
     {
+      "feature": "text_sentiment_compound",
+      "psi": 0.049,
+      "status": "stable"
+    },
+    {
       "feature": "honesty_score",
       "psi": 0.0489,
       "status": "stable"
@@ -177,11 +182,6 @@
     {
       "feature": "impulsivity_index",
       "psi": 0.0258,
-      "status": "stable"
-    },
-    {
-      "feature": "text_sentiment_compound",
-      "psi": 0.0249,
       "status": "stable"
     },
     {

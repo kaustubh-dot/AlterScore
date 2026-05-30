@@ -35,8 +35,94 @@ from backend.ml.registry.production_manifest import (
     compute_file_sha256,
     load_production_manifest,
 )
-from backend.ml.training.neural.train_tabnet import load_tabnet_model
-from backend.ml.training.neural.train_mlp import load_mlp_model
+def load_tabnet_model(artifact_path: str | Path) -> Any:
+    """Load a saved TabNetClassifier from a .zip archive."""
+    try:
+        from pytorch_tabnet.tab_model import TabNetClassifier  # type: ignore[import]
+    except ImportError as exc:
+        raise RuntimeError(
+            "pytorch-tabnet is required to load the AlterScore TabNet model. "
+            "Install it with: pip install pytorch-tabnet"
+        ) from exc
+
+    resolved_path = Path(artifact_path)
+    if not resolved_path.is_file():
+        raise FileNotFoundError(
+            f"TabNet artifact not found at {resolved_path}."
+        )
+    model = TabNetClassifier()
+    model.load_model(str(resolved_path))
+    return model
+
+
+def _build_mlp_model(config: dict[str, Any], *, device: Any) -> Any:
+    import torch
+    import torch.nn as nn
+
+    class ResidualMLP(nn.Module):
+        def __init__(
+            self, n_features: int, hidden_dim: int, n_hidden_layers: int, dropout: float
+        ) -> None:
+            super().__init__()
+            self.input_proj = nn.Sequential(
+                nn.Linear(n_features, hidden_dim),
+                nn.BatchNorm1d(hidden_dim),
+                nn.ReLU(),
+                nn.Dropout(dropout),
+            )
+            self.skip = (
+                nn.Linear(n_features, hidden_dim)
+                if n_features != hidden_dim
+                else nn.Identity()
+            )
+            self.hidden_blocks = nn.ModuleList(
+                [
+                    nn.Sequential(
+                        nn.Linear(hidden_dim, hidden_dim),
+                        nn.BatchNorm1d(hidden_dim),
+                        nn.ReLU(),
+                        nn.Dropout(dropout),
+                    )
+                    for _ in range(max(0, n_hidden_layers - 1))
+                ]
+            )
+            self.output = nn.Linear(hidden_dim, 1)
+
+        def forward(self, x: Any) -> Any:
+            h = self.input_proj(x) + self.skip(x)
+            for block in self.hidden_blocks:
+                h = block(h) + h
+            return torch.sigmoid(self.output(h)).squeeze(1)
+
+    return ResidualMLP(
+        n_features=config["n_features"],
+        hidden_dim=config["hidden_dim"],
+        n_hidden_layers=config["n_hidden_layers"],
+        dropout=config["dropout"],
+    ).to(device)
+
+
+def load_mlp_model(artifact_path: str | Path) -> Any:
+    """Load a ResidualMLP from a .pt checkpoint in eval mode on CPU."""
+    try:
+        import torch
+    except ImportError as exc:
+        raise RuntimeError(
+            "torch is required for the AlterScore residual MLP model. "
+            "Install it with: pip install torch"
+        ) from exc
+
+    resolved = Path(artifact_path)
+    if not resolved.is_file():
+        raise FileNotFoundError(
+            f"MLP artifact not found at {resolved}."
+        )
+    ckpt = torch.load(str(resolved), map_location="cpu", weights_only=False)
+    model = _build_mlp_model(ckpt["config"], device=torch.device("cpu"))
+    model.load_state_dict(ckpt["state_dict"])
+    model.eval()
+    return model
+
 
 
 @dataclass(frozen=True)

@@ -137,3 +137,79 @@ def test_score_endpoint_rejects_missing_behavioral_telemetry(trained_model_dir) 
     assert response.status_code == 422
     details = response.json().get("detail", [])
     assert any("behavioral" in str(d.get("loc")) for d in details)
+
+
+def test_score_endpoint_detects_straight_lining_with_telemetry(trained_model_dir) -> None:
+    """Verifies that straight-lining with supporting telemetry triggers a penalty, but not alone."""
+    settings = build_runtime_settings(trained_model_dir)
+    app = create_app(settings)
+
+    # 1. Straight-lining with fast response time (supporting telemetry)
+    payload_gaming = _load_base_payload()
+    # Choose option suffix 'a' for all scenario questions (100% straight-lining)
+    for q_key in ["scenario_s1", "scenario_s2", "scenario_s3", "scenario_s4", "scenario_s5", "scenario_s6", "scenario_s8"]:
+        payload_gaming["answers"][q_key] = {"primary": f"{q_key.replace('scenario_', '')}_a"}
+    payload_gaming["behavioral"]["avg_response_time_ms"] = 1500.0  # Fast pacing
+
+    # 2. Straight-lining with slow response time (no supporting telemetry, should be ignored)
+    payload_authentic = _load_base_payload()
+    for q_key in ["scenario_s1", "scenario_s2", "scenario_s3", "scenario_s4", "scenario_s5", "scenario_s6", "scenario_s8"]:
+        payload_authentic["answers"][q_key] = {"primary": f"{q_key.replace('scenario_', '')}_a"}
+    payload_authentic["behavioral"]["avg_response_time_ms"] = 8000.0  # Slow pacing
+    payload_authentic["answers"]["open_response_text"] = "I solved it by negotiating inventory options and budgeting resources."
+
+    with TestClient(app) as client:
+        resp_gaming = client.post("/api/debug-score", json=payload_gaming)
+        resp_authentic = client.post("/api/debug-score", json=payload_authentic)
+
+    assert resp_gaming.status_code == 200
+    assert resp_authentic.status_code == 200
+
+    gaming_trace = resp_gaming.json()
+    authentic_trace = resp_authentic.json()
+
+    gaming_mult = gaming_trace["governance_adjustments"]["governance_multiplier"]
+    authentic_mult = authentic_trace["governance_adjustments"]["governance_multiplier"]
+    reasons_gaming = gaming_trace["governance_adjustments"]["applied_realism_reasons"]
+
+    # Gaming payload must get a straight-lining penalty, while authentic does not
+    assert any("straight-lining" in r.lower() for r in reasons_gaming)
+    assert gaming_mult < authentic_mult
+
+
+def test_score_endpoint_applies_contradiction_severity_tiers(trained_model_dir) -> None:
+    """Verifies that severity tiers (Tiers 0-4) apply appropriate, distinct penalties."""
+    settings = build_runtime_settings(trained_model_dir)
+    app = create_app(settings)
+
+    # Base payload: Level 0 (No penalty)
+    payload_l0 = _load_base_payload()
+    payload_l0["answers"]["scenario_s1"] = {"primary": "s1_b"}
+    payload_l0["answers"]["scenario_s8"] = {"primary": "s8_b"}
+    payload_l0["answers"]["honesty_trap_q1"] = 2
+
+    # Level 1: Mild inconsistency (Soft consistency mismatch alone)
+    payload_l1 = _load_base_payload()
+    payload_l1["answers"]["scenario_s1"] = {"primary": "s1_b"}
+    payload_l1["answers"]["scenario_s8"] = {"primary": "s8_c"}  # Soft consistency 0.65
+    payload_l1["answers"]["honesty_trap_q1"] = 2
+
+    # Level 3: Strong contradiction (Trap triggered AND hard S1/S8 consistency mismatch)
+    payload_l3 = _load_base_payload()
+    payload_l3["answers"]["scenario_s1"] = {"primary": "s1_a"}
+    payload_l3["answers"]["scenario_s8"] = {"primary": "s8_b"}  # Hard consistency 0.0
+    payload_l3["answers"]["honesty_trap_q1"] = 5  # Honesty trap triggered
+    # Keep response time slow to avoid triggering malicious telemetry Tier 4
+    payload_l3["behavioral"]["avg_response_time_ms"] = 8000.0
+
+    with TestClient(app) as client:
+        trace_l0 = client.post("/api/debug-score", json=payload_l0).json()
+        trace_l1 = client.post("/api/debug-score", json=payload_l1).json()
+        trace_l3 = client.post("/api/debug-score", json=payload_l3).json()
+
+    mult_l0 = trace_l0["governance_adjustments"]["governance_multiplier"]
+    mult_l1 = trace_l1["governance_adjustments"]["governance_multiplier"]
+    mult_l3 = trace_l3["governance_adjustments"]["governance_multiplier"]
+
+    # Assert that Level 3 is more penalized than Level 1, which is more penalized than Level 0
+    assert mult_l3 < mult_l1 < mult_l0

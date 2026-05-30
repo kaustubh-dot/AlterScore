@@ -133,6 +133,9 @@ class ScoringService:
             "scenario_fast_gaming": assembled.behavioral_features.get(
                 "scenario_fast_gaming", 0.0
             ),
+            "scenario_straight_lining_ratio": assembled.behavioral_features.get(
+                "scenario_straight_lining_ratio", 0.0
+            ),
         }
         gov_multiplier, gov_reasons = _calculate_governance_multiplier(
             governance_features
@@ -605,13 +608,47 @@ def _calculate_governance_multiplier(
         multiplier -= penalty
         reasons.append(f"High impulsivity detected (index: {impulsivity:.2f})")
 
-    # 2. Honesty and Inconsistency Penalty
-    # Checked from consistency repeats and self-desirability trap answers.
+    # 2 & 8. Contradiction Severity Tiers
+    # Checked from consistency S1/S8 and self-desirability honesty traps.
     honesty = float(feature_row.get("honesty_score", 1.0))
-    if honesty < 0.75:
-        penalty = min(0.20, (0.75 - honesty) * 0.5)
-        multiplier -= penalty
-        reasons.append(f"Inconsistent psychometric profile (honesty: {honesty:.2f})")
+    scenario_consistency = float(feature_row.get("scenario_consistency_score", 0.5))
+
+    honesty_triggered = honesty <= 0.75
+    faking_detected = honesty <= 0.60
+    hard_contradiction = scenario_consistency == 0.0
+    soft_contradiction = scenario_consistency == 0.65
+
+    avg_time = float(feature_row.get("avg_response_time_ms", 5000.0))
+    change_rate = float(feature_row.get("answer_change_rate", 0.0))
+    engagement = float(feature_row.get("engagement_score", 1.0))
+    is_malicious_telemetry = (avg_time < 2000.0) or (change_rate > 0.3) or (engagement < 0.3)
+
+    tier = 0
+    contradiction_penalty = 0.0
+    reason_desc = ""
+
+    if (hard_contradiction and honesty_triggered and is_malicious_telemetry) or (faking_detected and is_malicious_telemetry):
+        tier = 4
+        contradiction_penalty = 0.18
+        reason_desc = "Impossible behavioral combination / gaming telemetry detected (Tier 4)"
+    elif (hard_contradiction and honesty_triggered) or faking_detected:
+        tier = 3
+        contradiction_penalty = 0.10
+        reason_desc = "Strong behavioral contradiction across traps and scenarios (Tier 3)"
+    elif hard_contradiction or (soft_contradiction and honesty_triggered):
+        tier = 2
+        contradiction_penalty = 0.05
+        reason_desc = "Repeated inconsistency in psychometric profile (Tier 2)"
+    elif soft_contradiction or honesty_triggered:
+        tier = 1
+        contradiction_penalty = 0.02
+        reason_desc = "Mild inconsistency in profile (Tier 1)"
+
+    if contradiction_penalty > 0:
+        multiplier -= contradiction_penalty
+        reasons.append(
+            f"{reason_desc} (penalty: {contradiction_penalty:.2f}, honesty: {honesty:.2f}, consistency: {scenario_consistency:.2f})"
+        )
 
     # 3. Telemetry Focus and Attention (Defocus/Dropout)
     dropouts = int(feature_row.get("dropout_count", 0))
@@ -649,23 +686,10 @@ def _calculate_governance_multiplier(
         reasons.append(f"Very low engagement detected (score: {engagement:.2f})")
 
     # 7. Speed Penalty (extremely fast average response)
-    avg_time = float(feature_row.get("avg_response_time_ms", 5000.0))
     if avg_time < 2000.0:
         penalty = min(0.15, (2000.0 - avg_time) / 10000.0)
         multiplier -= penalty
         reasons.append(f"Suspiciously fast response pacing (avg: {avg_time:.0f}ms)")
-
-    # 8. Scenario Behavioral Inconsistency Penalty (v2)
-    # Low consistency between S1 and S8 (the consistency-trap scenario pair)
-    # indicates self-presentation variance or random responding.
-    scenario_consistency = float(feature_row.get("scenario_consistency_score", 0.5))
-    if scenario_consistency < 0.4:
-        penalty = min(0.10, (0.4 - scenario_consistency) * 0.25)
-        multiplier -= penalty
-        reasons.append(
-            f"Behavioral inconsistency detected across scenario responses "
-            f"(consistency: {scenario_consistency:.2f})"
-        )
 
     # 9. Scenario Fast-Pattern Gaming Penalty (v2)
     # If the scenario analyzer flagged suspiciously fast mechanical completion
@@ -677,6 +701,27 @@ def _calculate_governance_multiplier(
         reasons.append(
             "Scenario section completed at mechanically fast pace (possible pattern-gaming)"
         )
+
+    # 10. Scenario Straight-Lining Penalty
+    # If the user selected the same option position in >= 85% of scenario questions
+    # and has supporting evidence of low engagement or fast pacing.
+    straight_lining_ratio = float(feature_row.get("scenario_straight_lining_ratio", 0.0))
+    if straight_lining_ratio >= 0.85:
+        text_agency = float(feature_row.get("text_agency_score", 0.3))
+        text_problem = float(feature_row.get("text_problem_solving_flag", 1.0))
+        consistency = float(feature_row.get("scenario_consistency_score", 0.5))
+
+        has_speed_evidence = (scenario_fast_gaming >= 1.0) or (avg_time < 3500.0)
+        has_low_effort_text = (text_agency < 0.2) or (text_problem == 0.0)
+        has_inconsistency = consistency < 0.5
+
+        if has_speed_evidence or has_low_effort_text or has_inconsistency:
+            penalty = 0.06
+            multiplier -= penalty
+            reasons.append(
+                f"Suspicious straight-lining response pattern (ratio: {straight_lining_ratio:.1%}) "
+                f"supported by low-engagement/speed telemetry"
+            )
 
     final_multiplier = max(0.40, min(1.0, multiplier))
     return final_multiplier, reasons

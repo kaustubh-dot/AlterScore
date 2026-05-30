@@ -158,10 +158,14 @@ def analyze_scenario_responses(
     # Fast-pattern gaming flag
     fast_pattern_gaming = _check_fast_pattern(first_click_times)
 
+    # Straight-lining check
+    scenario_straight_lining_ratio = _compute_straight_lining_ratio(answer_values)
+
     return {
         "feature_contributions": feature_contributions,
         "scenario_consistency_score": scenario_consistency_score,
         "fast_pattern_gaming": fast_pattern_gaming,
+        "scenario_straight_lining_ratio": scenario_straight_lining_ratio,
         "scenario_resolution_times": first_click_times,
     }
 
@@ -221,6 +225,7 @@ def compute_scenario_enriched_features(
     # Expose governance signals for downstream use
     enriched["scenario_consistency_score"] = consistency
     enriched["scenario_fast_gaming"] = float(analysis["fast_pattern_gaming"])
+    enriched["scenario_straight_lining_ratio"] = float(analysis["scenario_straight_lining_ratio"])
 
     return enriched
 
@@ -258,6 +263,34 @@ def _compute_consistency_score(answer_values: dict[str, Any]) -> float:
         return 0.65  # same dominant behavioral tendency, different expression
 
     return 0.0  # genuinely inconsistent
+
+
+def _compute_straight_lining_ratio(answer_values: dict[str, Any]) -> float:
+    """Compute the maximum straight-lining ratio across the scenario responses.
+
+    Returns the fraction of scenario answers that share the same option suffix
+    (e.g., '_a', '_b', '_c', '_d'). Returns 0.0 if no options are answered.
+    """
+    suffixes = []
+    for scenario_id in _SCENARIO_IDS:
+        raw = answer_values.get(scenario_id)
+        if raw is None:
+            continue
+        option_id, _ = _extract_option_id(raw, scenario_id)
+        if option_id and "_" in option_id:
+            suffix = option_id.split("_")[-1]
+            suffixes.append(suffix)
+
+    if not suffixes:
+        return 0.0
+
+    # Count the occurrence of each suffix
+    counts: dict[str, int] = {}
+    for s in suffixes:
+        counts[s] = counts.get(s, 0) + 1
+
+    max_count = max(counts.values())
+    return float(max_count / len(suffixes))
 
 
 def _check_fast_pattern(first_click_times: list[float]) -> bool:
