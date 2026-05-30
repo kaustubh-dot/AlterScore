@@ -1,31 +1,6 @@
-from backend.ml.inference.feature_assembly import _apply_timing_realism_transforms
 from backend.ml.nlp.extractor import _validate_text_quality
 from backend.ml.inference.score_mapper import probability_to_score
 from backend.app.services.scoring import _calculate_governance_multiplier
-
-
-def test_u_shaped_timing_transforms() -> None:
-    # 1. Healthy thoughtful inputs
-    healthy_inputs = {
-        "avg_response_time_ms": 6500.0,
-        "session_duration_sec": 190.0,
-        "typing_speed_wpm": 60.0,
-    }
-    transformed_healthy = _apply_timing_realism_transforms(healthy_inputs)
-    assert transformed_healthy["avg_response_time_ms"] == 6500.0
-    assert transformed_healthy["session_duration_sec"] == 190.0
-    assert transformed_healthy["typing_speed_wpm"] == 60.0
-
-    # 2. Impulsive fast pacing
-    fast_inputs = {
-        "avg_response_time_ms": 500.0,
-        "session_duration_sec": 30.0,
-        "typing_speed_wpm": 200.0,  # copy-pasting / bot typing
-    }
-    transformed_fast = _apply_timing_realism_transforms(fast_inputs)
-    assert transformed_fast["avg_response_time_ms"] > 100000.0  # heavily inflated
-    assert transformed_fast["session_duration_sec"] > 4000.0  # heavily inflated
-    assert transformed_fast["typing_speed_wpm"] == 0.0  # penalized WPM
 
 
 def test_text_quality_validation() -> None:

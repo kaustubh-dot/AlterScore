@@ -839,6 +839,18 @@ def _calculate_governance_multiplier(
     elif soft_contradiction or (honesty_triggered and is_malicious_telemetry):
         contradiction_penalty = 0.02
         reason_desc = "Mild inconsistency in profile (Tier 1)"
+
+    if contradiction_penalty > 0:
+        multiplier -= contradiction_penalty
+        reasons.append(
+            f"{reason_desc} (penalty: {contradiction_penalty:.2f}, honesty: {honesty:.2f}, consistency: {scenario_consistency:.2f})"
+        )
+
+    # 3. Telemetry Focus and Attention (Defocus/Dropout)
+    dropouts = int(feature_row.get("dropout_count", 0))
+    if dropouts > 2:
+        penalty = min(0.10, (dropouts - 2) * 0.02)
+        multiplier -= penalty
         reasons.append(f"Frequent application defocus events (dropouts: {dropouts})")
 
     # 4. Low Engagement / Extreme Changes
