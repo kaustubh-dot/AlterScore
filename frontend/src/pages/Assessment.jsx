@@ -23,6 +23,8 @@ window.sessionStorage.setItem("alterscore_session_id", storedSessionId);
 const AUTO_ADVANCE_TYPES = new Set(["mcq", "binary_choice", "likert"]);
 // Question types that need an explicit Continue button
 const MANUAL_ADVANCE_TYPES = new Set(["number", "text", "scenario"]);
+// Question types where user manually types character-by-character
+const MANUAL_TYPING_TYPES = new Set(["number", "text"]);
 
 function wait(ms) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
@@ -35,6 +37,7 @@ export default function Assessment() {
   const pendingPayloadRef = useRef(null);
   const lastScrollY = useRef(window.scrollY);
   const scrollDirection = useRef(0);
+  const initialQuestionValueRef = useRef(null);
 
   const [consented, setConsented] = useState(() => {
     return window.sessionStorage.getItem("alterscore_telemetry_consented") === "true";
@@ -102,6 +105,10 @@ export default function Assessment() {
     if (!consented) return;
     setQuestionStartTime(Date.now());
     window.clearTimeout(autoTimerRef.current);
+    
+    // Capture initial answer value when entering the question to avoid character-by-character typing change penalties
+    initialQuestionValueRef.current = answers[QUESTIONS[currentIndex].id];
+
     gsap.fromTo(
       questionRef.current,
       { autoAlpha: 0, x: 80, filter: "blur(8px)" },
@@ -191,16 +198,21 @@ export default function Assessment() {
     const responseTime = Date.now() - questionStartTime;
 
     setAnswers((state) => ({ ...state, [question.id]: value }));
+    
+    const isTypingType = MANUAL_TYPING_TYPES.has(question.type);
+    
     setTelemetry((state) => ({
       ...state,
       responseTimes: { ...state.responseTimes, [question.id]: responseTime },
-      changeCounts: {
-        ...state.changeCounts,
-        [question.id]:
-          answers[question.id] !== undefined && answers[question.id] !== value
-            ? (state.changeCounts[question.id] || 0) + 1
-            : state.changeCounts[question.id] || 0,
-      },
+      changeCounts: isTypingType
+        ? state.changeCounts
+        : {
+            ...state.changeCounts,
+            [question.id]:
+              answers[question.id] !== undefined && answers[question.id] !== value
+                ? (state.changeCounts[question.id] || 0) + 1
+                : state.changeCounts[question.id] || 0,
+          },
     }));
 
     if (AUTO_ADVANCE_TYPES.has(question.type)) {
@@ -242,6 +254,22 @@ export default function Assessment() {
 
   function goForward(fromAuto = false) {
     if (!fromAuto && !hasAnswer) return;
+
+    // Calculate final change count for typing questions upon navigation
+    if (MANUAL_TYPING_TYPES.has(question.type)) {
+      const initial = initialQuestionValueRef.current;
+      const final = answers[question.id];
+      if (initial !== undefined && initial !== null && initial !== "" && initial !== final) {
+        setTelemetry((state) => ({
+          ...state,
+          changeCounts: {
+            ...state.changeCounts,
+            [question.id]: (state.changeCounts[question.id] || 0) + 1,
+          },
+        }));
+      }
+    }
+
     if (isLast) {
       handleSubmit(answers);
       return;
@@ -299,6 +327,15 @@ export default function Assessment() {
   }
 
   async function handleSubmit(nextAnswers = answers) {
+    // Ensure final question change count is logged if it is a typing question
+    if (MANUAL_TYPING_TYPES.has(question.type)) {
+      const initial = initialQuestionValueRef.current;
+      const final = nextAnswers[question.id];
+      if (initial !== undefined && initial !== null && initial !== "" && initial !== final) {
+        telemetry.changeCounts[question.id] = (telemetry.changeCounts[question.id] || 0) + 1;
+      }
+    }
+
     let payload = pendingPayloadRef.current;
     if (!payload) {
       const storedPayload = window.sessionStorage.getItem("alterscore_pending_payload");
@@ -364,6 +401,12 @@ export default function Assessment() {
             min="0"
             value={answers[question.id] ?? ""}
             onChange={(event) => recordAnswer(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && hasAnswer) {
+                event.preventDefault();
+                goForward(false);
+              }
+            }}
             placeholder="0"
             autoFocus
           />
@@ -388,6 +431,12 @@ export default function Assessment() {
             maxLength={question.maxLength || 1000}
             value={answers[question.id] ?? ""}
             onChange={(event) => recordAnswer(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && (event.ctrlKey || event.metaKey) && hasAnswer) {
+                event.preventDefault();
+                goForward(false);
+              }
+            }}
             placeholder="Write the moment, the action, and what changed after it."
             style={{
               width: "100%",
