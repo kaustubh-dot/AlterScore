@@ -52,6 +52,8 @@ def test_train_baselines_persists_fairness_report_with_guarded_subgroup_metrics(
     assert set(report.groups) == set(PROTECTED_FEATURES)
     assert report.calibration_parity is not None
     assert report.individual_fairness_proxy is not None
+    assert report.post_governance_impact is not None
+    assert report.post_governance_impact.available is False
     assert subgroup_rows
     assert all(group_metrics.n_samples >= 30 for _, _, group_metrics in subgroup_rows)
     assert all(0.0 <= group_metrics.auc <= 1.0 for _, _, group_metrics in subgroup_rows)
@@ -124,6 +126,7 @@ def test_train_baselines_supports_persisted_dataset_path_without_raw_text_for_fa
     assert set(report.groups) == set(PROTECTED_FEATURES)
     assert report.calibration_parity is not None
     assert report.individual_fairness_proxy is not None
+    assert report.post_governance_impact is not None
 
 
 def test_train_classical_models_persists_fairness_report_and_runtime_loading_still_succeeds(
@@ -184,5 +187,6 @@ def test_train_classical_models_persists_fairness_report_and_runtime_loading_sti
     assert report.groups["gender"]
     assert report.calibration_parity is not None
     assert report.individual_fairness_proxy is not None
+    assert report.post_governance_impact is not None
     assert bundle.report.scoring_ready is True
     assert "fairness_report" in bundle.report.artifacts_loaded

@@ -2728,7 +2728,8 @@ For each of ['gender', 'age_group', 'region', 'education_level']:
 
 Also compute:
 - Calibration curve per gender (2 curves, should overlay)
-- Individual fairness proxy: for psychometrically-similar pairs (cosine sim > 0.90),
+- Individual fairness proxy: for full-profile similar pairs using
+  range-normalized similarity across the numeric scoring feature set,
   compute mean score difference — flag if > 60 points
 
 Save models/fairness_report.json and print a readable table to console.

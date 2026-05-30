@@ -226,7 +226,7 @@ Uses the `BaselineComparisonItem` list shape documented below.
 
 Current foundation note:
 - The fairness endpoint now serves the saved subgroup-audit payload from `models/reports/fairness_report.json`.
-- The saved report now includes calibration-parity curves/ECE gaps and an individual-fairness proxy in addition to subgroup AUC, approval-rate, and equalized-odds fields.
+- The saved report now includes calibration-parity curves/ECE gaps, a full-profile individual-fairness proxy, and post-governance fairness impact in addition to subgroup AUC, approval-rate, and equalized-odds fields.
 - The response is read from the startup-loaded runtime bundle and does not recompute subgroup metrics inside the API process.
 - If `fairness_report.json` is missing at startup, the endpoint returns a structured `503` with `missing_artifacts`.
 
@@ -631,13 +631,13 @@ Current foundation note:
     }
   },
   "individual_fairness_proxy": {
-    "similarity_feature_set": ["numeracy_score", "CRT_score"],
+    "similarity_feature_set": ["numeracy_score", "CRT_score", "engagement_score"],
     "similarity_threshold": 0.9,
     "score_gap_threshold": 50,
     "evaluated_applicants": 1800,
     "evaluated_pairs": 512839,
     "flagged_pair_count": 374894,
-    "flagged_pair_share": 0.731,
+    "flagged_pair_share": 0.216,
     "max_score_gap": 544,
     "mean_score_gap": 115.72,
     "p95_score_gap": 281.0,
@@ -652,7 +652,16 @@ Current foundation note:
         "differing_attributes": ["age_group", "region", "education_level"]
       }
     ],
-    "verdict": "Individual fairness proxy found demographically different, psychometrically similar pairs with score gaps above 50 points."
+    "verdict": "Individual fairness proxy found demographically different, full-profile similar pairs with score gaps above 50 points."
+  },
+  "post_governance_impact": {
+    "available": true,
+    "overall_auc_after_governance": 0.759,
+    "overall_approval_rate_delta": -0.04,
+    "mean_score_delta": -12.0,
+    "worst_auc_gap_after_governance": 0.06,
+    "flagged_groups_after_governance": [],
+    "groups": {}
   }
 }
 ```

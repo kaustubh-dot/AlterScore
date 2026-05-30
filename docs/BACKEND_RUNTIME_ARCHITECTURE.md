@@ -6,7 +6,7 @@ deployment, and ML engineers must understand before modifying runtime code.
 ## Active Runtime Model
 
 `models/registry/production_manifest.json` points to `xgboost_monotonic`
-(model version `0.2.0`) as the active runtime model. It is a single
+(model version `0.3.0`) as the active runtime model. It is a single
 monotonic constrained-tree scorer loaded from:
 
 ```text
@@ -107,11 +107,13 @@ If a scoring-critical artifact fails validation, `/api/score` returns `503`.
 
 ## Current Caveats
 
-- The checked-in runtime report shows AUC `0.8040`, Brier `0.1514`, and ECE
-  `0.0284`; the governed full-run review recorded AUC `0.8090`, Brier
-  `0.1496`, and ECE `0.0207`.
-- The checked-in fairness report currently requires attention for
-  `gender=non_binary`.
+- The checked-in runtime report is the operational source of truth: held-out
+  test AUC is `0.7596` before post-model governance and `0.7590` after the
+  governance multiplier. Older governed-review figures such as `0.8040` and
+  `0.8090` are historical experiment results from different candidate/report
+  contexts.
+- The fairness report includes subgroup metrics, calibration parity, a
+  full-profile individual-fairness proxy, and post-governance subgroup impact.
 - `production_manifest.json` still records a historical `code_ref` value and
   should be replaced with an explicit branch/commit identifier during the next
   formal promotion.

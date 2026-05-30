@@ -38,7 +38,7 @@
     },
     "metrics": {
       "path": "models/reports/metrics_monotonic.json",
-      "sha256": "f2379a6670ac42b7c27d5e8738b8a01afe0755243b46856cdda5a3316c731980"
+      "sha256": "4ef704c816284835bf64fa60c35065ba8e076b6508991ce401f48651ffb9f115"
     },
     "baseline_metrics": {
       "path": "models/reports/baseline_metrics_monotonic.json",
@@ -46,7 +46,7 @@
     },
     "fairness_report": {
       "path": "models/reports/fairness_report_monotonic.json",
-      "sha256": "7c7c0da28e5574ecc44cf07c1abda37f56f997d5c3ea64125b148b5d725595c5"
+      "sha256": "c338177a6b9fbc1ab875a3490fac5405731b867cf70e5575937cedd6da60b34a"
     },
     "psi_report": {
       "path": "models/reports/psi_report_monotonic.json",
@@ -63,11 +63,14 @@
   },
   "metrics_summary": {
     "test_split": "test_months_11_12",
-    "test_auc_roc": 0.7547,
+    "test_auc_roc": 0.7596,
     "calibration": "none"
   },
   "fairness_summary": {
-    "overall_auc": 0.7547,
+    "overall_auc": 0.7596,
+    "post_governance_available": true,
+    "post_governance_overall_auc": 0.759,
+    "individual_fairness_flagged_pair_share": 0.216,
     "verdict": "Model shows acceptable fairness across all tested demographic groups. No subgroup shows AUC deviation >4% from the overall model."
   },
   "drift_summary": {

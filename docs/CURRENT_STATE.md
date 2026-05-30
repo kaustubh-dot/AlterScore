@@ -1,10 +1,10 @@
 # Current State
 
-**Date:** May 27, 2026  
-**Phase:** Monotonic XGBoost promoted, Q&A session lockout resolved, validity suite fully green  
-**Active Runtime:** Manifest-backed `xgboost_monotonic` (classical_monotonic type)  
-**Manifest:** `models/registry/production_manifest.json`  
-**Manifest Version:** `xgboost_monotonic_v2`  
+**Date:** May 30, 2026
+**Phase:** Monotonic XGBoost promoted, governance hardening pass applied, validity suite green
+**Active Runtime:** Manifest-backed `xgboost_monotonic` (classical_monotonic type)
+**Manifest:** `models/registry/production_manifest.json`
+**Manifest Version:** `xgboost_monotonic_v2`
 **Branch:** `main` (Locked in manifest `code_ref` as `antigravity/dev`)
 
 ## Status Summary
@@ -21,8 +21,10 @@ A production-style manual deployment runbook (`docs/DEPLOYMENT_RUNBOOK.md`) and 
 
 - Runtime model: `xgboost_monotonic`
 - Runtime type: `classical_monotonic`
-- Test AUC: `0.7547` (governed with strict monotonicity constraints on key behavioral features)
-- Fairness status: Overall AUC `0.7547`, with designated verdict: "Model shows acceptable fairness across all tested demographic groups. No subgroup shows AUC deviation >4% from the overall model."
+- Test AUC: `0.7596` (checked-in monotonic runtime re-evaluated on held-out months `11-12`)
+- Post-governance AUC: `0.7590`
+- Fairness status: Overall AUC `0.7596`, with designated verdict: "Model shows acceptable fairness across all tested demographic groups. No subgroup shows AUC deviation >4% from the overall model."
+- Individual-fairness proxy: flagged-pair share `0.2160` after switching the proxy to full-profile range-normalized similarity.
 - Validity check status: 100% PASS on the python-based score-inflation validity audit.
 
 ## What Is Stable & Verified

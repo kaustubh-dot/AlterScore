@@ -117,7 +117,7 @@ Before any AI agent edits the repository, it must read and follow `docs/AI_WORKF
 - Demographic parity by protected group.
 - Equalized odds through false positive and false negative rates.
 - Calibration parity through grouped calibration curves.
-- Individual fairness proxy using psychometrically similar pairs with demographic differences.
+- Individual fairness proxy using full-profile similar pairs with demographic differences.
 - Fairness report with green/yellow/red flags, sample-size guards, and final verdict.
 
 ### Analytics Dashboard Modules

@@ -171,16 +171,17 @@ The final production recommendation remains:
 - keep the proxy-regularized and proxy-clipped variants as fairness-hardening
   references, not immediate replacements
 
-Post-promotion note: the checked-in promoted bundle reports AUC `0.8040`,
-Brier `0.1514`, ECE `0.0284`, stable PSI, and a fairness attention item for
-`gender=non_binary`. Reconcile that checked-in report state with this review
-before making pilot-readiness claims.
+Post-promotion note: the checked-in promoted bundle has since been refreshed
+as the operational source of truth. It reports held-out AUC `0.7596` before
+post-model governance and `0.7590` after post-model governance. The `0.8040`
+and `0.8090` values in this review are historical experiment/report-context
+figures, not the active manifest metric.
 
 ### Pilot Resolution & Subgroup Acceptance (May 25, 2026)
 
 The `gender=non_binary` subgroup has been formally reviewed and approved for the current pilot release based on the following justifications:
 - **Small-Support Subgroup:** The cohort size for this subgroup is extremely small (n_samples = 57, representing less than 3% of the total dataset). This small sample count naturally introduces high statistical variance in AUC and calibration curve metrics.
-- **No Gate-level Discrimination:** The subgroup AUC is `0.7468` (compared to the overall `0.8040`). While lower than the overall average, it remains well above acceptable scoring discrimination thresholds and indicates a stable predictive ranking quality rather than a systematic model failure.
+- **No Gate-level Discrimination:** The refreshed checked-in report does not flag this subgroup under the bounded AUC-gap policy. While small-support subgroup metrics still carry high variance, the current evidence indicates a monitoring concern rather than a systematic model failure.
 - **Ongoing Monitoring Plan:** Rather than attempting artificial feature clipping or proxy regularization (which degrades overall Brier and ECE scores), we accept this baseline raw configuration for the pilot deployment. We will perform targeted data collection for thin-file applicants during the pilot phase to expand the subgroup sample count and run a dedicated recalibration review in the next model promotion.
 
 

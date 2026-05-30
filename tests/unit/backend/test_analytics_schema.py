@@ -306,6 +306,7 @@ def test_fairness_report_shape_matches_documented_contract() -> None:
                 "similarity_feature_set": [
                     "numeracy_score",
                     "CRT_score",
+                    "engagement_score",
                 ],
                 "similarity_threshold": 0.9,
                 "score_gap_threshold": 50,
@@ -329,6 +330,37 @@ def test_fairness_report_shape_matches_documented_contract() -> None:
                 ],
                 "verdict": "Individual fairness proxy found one pair to review.",
             },
+            "post_governance_impact": {
+                "available": True,
+                "overall_auc_after_governance": 0.79,
+                "overall_approval_rate_before_governance": 0.64,
+                "overall_approval_rate_after_governance": 0.61,
+                "overall_approval_rate_delta": -0.03,
+                "mean_score_delta": -12.4,
+                "worst_auc_gap_after_governance": 0.04,
+                "flagged_groups_after_governance": [],
+                "evaluated_group_count": 1,
+                "skipped_group_count": 0,
+                "groups": {
+                    "gender": {
+                        "female": {
+                            "n_samples": 450,
+                            "post_governance_auc": 0.78,
+                            "post_governance_auc_gap_from_overall": 0.01,
+                            "approval_rate_before_governance": 0.63,
+                            "approval_rate_after_governance": 0.60,
+                            "approval_rate_delta": -0.03,
+                            "mean_score_before_governance": 688.4,
+                            "mean_score_after_governance": 676.0,
+                            "mean_score_delta": -12.4,
+                            "flag": "green",
+                        }
+                    }
+                },
+                "verdict": (
+                    "Model shows acceptable fairness across all tested demographic groups."
+                ),
+            },
         }
     )
 
@@ -342,4 +374,5 @@ def test_fairness_report_shape_matches_documented_contract() -> None:
         "groups",
         "calibration_parity",
         "individual_fairness_proxy",
+        "post_governance_impact",
     }

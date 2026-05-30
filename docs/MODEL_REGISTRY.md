@@ -234,7 +234,7 @@ Current local runtime-artifact status:
 - Default local backend startup now prefers the checked-in manifest-backed bundle, while `ALTERSCORE_RUNTIME_MODEL_PATH` remains an explicit override for tests or intentional direct-model runs.
 - `models/preprocessors/text_pca.pkl` exists and is loaded by the runtime bundle.
 - `models/reports/population_percentiles_monotonic.json` exists and drives the active score distribution response.
-- `models/reports/fairness_report_monotonic.json` exists and is generated offline from held-out months `11-12` using protected attributes only for subgroup evaluation. The model shows acceptable fairness across all tested demographic groups (no subgroup AUC deviation >4% from the overall model).
+- `models/reports/fairness_report_monotonic.json` exists and is generated offline from held-out months `11-12` using protected attributes only for subgroup evaluation. The model shows acceptable fairness across all tested demographic groups (no subgroup AUC deviation >4% from the overall model), includes post-governance impact, and reports individual-fairness proxy flagged-pair share `0.2160`.
 - `models/reports/psi_report_monotonic.json` exists and reports a `watch` drift verdict (max PSI `0.2052` on `avg_response_time_ms`).
 - `models/reports/global_importance_monotonic.json` exists, is generated offline from the canonical 35 model inputs, and matches the active backend response contract.
 - `models/explainers/shap_explainer_monotonic.pkl` is present on disk, deserializes through `backend.ml.explainability.shap_explainer`, passes runtime validation for the checked-in bundle, and drives the checked-in bundle's per-user score explanations.
@@ -242,8 +242,8 @@ Current local runtime-artifact status:
 - The curated local runtime bundle is now intentionally source-controlled for portability and smoke coverage, while heavier future training outputs remain ignored by default.
 - `/api/score` now emits persisted counterfactual actions from the checked-in artifact, and the code-level default builder remains only a non-default contingency for intentionally artifact-less test bundles.
 - Zero-filled semantic fallback remains supported only for intentionally PCA-less test/runtime bundles.
-- The current monotonic metrics artifact reports test AUC `0.7547` and calibration `none`.
-- The current monotonic fairness artifact reports `overall_auc = 0.7547` and a fairness verdict of `passed`.
+- The current monotonic metrics artifact reports test AUC `0.7596` and calibration `none`.
+- The current monotonic fairness artifact reports `overall_auc = 0.7596`, post-governance AUC `0.7590`, and a fairness verdict of `passed`.
 - The current monotonic PSI artifact reports `max_psi = 0.2052` and overall verdict `watch`.
 - The current monotonic global-importance artifact ranks features based on mean absolute SHAP values matching the active backend response.
 
@@ -361,10 +361,11 @@ Current local runtime-artifact status:
 - Runtime type: `classical_monotonic`
 - Manifest: `models/registry/production_manifest.json`
 - Manifest version: `xgboost_monotonic_v2`
-- Checked-in test AUC: `0.7547`
+- Checked-in test AUC: `0.7596`
+- Checked-in post-governance AUC: `0.7590`
 - Checked-in Brier score: *N/A (Monotonic)*
 - Checked-in ECE: *N/A (Monotonic)*
 - Checked-in PSI verdict: `watch` (Max PSI `0.2052` on `avg_response_time_ms`)
-- Checked-in fairness status: `passed` (Model shows acceptable fairness across all tested demographic groups)
+- Checked-in fairness status: `passed` (Model shows acceptable fairness across all tested demographic groups; individual-fairness proxy flagged-pair share `0.2160`)
 - Notes: The monotonic XGBoost bundle (v2 assessment) is the default manifest-backed runtime. Retrained on v2-calibrated synthetic data: scenario-driven features floored at 0.25, risk_consistency_flag rate tightened to match v2 runtime. Guaranteed monotonicity constraints on all key behavioral features.
 

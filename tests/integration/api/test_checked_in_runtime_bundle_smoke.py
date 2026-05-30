@@ -65,6 +65,7 @@ def test_checked_in_bundle_loader_validates_real_runtime_artifacts() -> None:
     assert bundle.fairness_report is not None
     assert "calibration_parity" in bundle.fairness_report
     assert "individual_fairness_proxy" in bundle.fairness_report
+    assert "post_governance_impact" in bundle.fairness_report
     assert bundle.global_importance is not None
     assert "production_manifest" in bundle.report.artifacts_loaded
     assert "runtime_model" in bundle.report.artifacts_loaded
@@ -147,6 +148,8 @@ def test_checked_in_bundle_fairness_endpoint_serves_refreshed_governance_payload
     assert payload.calibration_parity.groups["gender"]
     assert payload.individual_fairness_proxy is not None
     assert payload.individual_fairness_proxy.evaluated_pairs > 0
+    assert payload.post_governance_impact is not None
+    assert payload.post_governance_impact.available is True
 
 
 def test_checked_in_bundle_score_endpoint_appends_to_runtime_log_path() -> None:

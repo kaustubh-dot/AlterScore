@@ -210,3 +210,23 @@ Record every architecture-level decision here. Small implementation choices can 
   harden or explicitly accept the fairness finding, and replace historical
   manifest `code_ref` labels with explicit branch/commit identifiers during the
   next promotion.
+
+## DEC-0019 - Current NLP Scoring Is English-Only
+
+- Status: accepted
+- Date: 2026-05-30
+- Owner: Codex audit alignment
+- Context: The current local NLP extractor uses `all-MiniLM-L6-v2`, spaCy
+  English tokenization, and English keyword/sentiment lists for the Q27 text
+  answer. Those signals are not validated for Hindi, Telugu, Marathi, or other
+  Indian-language responses.
+- Decision: Treat the checked-in NLP scoring path as English-only until a
+  multilingual extractor and validation set are implemented. Any freeze,
+  pilot, or release claim must either scope the product to English responses or
+  mark multilingual NLP as an unresolved blocker.
+- Consequences: Non-English text may receive weak or misleading agency,
+  problem-solving, sentiment, and semantic PCA features. Governance and fairness
+  reports must not be interpreted as Indian-market multilingual readiness.
+- Follow-ups: Add multilingual NLP support or neutralize text-derived features
+  for unsupported languages, then evaluate subgroup and language-level score
+  impact before broad deployment.

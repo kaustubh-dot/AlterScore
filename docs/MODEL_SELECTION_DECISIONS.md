@@ -17,7 +17,7 @@ It is currently the strongest balance of:
 - operational simplicity
 - explainability and auditability
 
-In the governed full-scale comparison it achieved:
+In the historical governed full-scale comparison it achieved:
 
 - AUC `0.8090`
 - Brier `0.1496`
@@ -61,13 +61,13 @@ Focused fairness hardening on the monotonic `XGBoost` candidate found that:
 - however, the baseline raw monotonic `XGBoost` still remains the strongest
   production-safe overall operating point
 
-## Current Checked-In Runtime Caveat
+## Current Checked-In Runtime
 
-The promoted checked-in monotonic bundle reports AUC `0.8040`, Brier `0.1514`,
-ECE `0.0284`, stable PSI, and a fairness attention item for
-`gender=non_binary`. The next production-readiness task is to reconcile these
-checked-in reports with the stronger governed full-run review before any pilot
-claim.
+The promoted checked-in monotonic bundle is now the operational source of
+truth. Its refreshed held-out report shows AUC `0.7596` before post-model
+governance and `0.7590` after post-model governance. The older `0.8040` and
+`0.8090` figures remain useful historical comparison results, but they are not
+the active manifest metric.
 
 ## Decision Rule Going Forward
 

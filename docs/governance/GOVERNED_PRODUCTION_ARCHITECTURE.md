@@ -82,9 +82,11 @@ The latest full-scale governed comparison and fairness-hardening review showed:
   remained the preferred operating point in that review
 
 The checked-in promoted bundle is the operational source of truth. Its current
-reports show AUC `0.8040`, Brier `0.1514`, ECE `0.0284`, stable PSI, and a
-fairness attention item for `gender=non_binary`; that item must be reconciled
-before pilot claims.
+reports show held-out AUC `0.7596` before post-model governance and `0.7590`
+after post-model governance, stable PSI, subgroup fairness passing under the
+bounded AUC-gap policy, and individual-fairness proxy flagged-pair share
+`0.2160`. Older governed-review figures such as `0.8040` and `0.8090` are
+historical experiment/report contexts, not the active manifest metric.
 
 This is an important architecture outcome:
 

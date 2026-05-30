@@ -244,6 +244,40 @@ class IndividualFairnessProxy(SchemaModel):
     verdict: str = Field(..., min_length=1)
 
 
+class PostGovernanceGroupImpact(SchemaModel):
+    n_samples: int = Field(..., ge=0)
+    post_governance_auc: float = Field(..., ge=0, le=1)
+    post_governance_auc_gap_from_overall: float = Field(..., ge=0, le=1)
+    approval_rate_before_governance: float = Field(..., ge=0, le=1)
+    approval_rate_after_governance: float = Field(..., ge=0, le=1)
+    approval_rate_delta: float
+    mean_score_before_governance: float = Field(..., ge=300, le=850)
+    mean_score_after_governance: float = Field(..., ge=300, le=850)
+    mean_score_delta: float
+    flag: FairnessFlag
+
+
+class PostGovernanceImpact(SchemaModel):
+    available: bool
+    verdict: str = Field(..., min_length=1)
+    overall_auc_after_governance: float | None = Field(default=None, ge=0, le=1)
+    overall_approval_rate_before_governance: float | None = Field(
+        default=None, ge=0, le=1
+    )
+    overall_approval_rate_after_governance: float | None = Field(
+        default=None, ge=0, le=1
+    )
+    overall_approval_rate_delta: float | None = None
+    mean_score_delta: float | None = None
+    worst_auc_gap_after_governance: float | None = Field(default=None, ge=0, le=1)
+    flagged_groups_after_governance: list[str] = Field(default_factory=list)
+    evaluated_group_count: int | None = Field(default=None, ge=0)
+    skipped_group_count: int | None = Field(default=None, ge=0)
+    groups: dict[str, dict[str, PostGovernanceGroupImpact]] = Field(
+        default_factory=dict
+    )
+
+
 class FairnessReport(SchemaModel):
     overall_auc: float = Field(..., ge=0, le=1)
     overall_approval_rate: float = Field(..., ge=0, le=1)
@@ -254,6 +288,7 @@ class FairnessReport(SchemaModel):
     groups: dict[str, dict[str, FairnessGroupMetrics]]
     calibration_parity: FairnessCalibrationParity | None = None
     individual_fairness_proxy: IndividualFairnessProxy | None = None
+    post_governance_impact: PostGovernanceImpact | None = None
 
 
 __all__ = [
@@ -281,6 +316,8 @@ __all__ = [
     "PrecisionRecallPoint",
     "PrecisionRecallResponse",
     "PrecisionRecallSeries",
+    "PostGovernanceGroupImpact",
+    "PostGovernanceImpact",
     "RocCurveResponse",
     "RocCurveSeries",
     "RocPoint",

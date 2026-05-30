@@ -1,10 +1,11 @@
 import pandas as pd
 
 from backend.ml.evaluation.fairness import (
-    PSYCHOMETRIC_SIMILARITY_FEATURES,
+    FULL_PROFILE_SIMILARITY_FEATURES,
     build_calibration_parity_report,
     build_fairness_report,
     build_individual_fairness_proxy,
+    build_post_governance_impact_report,
 )
 from backend.ml.preprocessing.feature_registry import PROTECTED_FEATURES
 
@@ -59,10 +60,10 @@ def test_individual_fairness_proxy_flags_large_score_gaps_for_similar_pairs() ->
     )
     feature_frame = _psychometric_feature_frame(
         [
-            [0.90] * len(PSYCHOMETRIC_SIMILARITY_FEATURES),
-            [0.88] * len(PSYCHOMETRIC_SIMILARITY_FEATURES),
-            [0.10] * len(PSYCHOMETRIC_SIMILARITY_FEATURES),
-            [0.89] * len(PSYCHOMETRIC_SIMILARITY_FEATURES),
+            [0.90] * len(FULL_PROFILE_SIMILARITY_FEATURES),
+            [0.88] * len(FULL_PROFILE_SIMILARITY_FEATURES),
+            [0.10] * len(FULL_PROFILE_SIMILARITY_FEATURES),
+            [0.89] * len(FULL_PROFILE_SIMILARITY_FEATURES),
         ]
     )
 
@@ -93,8 +94,14 @@ def test_build_fairness_report_includes_governance_detail_sections() -> None:
     )
     feature_frame = _psychometric_feature_frame(
         [
-            [0.65 + index * 0.01] * len(PSYCHOMETRIC_SIMILARITY_FEATURES)
-            for index in range(8)
+            [0.65] * len(FULL_PROFILE_SIMILARITY_FEATURES),
+            [0.66] * len(FULL_PROFILE_SIMILARITY_FEATURES),
+            [0.67] * len(FULL_PROFILE_SIMILARITY_FEATURES),
+            [0.68] * len(FULL_PROFILE_SIMILARITY_FEATURES),
+            [0.65] * len(FULL_PROFILE_SIMILARITY_FEATURES),
+            [0.66] * len(FULL_PROFILE_SIMILARITY_FEATURES),
+            [0.67] * len(FULL_PROFILE_SIMILARITY_FEATURES),
+            [0.68] * len(FULL_PROFILE_SIMILARITY_FEATURES),
         ]
     )
 
@@ -108,6 +115,28 @@ def test_build_fairness_report_includes_governance_detail_sections() -> None:
 
     assert report["calibration_parity"]["groups"]["gender"]["female"]["points"]
     assert report["individual_fairness_proxy"]["evaluated_pairs"] > 0
+    assert report["post_governance_impact"]["available"] is False
+
+
+def test_post_governance_impact_report_exposes_subgroup_score_deltas() -> None:
+    protected_frame = _protected_frame(
+        row_count=8,
+        gender=["female", "female", "female", "female", "male", "male", "male", "male"],
+    )
+
+    report = build_post_governance_impact_report(
+        [0, 0, 1, 1, 0, 1, 0, 1],
+        [0.1, 0.2, 0.8, 0.9, 0.3, 0.7, 0.4, 0.6],
+        [0.1, 0.2, 0.8, 0.9, 0.2, 0.5, 0.3, 0.4],
+        protected_frame,
+        min_group_samples=2,
+    )
+
+    assert report["available"] is True
+    assert report["overall_approval_rate_after_governance"] < (
+        report["overall_approval_rate_before_governance"]
+    )
+    assert report["groups"]["gender"]["male"]["mean_score_delta"] < 0
 
 
 def _protected_frame(
@@ -129,4 +158,4 @@ def _protected_frame(
 
 
 def _psychometric_feature_frame(rows: list[list[float]]) -> pd.DataFrame:
-    return pd.DataFrame(rows, columns=PSYCHOMETRIC_SIMILARITY_FEATURES)
+    return pd.DataFrame(rows, columns=FULL_PROFILE_SIMILARITY_FEATURES)

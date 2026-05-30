@@ -3,6 +3,7 @@
 .env.*
 !.env.example
 .venv/
+.venv*/
 venv/
 env/
 backend/.venv*/
@@ -61,6 +62,7 @@ runtime/logs/*
 runtime/pytest-cache/
 runtime/pytest-temp/
 runtime/pytest-workspace/
+runtime/shared_session_trained_model/
 runtime/governed_reports/
 runtime/research_archive/
 

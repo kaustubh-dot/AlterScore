@@ -18,7 +18,10 @@ from backend.ml.evaluation.metrics import (
     select_best_test_auc_model,
 )
 from backend.ml.inference.score_mapper import probability_to_score
-from backend.ml.preprocessing.feature_registry import PROTECTED_FEATURES
+from backend.ml.preprocessing.feature_registry import (
+    NUMERIC_FEATURES,
+    PROTECTED_FEATURES,
+)
 
 DEFAULT_FAIRNESS_REPORT_PATH: Final[Path] = MODEL_REPORTS_DIR / "fairness_report.json"
 APPROVAL_SCORE_THRESHOLD: Final[int] = 550
@@ -30,21 +33,9 @@ INDIVIDUAL_FAIRNESS_SIMILARITY_THRESHOLD: Final[float] = 0.90
 INDIVIDUAL_FAIRNESS_SCORE_GAP_THRESHOLD: Final[int] = 50
 INDIVIDUAL_FAIRNESS_MAX_ROWS: Final[int] = 2_000
 INDIVIDUAL_FAIRNESS_WORST_PAIR_COUNT: Final[int] = 10
+FULL_PROFILE_SIMILARITY_FEATURES: Final[tuple[str, ...]] = tuple(NUMERIC_FEATURES)
 PSYCHOMETRIC_SIMILARITY_FEATURES: Final[tuple[str, ...]] = (
-    "numeracy_score",
-    "CRT_score",
-    "financial_literacy_score",
-    "future_orientation",
-    "delay_discounting_rate",
-    "risk_attitude",
-    "risk_consistency_flag",
-    "loss_aversion_score",
-    "locus_of_control",
-    "conscientiousness_score",
-    "social_capital_score",
-    "honesty_score",
-    "resilience_score",
-    "reciprocity_norm",
+    FULL_PROFILE_SIMILARITY_FEATURES
 )
 
 
@@ -54,6 +45,7 @@ def build_fairness_report(
     protected_frame: pd.DataFrame,
     *,
     feature_frame: pd.DataFrame | None = None,
+    post_governance_probabilities: np.ndarray | list[float] | None = None,
     approval_score_threshold: int = APPROVAL_SCORE_THRESHOLD,
     min_group_samples: int = MIN_GROUP_SAMPLES,
     calibration_bins: int = CALIBRATION_PARITY_BIN_COUNT,
@@ -103,6 +95,14 @@ def build_fairness_report(
             feature_frame=feature_frame,
             similarity_threshold=similarity_threshold,
             score_gap_threshold=score_gap_threshold,
+        ),
+        "post_governance_impact": build_post_governance_impact_report(
+            y_true_array,
+            y_prob_array,
+            post_governance_probabilities,
+            protected_frame,
+            approval_score_threshold=approval_score_threshold,
+            min_group_samples=min_group_samples,
         ),
     }
 
@@ -276,6 +276,148 @@ def build_calibration_parity_report(
     }
 
 
+def build_post_governance_impact_report(
+    y_true: np.ndarray | list[int],
+    model_probabilities: np.ndarray | list[float],
+    post_governance_probabilities: np.ndarray | list[float] | None,
+    protected_frame: pd.DataFrame,
+    *,
+    approval_score_threshold: int = APPROVAL_SCORE_THRESHOLD,
+    min_group_samples: int = MIN_GROUP_SAMPLES,
+) -> dict[str, Any]:
+    """Compare subgroup outcomes before and after post-model governance."""
+
+    if post_governance_probabilities is None:
+        return {
+            "available": False,
+            "verdict": (
+                "Post-governance fairness impact was not computed because adjusted "
+                "probabilities were not supplied."
+            ),
+        }
+
+    y_true_array = np.asarray(y_true, dtype=int)
+    model_prob_array = np.asarray(model_probabilities, dtype=float)
+    governed_prob_array = np.asarray(post_governance_probabilities, dtype=float)
+    _validate_fairness_inputs(y_true_array, model_prob_array, protected_frame)
+    _validate_fairness_inputs(y_true_array, governed_prob_array, protected_frame)
+
+    model_scores = np.asarray(
+        [probability_to_score(probability) for probability in model_prob_array],
+        dtype=int,
+    )
+    governed_scores = np.asarray(
+        [probability_to_score(probability) for probability in governed_prob_array],
+        dtype=int,
+    )
+    model_approved = model_scores >= int(approval_score_threshold)
+    governed_approved = governed_scores >= int(approval_score_threshold)
+    governed_overall_auc = _safe_roc_auc_score(y_true_array, governed_prob_array)
+
+    groups: dict[str, dict[str, Any]] = {}
+    flagged_groups: list[str] = []
+    worst_auc_gap = 0.0
+    evaluated_group_count = 0
+    skipped_group_count = 0
+
+    for attribute_name in PROTECTED_FEATURES:
+        attribute_values = (
+            protected_frame[attribute_name].fillna("__MISSING__").astype(str)
+        )
+        attribute_payload: dict[str, Any] = {}
+
+        for group_value in sorted(attribute_values.unique().tolist()):
+            mask = (attribute_values == group_value).to_numpy(dtype=bool)
+            n_samples = int(mask.sum())
+            if n_samples < min_group_samples or len(np.unique(y_true_array[mask])) < 2:
+                skipped_group_count += 1
+                continue
+
+            evaluated_group_count += 1
+            subgroup_true = y_true_array[mask]
+            subgroup_model_approved = model_approved[mask]
+            subgroup_governed_approved = governed_approved[mask]
+            subgroup_model_scores = model_scores[mask]
+            subgroup_governed_scores = governed_scores[mask]
+            subgroup_governed_prob = governed_prob_array[mask]
+            governed_auc = _safe_roc_auc_score(
+                subgroup_true,
+                subgroup_governed_prob,
+            )
+            auc_gap = abs(governed_auc - governed_overall_auc)
+            worst_auc_gap = max(worst_auc_gap, auc_gap)
+            flag = _determine_group_flag(auc_gap)
+            if flag != "green":
+                flagged_groups.append(f"{attribute_name}={group_value}")
+
+            attribute_payload[group_value] = {
+                "n_samples": n_samples,
+                "post_governance_auc": round(governed_auc, 4),
+                "post_governance_auc_gap_from_overall": round(auc_gap, 4),
+                "approval_rate_before_governance": round(
+                    float(subgroup_model_approved.mean()),
+                    4,
+                ),
+                "approval_rate_after_governance": round(
+                    float(subgroup_governed_approved.mean()),
+                    4,
+                ),
+                "approval_rate_delta": round(
+                    float(
+                        subgroup_governed_approved.mean()
+                        - subgroup_model_approved.mean()
+                    ),
+                    4,
+                ),
+                "mean_score_before_governance": round(
+                    float(subgroup_model_scores.mean()),
+                    1,
+                ),
+                "mean_score_after_governance": round(
+                    float(subgroup_governed_scores.mean()),
+                    1,
+                ),
+                "mean_score_delta": round(
+                    float(subgroup_governed_scores.mean() - subgroup_model_scores.mean()),
+                    1,
+                ),
+                "flag": flag,
+            }
+
+        groups[attribute_name] = attribute_payload
+
+    return {
+        "available": True,
+        "overall_auc_after_governance": round(governed_overall_auc, 4),
+        "overall_approval_rate_before_governance": round(
+            float(model_approved.mean()),
+            4,
+        ),
+        "overall_approval_rate_after_governance": round(
+            float(governed_approved.mean()),
+            4,
+        ),
+        "overall_approval_rate_delta": round(
+            float(governed_approved.mean() - model_approved.mean()),
+            4,
+        ),
+        "mean_score_delta": round(
+            float(governed_scores.mean() - model_scores.mean()),
+            1,
+        ),
+        "worst_auc_gap_after_governance": round(worst_auc_gap, 4),
+        "flagged_groups_after_governance": flagged_groups,
+        "evaluated_group_count": evaluated_group_count,
+        "skipped_group_count": skipped_group_count,
+        "groups": groups,
+        "verdict": _build_verdict(
+            flagged_groups,
+            evaluated_group_count=evaluated_group_count,
+            skipped_group_count=skipped_group_count,
+        ),
+    }
+
+
 def build_individual_fairness_proxy(
     scores: np.ndarray | list[int],
     protected_frame: pd.DataFrame,
@@ -293,7 +435,7 @@ def build_individual_fairness_proxy(
         raise ValueError("protected_frame row count must match the supplied scores.")
 
     base_payload = {
-        "similarity_feature_set": list(PSYCHOMETRIC_SIMILARITY_FEATURES),
+        "similarity_feature_set": list(FULL_PROFILE_SIMILARITY_FEATURES),
         "similarity_threshold": round(float(similarity_threshold), 4),
         "score_gap_threshold": int(score_gap_threshold),
         "evaluated_applicants": 0,
@@ -332,27 +474,38 @@ def build_individual_fairness_proxy(
 
     feature_values = feature_frame.iloc[sampled_positions].loc[
         :,
-        list(PSYCHOMETRIC_SIMILARITY_FEATURES),
+        list(FULL_PROFILE_SIMILARITY_FEATURES),
     ]
     feature_matrix = np.nan_to_num(feature_values.to_numpy(dtype=float), nan=0.0)
-    row_norms = np.linalg.norm(feature_matrix, axis=1)
-    nonzero_mask = row_norms > 0.0
+    nonzero_mask = np.isfinite(feature_matrix).all(axis=1)
     if int(nonzero_mask.sum()) < 2:
         return {
             **base_payload,
             "evaluated_applicants": int(nonzero_mask.sum()),
-            "verdict": "Individual fairness proxy is inconclusive because psychometric vectors were empty.",
+            "verdict": "Individual fairness proxy is inconclusive because similarity vectors were empty.",
         }
 
     feature_matrix = feature_matrix[nonzero_mask]
-    normalized_features = feature_matrix / row_norms[nonzero_mask, None]
+    feature_min = feature_matrix.min(axis=0)
+    feature_range = feature_matrix.max(axis=0) - feature_min
+    scaled_features = np.divide(
+        feature_matrix - feature_min,
+        feature_range,
+        out=np.zeros_like(feature_matrix, dtype=float),
+        where=feature_range > 1e-12,
+    )
     score_subset = score_array[sampled_positions][nonzero_mask]
     protected_subset = protected_frame.iloc[sampled_positions].reset_index(drop=True)
     protected_subset = protected_subset.loc[
         nonzero_mask, PROTECTED_FEATURES
     ].reset_index(drop=True)
 
-    similarities = normalized_features @ normalized_features.T
+    feature_count = max(int(scaled_features.shape[1]), 1)
+    distances = np.linalg.norm(
+        scaled_features[:, None, :] - scaled_features[None, :, :],
+        axis=2,
+    )
+    similarities = 1.0 - np.clip(distances / np.sqrt(feature_count), 0.0, 1.0)
     upper_triangle = np.triu(np.ones_like(similarities, dtype=bool), k=1)
     similar_pairs = (similarities >= float(similarity_threshold)) & upper_triangle
     demographic_difference = _build_demographic_difference_matrix(protected_subset)
@@ -519,7 +672,7 @@ def _validate_similarity_feature_frame(
         )
     missing_features = [
         feature_name
-        for feature_name in PSYCHOMETRIC_SIMILARITY_FEATURES
+        for feature_name in FULL_PROFILE_SIMILARITY_FEATURES
         if feature_name not in feature_frame.columns
     ]
     if missing_features:
@@ -610,6 +763,7 @@ def _build_individual_fairness_verdict(
 __all__ = [
     "APPROVAL_SCORE_THRESHOLD",
     "DEFAULT_FAIRNESS_REPORT_PATH",
+    "FULL_PROFILE_SIMILARITY_FEATURES",
     "MIN_GROUP_SAMPLES",
     "CALIBRATION_PARITY_BIN_COUNT",
     "INDIVIDUAL_FAIRNESS_SCORE_GAP_THRESHOLD",
@@ -620,6 +774,7 @@ __all__ = [
     "build_calibration_parity_report",
     "build_fairness_report",
     "build_fairness_report_for_candidate_probabilities",
+    "build_post_governance_impact_report",
     "build_individual_fairness_proxy",
     "save_fairness_report",
 ]

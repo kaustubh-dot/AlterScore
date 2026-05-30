@@ -156,7 +156,9 @@ def test_score_endpoint_detects_straight_lining_with_telemetry(trained_model_dir
     for q_key in ["scenario_s1", "scenario_s2", "scenario_s3", "scenario_s4", "scenario_s5", "scenario_s6", "scenario_s8"]:
         payload_authentic["answers"][q_key] = {"primary": f"{q_key.replace('scenario_', '')}_a"}
     payload_authentic["behavioral"]["avg_response_time_ms"] = 8000.0  # Slow pacing
-    payload_authentic["answers"]["open_response_text"] = "I solved it by negotiating inventory options and budgeting resources."
+    payload_authentic["answers"]["open_response_text"] = (
+        "When my income fell, I reduced expenses, found extra work, and made a repayment plan."
+    )
 
     with TestClient(app) as client:
         resp_gaming = client.post("/api/debug-score", json=payload_gaming)

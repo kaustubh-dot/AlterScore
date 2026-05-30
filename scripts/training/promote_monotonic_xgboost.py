@@ -32,6 +32,7 @@ from backend.app.core.paths import (
     MODEL_REGISTRY_DIR,
     RAW_DATA_DIR,
 )
+from backend.app.services.scoring import _calculate_governance_multiplier
 from backend.ml.preprocessing.feature_registry import ALL_MODEL_FEATURES
 from backend.ml.preprocessing.pipeline import (
     align_text_features_from_raw_text,
@@ -154,6 +155,13 @@ def main() -> int:
     train_probs = model.predict_proba(X_train_df)[:, 1]
     val_probs = model.predict_proba(X_val_df)[:, 1]
     test_probs = model.predict_proba(X_test_df)[:, 1]
+    policy_test_frame = policy_feature_frame.loc[
+        test_mask_series.to_numpy()
+    ].reset_index(drop=True)
+    test_post_governance_probs = _apply_post_model_governance(
+        test_probs,
+        policy_test_frame,
+    )
 
     val_threshold = optimal_threshold(y_val, val_probs)
     print(f"Optimal validation threshold calculated: {val_threshold:.4f}")
@@ -303,7 +311,8 @@ def main() -> int:
         y_test,
         test_probs,
         original_prepared.test.protected.reset_index(drop=True),
-        feature_frame=original_prepared.test.X.reset_index(drop=True),
+        feature_frame=policy_test_frame,
+        post_governance_probabilities=test_post_governance_probs,
     )
     save_fairness_report(
         fairness_report, MODEL_REPORTS_DIR / "fairness_report_monotonic.json"
@@ -453,6 +462,23 @@ def main() -> int:
 
     print("Monotonic XGBoost candidate promotion completed successfully!")
     return 0
+
+
+def _apply_post_model_governance(
+    probabilities: np.ndarray,
+    feature_frame: pd.DataFrame,
+) -> np.ndarray:
+    adjusted_probabilities: list[float] = []
+    for probability, feature_row in zip(
+        np.asarray(probabilities, dtype=float),
+        feature_frame.to_dict(orient="records"),
+        strict=True,
+    ):
+        multiplier, _ = _calculate_governance_multiplier(feature_row)
+        adjusted_probabilities.append(
+            float(np.clip(probability * multiplier, 0.01, 0.99))
+        )
+    return np.asarray(adjusted_probabilities, dtype=float)
 
 
 if __name__ == "__main__":

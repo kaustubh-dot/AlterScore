@@ -1,14 +1,14 @@
 # Handoff Summary: Front-End UI Developer Focus
 
-**Date:** May 27, 2026  
-**Status:** Monotonic XGBoost v2 serving stable; Borrower flow and Evaluator dashboard fully implemented; ready for styling/UI iterations.  
+**Date:** May 30, 2026
+**Status:** Monotonic XGBoost v2 serving stable; governance hardening pass applied; Borrower flow and Evaluator dashboard fully implemented; ready for styling/UI iterations.
 **Target Audience:** UI Developers working on frontend design, responsiveness, and WebGL asset optimization.
 
 ## Backend Status
 
 The backend service is stable and serves the manifest-backed `xgboost_monotonic_v2` model. All scoring endpoints and analytical reports are fully operational.
 * **Production Manifest:** `models/registry/production_manifest.json`
-* **Test AUC:** `0.7547` (governed with strict monotonicity constraints on key behavioral features)
+* **Test AUC:** `0.7596` before post-model governance; `0.7590` after post-model governance.
 
 ## API Surface (Stable & Fully Operational)
 
