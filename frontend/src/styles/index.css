@@ -28,10 +28,10 @@
   --border-dim: rgba(240, 236, 226, 0.09);
   --border-glow: rgba(212, 168, 83, 0.35);
 
-  --font-display: "Space Grotesk", sans-serif;
-  --font-body: "Space Grotesk", sans-serif;
+  --font-display: "Bigger Display", "Space Grotesk", sans-serif;
+  --font-body: "Fraktion Sans", "Space Grotesk", sans-serif;
   --font-serif: "Instrument Serif", serif;
-  --font-mono: "JetBrains Mono", monospace;
+  --font-mono: "Fraktion Mono", "JetBrains Mono", monospace;
   --radius-sm: 4px;
   --radius-md: 6px;
   --radius-lg: 8px;
@@ -140,8 +140,8 @@ button:disabled {
 
 .site-shell.is-ready {
   opacity: 1;
-  filter: blur(0px) brightness(1);
-  transform: scale(1);
+  filter: none;
+  transform: none;
 }
 
 .route-loading {

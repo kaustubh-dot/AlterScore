@@ -1,12 +1,11 @@
 import { gsap } from "gsap";
 import html2canvas from "html2canvas";
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { Link, Navigate, useLocation } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Navigate, useLocation } from "react-router-dom";
 
-import { formatCurrencyRange, getRiskBand } from "../services/scorePayload.js";
+import { getRiskBand } from "../services/scorePayload.js";
+import { useVisualExperience } from "../context/VisualExperienceContext.jsx";
 
-const GaugeArc = lazy(() => import("../components/webgl/GaugeArc.jsx"));
-const ResultsParticles = lazy(() => import("../components/webgl/ResultsParticles.jsx"));
 import ScoreReveal from "../components/results/ScoreReveal.jsx";
 import ShapBars from "../components/results/ShapBars.jsx";
 import CounterfactualCards from "../components/results/CounterfactualCards.jsx";
@@ -41,6 +40,7 @@ function scoreToColor(score) {
 
 export default function Results() {
   const location = useLocation();
+  const { setMode, setScoreTarget } = useVisualExperience();
   const certificateRef = useRef(null);
   const revealRef = useRef(null);
   const [displayScore, setDisplayScore] = useState(300);
@@ -56,6 +56,8 @@ export default function Results() {
 
   useEffect(() => {
     if (!result) return undefined;
+    setMode("results");
+    setScoreTarget(result.credit_score);
 
     const state = { value: 300 };
     const context = gsap.context(() => {
@@ -79,13 +81,15 @@ export default function Results() {
       gsap.fromTo(".shap-fill", { scaleX: 0 }, { scaleX: 1, transformOrigin: "left", stagger: 0.08, delay: 2.8, duration: 0.8, ease: "power3.out" });
     }, revealRef);
 
-    return () => context.revert();
-  }, [result]);
+    return () => {
+      context.revert();
+      setScoreTarget(null);
+    };
+  }, [result, setMode, setScoreTarget]);
 
   if (!result) return <Navigate to="/assessment" replace />;
 
   const bandMeta = getRiskBand(result.risk_band);
-  const maxFactor = Math.max(...result.explanation.map((factor) => Math.abs(factor.shap_value)), 0.01);
   const dynamicColor = scoreToColor(displayScore);
 
   async function downloadCertificate() {
@@ -108,9 +112,6 @@ export default function Results() {
 
   return (
     <main ref={revealRef} className="results-experience" data-section>
-      <Suspense fallback={null}>
-        <ResultsParticles />
-      </Suspense>
       <div className="result-line-sweep" />
 
       <section ref={certificateRef} className="results-certificate">

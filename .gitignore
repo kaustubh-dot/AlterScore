@@ -128,3 +128,6 @@ experiments/optuna/*
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# Local browser test logs
+frontend/user_browser_errors.json

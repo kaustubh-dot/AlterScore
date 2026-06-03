@@ -230,3 +230,48 @@ Record every architecture-level decision here. Small implementation choices can 
 - Follow-ups: Add multilingual NLP support or neutralize text-derived features
   for unsupported languages, then evaluate subgroup and language-level score
   impact before broad deployment.
+
+## DEC-0020 - Use A Persistent Route-Aware WebGL World For The Borrower Journey
+
+- Status: accepted
+- Date: 2026-05-31
+- Owner: Frontend visual-polish pass
+- Context: The borrower frontend had separate static background images and
+  section-specific scroll timelines. The resulting experience was visually
+  fragmented and the dormant landing-only WebGL orb was not mounted.
+- Decision: Use one persistent React Three Fiber canvas across borrower-facing
+  routes. The landing page drives a single chaptered scroll timeline, the
+  assessment uses a dimmed lightweight halo state, processing intensifies the
+  same core, and results rotate the core toward the returned score before the
+  dedicated score gauge reveal. Disable WebGL on the evaluator dashboard.
+- Consequences: Borrower routes share a coherent visual state machine without
+  changing backend contracts. Quality tiers reduce particles, terrain detail,
+  DPR, and post-processing on smaller or lower-motion devices.
+- Follow-ups: Complete real-backend borrower E2E in an environment with the
+  backend virtual environment available and retain screenshot QA evidence for
+  common desktop and mobile viewports.
+
+## DEC-0021 - Use An Original Signal Corridor For The Landing Fly-Through
+
+- Status: accepted
+- Date: 2026-06-02
+- Owner: Frontend landing visual-polish pass
+- Context: The first persistent WebGL landing pass still emphasized a centered
+  Credit Signal Core and active chapter copy transitions. The desired landing
+  interaction is a long, continuous forward journey with sparse fixed HUD
+  overlays and spatial labels rather than a sequence of conventional text
+  reveals.
+- Decision: Keep the shared route-aware canvas, but render an original R3F
+  Signal Corridor world on `/`. Drive its camera along a scroll-mapped spline
+  through rails, glass slabs, glyph planes, signal nodes, ribbons, tunnel
+  frames, fog, and a score-ring chamber. Use a fixed HUD rail and spatial copy
+  field over a desktop landing scroll length of approximately 89 viewport
+  heights. Preserve the Credit Signal Core for assessment, processing, and
+  results.
+- Consequences: The landing now follows the interaction grammar of a cinematic
+  WebGL fly-through without copying third-party assets, code, or composition.
+  The generated WebP landscapes remain fallback poster assets for quieter
+  routes and reduced-motion behavior.
+- Follow-ups: Retain real-device motion QA for lower-powered mobile hardware
+  and consider lazy-loading the landing world if the R3F vendor chunk becomes a
+  deployment concern.

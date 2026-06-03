@@ -1,0 +1,158 @@
+[
+    {
+        "id": "emerson",
+        "name": "EMERSON",
+        "subtitle": "Integration Solutions",
+        "color": "#808080"
+    },
+    {
+        "id": "mastercard",
+        "name": "MASTERCARD",
+        "subtitle": "E-Ordering",
+        "color": "#808080"
+    },
+    {
+        "id": "nike",
+        "name": "NIKE",
+        "subtitle": "B2B Warehouse",
+        "color": "#808080"
+    },
+    {
+        "id": "kfc-loyalty",
+        "name": "KFC",
+        "subtitle": "AI Loyalty System",
+        "color": "#808080"
+    },
+    {
+        "id": "de-rigo",
+        "name": "DE RIGO",
+        "subtitle": "Audacity Land",
+        "color": "#808080"
+    },
+    {
+        "id": "sara-assicurazioni",
+        "name": "SARA ASSICURAZIONI",
+        "subtitle": "Web3 Backbone",
+        "color": "#808080"
+    },
+    {
+        "id": "tmov",
+        "name": "TMOV",
+        "subtitle": "Immersive Experience",
+        "color": "#808080"
+    },
+    {
+        "id": "italo-cescon",
+        "name": "ITALO CESCON",
+        "subtitle": "Digital Identity",
+        "color": "#808080"
+    },
+    {
+        "id": "promotica",
+        "name": "PROMOTICA",
+        "subtitle": "Backbone System",
+        "color": "#808080"
+    },
+    {
+        "id": "subaru",
+        "name": "SUBARU",
+        "subtitle": "Live Entertainment",
+        "color": "#808080"
+    },
+    {
+        "id": "reebok",
+        "name": "REEBOK",
+        "subtitle": "Phygital Shoes",
+        "color": "#808080"
+    },
+    {
+        "id": "areas",
+        "name": "AREAS",
+        "subtitle": "My Chef Plus",
+        "color": "#808080"
+    },
+    {
+        "id": "rubensluciano",
+        "name": "RUBENSLUCIANO",
+        "subtitle": "Immersive Website",
+        "color": "#808080"
+    },
+    {
+        "id": "bruno-presezzi",
+        "name": "BRUNO PRESEZZI",
+        "subtitle": "Presobene Gin",
+        "color": "#808080"
+    },
+    {
+        "id": "grana-padano",
+        "name": "GRANA PADANO",
+        "subtitle": "Brand Communication",
+        "color": "#808080"
+    },
+    {
+        "id": "piacenti",
+        "name": "PIACENTI",
+        "subtitle": "ERP & CRM",
+        "color": "#808080"
+    },
+    {
+        "id": "omron",
+        "name": "OMRON",
+        "subtitle": "Digital Marketing",
+        "color": "#808080"
+    },
+    {
+        "id": "safe",
+        "name": "SAFE",
+        "subtitle": "Website",
+        "color": "#808080"
+    },
+    {
+        "id": "kfc-ai",
+        "name": "KFC",
+        "subtitle": "AI Platform",
+        "color": "#808080"
+    },
+    {
+        "id": "mavive",
+        "name": "MAVIVE",
+        "subtitle": "Rosa Moceniga Elixir",
+        "color": "#808080"
+    },
+    {
+        "id": "flatman",
+        "name": "FLATMAN",
+        "subtitle": "Real Estate 3.0",
+        "color": "#808080"
+    },
+    {
+        "id": "noleggio-lorini",
+        "name": "NOLEGGIO LORINI",
+        "subtitle": "Guardeal",
+        "color": "#808080"
+    },
+    {
+        "id": "cuzziol-grandivini",
+        "name": "CUZZIOL GRANDIVINI",
+        "subtitle": "New Ecosystem",
+        "color": "#808080"
+    },
+    {
+        "id": "geopietra",
+        "name": "GEOPIETRA",
+        "subtitle": "AI CRM",
+        "color": "#808080"
+    },
+    {
+        "id": "italmill",
+        "name": "ITALMILL",
+        "subtitle": "Digital Identity",
+        "color": "#808080"
+    },
+    {
+        "id": "mu-burger",
+        "name": "MU BURGER",
+        "subtitle": "E-Ordering",
+        "color": "#808080"
+    }
+]

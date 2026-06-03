@@ -20,7 +20,7 @@
 | Track D - Explainability & Promotion | Complete | SHAP, DICE, global importance, manifest validation |
 | Track D+ - Ensemble Serving Runtime | Promoted | Stacking ensemble fully integrated and served via manifest-backed routing |
 | Track D++ - Governed Constrained Trees | Complete, rollback path | Monotonic `xgboost` remains a validated alternative and rollback runtime |
-| Track E - Borrower Frontend | Complete | Q&A session lockout resolved; session reset handlers for "Run again" and "Start over" fully active |
+| Track E - Borrower Frontend | Complete, visual QA follow-up open | Persistent route-aware WebGL borrower journey and original landing Signal Corridor implemented; repeat real-backend browser walkthrough on a configured workstation |
 | Track F - Evaluator Dashboard | Partial | Most analytics endpoints consumed; confusion matrix, panel states, and tests remain |
 | Track G - Release & Demo | Pending | Local/manual runbook, release checklist, and demo script remain |
 
@@ -65,6 +65,13 @@ Complete. The borrower flow has been fully completed and hardened:
 - Added custom session-reset "Run again" handler to completely clear cached states.
 - Implemented mid-assessment "Start over" controls to let users reset progress.
 - Node unit tests cover all questions and score payloads.
+- Replaced the static landing treatment with a single chaptered scroll journey,
+  an original Credit Signal Core, a smart loader, and route-aware WebGL states
+  for assessment, processing, and results.
+- Refined `/` into an original Sidewave-inspired behavioral twin: a long
+  spline-driven Signal Corridor fly-through, fixed HUD rail, spatial glyph
+  fields, one fixed WebGL canvas, and a final assessment CTA chamber.
+- Added desktop, tablet, mobile, and reduced-motion quality tiers.
 - Optional bundle optimization for the R3F vendor chunk if demo performance
   requires it.
 

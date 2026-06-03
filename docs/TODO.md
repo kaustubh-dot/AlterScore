@@ -40,6 +40,21 @@
 - [x] Run browser screenshot QA for landing, assessment, processing, and results.
 - [x] Verify mobile layout at 375px and common desktop widths (implemented session resets and grouped controls beautifully).
 - [x] Review R3F bundle size and decide whether manual Rollup chunking is needed to split large three.js assets.
+- [x] Replace static landing cross-fades with one chaptered borrower story and
+  a persistent route-aware Credit Signal Core.
+- [x] Add original desktop/mobile signal-landscape WebP assets, smart loader
+  pacing, adaptive WebGL quality tiers, and reduced-motion behavior.
+- [x] Carry the shared visual engine into assessment, processing, and results
+  while keeping dashboard rendering utilitarian.
+- [x] Replace the landing chapter-copy presentation with an original
+  Sidewave-inspired Signal Corridor: fixed HUD, long forward camera spline,
+  glyph fields, rails, ribbons, glass slabs, tunnel frames, and final score
+  chamber CTA.
+- [x] Verify the corridor landing at 1280x720 with one fixed canvas, a
+  approximately 64k-pixel scroll journey, zero document horizontal overflow,
+  final `/assessment` CTA handoff, and no browser console errors.
+- [ ] Repeat the full borrower browser walkthrough against a running real
+  backend on a workstation with the backend Python environment installed.
 
 ## Track F - Evaluator Dashboard & Minor Mock Coverage
 
