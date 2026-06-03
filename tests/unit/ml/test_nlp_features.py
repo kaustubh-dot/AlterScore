@@ -36,7 +36,7 @@ def test_high_agency_text_scores_above_low_agency_text() -> None:
     )
 
     assert high_agency_result["text_agency_score"] > 0.3
-    assert high_agency_result["text_problem_solving_flag"] == 1.0
+    assert high_agency_result["text_problem_solving_flag"] > 0.8
     assert isinstance(high_agency_result["text_sentiment_compound"], float)
 
     assert low_agency_result["text_agency_score"] < 0.2

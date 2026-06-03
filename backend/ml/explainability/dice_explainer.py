@@ -108,7 +108,9 @@ class PersistedDiceExplainer:
             )
         if allowed_actionable_features is not None:
             # Tolerate avg_response_time_ms since it was neutralized and removed from canonical ACTIONABLE_FEATURES
-            tolerated_actionables = set(allowed_actionable_features) | {"avg_response_time_ms"}
+            tolerated_actionables = set(allowed_actionable_features) | {
+                "avg_response_time_ms"
+            }
             unsupported_actionables = sorted(
                 set(actionable_features) - tolerated_actionables
             )

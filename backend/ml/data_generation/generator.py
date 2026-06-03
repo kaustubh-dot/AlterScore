@@ -358,9 +358,7 @@ def generate_synthetic_dataset(
         5.0,
     )
     cognitive_load_index = np.clip(
-        1.0
-        * (1.0 + answer_change_rate)
-        * (1.0 + dropout_count * 0.2),
+        1.0 * (1.0 + answer_change_rate) * (1.0 + dropout_count * 0.2),
         0.0,
         None,
     )

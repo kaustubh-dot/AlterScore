@@ -430,6 +430,7 @@ def _build_classical_models(*, random_state: int) -> dict[str, Any]:
     if not is_test:
         try:
             import torch
+
             has_gpu = torch.cuda.is_available()
         except ImportError:
             pass

@@ -14,7 +14,7 @@ import useSectionObserver from "../../hooks/useSectionObserver.js";
 
 function TacticalShell() {
   const location = useLocation();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(location.pathname !== "/");
   const [demoDrawerOpen, setDemoDrawerOpen] = useState(false);
   const sessionHash = useMemo(() => Math.random().toString(36).slice(2, 10).toUpperCase(), []);
   useLenis(loading || location.pathname === "/");

@@ -70,8 +70,7 @@ def compute_derived_features(features: Mapping[str, Any]) -> dict[str, float]:
         upper=1.0,
     )
     impulsivity_index = _clip(
-        (values["risk_attitude"] * 1.0)
-        / (values["CRT_score"] + 0.1),
+        (values["risk_attitude"] * 1.0) / (values["CRT_score"] + 0.1),
         lower=0.0,
         upper=5.0,
     )
