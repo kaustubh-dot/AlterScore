@@ -8,19 +8,39 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      HF_SPACE_REPO: https://huggingface.co/spaces/coolbot22/alterscore-backend
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
           lfs: true
 
+      - name: Skip When Token Is Missing
+        if: env.HF_TOKEN == ''
+        run: |
+          echo "::warning::HF_TOKEN is not configured, so Hugging Face deployment was skipped."
+
       - name: Install Git LFS
+        if: env.HF_TOKEN != ''
         run: git lfs install
 
-      - name: Prepend Hugging Face Spaces YAML Metadata
+      - name: Build Backend Space Package
+        if: env.HF_TOKEN != ''
         run: |
-          cat << 'EOF' > README.tmp
+          set -euo pipefail
+          SPACE_DIR="$RUNNER_TEMP/alterscore-hf-space"
+          rm -rf "$SPACE_DIR"
+          mkdir -p "$SPACE_DIR"
+
+          cp -R backend "$SPACE_DIR/backend"
+          cp -R models "$SPACE_DIR/models"
+          cp -R scripts "$SPACE_DIR/scripts"
+          cp Dockerfile "$SPACE_DIR/Dockerfile"
+
+          cat > "$SPACE_DIR/README.md" <<'EOF'
           ---
           title: AlterScore Backend
           emoji: 📊
@@ -30,20 +50,23 @@ jobs:
           app_port: 7860
           pinned: false
           ---
-          
-          EOF
-          cat README.md >> README.tmp
-          mv README.tmp README.md
 
-      - name: Commit and Push to Hugging Face Spaces
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          # AlterScore Backend
+
+          Manifest-backed FastAPI scoring backend for AlterScore.
+          EOF
+
+      - name: Push Backend Package
+        if: env.HF_TOKEN != ''
         run: |
-          git config --global user.email "bot@alterscore.ai"
-          git config --global user.name "AlterScore Deployment Bot"
-          # Stage the modified README.md
-          git add README.md
-          # Create a deployment commit
-          git commit -m "deploy(hf): inject metadata frontmatter and package for Space runtime"
-          # Push directly to Hugging Face Space repository main branch
-          git push https://coolbot22:$HF_TOKEN@huggingface.co/spaces/coolbot22/alterscore-backend HEAD:refs/heads/main --force
+          set -euo pipefail
+          SPACE_DIR="$RUNNER_TEMP/alterscore-hf-space"
+          cd "$SPACE_DIR"
+          git init
+          git lfs install
+          git config user.email "bot@alterscore.ai"
+          git config user.name "AlterScore Deployment Bot"
+          git remote add origin "https://coolbot22:${HF_TOKEN}@huggingface.co/spaces/coolbot22/alterscore-backend"
+          git add .
+          git commit -m "deploy(hf): package backend runtime"
+          git push origin HEAD:refs/heads/main --force

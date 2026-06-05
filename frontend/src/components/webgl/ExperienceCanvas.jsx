@@ -1,6 +1,6 @@
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Bloom, EffectComposer } from "@react-three/postprocessing";
-import { Suspense, useMemo, useRef, useEffect } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 
 import { useVisualExperience } from "../../context/VisualExperienceContext.jsx";
@@ -111,6 +111,40 @@ function World() {
   );
 }
 
+const UNITY_SCALE = 100000;
+
+function getUnityBuildCandidate() {
+  const isMobile = /Mobile|iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const envBase = import.meta.env?.VITE_UNITY_BUILD_BASE_URL;
+  const envDesktop = import.meta.env?.VITE_UNITY_BUILD_NAME_DESKTOP;
+  const envMobile = import.meta.env?.VITE_UNITY_BUILD_NAME_MOBILE;
+
+  if (envBase && (envDesktop || envMobile)) {
+    return {
+      baseUrl: envBase.replace(/\/$/, ""),
+      buildName: isMobile ? envMobile || envDesktop : envDesktop || envMobile,
+      source: "licensed",
+    };
+  }
+
+  return {
+    baseUrl: "/Build",
+    buildName: isMobile ? "Sidewave_WebGL_260421_astc" : "Sidewave_WebGL_260421_dxt",
+    source: "local",
+  };
+}
+
+function unityAssetUrl(candidate, extension) {
+  return `${candidate.baseUrl}/${candidate.buildName}.${extension}`;
+}
+
+async function assertUnityAsset(url) {
+  const response = await fetch(url, { method: "HEAD", cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(`Unity asset unavailable: ${url}`);
+  }
+}
+
 function loadScript(src, id) {
   return new Promise((resolve, reject) => {
     if (document.getElementById(id)) {
@@ -127,102 +161,197 @@ function loadScript(src, id) {
   });
 }
 
-function loadOptionalScript(src, id) {
-  return loadScript(src, id).catch((e) => {
-    console.warn(`Optional script failed to load: ${src}`, e);
-  });
-}
+function UnityLandingCanvas() {
+  const { qualityTier } = useVisualExperience();
+  const [status, setStatus] = useState("booting");
+  const [progress, setProgress] = useState(0);
+  const instanceRef = useRef(null);
+  const timedOutRef = useRef(false);
+  const scrollRef = useRef({ current: 0, target: 0, last: -1, lastTime: performance.now() });
 
-function UnityContainer() {
+  const enterFallback = useCallback((reason) => {
+    console.warn("Unity landing fallback:", reason);
+    setStatus("fallback");
+    window.dispatchEvent(new CustomEvent("alterscore:unity-status", { detail: { status: "fallback", reason } }));
+  }, []);
+
   useEffect(() => {
-    let isMounted = true;
+    let active = true;
+    let timeoutId = 0;
+    const candidate = getUnityBuildCandidate();
     document.body.classList.add("mode-landing");
 
-    const loadAll = async () => {
-      try {
-        await loadScript("/js/jquery.min.js", "jquery-script");
-        await loadScript("/js/jquery.easing.min.js", "jquery-easing-script");
-        
-        if (!isMounted) return;
-
-        await loadOptionalScript("/js/cookieconsent.umd.js?ver=1.63", "cookieconsent-script");
-        await loadOptionalScript("/js/cookie.js?ver=1.63", "cookie-script");
-        await loadScript("/js/unity-loader.js?ver=1.63", "unity-loader-script");
-        await loadOptionalScript("/js/translator.js?ver=1.63", "translator-script");
-        await loadOptionalScript("/js/lemon.js", "lemon-script");
-        await loadOptionalScript("/js/ai-chat.js?ver=1.63", "ai-chat-script");
-        await loadScript("/js/ui-interactions.js?ver=1.63", "ui-interactions-script");
-        await loadScript("/js/scroll-navigation.js?ver=1.63", "scroll-navigation-script");
-        await loadScript("/js/scroll-visuals.js?ver=1.63", "scroll-visuals-script");
-      } catch (e) {
-        console.error("Error loading Unity scripts:", e);
+    window.EventDispatcher = (eventName) => {
+      window.dispatchEvent(new CustomEvent(`unity:${eventName}`));
+    };
+    window.EventDispatcherWithArgument = (eventName, argument) => {
+      window.dispatchEvent(new CustomEvent(`unity:${eventName}`, { detail: argument }));
+      if (eventName === "TimelineLength") {
+        window.dispatchEvent(new CustomEvent("alterscore:unity-timeline", { detail: argument }));
+      }
+      if (eventName === "WebGLSafeDraw" || eventName === "SceneReady") {
+        setStatus("ready");
+        window.dispatchEvent(new CustomEvent("alterscore:unity-status", { detail: { status: "ready" } }));
       }
     };
 
-    loadAll();
+    async function bootUnity() {
+      try {
+        await Promise.all([
+          assertUnityAsset(unityAssetUrl(candidate, "loader.js")),
+          assertUnityAsset(unityAssetUrl(candidate, "framework.js")),
+          assertUnityAsset(unityAssetUrl(candidate, "data.br")),
+          assertUnityAsset(unityAssetUrl(candidate, "wasm.br")),
+        ]);
+
+        if (!active) return;
+
+        const loaderId = `unity-loader-${candidate.buildName}`;
+        await loadScript(unityAssetUrl(candidate, "loader.js"), loaderId);
+
+        if (!active || typeof window.createUnityInstance !== "function") {
+          throw new Error("Unity loader did not expose createUnityInstance.");
+        }
+
+        const canvas = document.getElementById("webContainer");
+        const config = {
+          dataUrl: unityAssetUrl(candidate, "data.br"),
+          frameworkUrl: unityAssetUrl(candidate, "framework.js"),
+          codeUrl: unityAssetUrl(candidate, "wasm.br"),
+          streamingAssetsUrl: `${candidate.baseUrl}/StreamingAssets`,
+          companyName: "AlterScore",
+          productName: "AlterScore Borrower Experience",
+          productVersion: "1.0.0",
+        };
+
+        timeoutId = window.setTimeout(() => {
+          timedOutRef.current = true;
+          if (active && !instanceRef.current) {
+            enterFallback("Unity scene did not become ready before timeout.");
+          }
+        }, 5000);
+
+        const unityInstance = await window.createUnityInstance(canvas, config, (value) => {
+          if (!active) return;
+          setProgress(Math.round(value * 100));
+          window.dispatchEvent(
+            new CustomEvent("alterscore:unity-status", {
+              detail: { status: "loading", progress: Math.round(value * 100), source: candidate.source },
+            }),
+          );
+        });
+
+        if (!active || timedOutRef.current) {
+          unityInstance.Quit?.();
+          return;
+        }
+
+        instanceRef.current = unityInstance;
+        window.clearTimeout(timeoutId);
+        window.gameInstance = unityInstance;
+        setProgress(100);
+        setStatus("ready");
+        window.dispatchEvent(new CustomEvent("alterscore:unity-status", { detail: { status: "ready", source: candidate.source } }));
+
+        if (unityInstance.Module?.SystemInfo?.mobile) {
+          unityInstance.SendMessage?.("zController", "DisableFluidFx");
+        } else {
+          unityInstance.SendMessage?.("zController", "EnableFluidFx");
+        }
+      } catch (e) {
+        if (active) enterFallback(e.message || "Unity scene failed to load.");
+      }
+    }
+
+    bootUnity();
 
     return () => {
-      isMounted = false;
+      active = false;
+      window.clearTimeout(timeoutId);
 
-      // Reset document classes and scroll states
       document.documentElement.classList.remove("no-scroll");
       document.body.classList.remove("no-scroll", "isMobile", "mode-landing");
       document.body.style.overflow = "";
 
-      // Cleanup global event listeners namespaced with .landing
-      if (window.jQuery) {
-        window.jQuery(window).off(".landing");
-        window.jQuery(document).off(".landing");
-      }
-
-      // Clean up native wheel and touch event listeners
-      if (window.landingHandlers) {
-        window.removeEventListener("wheel", window.landingHandlers.wheel, { passive: false });
-        window.removeEventListener("touchstart", window.landingHandlers.touchstart, { passive: true });
-        window.removeEventListener("touchmove", window.landingHandlers.touchmove, { passive: false });
-        window.removeEventListener("touchend", window.landingHandlers.touchend, { passive: true });
-        delete window.landingHandlers;
-      }
-
-      // Quit Unity instance to free WebGL memory
-      if (window.gameInstance && typeof window.gameInstance.Quit === "function") {
+      if (instanceRef.current && typeof instanceRef.current.Quit === "function") {
         try {
-          window.gameInstance.Quit();
+          instanceRef.current.Quit();
         } catch (e) {
           console.warn("Error quitting Unity instance:", e);
         }
-        window.gameInstance = null;
       }
+      instanceRef.current = null;
+      window.gameInstance = null;
 
-      // Remove script tags from DOM (excluding jQuery to avoid event dispatcher corruption)
-      [
-        "cookieconsent-script",
-        "cookie-script",
-        "translator-script",
-        "ai-chat-script",
-        "unity-loader-script",
-        "ui-interactions-script",
-        "scroll-navigation-script",
-        "scroll-visuals-script"
-      ].forEach((id) => {
-        const el = document.getElementById(id);
-        if (el) el.remove();
-      });
-
-      // Remove any loaded build script appended by unity-loader
       const loaderScripts = document.querySelectorAll('script[src*=".loader.js"]');
       loaderScripts.forEach(s => s.remove());
+      delete window.EventDispatcher;
+      delete window.EventDispatcherWithArgument;
     };
+  }, [enterFallback]);
+
+  useEffect(() => {
+    let frameId = 0;
+
+    function updateScroll(now) {
+      const state = scrollRef.current;
+      const total = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
+      state.target = Math.min(Math.max(window.scrollY / total, 0), 1);
+      const dt = Math.min((now - state.lastTime) / 1000, 0.064);
+      state.lastTime = now;
+      const alpha = 1 - Math.exp(-dt / 0.46);
+      state.current += (state.target - state.current) * alpha;
+
+      if (instanceRef.current && Math.abs(state.current - state.last) > 0.0004) {
+        state.last = state.current;
+        try {
+          instanceRef.current.SendMessage("Timeline", "SetScrollValue", Math.round(state.current * UNITY_SCALE));
+        } catch {
+          // Unity scenes vary by export; absence of Timeline should not break React.
+        }
+      }
+
+      frameId = window.requestAnimationFrame(updateScroll);
+    }
+
+    frameId = window.requestAnimationFrame(updateScroll);
+    return () => window.cancelAnimationFrame(frameId);
   }, []);
 
+  const showFallback = status === "fallback";
+  const ready = status === "ready";
+
   return (
-    <div id="unityContainer" className="webgl-content unity-desktop">
-      <div id="unityProgress" className="progress">
-        <div className="empty"></div>
-        <div id="unity-progress-bar-full" className="full"></div>
+    <div className={`unity-stage unity-stage--${status}`} aria-hidden="true">
+      <div className="unity-stage__shade" />
+      <div id="unityContainer" className="webgl-content unity-desktop">
+        <canvas id="webContainer" className={ready ? "is-visible" : ""} />
       </div>
-      <div id="loadingMessages" className="hideAfterLoading"><span></span></div>
-      <canvas id="webContainer"></canvas>
+
+      {showFallback && (
+        <Canvas
+          className="unity-fallback-canvas"
+          camera={{ position: [0, 0, 50], fov: 48, near: 0.1, far: 320 }}
+          dpr={qualityTier.dpr}
+          gl={{
+            antialias: qualityTier.name !== "mobile",
+            alpha: true,
+            powerPreference: "high-performance",
+            stencil: false,
+          }}
+        >
+          <Suspense fallback={null}>
+            <World />
+          </Suspense>
+        </Canvas>
+      )}
+
+      {status === "booting" && (
+        <div className="unity-stage__boot">
+          <span>{String(progress).padStart(3, "0")}</span>
+          <i style={{ transform: `scaleX(${progress / 100})` }} />
+        </div>
+      )}
     </div>
   );
 }
@@ -230,7 +359,7 @@ function UnityContainer() {
 export default function ExperienceCanvas() {
   const { mode, qualityTier } = useVisualExperience();
   if (mode === "dashboard") return <div className="experience-backdrop experience-backdrop--dashboard" />;
-  if (mode === "landing") return <UnityContainer />;
+  if (mode === "landing") return <UnityLandingCanvas />;
 
   return (
     <div className={`experience-world experience-world--${mode}`} aria-hidden="true">

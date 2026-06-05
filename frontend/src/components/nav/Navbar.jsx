@@ -22,64 +22,53 @@ export default function Navbar({ onOpenDemo }) {
   }, [open]);
 
   if (mode === "landing") {
-    const handleRouteClick = () => {
-      if (window.HideMenu) {
-        window.HideMenu();
-      }
-    };
-
     return (
-      <>
-        <a href="#origin" className="showAfterLoading" id="alterscore-logo">
+      <header className="sidewave-nav">
+        <NavLink to="/" className="sidewave-wordmark" aria-label="AlterScore home" onClick={() => setOpen(false)}>
           ALTERSCORE
-        </a>
+        </NavLink>
 
-        <div id="menuBtn" className="showAfterLoading">
-          <div className="openMenu">MENU</div>
-          <div className="closeMenu">CLOSE</div>
+        <button
+          type="button"
+          className={`sidewave-menu-toggle ${open ? "is-open" : ""}`}
+          onClick={() => setOpen((value) => !value)}
+          aria-expanded={open}
+          aria-controls="landing-menu"
+        >
+          <span>MENU</span>
+          <i />
+          <span>CLOSE</span>
+        </button>
+
+        <div id="landing-menu" className={`sidewave-menu-panel ${open ? "is-open" : ""}`}>
+          <nav aria-label="Landing menu">
+            <a href="#origin" onClick={() => setOpen(false)}>
+              <small>01</small>
+              <span>Origin</span>
+            </a>
+            <a href="#signal" onClick={() => setOpen(false)}>
+              <small>02</small>
+              <span>Signal</span>
+            </a>
+            <a href="#model" onClick={() => setOpen(false)}>
+              <small>03</small>
+              <span>Model</span>
+            </a>
+            <a href="#access" onClick={() => setOpen(false)}>
+              <small>04</small>
+              <span>Access</span>
+            </a>
+            <NavLink to="/assessment" onClick={() => setOpen(false)}>
+              <small>05</small>
+              <span>Assessment</span>
+            </NavLink>
+            <NavLink to="/dashboard" onClick={() => setOpen(false)}>
+              <small>06</small>
+              <span>Dashboard</span>
+            </NavLink>
+          </nav>
         </div>
-
-        <div id="menuPanel" style={{ "--default-bg": "none" }}>
-          <ul>
-            <li data-menutarget="origin" className="active">
-              <div className="panelBg" style={{ backgroundImage: "url(/images/menu_origin.webp)" }}></div>
-              <a href="#origin">ORIGIN</a>
-            </li>
-
-            <li data-menutarget="about">
-              <div className="panelBg" style={{ backgroundImage: "url(/images/menu_about.webp)" }}></div>
-              <a href="#about">SIGNAL</a>
-            </li>
-
-            <li data-menutarget="services">
-              <div className="panelBg" style={{ backgroundImage: "url(/images/menu_services.webp)" }}></div>
-              <a href="#services">MODEL</a>
-            </li>
-
-            <li data-menutarget="usecases">
-              <div className="panelBg" style={{ backgroundImage: "url(/images/menu_usecases.webp)" }}></div>
-              <a href="#usecases">EXPLAIN</a>
-            </li>
-
-            <li data-menutarget="contacts">
-              <div className="panelBg" style={{ backgroundImage: "url(/images/menu_contacts.webp)" }}></div>
-              <a href="#contact">ACCESS</a>
-            </li>
-
-            {/* Direct React Router links for AlterScore routes */}
-            <li>
-              <NavLink to="/assessment" id="nav-assessment-link" style={{ background: "black" }} onClick={handleRouteClick}>
-                ASSESSMENT
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/dashboard" id="nav-dashboard-link" style={{ background: "black" }} onClick={handleRouteClick}>
-                DASHBOARD
-              </NavLink>
-            </li>
-          </ul>
-        </div>
-      </>
+      </header>
     );
   }
 
@@ -158,5 +147,4 @@ export default function Navbar({ onOpenDemo }) {
     </header>
   );
 }
-
 

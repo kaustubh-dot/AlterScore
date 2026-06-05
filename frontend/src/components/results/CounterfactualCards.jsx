@@ -27,7 +27,7 @@ export default function CounterfactualCards({ actions }) {
             border: "1px solid var(--accent)",
             color: "var(--accent)",
             padding: "0.4rem 0.8rem",
-            borderRadius: "4px",
+            borderRadius: "0px",
             fontSize: "0.85rem",
             fontWeight: "bold",
             fontFamily: "var(--font-mono)",
@@ -57,7 +57,7 @@ export default function CounterfactualCards({ actions }) {
                 padding: "1rem",
                 background: isChecked ? "rgba(48,242,210,0.02)" : "rgba(255,255,255,0.01)",
                 border: isChecked ? "1px solid var(--accent)" : "1px solid var(--line)",
-                borderRadius: "6px",
+                borderRadius: "0px",
                 cursor: "pointer",
                 transition: "all 0.25s ease"
               }}
@@ -67,7 +67,7 @@ export default function CounterfactualCards({ actions }) {
                   width: "18px", 
                   height: "18px", 
                   border: isChecked ? "2px solid var(--accent)" : "2px solid var(--soft)",
-                  borderRadius: "3px", 
+                  borderRadius: "0px", 
                   display: "flex", 
                   justifyContent: "center", 
                   alignItems: "center",

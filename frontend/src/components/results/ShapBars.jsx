@@ -58,7 +58,7 @@ export default function ShapBars({ explanation }) {
               style={{
                 background: isExpanded ? "rgba(255, 255, 255, 0.02)" : "transparent",
                 border: isExpanded ? "1px solid var(--border-active)" : "1px solid transparent",
-                borderRadius: "6px",
+                borderRadius: "0px",
                 padding: "0.8rem 1rem",
                 cursor: "pointer",
                 transition: "all 0.3s ease",
@@ -78,7 +78,7 @@ export default function ShapBars({ explanation }) {
                 </div>
                 <span className={positive ? "factor-badge is-positive" : "factor-badge is-negative"} style={{
                   padding: "0.25rem 0.5rem",
-                  borderRadius: "4px",
+                  borderRadius: "0px",
                   fontSize: "0.8rem",
                   fontWeight: "bold",
                   background: positive ? "rgba(48,242,210,0.1)" : "rgba(255,77,94,0.1)",
@@ -88,7 +88,7 @@ export default function ShapBars({ explanation }) {
                 </span>
               </div>
 
-              <div className="shap-track" style={{ width: "100%", background: "rgba(255,255,255,0.03)", height: "8px", borderRadius: "4px", overflow: "hidden", position: "relative" }}>
+              <div className="shap-track" style={{ width: "100%", background: "rgba(255,255,255,0.03)", height: "8px", borderRadius: "0px", overflow: "hidden", position: "relative" }}>
                 <span
                   className={`shap-fill ${positive ? "is-positive" : "is-negative"}`}
                   style={{ 
@@ -108,7 +108,7 @@ export default function ShapBars({ explanation }) {
                     padding: "0.8rem", 
                     marginTop: "0.4rem", 
                     background: "rgba(0,0,0,0.2)", 
-                    borderRadius: "4px", 
+                    borderRadius: "0px", 
                     fontSize: "0.8rem", 
                     color: "var(--text-muted)",
                     lineHeight: "1.4",

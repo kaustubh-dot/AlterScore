@@ -31,7 +31,7 @@ import {
 function CurvePlot({ seriesList, xLabel, yLabel, activeCurveTab }) {
   if (!seriesList || !seriesList.length) {
     return (
-      <div style={{ height: 240, display: "flex", justifyContent: "center", alignItems: "center", border: "1px dashed var(--line)", borderRadius: "6px", color: "var(--soft)", fontSize: "0.8rem" }}>
+      <div style={{ height: 240, display: "flex", justifyContent: "center", alignItems: "center", border: "1px dashed var(--line)", borderRadius: "0px", color: "var(--soft)", fontSize: "0.8rem" }}>
         No curve data available.
       </div>
     );
@@ -48,7 +48,7 @@ function CurvePlot({ seriesList, xLabel, yLabel, activeCurveTab }) {
   }
 
   return (
-    <div style={{ width: "100%", height: 240, background: "rgba(0,0,0,0.15)", borderRadius: "6px", padding: "1rem 1rem 0.5rem 0.5rem" }}>
+    <div style={{ width: "100%", height: 240, background: "rgba(0,0,0,0.15)", borderRadius: "0px", padding: "1rem 1rem 0.5rem 0.5rem" }}>
       <ResponsiveContainer width="100%" height="100%">
         <LineChart margin={{ top: 10, right: 10, left: -25, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
@@ -71,7 +71,7 @@ function CurvePlot({ seriesList, xLabel, yLabel, activeCurveTab }) {
             label={{ value: yLabel, angle: -90, position: "insideLeft", offset: 10, fill: "var(--text-muted)", fontSize: 10 }}
           />
           <RechartsTooltip 
-            contentStyle={{ background: "rgba(4,5,15,0.95)", border: "1px solid var(--border-active)", color: "var(--text-strong)", borderRadius: "4px", fontSize: "0.75rem" }} 
+            contentStyle={{ background: "rgba(4,5,15,0.95)", border: "1px solid var(--border-active)", color: "var(--text-strong)", borderRadius: "0px", fontSize: "0.75rem" }} 
             formatter={(value) => [value.toFixed(4), yKey.toUpperCase()]}
             labelFormatter={(label) => `${xKey.toUpperCase()}: ${label.toFixed(4)}`}
           />
@@ -100,14 +100,14 @@ function ScoreHistogramPlot({ buckets }) {
   if (!buckets || !buckets.length) return null;
 
   return (
-    <div style={{ width: "100%", height: 220, background: "rgba(0,0,0,0.15)", borderRadius: "6px", padding: "1rem" }}>
+    <div style={{ width: "100%", height: 220, background: "rgba(0,0,0,0.15)", borderRadius: "0px", padding: "1rem" }}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={buckets} margin={{ top: 10, right: 10, left: -25, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
           <XAxis dataKey="label" stroke="var(--soft)" fontSize={9} />
           <YAxis stroke="var(--soft)" fontSize={9} />
           <RechartsTooltip 
-            contentStyle={{ background: "rgba(4,5,15,0.95)", border: "1px solid var(--border-active)", color: "var(--text-strong)", borderRadius: "4px", fontSize: "0.75rem" }}
+            contentStyle={{ background: "rgba(4,5,15,0.95)", border: "1px solid var(--border-active)", color: "var(--text-strong)", borderRadius: "0px", fontSize: "0.75rem" }}
             formatter={(value, name) => [value, name === "count" ? "Applicants" : name]}
           />
           <Bar dataKey="count" fill="rgba(48, 242, 210, 0.15)" stroke="var(--accent)" strokeWidth={1}>
@@ -138,13 +138,13 @@ function PanelWrapper({ title, loading, error, empty, emptyMessage = "Data unava
           <p className="mono-text" style={{ fontSize: "0.7rem", color: "var(--soft)" }}>// DECRYPTING ARTIFACT DATA...</p>
         </div>
       ) : error ? (
-        <div style={{ height: 240, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", border: "1px dashed var(--status-poor)", borderRadius: "6px", padding: "1.5rem", textAlign: "center" }}>
+        <div style={{ height: 240, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", border: "1px dashed var(--status-poor)", borderRadius: "0px", padding: "1.5rem", textAlign: "center" }}>
           <span style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>⚠️</span>
           <p className="mono-text" style={{ fontSize: "0.75rem", color: "var(--status-poor)", fontWeight: "bold" }}>ENDPOINT FAILED</p>
           <p className="mono-text" style={{ fontSize: "0.65rem", color: "var(--soft)", marginTop: "0.4rem" }}>{error.message || "Failed to load telemetry payload"}</p>
         </div>
       ) : empty ? (
-        <div style={{ height: 240, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", border: "1px dashed var(--line)", borderRadius: "6px", color: "var(--soft)", fontSize: "0.8rem" }}>
+        <div style={{ height: 240, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", border: "1px dashed var(--line)", borderRadius: "0px", color: "var(--soft)", fontSize: "0.8rem" }}>
           {emptyMessage}
         </div>
       ) : (
@@ -265,7 +265,7 @@ export default function Dashboard() {
   if (error) {
     return (
       <main className="assessment-page" style={{ maxWidth: '1000px', display: "flex", justifyContent: "center", alignItems: "center", minHeight: "60vh" }}>
-        <div style={{ textAlign: "center", border: "1px dashed var(--status-poor)", padding: "2.5rem", borderRadius: "8px", background: "rgba(0,0,0,0.2)" }}>
+        <div style={{ textAlign: "center", border: "1px dashed var(--status-poor)", padding: "2.5rem", borderRadius: "0px", background: "rgba(0,0,0,0.2)" }}>
           <h2 style={{ color: "var(--status-poor)", marginBottom: "1rem" }}>CONNECTION FAILED</h2>
           <p className="mono-text" style={{ fontSize: "0.8rem", color: "var(--soft)", marginBottom: "1.5rem" }}>
             The Evaluator backend service is currently unreachable. Make sure the FastAPI backend is running.
@@ -321,21 +321,21 @@ export default function Dashboard() {
             <button 
               className={`btn-cta ${activeTab === "performance" ? "active" : ""}`}
               onClick={() => setActiveTab("performance")}
-              style={{ padding: "0.5rem 1rem", fontSize: "0.75rem", background: activeTab === "performance" ? "var(--accent)" : "rgba(255,255,255,0.02)", color: activeTab === "performance" ? "var(--bg)" : "var(--text-strong)", border: "1px solid var(--line)", borderRadius: "4px", cursor: "pointer" }}
+              style={{ padding: "0.5rem 1rem", fontSize: "0.75rem", background: activeTab === "performance" ? "var(--accent)" : "rgba(255,255,255,0.02)", color: activeTab === "performance" ? "var(--bg)" : "var(--text-strong)", border: "1px solid var(--line)", borderRadius: "0px", cursor: "pointer" }}
             >
               PERFORMANCE
             </button>
             <button 
               className={`btn-cta ${activeTab === "drift" ? "active" : ""}`}
               onClick={() => setActiveTab("drift")}
-              style={{ padding: "0.5rem 1rem", fontSize: "0.75rem", background: activeTab === "drift" ? "var(--accent)" : "rgba(255,255,255,0.02)", color: activeTab === "drift" ? "var(--bg)" : "var(--text-strong)", border: "1px solid var(--line)", borderRadius: "4px", cursor: "pointer" }}
+              style={{ padding: "0.5rem 1rem", fontSize: "0.75rem", background: activeTab === "drift" ? "var(--accent)" : "rgba(255,255,255,0.02)", color: activeTab === "drift" ? "var(--bg)" : "var(--text-strong)", border: "1px solid var(--line)", borderRadius: "0px", cursor: "pointer" }}
             >
               DRIFT MONITORING
             </button>
             <button 
               className={`btn-cta ${activeTab === "fairness" ? "active" : ""}`}
               onClick={() => setActiveTab("fairness")}
-              style={{ padding: "0.5rem 1rem", fontSize: "0.75rem", background: activeTab === "fairness" ? "var(--accent)" : "rgba(255,255,255,0.02)", color: activeTab === "fairness" ? "var(--bg)" : "var(--text-strong)", border: "1px solid var(--line)", borderRadius: "4px", cursor: "pointer" }}
+              style={{ padding: "0.5rem 1rem", fontSize: "0.75rem", background: activeTab === "fairness" ? "var(--accent)" : "rgba(255,255,255,0.02)", color: activeTab === "fairness" ? "var(--bg)" : "var(--text-strong)", border: "1px solid var(--line)", borderRadius: "0px", cursor: "pointer" }}
             >
               FAIRNESS AUDIT
             </button>
@@ -345,26 +345,26 @@ export default function Dashboard() {
 
       {/* Grid of Key Status Metrics */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1rem", marginBottom: "1.5rem" }}>
-        <div style={{ border: '1px solid var(--line)', padding: '1.2rem', background: 'rgba(255,255,255,0.01)', borderRadius: '6px' }}>
+        <div style={{ border: '1px solid var(--line)', padding: '1.2rem', background: 'rgba(255,255,255,0.01)', borderRadius: "0px" }}>
           <div className="mono-text" style={{ color: 'var(--muted)', marginBottom: '0.4rem', fontSize: '0.7rem' }}>// MODEL ROC-AUC</div>
           <strong style={{ fontSize: '1.4rem', color: 'var(--text-strong)' }}>{overallStats?.auc_roc?.toFixed(4) || "N/A"}</strong>
           <span style={{ color: "var(--accent-green)", fontSize: "0.7rem", display: "block", marginTop: "0.2rem" }}>{overallStats?.model_name || "No model metrics"}</span>
         </div>
-        <div style={{ border: '1px solid var(--line)', padding: '1.2rem', background: 'rgba(255,255,255,0.01)', borderRadius: '6px' }}>
+        <div style={{ border: '1px solid var(--line)', padding: '1.2rem', background: 'rgba(255,255,255,0.01)', borderRadius: "0px" }}>
           <div className="mono-text" style={{ color: 'var(--muted)', marginBottom: '0.4rem', fontSize: '0.7rem' }}>// DRIFT PSI MONITOR</div>
           <strong style={{ fontSize: '1.4rem', color: drift?.verdict === "stable" ? "var(--accent-green)" : "var(--status-poor)" }}>
             {drift?.max_psi?.toFixed(4) || "N/A"}
           </strong>
           <span style={{ color: "var(--soft)", fontSize: "0.7rem", display: "block", marginTop: "0.2rem" }}>Verdict: {drift?.verdict?.toUpperCase() || "UNKNOWN"}</span>
         </div>
-        <div style={{ border: '1px solid var(--line)', padding: '1.2rem', background: 'rgba(255,255,255,0.01)', borderRadius: '6px' }}>
+        <div style={{ border: '1px solid var(--line)', padding: '1.2rem', background: 'rgba(255,255,255,0.01)', borderRadius: "0px" }}>
           <div className="mono-text" style={{ color: 'var(--muted)', marginBottom: '0.4rem', fontSize: '0.7rem' }}>// DEVIATION AUDIT</div>
           <strong style={{ fontSize: '1.4rem', color: fairness?.verdict === "fair" ? "var(--accent-green)" : "var(--status-fair)" }}>
             {fairness?.worst_auc_gap !== undefined ? `${(fairness.worst_auc_gap * 100).toFixed(2)}%` : "N/A"}
           </strong>
           <span style={{ color: "var(--soft)", fontSize: "0.7rem", display: "block", marginTop: "0.2rem" }}>Verdict: {fairnessStatusLabel}</span>
         </div>
-        <div style={{ border: '1px solid var(--line)', padding: '1.2rem', background: 'rgba(255,255,255,0.01)', borderRadius: '6px' }}>
+        <div style={{ border: '1px solid var(--line)', padding: '1.2rem', background: 'rgba(255,255,255,0.01)', borderRadius: "0px" }}>
           <div className="mono-text" style={{ color: 'var(--muted)', marginBottom: '0.4rem', fontSize: '0.7rem' }}>// LOCKED RUNTIME</div>
           <strong style={{ fontSize: '1.2rem', color: 'var(--text-strong)' }}>{activeModelName || health?.manifest_version || "N/A"}</strong>
           <span style={{ color: "var(--soft)", fontSize: "0.7rem", display: "block", marginTop: "0.2rem" }}>Engine Source: {health?.artifact_source || "manifest"}</span>
@@ -432,7 +432,7 @@ export default function Dashboard() {
               <h3 style={{ marginBottom: "1rem" }}>Score Distribution Summary</h3>
               {distribution && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.5rem", padding: "0.8rem", background: "rgba(255,255,255,0.01)", border: "1px solid var(--line)", borderRadius: "4px" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.5rem", padding: "0.8rem", background: "rgba(255,255,255,0.01)", border: "1px solid var(--line)", borderRadius: "0px" }}>
                     <div>
                       <span className="mono-text" style={{ fontSize: "0.65rem", color: "var(--soft)", display: "block" }}>// MEAN SCORE</span>
                       <strong>{distribution.summary.mean_score.toFixed(1)}</strong>
@@ -480,14 +480,14 @@ export default function Dashboard() {
                     <div style={{ display: "flex", justifyContent: "center", alignItems: "center", fontWeight: "bold", fontSize: "0.75rem", color: "var(--soft)", textTransform: "uppercase", padding: "10px", textAlign: "right" }}>
                       Actual Defaulter
                     </div>
-                    <div style={{ background: "rgba(255, 77, 94, 0.05)", border: "1px dashed rgba(255, 77, 94, 0.3)", borderRadius: "6px", padding: "1.2rem", textAlign: "center" }}>
+                    <div style={{ background: "rgba(255, 77, 94, 0.05)", border: "1px dashed rgba(255, 77, 94, 0.3)", borderRadius: "0px", padding: "1.2rem", textAlign: "center" }}>
                       <span className="mono-text" style={{ fontSize: "0.6rem", color: "rgba(255,77,94,0.7)", display: "block", marginBottom: "0.3rem" }}>TRUE NEGATIVE (TN)</span>
                       <strong style={{ fontSize: "1.6rem", color: "var(--text-strong)", display: "block" }}>{matrixItem.tn}</strong>
                       <span className="mono-text" style={{ fontSize: "0.7rem", color: "var(--soft)" }}>
                         {((matrixItem.tn / (matrixItem.tn + matrixItem.fp + matrixItem.fn + matrixItem.tp)) * 100).toFixed(1)}%
                       </span>
                     </div>
-                    <div style={{ background: "rgba(255, 173, 51, 0.05)", border: "1px dashed rgba(255, 173, 51, 0.3)", borderRadius: "6px", padding: "1.2rem", textAlign: "center" }}>
+                    <div style={{ background: "rgba(255, 173, 51, 0.05)", border: "1px dashed rgba(255, 173, 51, 0.3)", borderRadius: "0px", padding: "1.2rem", textAlign: "center" }}>
                       <span className="mono-text" style={{ fontSize: "0.6rem", color: "rgba(255,173,51,0.7)", display: "block", marginBottom: "0.3rem" }}>FALSE POSITIVE (FP)</span>
                       <strong style={{ fontSize: "1.6rem", color: "var(--text-strong)", display: "block" }}>{matrixItem.fp}</strong>
                       <span className="mono-text" style={{ fontSize: "0.7rem", color: "var(--soft)" }}>
@@ -500,14 +500,14 @@ export default function Dashboard() {
                     <div style={{ display: "flex", justifyContent: "center", alignItems: "center", fontWeight: "bold", fontSize: "0.75rem", color: "var(--soft)", textTransform: "uppercase", padding: "10px", textAlign: "right" }}>
                       Actual Repayer
                     </div>
-                    <div style={{ background: "rgba(255, 173, 51, 0.05)", border: "1px dashed rgba(255, 173, 51, 0.3)", borderRadius: "6px", padding: "1.2rem", textAlign: "center" }}>
+                    <div style={{ background: "rgba(255, 173, 51, 0.05)", border: "1px dashed rgba(255, 173, 51, 0.3)", borderRadius: "0px", padding: "1.2rem", textAlign: "center" }}>
                       <span className="mono-text" style={{ fontSize: "0.6rem", color: "rgba(255,173,51,0.7)", display: "block", marginBottom: "0.3rem" }}>FALSE NEGATIVE (FN)</span>
                       <strong style={{ fontSize: "1.6rem", color: "var(--text-strong)", display: "block" }}>{matrixItem.fn}</strong>
                       <span className="mono-text" style={{ fontSize: "0.7rem", color: "var(--soft)" }}>
                         {((matrixItem.fn / (matrixItem.tn + matrixItem.fp + matrixItem.fn + matrixItem.tp)) * 100).toFixed(1)}%
                       </span>
                     </div>
-                    <div style={{ background: "rgba(48, 242, 210, 0.05)", border: "1px dashed rgba(48, 242, 210, 0.3)", borderRadius: "6px", padding: "1.2rem", textAlign: "center" }}>
+                    <div style={{ background: "rgba(48, 242, 210, 0.05)", border: "1px dashed rgba(48, 242, 210, 0.3)", borderRadius: "0px", padding: "1.2rem", textAlign: "center" }}>
                       <span className="mono-text" style={{ fontSize: "0.6rem", color: "rgba(48,242,210,0.7)", display: "block", marginBottom: "0.3rem" }}>TRUE POSITIVE (TP)</span>
                       <strong style={{ fontSize: "1.6rem", color: "var(--text-strong)", display: "block" }}>{matrixItem.tp}</strong>
                       <span className="mono-text" style={{ fontSize: "0.7rem", color: "var(--soft)" }}>
@@ -520,28 +520,28 @@ export default function Dashboard() {
                 {/* Score Rates Panel */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "10px", justifyContent: "center" }}>
                   <div className="dashboard-metrics-subgrid">
-                    <div style={{ background: "rgba(255,255,255,0.01)", border: "1px solid var(--line)", padding: "0.8rem", borderRadius: "4px" }}>
+                    <div style={{ background: "rgba(255,255,255,0.01)", border: "1px solid var(--line)", padding: "0.8rem", borderRadius: "0px" }}>
                       <span className="mono-text" style={{ fontSize: "0.65rem", color: "var(--soft)", display: "block" }}>// CLASSIFIED ACCURACY</span>
                       <strong style={{ fontSize: "1.2rem", color: "var(--text-strong)" }}>{(matrixItem.accuracy * 100).toFixed(2)}%</strong>
                     </div>
-                    <div style={{ background: "rgba(255,255,255,0.01)", border: "1px solid var(--line)", padding: "0.8rem", borderRadius: "4px" }}>
+                    <div style={{ background: "rgba(255,255,255,0.01)", border: "1px solid var(--line)", padding: "0.8rem", borderRadius: "0px" }}>
                       <span className="mono-text" style={{ fontSize: "0.65rem", color: "var(--soft)", display: "block" }}>// F1 HARMONIC SCORE</span>
                       <strong style={{ fontSize: "1.2rem", color: "var(--text-strong)" }}>{(matrixItem.f1 * 100).toFixed(2)}%</strong>
                     </div>
                   </div>
 
                   <div className="dashboard-metrics-subgrid">
-                    <div style={{ background: "rgba(255,255,255,0.01)", border: "1px solid var(--line)", padding: "0.8rem", borderRadius: "4px" }}>
+                    <div style={{ background: "rgba(255,255,255,0.01)", border: "1px solid var(--line)", padding: "0.8rem", borderRadius: "0px" }}>
                       <span className="mono-text" style={{ fontSize: "0.65rem", color: "var(--soft)", display: "block" }}>// PRECISION RATE</span>
                       <strong style={{ fontSize: "1.2rem", color: "var(--text-strong)" }}>{(matrixItem.precision * 100).toFixed(2)}%</strong>
                     </div>
-                    <div style={{ background: "rgba(255,255,255,0.01)", border: "1px solid var(--line)", padding: "0.8rem", borderRadius: "4px" }}>
+                    <div style={{ background: "rgba(255,255,255,0.01)", border: "1px solid var(--line)", padding: "0.8rem", borderRadius: "0px" }}>
                       <span className="mono-text" style={{ fontSize: "0.65rem", color: "var(--soft)", display: "block" }}>// SENSITIVITY (RECALL)</span>
                       <strong style={{ fontSize: "1.2rem", color: "var(--text-strong)" }}>{(matrixItem.recall * 100).toFixed(2)}%</strong>
                     </div>
                   </div>
 
-                  <div style={{ background: "rgba(255,255,255,0.01)", border: "1px solid var(--line)", padding: "0.8rem", borderRadius: "4px" }}>
+                  <div style={{ background: "rgba(255,255,255,0.01)", border: "1px solid var(--line)", padding: "0.8rem", borderRadius: "0px" }}>
                     <span className="mono-text" style={{ fontSize: "0.65rem", color: "var(--soft)", display: "block" }}>// SPECIFICITY (REJECTION ACCURACY)</span>
                     <strong style={{ fontSize: "1.2rem", color: "var(--text-strong)" }}>{(matrixItem.specificity * 100).toFixed(2)}%</strong>
                   </div>
@@ -579,7 +579,7 @@ export default function Dashboard() {
                         <td style={{ padding: "0.8rem 1rem" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
                             <strong style={{ minWidth: "50px" }}>{feat.psi.toFixed(4)}</strong>
-                            <div style={{ flexGrow: 1, background: "rgba(255,255,255,0.05)", height: "4px", borderRadius: "2px", overflow: "hidden", maxWidth: "200px" }}>
+                            <div style={{ flexGrow: 1, background: "rgba(255,255,255,0.05)", height: "4px", borderRadius: "0px", overflow: "hidden", maxWidth: "200px" }}>
                               <div style={{ width: `${Math.min(feat.psi * 200, 100)}%`, height: "100%", background: statusColor }} />
                             </div>
                           </div>
@@ -591,7 +591,7 @@ export default function Dashboard() {
                             color: statusColor,
                             border: `1px solid ${statusColor}`,
                             padding: "0.2rem 0.5rem",
-                            borderRadius: "3px",
+                            borderRadius: "0px",
                             background: "rgba(0,0,0,0.2)"
                           }}>
                             {feat.status.toUpperCase()}
@@ -626,7 +626,7 @@ export default function Dashboard() {
                     the locked manifest keeps this under active review.
                   </p>
                 </div>
-                <div style={{ background: "rgba(255,255,255,0.01)", border: "1px solid var(--line)", padding: "1rem", borderRadius: "6px" }}>
+                <div style={{ background: "rgba(255,255,255,0.01)", border: "1px solid var(--line)", padding: "1rem", borderRadius: "0px" }}>
                   <span className="mono-text" style={{ fontSize: "0.7rem", color: "var(--soft)", display: "block" }}>// INDIVIDUAL FAIRNESS VERDICT</span>
                   <strong style={{ fontSize: "1.1rem", color: "var(--accent-green)", display: "block", marginTop: "0.2rem" }}>
                     {fairness.verdict.toUpperCase()} (AUC gap within limit)
@@ -671,7 +671,7 @@ export default function Dashboard() {
                                 color: statusColor,
                                 border: `1px solid ${statusColor}`,
                                 padding: "0.2rem 0.5rem",
-                                borderRadius: "3px",
+                                borderRadius: "0px",
                                 background: "rgba(0,0,0,0.2)"
                               }}>
                                 {metrics.flag.toUpperCase()}

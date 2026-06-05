@@ -14,17 +14,17 @@ import useSectionObserver from "../../hooks/useSectionObserver.js";
 
 function TacticalShell() {
   const location = useLocation();
-  const [loading, setLoading] = useState(location.pathname !== "/");
+  const [loading, setLoading] = useState(true);
   const [demoDrawerOpen, setDemoDrawerOpen] = useState(false);
   const sessionHash = useMemo(() => Math.random().toString(36).slice(2, 10).toUpperCase(), []);
-  useLenis(loading || location.pathname === "/");
+  useLenis(loading);
   useSectionObserver(location.pathname);
   useMagneticButton();
 
   return (
     <>
       <ExperienceCanvas />
-      {location.pathname !== "/" && <GrainOverlay />}
+      <GrainOverlay />
       <CustomCursor />
 
       {loading && <LoadingScreen onComplete={() => setLoading(false)} />}

@@ -18,7 +18,7 @@ export const LANDING_FRAMES = [
     index: "03",
     label: "MODEL",
     range: [0.34, 0.52],
-    summary: "ENSEMBLE LAYERS COMPRESS NOISE INTO DIRECTION.",
+    summary: "A GOVERNED MODEL COMPRESSES CONTEXT INTO DIRECTION.",
   },
   {
     id: "access",
@@ -54,8 +54,8 @@ export const LANDING_SPATIAL_COPY = [
   {
     id: "ensemble",
     kicker: "MODEL",
-    title: "SIX MODELS FIND THE SHAPE",
-    body: "STACKED / CALIBRATED / EXPLAINED",
+    title: "THE MODEL FINDS THE SHAPE",
+    body: "MONOTONIC / GOVERNED / EXPLAINED",
     className: "spatial-copy--model",
   },
   {
@@ -81,7 +81,7 @@ export const LANDING_GLYPH_FIELDS = [
   {
     id: "cipher-c",
     className: "glyph-field--c",
-    text: "STACKING ENSEMBLE / CALIBRATION / BEHAVIORAL TELEMETRY / EXPLAINABLE SIGNAL",
+    text: "MONOTONIC RUNTIME / GOVERNANCE / BEHAVIORAL TELEMETRY / EXPLAINABLE SIGNAL",
   },
 ];
 
