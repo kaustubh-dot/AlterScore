@@ -229,7 +229,7 @@ function UnityLandingCanvas() {
           if (active && !instanceRef.current) {
             enterFallback("Unity scene did not become ready before timeout.");
           }
-        }, 5000);
+        }, 30000);
 
         const unityInstance = await window.createUnityInstance(canvas, config, (value) => {
           if (!active) return;
