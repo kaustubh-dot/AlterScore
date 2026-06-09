@@ -235,26 +235,25 @@ export default function Processing({ payload, onComplete }) {
     };
   };
 
+  const progressPercent = Math.min((activeStep / steps.length) * 100, 100);
+
   return (
     <div className="processing-layout">
       <SignalCanvas />
-      <div className="processing-glow-orb" />
       
       <div className="processing-container container">
-        <div className="terminal-card shimmer-border">
-          <div className="terminal-header">
-            <Terminal size={14} className="terminal-icon" />
-            <span className="terminal-title">inference_engine.sh</span>
-            <div className="terminal-dots">
-              <span className="dot" />
-              <span className="dot" />
-              <span className="dot" />
+        <div className="processing-card">
+          <div className="processing-header">
+            <span className="processing-title">Cognitive Pipeline Calibration</span>
+            <div className="processing-meter-container">
+              <div 
+                className="processing-meter-fill"
+                style={{ width: `${progressPercent}%` }}
+              />
             </div>
           </div>
           
-          <div className="terminal-body">
-            <p className="terminal-line system">Initializing neural scoring stack...</p>
-            
+          <div className="processing-body">
             <div className="steps-list">
               {steps.map((step, idx) => {
                 const isCompleted = idx < activeStep;
@@ -271,21 +270,21 @@ export default function Processing({ payload, onComplete }) {
                       ) : isActive ? (
                         <span className="pulse-indicator" />
                       ) : (
-                        '◈'
+                        '—'
                       )}
                     </span>
                     <span className="step-label">{step.label}</span>
-                    {isCompleted && <span className="step-status">OK</span>}
-                    {isActive && <span className="step-status scanning animate-pulse">RUNNING</span>}
+                    {isCompleted && <span className="step-status">COMPLETED</span>}
+                    {isActive && <span className="step-status scanning">PROCESSING</span>}
                   </div>
                 );
               })}
             </div>
             
-            <div className="terminal-footer">
-              <p className="terminal-line warning">
-                Estimated inference pipeline time: 3–5 seconds
-              </p>
+            <div className="processing-footer">
+              <span className="processing-eta">
+                Calibrating behavioral telemetry • Please wait
+              </span>
             </div>
           </div>
         </div>

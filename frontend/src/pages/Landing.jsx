@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Brain, ShieldAlert, Cpu, HeartHandshake, Eye } from 'lucide-react';
+import { ArrowRight, Brain, HeartHandshake, Eye } from 'lucide-react';
 import SignalCanvas from '../components/hero/SignalCanvas';
 import ScrollReveal from '../components/animation/ScrollReveal';
 import GlowCard from '../components/ui/GlowCard';
 import MagneticButton from '../components/ui/MagneticButton';
-import GlitchText from '../components/animation/GlitchText';
+import TextReveal from '../components/animation/TextReveal';
 import './Landing.css';
 
 // Count-up helper hook
@@ -99,30 +99,27 @@ export default function Landing() {
       {/* Hero Section */}
       <header className="landing-hero" id="hero">
         <SignalCanvas />
-        <div className="hero-glow-orb" />
         <div className="hero-content container">
-          <ScrollReveal direction="up" delay={100}>
-            <p className="hero-eyebrow">Cognitive Credit System</p>
-          </ScrollReveal>
+          <div style={{ marginBottom: '16px' }}>
+            <TextReveal text="Cognitive Credit System" delay={100} />
+          </div>
           
-          <ScrollReveal direction="up" delay={250}>
-            <h1 className="hero-headline">
-              Credit intelligence <br />
-              beyond <em className="gradient-text-accent"><GlitchText text="history" /></em>.
-            </h1>
-          </ScrollReveal>
+          <h1 className="hero-headline">
+            <TextReveal text="Credit intelligence" delay={250} /> <br />
+            <TextReveal text="beyond history." delay={450} />
+          </h1>
           
-          <ScrollReveal direction="up" delay={400}>
+          <ScrollReveal direction="up" delay={650}>
             <div className="hero-cta">
               <MagneticButton onClick={startAssessment} className="btn-large" variant="primary">
                 <span>Start Assessment</span>
-                <ArrowRight size={16} />
+                <ArrowRight size={14} />
               </MagneticButton>
             </div>
           </ScrollReveal>
 
-          <ScrollReveal direction="up" delay={550}>
-            <div className="hero-meta typewriter">
+          <ScrollReveal direction="up" delay={800}>
+            <div className="hero-meta">
               <span>27 Questions • ~5 Minutes • Instant Decision</span>
             </div>
           </ScrollReveal>
@@ -137,36 +134,34 @@ export default function Landing() {
       {/* What We Measure Section */}
       <section className="section section-features">
         <div className="container">
-          <ScrollReveal direction="up">
-            <div className="section-header">
-              <span className="section-eyebrow">Interactive Sensors</span>
-              <h2 className="section-title"><GlitchText text="What We Measure" /></h2>
-            </div>
-          </ScrollReveal>
+          <div className="section-header">
+            <span className="section-eyebrow">Interactive Sensors</span>
+            <h2 className="section-title"><TextReveal text="What We Measure" /></h2>
+          </div>
 
           <div className="features-grid">
             <ScrollReveal direction="scale" delay={100} className="feature-reveal">
-              <GlowCard className="feature-card tech-card" style={{ '--card-accent': 'var(--accent-primary)' }}>
+              <GlowCard className="feature-card">
                 <div className="feature-icon-wrapper">
-                  <Brain size={24} />
+                  <Brain size={20} />
                 </div>
                 <h3 className="feature-title">Cognitive Reflection</h3>
               </GlowCard>
             </ScrollReveal>
 
             <ScrollReveal direction="scale" delay={200} className="feature-reveal">
-              <GlowCard className="feature-card tech-card" style={{ '--card-accent': 'var(--accent-cyan)' }}>
+              <GlowCard className="feature-card">
                 <div className="feature-icon-wrapper">
-                  <Eye size={24} />
+                  <Eye size={20} />
                 </div>
                 <h3 className="feature-title">Silent Telemetry</h3>
               </GlowCard>
             </ScrollReveal>
 
             <ScrollReveal direction="scale" delay={300} className="feature-reveal">
-              <GlowCard className="feature-card tech-card" style={{ '--card-accent': 'var(--accent-emerald)' }}>
+              <GlowCard className="feature-card">
                 <div className="feature-icon-wrapper">
-                  <HeartHandshake size={24} />
+                  <HeartHandshake size={20} />
                 </div>
                 <h3 className="feature-title">Resilience & Agency</h3>
               </GlowCard>
@@ -178,12 +173,10 @@ export default function Landing() {
       {/* How It Works Section */}
       <section className="section section-how">
         <div className="container">
-          <ScrollReveal direction="up">
-            <div className="section-header">
-              <span className="section-eyebrow">System Stepper</span>
-              <h2 className="section-title"><GlitchText text="How It Works" /></h2>
-            </div>
-          </ScrollReveal>
+          <div className="section-header">
+            <span className="section-eyebrow">System Stepper</span>
+            <h2 className="section-title"><TextReveal text="How It Works" /></h2>
+          </div>
 
           <div className="stepper-row-container">
             <div className="timeline-svg-wrapper">
@@ -195,7 +188,7 @@ export default function Landing() {
             
             <div className="stepper-row">
               <ScrollReveal direction="up" delay={100} className="step-reveal">
-                <GlowCard className="step-node tech-card">
+                <GlowCard className="step-node">
                   <div className="step-number-wrapper">
                     <span className="step-number">01</span>
                   </div>
@@ -204,7 +197,7 @@ export default function Landing() {
               </ScrollReveal>
 
               <ScrollReveal direction="up" delay={250} className="step-reveal">
-                <GlowCard className="step-node tech-card">
+                <GlowCard className="step-node">
                   <div className="step-number-wrapper">
                     <span className="step-number">02</span>
                   </div>
@@ -213,7 +206,7 @@ export default function Landing() {
               </ScrollReveal>
 
               <ScrollReveal direction="up" delay={400} className="step-reveal">
-                <GlowCard className="step-node tech-card">
+                <GlowCard className="step-node">
                   <div className="step-number-wrapper">
                     <span className="step-number">03</span>
                   </div>
@@ -231,28 +224,28 @@ export default function Landing() {
           <div className="stats-grid">
             <ScrollReveal direction="up" delay={100}>
               <div className="stat-item">
-                <div className="stat-number gradient-text">{triggerStats ? `${stat1}B` : '0B'}</div>
+                <div className="stat-number">{triggerStats ? `${stat1}B` : '0B'}</div>
                 <div className="stat-label">Unbanked Adults</div>
               </div>
             </ScrollReveal>
             
             <ScrollReveal direction="up" delay={200}>
               <div className="stat-item">
-                <div className="stat-number gradient-text">{triggerStats ? stat2 : '0'}</div>
+                <div className="stat-number">{triggerStats ? stat2 : '0'}</div>
                 <div className="stat-label">Behavioral Features</div>
               </div>
             </ScrollReveal>
 
             <ScrollReveal direction="up" delay={300}>
               <div className="stat-item">
-                <div className="stat-number gradient-text">{triggerStats ? stat3 : '0.00'}</div>
+                <div className="stat-number">{triggerStats ? stat3 : '0.00'}</div>
                 <div className="stat-label">Model AUC</div>
               </div>
             </ScrollReveal>
 
             <ScrollReveal direction="up" delay={400}>
               <div className="stat-item">
-                <div className="stat-number gradient-text">{triggerStats ? `${stat4}m` : '0m'}</div>
+                <div className="stat-number">{triggerStats ? `${stat4}m` : '0m'}</div>
                 <div className="stat-label">Time to Score</div>
               </div>
             </ScrollReveal>
@@ -265,15 +258,15 @@ export default function Landing() {
         <SignalCanvas />
         <div className="cta-container container">
           <ScrollReveal direction="scale">
-            <h2 className="cta-title gradient-text-accent text-glow">
-              <GlitchText text="Ready to be seen differently?" />
+            <h2 className="cta-title">
+              <TextReveal text="Ready to be seen differently?" />
             </h2>
           </ScrollReveal>
           <ScrollReveal direction="up" delay={200}>
             <div className="cta-btn-wrapper">
               <MagneticButton onClick={startAssessment} variant="primary">
                 <span>Begin Assessment</span>
-                <ArrowRight size={16} />
+                <ArrowRight size={14} />
               </MagneticButton>
             </div>
           </ScrollReveal>

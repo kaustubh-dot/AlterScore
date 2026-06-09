@@ -1,67 +1,28 @@
 .glow-card {
   position: relative;
-  border-radius: var(--radius-lg);
-  background: rgba(11, 18, 33, 0.4);
-  border: 1px solid rgba(76, 110, 245, 0.08);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  border: 1px solid var(--bg-border);
   overflow: hidden;
-  transition: background-color var(--duration-normal) var(--ease-smooth), border-color var(--duration-normal) var(--ease-smooth);
+  transition: 
+    background-color var(--duration-normal) var(--ease-smooth), 
+    border-color var(--duration-normal) var(--ease-smooth),
+    transform var(--duration-normal) var(--ease-smooth);
 }
 
 .glow-card:hover {
-  background: rgba(11, 18, 33, 0.65);
-  border-color: rgba(124, 58, 237, 0.2);
+  background-color: var(--bg-elevated);
+  border-color: var(--text-secondary);
+  transform: translateY(-2px);
 }
 
+/* Remove spotlight effects completely for editorial theme */
 .glow-card-spotlight {
-  position: absolute;
-  width: 250px;
-  height: 250px;
-  background: radial-gradient(circle, rgba(76, 110, 245, 0.08) 0%, rgba(124, 58, 237, 0.03) 50%, transparent 100%);
-  border-radius: 50%;
-  pointer-events: none;
-  transform: translate(-50%, -50%);
-  z-index: 0;
-  opacity: 0;
-  transition: opacity var(--duration-normal) var(--ease-smooth);
-  mix-blend-mode: screen;
-}
-
-.glow-card-hover .glow-card-spotlight {
-  opacity: 1;
+  display: none;
 }
 
 .glow-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(135deg, rgba(76, 110, 245, 0.1), rgba(124, 58, 237, 0.1));
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-  z-index: 1;
-  transition: background var(--duration-normal) var(--ease-smooth);
-}
-
-.glow-card-hover::before {
-  background: radial-gradient(
-    140px circle at var(--mouse-x) var(--mouse-y),
-    rgba(124, 58, 237, 0.6) 0%,
-    rgba(76, 110, 245, 0.2) 50%,
-    transparent 100__%
-  );
-}
-
-/* Fallback/safari compatibility check */
-.glow-card-hover::before {
-  background: radial-gradient(
-    140px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-    rgba(124, 58, 237, 0.6) 0%,
-    rgba(76, 110, 245, 0.2) 50%,
-    transparent 100%
-  );
+  display: none;
 }
 
 .glow-card-content {

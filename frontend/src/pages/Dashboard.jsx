@@ -3,7 +3,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Activity, ShieldCheck, Database, BarChart3, Radio, Sliders, ChevronRight, Terminal as TermIcon } from 'lucide-react';
 import ScrollReveal from '../components/animation/ScrollReveal';
 import GlowCard from '../components/ui/GlowCard';
-import GlitchText from '../components/animation/GlitchText';
+import TextReveal from '../components/animation/TextReveal';
 import './Dashboard.css';
 
 export default function Dashboard() {
@@ -161,15 +161,15 @@ export default function Dashboard() {
       <main className="dashboard-content">
         <header className="dashboard-header">
           <span className="dashboard-subtitle">Analytical Console</span>
-          <h1 className="dashboard-title gradient-text">
-            <GlitchText text="Model Command Center" />
+          <h1 className="dashboard-title">
+            <TextReveal text="Model Command Center" />
           </h1>
         </header>
 
         {/* Top Level KPIs */}
         <section className="kpi-row">
           <ScrollReveal direction="up" delay={50} className="kpi-reveal">
-            <GlowCard className="kpi-card tech-card">
+            <GlowCard className="kpi-card">
               <div className="kpi-label">Active Classifier</div>
               <div className="kpi-val" style={{ color: 'var(--accent-primary)', fontSize: '15px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 Stacking Ensemble
@@ -178,21 +178,21 @@ export default function Dashboard() {
           </ScrollReveal>
           
           <ScrollReveal direction="up" delay={150} className="kpi-reveal">
-            <GlowCard className="kpi-card tech-card">
+            <GlowCard className="kpi-card">
               <div className="kpi-label">Calibration Gap (ECE)</div>
               <div className="kpi-val">0.034</div>
             </GlowCard>
           </ScrollReveal>
 
           <ScrollReveal direction="up" delay={250} className="kpi-reveal">
-            <GlowCard className="kpi-card tech-card">
+            <GlowCard className="kpi-card">
               <div className="kpi-label">Max Feature Drift (PSI)</div>
               <div className="kpi-val" style={{ color: 'var(--accent-emerald)' }}>0.12 (Stable)</div>
             </GlowCard>
           </ScrollReveal>
 
           <ScrollReveal direction="up" delay={350} className="kpi-reveal">
-            <GlowCard className="kpi-card tech-card">
+            <GlowCard className="kpi-card">
               <div className="kpi-label">Validation Set AUC</div>
               <div className="kpi-val">0.812</div>
             </GlowCard>
@@ -201,7 +201,7 @@ export default function Dashboard() {
 
         {/* Model Metrics Table */}
         <ScrollReveal direction="up" delay={100}>
-          <section className="panel-card tech-card" style={{ marginBottom: '32px' }}>
+          <section className="panel-card" style={{ marginBottom: '32px' }}>
             <div className="panel-header">
               <h3 className="panel-title">Production Model Leaderboard</h3>
               <span className="panel-badge">Validation Months 11-12</span>
@@ -242,7 +242,7 @@ export default function Dashboard() {
         {/* Charts: ROC Curve & Score Distribution */}
         <div className="grid-6-6">
           <ScrollReveal direction="left" delay={200}>
-            <div className="panel-card tech-card">
+            <div className="panel-card">
               <div className="panel-header">
                 <h3 className="panel-title">ROC Curves (Overlaid)</h3>
                 <span className="panel-badge">Sensitivity</span>
@@ -264,7 +264,7 @@ export default function Dashboard() {
           </ScrollReveal>
 
           <ScrollReveal direction="right" delay={200}>
-            <div className="panel-card tech-card">
+            <div className="panel-card">
               <div className="panel-header">
                 <h3 className="panel-title">Population Score Distribution</h3>
                 <span className="panel-badge">Histogram</span>
@@ -290,7 +290,7 @@ export default function Dashboard() {
 
         {/* Interactive Threshold Calibration Hud */}
         <ScrollReveal direction="up" delay={100}>
-          <section className="panel-card tech-card" style={{ marginBottom: '32px' }}>
+          <section className="panel-card" style={{ marginBottom: '32px' }}>
             <div className="panel-header" style={{ borderBottom: '1px solid var(--bg-border)', paddingBottom: '12px' }}>
               <h3 className="panel-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Sliders size={16} style={{ color: 'var(--accent-cyan)' }} />
@@ -375,7 +375,7 @@ export default function Dashboard() {
         {/* Charts: Calibration Curve & Global Importance */}
         <div className="grid-6-6">
           <ScrollReveal direction="left" delay={200}>
-            <div className="panel-card tech-card">
+            <div className="panel-card">
               <div className="panel-header">
                 <h3 className="panel-title">Global Feature Importance (SHAP)</h3>
                 <span className="panel-badge">Top Contributing Features</span>
@@ -395,7 +395,7 @@ export default function Dashboard() {
           </ScrollReveal>
 
           <ScrollReveal direction="right" delay={200}>
-            <div className="panel-card tech-card">
+            <div className="panel-card">
               <div className="panel-header">
                 <h3 className="panel-title">Calibration Curves</h3>
                 <span className="panel-badge">Expected Calibration Gap</span>
@@ -418,7 +418,7 @@ export default function Dashboard() {
 
         {/* Live System Logging Panel */}
         <ScrollReveal direction="up" delay={300}>
-          <section className="panel-card tech-card" style={{ border: '1px solid rgba(6, 182, 212, 0.2)' }}>
+          <section className="panel-card" style={{ border: '1px solid var(--bg-border)' }}>
             <div className="panel-header">
               <h3 className="panel-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <TermIcon size={14} style={{ color: 'var(--accent-cyan)' }} />

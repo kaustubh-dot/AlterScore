@@ -3,7 +3,7 @@ import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { ShieldCheck, TrendingUp, Sparkles, Sliders, RotateCcw, LayoutDashboard, AlertCircle } from 'lucide-react';
 import ScrollReveal from '../components/animation/ScrollReveal';
 import GlowCard from '../components/ui/GlowCard';
-import GlitchText from '../components/animation/GlitchText';
+import TextReveal from '../components/animation/TextReveal';
 import './Results.css';
 
 export default function Results() {
@@ -207,17 +207,7 @@ export default function Results() {
               />
             </svg>
 
-            {/* Particle Burst */}
-            {animationStep >= 2 && (
-              <div className="particle-burst">
-                <div className="particle p1" style={{ '--color': bandColor }} />
-                <div className="particle p2" style={{ '--color': bandColor }} />
-                <div className="particle p3" style={{ '--color': bandColor }} />
-                <div className="particle p4" style={{ '--color': bandColor }} />
-                <div className="particle p5" style={{ '--color': bandColor }} />
-                <div className="particle p6" style={{ '--color': bandColor }} />
-              </div>
-            )}
+
 
             {/* Data values inside circle */}
             <div className="score-center-data">
@@ -238,7 +228,7 @@ export default function Results() {
                   opacity: animationStep >= 3 ? 1 : 0
                 }}
               >
-                <GlitchText text={band} triggerOnMount />
+                <TextReveal text={band} />
               </span>
             </div>
           </div>
@@ -258,7 +248,7 @@ export default function Results() {
         {/* Info Grid (Bands & Loan Limits) */}
         <div className={`info-cards-row fade-in-content ${animationStep >= 4 ? 'visible' : ''}`}>
           <ScrollReveal direction="up" delay={100}>
-            <GlowCard className="result-card tech-card">
+            <GlowCard className="result-card">
               <span className="card-kicker">Risk Assessment</span>
               <h3 className="card-title">Band Verdict</h3>
               <p className="card-body">{bandDesc}</p>
@@ -266,7 +256,7 @@ export default function Results() {
           </ScrollReveal>
 
           <ScrollReveal direction="up" delay={200}>
-            <GlowCard className="result-card tech-card">
+            <GlowCard className="result-card">
               <span className="card-kicker">Lending Access</span>
               <h3 className="card-title">Approved Loan Limit</h3>
               {minAmount > 0 ? (
@@ -287,11 +277,11 @@ export default function Results() {
             <div className="section-header" style={{ textAlign: 'left', marginBottom: '24px' }}>
               <span className="section-eyebrow">Explainable AI</span>
               <h2 className="section-title" style={{ fontSize: 'var(--text-xl)' }}>
-                <GlitchText text="What Drove Your Score" />
+                <TextReveal text="What Drove Your Score" />
               </h2>
             </div>
 
-            <GlowCard className="shap-table result-card tech-card">
+            <GlowCard className="shap-table result-card">
               {scoreData.explanation.map((item, idx) => {
                 const isPos = item.direction === 'positive';
                 const maxShap = 0.15; // normalize max bar width
@@ -321,7 +311,7 @@ export default function Results() {
 
         {/* SCORE OPTIMIZER PLAYGROUND WIDGET */}
         <ScrollReveal direction="up" delay={400}>
-          <section className={`optimizer-widget tech-card fade-in-content ${animationStep >= 4 ? 'visible' : ''}`}>
+          <section className={`optimizer-widget fade-in-content ${animationStep >= 4 ? 'visible' : ''}`}>
             <div className="optimizer-header">
               <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0, fontSize: '15px' }}>
                 <Sliders size={16} style={{ color: 'var(--accent-cyan)' }} />
@@ -397,14 +387,14 @@ export default function Results() {
           <div className="section-header" style={{ textAlign: 'left', marginBottom: '24px' }}>
             <span className="section-eyebrow">Counterfactual Recommendations</span>
             <h2 className="section-title" style={{ fontSize: 'var(--text-xl)' }}>
-              <GlitchText text="What Could Move You Up" />
+              <TextReveal text="What Could Move You Up" />
             </h2>
           </div>
 
           <div className="dice-list">
             {scoreData.counterfactual_actions.map((act, idx) => (
               <ScrollReveal direction="scale" delay={idx * 100} key={idx}>
-                <GlowCard className="dice-card tech-card">
+                <GlowCard className="dice-card">
                   <span className="dice-feature-change">
                     Gain: +{act.estimated_score_gain} Pts
                   </span>
@@ -420,14 +410,14 @@ export default function Results() {
           <div className="section-header" style={{ textAlign: 'left', marginBottom: '24px' }}>
             <span className="section-eyebrow">Pacing Guides</span>
             <h2 className="section-title" style={{ fontSize: 'var(--text-xl)' }}>
-              <GlitchText text="System Guidance Tips" />
+              <TextReveal text="System Guidance Tips" />
             </h2>
           </div>
 
           <div className="tips-list">
             {scoreData.improvement_tips.map((tip, idx) => (
               <ScrollReveal direction="scale" delay={idx * 100} key={idx}>
-                <GlowCard className="tip-card tech-card">
+                <GlowCard className="tip-card">
                   <h4 className="tip-header">{tip.title}</h4>
                   <p className="tip-body">{tip.body}</p>
                 </GlowCard>

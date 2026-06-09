@@ -1,3 +1,5 @@
+/* Dashboard Page Redesign (Awwwards Editorial Style) */
+
 .dashboard-layout {
   display: flex;
   min-height: 100vh;
@@ -23,9 +25,9 @@
   font-size: var(--text-md);
   color: var(--text-primary);
   font-weight: 700;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  margin-bottom: var(--space-8);
+  margin-bottom: var(--space-10);
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -42,7 +44,7 @@
   align-items: center;
   gap: var(--space-3);
   padding: 10px var(--space-4);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   color: var(--text-secondary);
   text-decoration: none;
   font-size: var(--text-sm);
@@ -50,24 +52,25 @@
   font-family: var(--font-body);
   position: relative;
   overflow: hidden;
+  border-left: 3px solid transparent;
 }
 
 .sidebar-item:hover, .sidebar-item.active {
   color: var(--text-primary);
-  background: rgba(6, 182, 212, 0.05);
-  box-shadow: 0 0 16px rgba(6, 182, 212, 0.05);
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .sidebar-item.active {
-  border-left: 2.5px solid var(--accent-cyan);
+  border-left-color: #FFFFFF;
 }
 
 .sidebar-footer {
   margin-top: auto;
-  font-size: 10px;
+  font-size: 9px;
   color: var(--text-muted);
   font-family: var(--font-mono);
   text-align: center;
+  letter-spacing: 0.05em;
 }
 
 /* Content Frame */
@@ -92,20 +95,24 @@
 
 .dashboard-header {
   margin-bottom: var(--space-10);
+  border-bottom: 1px solid var(--bg-border);
+  padding-bottom: var(--space-4);
 }
 
 .dashboard-subtitle {
   font-family: var(--font-mono);
   font-size: var(--text-xs);
-  color: var(--accent-cyan);
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-1);
+  display: block;
 }
 
 .dashboard-title {
   font-family: var(--font-display);
   font-size: var(--text-3xl);
+  font-weight: 300;
   color: var(--text-primary);
 }
 
@@ -143,9 +150,9 @@
 
 .kpi-val {
   font-family: var(--font-mono);
-  font-size: var(--text-2xl);
-  color: var(--text-number);
-  font-weight: 700;
+  font-size: var(--text-lg);
+  color: #FFFFFF;
+  font-weight: 600;
 }
 
 /* Grid blocks */
@@ -163,11 +170,10 @@
 }
 
 .panel-card {
-  background: var(--bg-elevated);
+  background: var(--bg-surface);
   border: 1px solid var(--bg-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-sm);
   padding: var(--space-6);
-  box-shadow: var(--shadow-card);
 }
 
 .panel-header {
@@ -179,20 +185,20 @@
 
 .panel-title {
   font-family: var(--font-body);
-  font-size: var(--text-sm);
+  font-size: var(--text-xs);
   font-weight: 600;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-secondary);
   margin: 0;
 }
 
 .panel-badge {
-  background: var(--bg-muted);
+  background: transparent;
   border: 1px solid var(--bg-border);
-  color: var(--text-secondary);
+  color: var(--text-muted);
   font-family: var(--font-mono);
-  font-size: var(--text-xs);
+  font-size: 10px;
   padding: 1px 6px;
   border-radius: var(--radius-sm);
 }
@@ -236,7 +242,7 @@
 }
 
 .dashboard-table tr:hover td {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(255, 255, 255, 0.015);
   color: var(--text-primary);
 }
 
@@ -246,8 +252,8 @@
 }
 
 .dashboard-table tr.highlighted td {
-  background: rgba(76, 110, 245, 0.05);
-  border-bottom-color: var(--accent-primary);
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom-color: #FFFFFF;
   color: var(--text-primary);
 }
 
@@ -279,35 +285,35 @@
 }
 
 .matrix-cell {
-  background: var(--bg-surface);
+  background: var(--bg-void);
   border: 1px solid var(--bg-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   padding: var(--space-4);
   transition: all var(--duration-fast) var(--ease-smooth);
 }
 
 .matrix-cell:hover {
-  border-color: rgba(76, 110, 245, 0.2);
-  transform: translateY(-1px);
+  border-color: var(--text-muted);
 }
 
 .matrix-num {
   font-size: var(--text-lg);
-  color: var(--text-number);
-  font-weight: 700;
+  color: #FFFFFF;
+  font-weight: 600;
 }
 
 .matrix-lbl {
-  font-size: 9px;
+  font-size: 8px;
   color: var(--text-muted);
   text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 /* Live API request log screen */
 .terminal-screen {
-  background: #020409;
-  border: 1px solid rgba(6, 182, 212, 0.25);
-  border-radius: var(--radius-md);
+  background: var(--bg-void);
+  border: 1px solid var(--bg-border);
+  border-radius: var(--radius-sm);
   padding: var(--space-4);
   font-family: var(--font-mono);
   font-size: 11px;
@@ -326,12 +332,12 @@
 }
 
 .log-line .method {
-  color: var(--accent-cyan);
-  font-weight: 700;
+  color: #FFFFFF;
+  font-weight: 500;
 }
 
 .log-line .path {
-  color: var(--text-primary);
+  color: var(--text-secondary);
 }
 
 .log-line .status-ok {
@@ -339,5 +345,5 @@
 }
 
 .log-line .score-val {
-  color: var(--text-number);
+  color: #FFFFFF;
 }

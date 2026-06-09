@@ -26,7 +26,7 @@ export default function Navbar() {
     <nav className={`navbar ${scrolled ? 'navbar-scrolled' : ''}`}>
       <div className="navbar-container container">
         <Link to="/" className="navbar-logo">
-          <Activity className="logo-icon animate-pulse" size={16} />
+          <Activity className="logo-icon" size={16} />
           <span className="logo-text">AlterScore</span>
           <span className="logo-tag">v2.0</span>
         </Link>

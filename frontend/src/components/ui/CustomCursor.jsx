@@ -18,7 +18,7 @@ export default function CustomCursor() {
       setHidden(false);
       
       if (dotRef.current) {
-        dotRef.current.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0)`;
+        dotRef.current.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0) translate(-50%, -50%)`;
       }
     };
 
@@ -77,7 +77,9 @@ export default function CustomCursor() {
       <div 
         ref={ringRef} 
         className={`cursor-ring ${hidden ? 'hidden' : ''} ${hovered ? 'hover' : ''} ${clicked ? 'active' : ''}`} 
-      />
+      >
+        <div className="cursor-ring-inner" />
+      </div>
     </>
   );
 }
