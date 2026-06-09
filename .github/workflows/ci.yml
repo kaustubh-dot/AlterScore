@@ -35,18 +35,7 @@ jobs:
       - name: Run Ruff Linter
         run: ruff check backend scripts tests
 
-      - name: Set up Node.js 18
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
 
-      - name: Run Frontend Lint Checks
-        run: |
-          cd frontend
-          npm ci
-          npm run lint --if-present
 
   backend-tests:
     name: Backend API & ML Test Suite
@@ -108,26 +97,3 @@ jobs:
         run: |
           python scripts/validation/verify_reproducibility.py
 
-  frontend-build:
-    name: Frontend Production Build compilation
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js 18
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Install NPM Packages
-        run: |
-          cd frontend
-          npm ci
-
-      - name: Compile Production Build
-        run: |
-          cd frontend
-          npm run build

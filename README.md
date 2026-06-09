@@ -4,17 +4,14 @@
 
 **An enterprise-grade, ethically governed alternative credit scoring platform that leverages psychometric assessments, rich behavioral telemetry, and NLP-derived resilience cues to safely score thin-file and unbanked borrowers.**
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-alterscore.vercel.app-blue?style=for-the-badge&logo=vercel)](https://alterscore.vercel.app/)
 [![Backend API](https://img.shields.io/badge/Backend-Hugging%20Face%20Spaces-yellow?style=for-the-badge&logo=huggingface)](https://huggingface.co/spaces/coolbot22/alterscore-backend)
 [![CI/CD](https://img.shields.io/github/actions/workflow/status/kaustubh-dot/AlterScore/ci.yml?branch=main&style=for-the-badge&label=Build&logo=github)](https://github.com/kaustubh-dot/AlterScore/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
 ![Python 3.12](https://img.shields.io/badge/Python-3.12+-3776AB?style=flat-square&logo=python&logoColor=white)
-![React 18](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?style=flat-square&logo=fastapi&logoColor=white)
 ![XGBoost Monotonic](https://img.shields.io/badge/XGBoost-Monotonic-red?style=flat-square&logo=xgboost&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Supported-2496ED?style=flat-square&logo=docker&logoColor=white)
-![Vite 6](https://img.shields.io/badge/Vite-6.0+-646CFF?style=flat-square&logo=vite&logoColor=white)
 
 </div>
 
@@ -107,15 +104,14 @@ The active production model is a manifest-backed, highly optimized **Monotonic X
 
 ## 🚀 Quickstart
 
-Run both the backend and frontend services locally.
+Run the backend service locally.
 
 ### Prerequisites
 * Python `3.12.x`
-* Node.js `18.x` or later (NPM `9.x` - `11.x`)
 
 ---
 
-### 1. Backend Setup & Startup
+### Backend Setup & Startup
 Run these commands from the repository root directory:
 
 ```powershell
@@ -144,24 +140,6 @@ python -m uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000
 
 ---
 
-### 2. Frontend Setup & Startup
-In a separate terminal, navigate to the frontend folder:
-
-```powershell
-# 1. Navigate to the frontend directory
-cd frontend
-
-# 2. Install NPM dependencies
-npm install
-
-# 3. Launch Vite development server
-npm run dev -- --host 127.0.0.1 --port 5173
-```
-
-* **Frontend Local App:** `http://127.0.0.1:5173`
-
----
-
 ## 🧪 Validation & Verification
 
 Ensure model health, reproducibility, and API contract compliance:
@@ -187,7 +165,6 @@ Ensure model health, reproducibility, and API contract compliance:
 | Directory / File | Purpose |
 | :--- | :--- |
 | **`backend/`** | FastAPI server, validation layers, ML scoring, and local logging services. |
-| **`frontend/`** | React + Vite single page application containing psychometrics assessment and evaluator views. |
 | **`models/`** | Production manifest file (`production_manifest.json`), preprocess pipelines, and saved model binaries. |
 | **`scripts/`** | Development setup scripts, environment initialization tools. |
 | **`tests/`** | Pytest unit test coverage and high-fidelity integrated API smoke tests. |
@@ -204,7 +181,6 @@ For detailed architectural and regulatory analysis, refer to the documents in ou
 * [docs/GOVERNANCE_WORKFLOW.md](docs/GOVERNANCE_WORKFLOW.md) — Promotion requirements, mathematical constraints, and audit models.
 * [docs/MODEL_SELECTION_DECISIONS.md](docs/MODEL_SELECTION_DECISIONS.md) — Auditable justification for monotonic tree selection over neural networks.
 * [docs/API_CONTRACTS.md](docs/API_CONTRACTS.md) — Comprehensive request and response JSON schema contracts.
-* [docs/VERCEL_DEPLOYMENT.md](docs/VERCEL_DEPLOYMENT.md) — Step-by-step runbook for high-performance frontend hosting.
 * [docs/FREE_HOSTING_STRATEGY.md](docs/FREE_HOSTING_STRATEGY.md) — Practical strategies for hosting standard Python ML packages for free.
 * [docs/SETUP.md](docs/SETUP.md) — Broad onboarding setup guides for developers.
 

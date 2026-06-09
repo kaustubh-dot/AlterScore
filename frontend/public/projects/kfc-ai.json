@@ -1,9 +1,0 @@
-{
-    "title": "KFC",
-    "subtitle": "AI Platform",
-    "backgroundVideo": "https://player.vimeo.com/video/1173831772",
-    "backgroundImage": "",
-    "description": "Turning data into actionable intelligence through AI.<br>A custom AI agent built on KFC Italy’s data ecosystem, leveraging a centralized data lake with acquisition, AOV, retention, order volume, and BI metrics.<br>The system interprets performance trends and generates predictive insights to support strategic decisions for managers and investors.",
-    "industry": "QSR & FOOD SERVICE",
-    "services": ["AI AGENT DEVELOPMENT", "DATA LAKE ARCHITECTURE", "BUSINESS INTELLIGENCE SYSTEMS", "PREDICTIVE ANALYTICS"]
-}
