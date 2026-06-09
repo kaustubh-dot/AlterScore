@@ -1,96 +1,99 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { Activity } from 'lucide-react';
 import './Preloader.css';
 
-const STATUS_PHASES = [
-  { max: 20, text: '01 / SYSTEM_BOOT_SEQUENCE' },
-  { max: 45, text: '02 / SENSOR_MATRIX_ONLINE' },
-  { max: 70, text: '03 / ANALYZING_COGNITIVE_BIAS' },
-  { max: 90, text: '04 / COMPILING_TELEMETRY_PIPELINE' },
-  { max: 99, text: '05 / RUNNING_STACKING_CALIBRATOR' },
-  { max: 100, text: '06 / CONTEXT_CALIBRATED' }
-];
-
 export default function Preloader({ onComplete }) {
-  const [count, setCount] = useState(0);
-  const [statusText, setStatusText] = useState(STATUS_PHASES[0].text);
-  const [isExiting, setIsExiting] = useState(false);
-  const requestRef = useRef(null);
+  const [percent, setPercent] = useState(0);
+  const [blur, setBlur] = useState(30);
+  const [opacity, setOpacity] = useState(1);
   const startTimeRef = useRef(null);
+  const requestRef = useRef(null);
 
   useEffect(() => {
-    const duration = 2800; // Simulated loading time in ms
+    const duration = 2500; // total duration: 2.5s
+    const activeDuration = 1900; // counter/ruler active time: 1.9s
 
-    const animateCount = (timestamp) => {
+    const step = (timestamp) => {
       if (!startTimeRef.current) startTimeRef.current = timestamp;
       const elapsed = timestamp - startTimeRef.current;
       const progress = Math.min(elapsed / duration, 1);
 
-      // Non-linear ease-in-out curve (fast start, slow crawl, quick finish)
-      let easeProgress;
-      if (progress < 0.3) {
-        // Fast start
-        easeProgress = progress * 2;
-      } else if (progress < 0.85) {
-        // Slow deliberation crawl
-        easeProgress = 0.6 + (progress - 0.3) * 0.45;
-      } else {
-        // Rapid finalization
-        easeProgress = 0.8475 + (progress - 0.85) * 1.016;
+      // 1) Blur animation: 30px -> 0px over total duration
+      const currentBlur = 30 * (1 - progress);
+      setBlur(currentBlur);
+
+      // 2) Opacity fade out in the last 500ms (from 2.0s to 2.5s)
+      if (elapsed >= 2000) {
+        const fadeProgress = (elapsed - 2000) / 500;
+        setOpacity(1 - Math.min(fadeProgress, 1));
       }
 
-      const currentCount = Math.min(Math.floor(easeProgress * 100), 100);
-      setCount(currentCount);
+      // 3) Percent progress (0 to 100 in 1.9s)
+      const countProgress = Math.min(elapsed / activeDuration, 1);
+      setPercent(Math.round(countProgress * 100));
 
-      // Cycle status texts based on percentage
-      const activePhase = STATUS_PHASES.find(p => currentCount <= p.max) || STATUS_PHASES[STATUS_PHASES.length - 1];
-      setStatusText(activePhase.text);
-
-      if (progress < 1 && currentCount < 100) {
-        requestRef.current = requestAnimationFrame(animateCount);
+      if (elapsed < duration) {
+        requestRef.current = requestAnimationFrame(step);
       } else {
-        // Hit 100% and initiate curtain slide-up
-        setCount(100);
-        setStatusText(STATUS_PHASES[STATUS_PHASES.length - 1].text);
-        
-        setTimeout(() => {
-          setIsExiting(true);
-          // Wait for CSS slide transition to complete before triggering main mount
-          setTimeout(() => {
-            onComplete();
-          }, 800); // matches CSS exit animation time
-        }, 300);
+        onComplete();
       }
     };
 
-    requestRef.current = requestAnimationFrame(animateCount);
-
+    requestRef.current = requestAnimationFrame(step);
     return () => {
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
     };
   }, [onComplete]);
 
-  // Format count to 2 digits (e.g. 05) or 3 digits (100)
-  const formattedCount = count.toString().padStart(2, '0');
+  // Translate scale from 0% to -75% based on percent progress (max 100)
+  const translationPercent = -75 * (percent / 100);
+
+  // Generate tick marks (41 ticks, spacing 20px apart to fill 800px)
+  const renderTicks = () => {
+    return Array.from({ length: 41 }).map((_, i) => {
+      const isMajor = i % 5 === 0;
+      return (
+        <div 
+          key={i} 
+          className={`ruler-tick ${isMajor ? 'major' : 'minor'}`}
+        />
+      );
+    });
+  };
 
   return (
-    <div className={`preloader-overlay ${isExiting ? 'exit-slide' : ''}`}>
-      {/* Visual Alignment grid marks */}
-      <div className="preloader-grid-lines" />
-      
-      <div className="preloader-content">
-        <div className="preloader-header">
-          <span className="preloader-kicker">AlterScore // Behavioral Core</span>
-        </div>
+    <div 
+      className="preloader-overlay"
+      style={{
+        backdropFilter: `blur(${blur}px)`,
+        WebkitBackdropFilter: `blur(${blur}px)`,
+        opacity: opacity,
+      }}
+    >
+      {/* Left Aligned: Brand Logo Icon */}
+      <div className="preloader-icon-container">
+        <Activity className="preloader-icon" size={18} />
+        <span className="preloader-brand">AlterScore</span>
+      </div>
 
-        <div className="preloader-center">
-          <div className="preloader-counter-wrapper">
-            <span className="preloader-number">{formattedCount}</span>
-            <span className="preloader-percent">%</span>
-          </div>
+      {/* Center Aligned: Vertical Ruler Tape viewport */}
+      <div className="preloader-scale-viewport">
+        <div className="shadow-top" />
+        <div 
+          className="preloader-scale-track"
+          style={{ transform: `translate3d(0, ${translationPercent}%, 0)` }}
+        >
+          <div className="ruler-segment">{renderTicks()}</div>
+          <div className="ruler-segment">{renderTicks()}</div>
         </div>
+        <div className="shadow-bot" />
+      </div>
 
-        <div className="preloader-footer">
-          <span className="preloader-status">{statusText}</span>
+      {/* Right Aligned: Percentage Text Counter */}
+      <div className="preloader-percent-container">
+        <div className="percent-block">
+          <span className="preloader-percent-num">{percent}</span>
+          <span className="preloader-percent-symbol">%</span>
         </div>
       </div>
     </div>
