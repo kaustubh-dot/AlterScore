@@ -11,13 +11,9 @@ import Preloader from './components/ui/Preloader';
 import './styles/global.css';
 
 export default function App() {
-  const [showPreloader, setShowPreloader] = useState(() => {
-    // Only run preloader once per session to prevent exhaustion on reload/navigation
-    return sessionStorage.getItem('alterscore_session_loaded') !== 'true';
-  });
+  const [showPreloader, setShowPreloader] = useState(true);
 
   const handlePreloadComplete = () => {
-    sessionStorage.setItem('alterscore_session_loaded', 'true');
     setShowPreloader(false);
   };
 
