@@ -2,6 +2,9 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Brain, ShieldAlert, Cpu, HeartHandshake, Eye } from 'lucide-react';
 import SignalCanvas from '../components/hero/SignalCanvas';
+import ScrollReveal from '../components/animation/ScrollReveal';
+import GlowCard from '../components/ui/GlowCard';
+import MagneticButton from '../components/ui/MagneticButton';
 import './Landing.css';
 
 // Count-up helper hook
@@ -11,7 +14,6 @@ function useCountUp(target, duration = 1500, startCount = false) {
   useEffect(() => {
     if (!startCount) return;
     
-    // Parse target to understand float vs integer
     const isFloat = target.toString().includes('.');
     const targetVal = parseFloat(target);
     if (isNaN(targetVal)) return;
@@ -23,7 +25,6 @@ function useCountUp(target, duration = 1500, startCount = false) {
       const elapsed = timestamp - startTime;
       const progress = Math.min(elapsed / duration, 1);
       
-      // Easing curve (easeOutQuad)
       const easeProgress = progress * (2 - progress);
       const current = easeProgress * targetVal;
 
@@ -36,7 +37,7 @@ function useCountUp(target, duration = 1500, startCount = false) {
       if (progress < 1) {
         requestAnimationFrame(updateCount);
       } else {
-        setCount(target); // Force final exact value
+        setCount(target);
       }
     };
 
@@ -63,7 +64,6 @@ export default function Landing() {
 
     window.addEventListener('scroll', handleScroll);
 
-    // Setup intersection observer for stats counting
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -84,11 +84,10 @@ export default function Landing() {
     };
   }, []);
 
-  // Set up stats count-ups
-  const stat1 = useCountUp(1.4, 2000, triggerStats); // 1.4B
-  const stat2 = useCountUp(39, 1500, triggerStats); // 39 features
-  const stat3 = useCountUp(0.76, 2000, triggerStats); // 0.76 AUC
-  const stat4 = useCountUp(5, 1200, triggerStats); // 5 min
+  const stat1 = useCountUp(1.4, 2000, triggerStats);
+  const stat2 = useCountUp(39, 1500, triggerStats);
+  const stat3 = useCountUp(0.76, 2000, triggerStats);
+  const stat4 = useCountUp(5, 1200, triggerStats);
 
   const startAssessment = () => {
     navigate('/assessment');
@@ -99,28 +98,33 @@ export default function Landing() {
       {/* Hero Section */}
       <header className="landing-hero" id="hero">
         <SignalCanvas />
+        <div className="hero-glow-orb" />
         <div className="hero-content container">
-          <p className="hero-eyebrow animate-fade-up">Cognitive Credit System</p>
-          <h1 className="hero-headline animate-fade-up">
-            Credit intelligence <br />
-            beyond <em>history</em>.
-          </h1>
-          <p className="hero-subhead animate-fade-up">
-            We read how you think, how you decide, and how you recover — not what traditional banks have recorded about you.
-          </p>
-          <div className="hero-cta animate-fade-up">
-            <button onClick={startAssessment} className="btn btn-primary btn-large">
-              <span>Start Assessment</span>
-              <ArrowRight size={16} />
-            </button>
-          </div>
-          <div className="hero-meta animate-fade-up">
-            <span>27 Questions</span>
-            <span className="hero-meta-dot">•</span>
-            <span>~5 Minutes</span>
-            <span className="hero-meta-dot">•</span>
-            <span>Instant Decisions</span>
-          </div>
+          <ScrollReveal direction="up" delay={100}>
+            <p className="hero-eyebrow">Cognitive Credit System</p>
+          </ScrollReveal>
+          
+          <ScrollReveal direction="up" delay={250}>
+            <h1 className="hero-headline">
+              Credit intelligence <br />
+              beyond <em className="gradient-text-accent">history</em>.
+            </h1>
+          </ScrollReveal>
+          
+          <ScrollReveal direction="up" delay={400}>
+            <div className="hero-cta">
+              <MagneticButton onClick={startAssessment} className="btn-large" variant="primary">
+                <span>Start Assessment</span>
+                <ArrowRight size={16} />
+              </MagneticButton>
+            </div>
+          </ScrollReveal>
+
+          <ScrollReveal direction="up" delay={550}>
+            <div className="hero-meta typewriter">
+              <span>27 Questions • ~5 Minutes • Instant Decision</span>
+            </div>
+          </ScrollReveal>
         </div>
 
         <div className={`scroll-indicator ${hideScroll ? 'hidden' : ''}`}>
@@ -132,44 +136,40 @@ export default function Landing() {
       {/* What We Measure Section */}
       <section className="section section-features">
         <div className="container">
-          <div className="section-header">
-            <span className="section-eyebrow">Interactive Sensors</span>
-            <h2 className="section-title">What We Measure</h2>
-            <p className="section-desc">
-              AlterScore operates beyond transactional ledgers, looking directly at structural cognitive styles.
-            </p>
-          </div>
+          <ScrollReveal direction="up">
+            <div className="section-header">
+              <span className="section-eyebrow">Interactive Sensors</span>
+              <h2 className="section-title">What We Measure</h2>
+            </div>
+          </ScrollReveal>
 
           <div className="features-grid">
-            <div className="feature-card" style={{ '--card-accent': 'var(--accent-primary)' }}>
-              <div className="feature-icon-wrapper">
-                <Brain size={24} />
-              </div>
-              <h3 className="feature-title">Cognitive Reflection</h3>
-              <p className="feature-text">
-                Evaluates analytical reasoning, delay discounting, and numerical reasoning through logic traps. We measure the split-second balance between instinct and deliberation.
-              </p>
-            </div>
+            <ScrollReveal direction="scale" delay={100} className="feature-reveal">
+              <GlowCard className="feature-card" style={{ '--card-accent': 'var(--accent-primary)' }}>
+                <div className="feature-icon-wrapper">
+                  <Brain size={24} />
+                </div>
+                <h3 className="feature-title">Cognitive Reflection</h3>
+              </GlowCard>
+            </ScrollReveal>
 
-            <div className="feature-card" style={{ '--card-accent': 'var(--accent-cyan)' }}>
-              <div className="feature-icon-wrapper">
-                <Eye size={24} />
-              </div>
-              <h3 className="feature-title">Silent Telemetry</h3>
-              <p className="feature-text">
-                Our lightweight sensors observe hesitation patterns, mouse/scroll speed, answer changes, and temporal delays. We capture the friction of decision-making.
-              </p>
-            </div>
+            <ScrollReveal direction="scale" delay={200} className="feature-reveal">
+              <GlowCard className="feature-card" style={{ '--card-accent': 'var(--accent-cyan)' }}>
+                <div className="feature-icon-wrapper">
+                  <Eye size={24} />
+                </div>
+                <h3 className="feature-title">Silent Telemetry</h3>
+              </GlowCard>
+            </ScrollReveal>
 
-            <div className="feature-card" style={{ '--card-accent': 'var(--accent-emerald)' }}>
-              <div className="feature-icon-wrapper">
-                <HeartHandshake size={24} />
-              </div>
-              <h3 className="feature-title">Resilience & Agency</h3>
-              <p className="feature-text">
-                A localized, semantic NLP scanner analyzes open descriptions of financial crisis to identify problem-solving orientation, locus of control, and personal accountability.
-              </p>
-            </div>
+            <ScrollReveal direction="scale" delay={300} className="feature-reveal">
+              <GlowCard className="feature-card" style={{ '--card-accent': 'var(--accent-emerald)' }}>
+                <div className="feature-icon-wrapper">
+                  <HeartHandshake size={24} />
+                </div>
+                <h3 className="feature-title">Resilience & Agency</h3>
+              </GlowCard>
+            </ScrollReveal>
           </div>
         </div>
       </section>
@@ -177,43 +177,48 @@ export default function Landing() {
       {/* How It Works Section */}
       <section className="section section-how">
         <div className="container">
-          <div className="section-header">
-            <span className="section-eyebrow">System Stepper</span>
-            <h2 className="section-title">How It Works</h2>
-            <p className="section-desc">
-              A clinical, friction-free journey from cognitive profiling to a credit tier verdict.
-            </p>
-          </div>
+          <ScrollReveal direction="up">
+            <div className="section-header">
+              <span className="section-eyebrow">System Stepper</span>
+              <h2 className="section-title">How It Works</h2>
+            </div>
+          </ScrollReveal>
 
-          <div className="stepper-row">
-            <div className="step-node">
-              <div className="step-number">01</div>
-              <h3 className="step-title">Answer Questions</h3>
-              <p className="step-desc">Respond to 27 cognitive puzzles and behavioral scenarios designed to profile your agency.</p>
+          <div className="stepper-row-container">
+            <div className="timeline-svg-wrapper">
+              <svg className="timeline-svg" width="100%" height="2" viewBox="0 0 100 2" preserveAspectRatio="none">
+                <line x1="0" y1="1" x2="100" y2="1" className="timeline-line-bg" />
+                <line x1="0" y1="1" x2="100" y2="1" className="timeline-line-active" />
+              </svg>
             </div>
             
-            <div className="step-arrow">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path className="arrow-path" d="M5 12h14M13 6l6 6-6 6" />
-              </svg>
-            </div>
+            <div className="stepper-row">
+              <ScrollReveal direction="up" delay={100} className="step-reveal">
+                <GlowCard className="step-node">
+                  <div className="step-number-wrapper">
+                    <span className="step-number">01</span>
+                  </div>
+                  <h3 className="step-title">Profile Agency</h3>
+                </GlowCard>
+              </ScrollReveal>
 
-            <div className="step-node">
-              <div className="step-number">02</div>
-              <h3 className="step-title">Extract Signals</h3>
-              <p className="step-desc">Our backend extracts 39 features, including semantic indicators and telemetry speeds.</p>
-            </div>
+              <ScrollReveal direction="up" delay={250} className="step-reveal">
+                <GlowCard className="step-node">
+                  <div className="step-number-wrapper">
+                    <span className="step-number">02</span>
+                  </div>
+                  <h3 className="step-title">Parse Telemetry</h3>
+                </GlowCard>
+              </ScrollReveal>
 
-            <div className="step-arrow">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path className="arrow-path" d="M5 12h14M13 6l6 6-6 6" />
-              </svg>
-            </div>
-
-            <div className="step-node">
-              <div className="step-number">03</div>
-              <h3 className="step-title">Get Score</h3>
-              <p className="step-desc">Get an instant score between 300 and 850, complete with SHAP explanations and actionable counterfactuals.</p>
+              <ScrollReveal direction="up" delay={400} className="step-reveal">
+                <GlowCard className="step-node">
+                  <div className="step-number-wrapper">
+                    <span className="step-number">03</span>
+                  </div>
+                  <h3 className="step-title">Score Verdict</h3>
+                </GlowCard>
+              </ScrollReveal>
             </div>
           </div>
         </div>
@@ -223,22 +228,33 @@ export default function Landing() {
       <section className="section section-stats" ref={statsRef}>
         <div className="container">
           <div className="stats-grid">
-            <div className="stat-item">
-              <div className="stat-number">{triggerStats ? `${stat1}B` : '0B'}</div>
-              <div className="stat-label">Unbanked Adults Globally</div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-number">{triggerStats ? stat2 : '0'}</div>
-              <div className="stat-label">Behavioral Features</div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-number">{triggerStats ? stat3 : '0.00'}</div>
-              <div className="stat-label">Model AUC Score</div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-number">{triggerStats ? `${stat4} min` : '0 min'}</div>
-              <div className="stat-label">Average Time to Score</div>
-            </div>
+            <ScrollReveal direction="up" delay={100}>
+              <div className="stat-item">
+                <div className="stat-number gradient-text">{triggerStats ? `${stat1}B` : '0B'}</div>
+                <div className="stat-label">Unbanked Adults</div>
+              </div>
+            </ScrollReveal>
+            
+            <ScrollReveal direction="up" delay={200}>
+              <div className="stat-item">
+                <div className="stat-number gradient-text">{triggerStats ? stat2 : '0'}</div>
+                <div className="stat-label">Behavioral Features</div>
+              </div>
+            </ScrollReveal>
+
+            <ScrollReveal direction="up" delay={300}>
+              <div className="stat-item">
+                <div className="stat-number gradient-text">{triggerStats ? stat3 : '0.00'}</div>
+                <div className="stat-label">Model AUC</div>
+              </div>
+            </ScrollReveal>
+
+            <ScrollReveal direction="up" delay={400}>
+              <div className="stat-item">
+                <div className="stat-number gradient-text">{triggerStats ? `${stat4}m` : '0m'}</div>
+                <div className="stat-label">Time to Score</div>
+              </div>
+            </ScrollReveal>
           </div>
         </div>
       </section>
@@ -247,14 +263,17 @@ export default function Landing() {
       <section className="final-cta">
         <SignalCanvas />
         <div className="cta-container container">
-          <h2 className="cta-title">Ready to be seen differently?</h2>
-          <p className="cta-sub">
-            Begin your psychometric assessment. Your cognitive credentials are the only collateral required.
-          </p>
-          <button onClick={startAssessment} className="btn btn-primary">
-            <span>Begin Assessment</span>
-            <ArrowRight size={16} />
-          </button>
+          <ScrollReveal direction="scale">
+            <h2 className="cta-title gradient-text-accent text-glow">Ready to be seen differently?</h2>
+          </ScrollReveal>
+          <ScrollReveal direction="up" delay={200}>
+            <div className="cta-btn-wrapper">
+              <MagneticButton onClick={startAssessment} variant="primary">
+                <span>Begin Assessment</span>
+                <ArrowRight size={16} />
+              </MagneticButton>
+            </div>
+          </ScrollReveal>
         </div>
       </section>
     </div>

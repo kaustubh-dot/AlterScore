@@ -32,7 +32,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: box-shadow 1000ms ease;
+  transition: box-shadow 1000ms var(--ease-spring);
 }
 
 .score-svg {
@@ -50,7 +50,7 @@
 .score-fill {
   stroke-width: 6;
   stroke-linecap: round;
-  transition: stroke-dashoffset 1500ms ease-out, stroke 1500ms ease;
+  transition: stroke-dashoffset 1500ms var(--ease-smooth), stroke 1500ms ease;
 }
 
 .score-center-data {
@@ -67,7 +67,7 @@
   font-weight: 700;
   line-height: 1;
   margin-bottom: 2px;
-  transition: color 1500ms ease;
+  transition: color 1500ms ease, text-shadow 1500ms ease;
 }
 
 .score-band-label {
@@ -90,6 +90,49 @@
   font-size: var(--text-xs);
   color: var(--text-muted);
   margin-top: var(--space-1);
+}
+
+/* Particle Burst Styles */
+.particle-burst {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--color, var(--accent-primary));
+  opacity: 0;
+  top: 50%;
+  left: 50%;
+  margin-top: -3px;
+  margin-left: -3px;
+  animation: burst 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.particle.p1 { --x: -70px; --y: -70px; animation-delay: 0ms; }
+.particle.p2 { --x: 70px; --y: -70px; animation-delay: 100ms; }
+.particle.p3 { --x: -90px; --y: 10px; animation-delay: 50ms; }
+.particle.p4 { --x: 90px; --y: 10px; animation-delay: 150ms; }
+.particle.p5 { --x: -50px; --y: 80px; animation-delay: 80ms; }
+.particle.p6 { --x: 40px; --y: 90px; animation-delay: 200ms; }
+
+@keyframes burst {
+  0% {
+    transform: translate(0, 0) scale(0.2);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--x), var(--y)) scale(1.2);
+    opacity: 0;
+  }
 }
 
 /* Delayed fade in content */
@@ -323,14 +366,13 @@
 }
 
 .dice-card {
-  background: var(--bg-elevated);
-  border: 1px solid var(--bg-border);
   border-left: 4px solid var(--accent-primary);
   border-radius: var(--radius-md);
   padding: var(--space-4) var(--space-6);
   display: flex;
   align-items: center;
   gap: var(--space-4);
+  background: rgba(11, 18, 33, 0.4);
 }
 
 .dice-feature-change {
@@ -368,10 +410,9 @@
 }
 
 .tip-card {
-  background: var(--bg-elevated);
-  border: 1px solid var(--bg-border);
   border-radius: var(--radius-md);
   padding: var(--space-5);
+  background: rgba(11, 18, 33, 0.4);
 }
 
 .tip-header {

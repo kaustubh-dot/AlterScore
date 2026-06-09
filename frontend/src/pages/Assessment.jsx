@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { ArrowLeft, ArrowRight, RefreshCw, Terminal, Eye, ShieldCheck } from 'lucide-react';
 import { QUESTIONS, SECTIONS } from '../data/questions';
+import Modal from '../components/ui/Modal';
 import './Assessment.css';
 import Processing from './Processing';
 
@@ -34,6 +35,7 @@ export default function Assessment() {
   const [hudOpen, setHudOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionPayload, setSubmissionPayload] = useState(null);
+  const [resetModalOpen, setResetModalOpen] = useState(false);
 
   // Track scroll hesitation
   useEffect(() => {
@@ -172,17 +174,20 @@ export default function Assessment() {
   };
 
   const handleStartOver = () => {
-    if (window.confirm('Reset assessment and clear telemetry logs?')) {
-      setAnswers({});
-      setCurrentIndex(0);
-      setChangeCounts({});
-      setFirstClicks({});
-      setResponseTimes({});
-      setScrollCount(0);
-      setDropouts(0);
-      sessionStartRef.current = Date.now();
-      questionStartRef.current = Date.now();
-    }
+    setResetModalOpen(true);
+  };
+
+  const confirmReset = () => {
+    setAnswers({});
+    setCurrentIndex(0);
+    setChangeCounts({});
+    setFirstClicks({});
+    setResponseTimes({});
+    setScrollCount(0);
+    setDropouts(0);
+    sessionStartRef.current = Date.now();
+    questionStartRef.current = Date.now();
+    setResetModalOpen(false);
   };
 
   // Compile and Submit Telemetry Payload
@@ -209,7 +214,6 @@ export default function Assessment() {
       : 0.0;
 
     // Calculate risk response speed ratio
-    // We treat scenario_s1 and scenario_s4 as risk-related decisions.
     const riskQuestions = ['scenario_s1', 'scenario_s4'];
     const riskRts = riskQuestions.map(id => responseTimes[id]).filter(Boolean);
     const nonRiskRts = QUESTIONS.filter(q => !riskQuestions.includes(q.id))
@@ -242,7 +246,6 @@ export default function Assessment() {
       session_id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15),
       answers: {
         ...answers,
-        // Make sure all scenarios are properly formatted
         scenario_s1: answers['scenario_s1'] || { primary: 's1_b', least: null, first_click_ms: 0, change_count: 0 },
         scenario_s2: answers['scenario_s2'] || { primary: 's2_b', least: null, first_click_ms: 0, change_count: 0 },
         scenario_s3: answers['scenario_s3'] || { primary: 's3_b', least: null, first_click_ms: 0, change_count: 0 },
@@ -269,12 +272,10 @@ export default function Assessment() {
     setSubmissionPayload(payload);
   };
 
-  // Perform API Post Call after Processing Screen resolves
   const handleScoreResult = (scoreData) => {
     navigate('/results', { state: scoreData });
   };
 
-  // Standard Render Checks
   const currentAnswer = answers[currentQ.id];
   const hasAnswer = currentAnswer !== undefined && (
     currentQ.type !== 'scenario' || (currentAnswer.primary && currentAnswer.primary !== '')
@@ -286,7 +287,6 @@ export default function Assessment() {
   const isWordCountValid = currentQ.type === 'text' ? wordCount >= (currentQ.minWords || 10) : true;
   const canContinue = hasAnswer && isWordCountValid;
 
-  // Render question controls
   const renderControls = () => {
     if (currentQ.type === 'number') {
       return (
@@ -357,14 +357,14 @@ export default function Assessment() {
                 <div style={{ display: 'flex', gap: '6px' }}>
                   <button
                     onClick={() => recordScenarioAnswer('primary', opt.id)}
-                    className={`badge-tag ${isPrimary ? 'primary' : 'option-pill'}`}
+                    className={`badge-tag ${isPrimary ? 'primary' : 'option-pill-btn'}`}
                     style={{ border: 'none', cursor: 'pointer', padding: '4px 8px', fontSize: '9px' }}
                   >
                     Most
                   </button>
                   <button
                     onClick={() => recordScenarioAnswer('least', opt.id)}
-                    className={`badge-tag ${isLeast ? 'least' : 'option-pill'}`}
+                    className={`badge-tag ${isLeast ? 'least' : 'option-pill-btn'}`}
                     style={{ border: 'none', cursor: 'pointer', padding: '4px 8px', fontSize: '9px' }}
                   >
                     Least
@@ -417,27 +417,29 @@ export default function Assessment() {
       <div className="assessment-layout">
         <div className="assessment-container container">
           <div className="assessment-wrapper">
-            <div className="consent-card">
-              <div className="consent-icon">
+            <div className="consent-card animate-fade-up">
+              <div className="consent-icon animate-pulse-glow">
                 <Terminal size={32} />
               </div>
-              <h2 className="consent-title">Signal Authorization</h2>
+              <h2 className="consent-title gradient-text-accent">Signal Authorization</h2>
               <div className="consent-text">
-                <p style={{ marginBottom: '12px' }}>
-                  AlterScore does not record your name, bank accounts, or financial transactions. Instead, this cognitive test analyzes your decision style.
+                <p style={{ textAlign: 'center', marginBottom: '24px', color: 'var(--text-secondary)' }}>
+                  We measure analytical reasoning and behavioral telemetry, not transactions.
                 </p>
-                <p style={{ marginBottom: '12px' }}>
-                  By proceeding, you consent to the capture of **silent behavioral telemetry**:
-                </p>
-                <ul style={{ paddingLeft: '1.25rem', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <li>Response timings and hesitation delays</li>
-                  <li>Draft changes and answer revision rate</li>
-                  <li>Scroll scrolling hesitation metrics</li>
-                  <li>Typing speeds on semantic open questions</li>
-                </ul>
-                <p>
-                  All telemetry is analyzed locally and secure under stacking ensembles. Data is transmitted securely to our validation servers.
-                </p>
+                <div className="telemetry-specs">
+                  <div className="spec-item">
+                    <ShieldCheck size={16} className="spec-icon" />
+                    <span>Response latency and hesitation patterns</span>
+                  </div>
+                  <div className="spec-item">
+                    <ShieldCheck size={16} className="spec-icon" />
+                    <span>Answer change rates and typing dynamics</span>
+                  </div>
+                  <div className="spec-item">
+                    <ShieldCheck size={16} className="spec-icon" />
+                    <span>Secure, locally-computed psychometric profiling</span>
+                  </div>
+                </div>
               </div>
               <button onClick={handleConsent} className="btn btn-primary" style={{ width: '100%' }}>
                 <span>Authorize & Begin</span>
@@ -459,7 +461,6 @@ export default function Assessment() {
     );
   }
 
-  // Calculate overall progress
   const progressPercent = ((currentIndex + 1) / QUESTIONS.length) * 100;
 
   return (
@@ -524,6 +525,17 @@ export default function Assessment() {
           </div>
         </div>
       </div>
+
+      {/* Custom Modal for Reset Confirmation */}
+      <Modal
+        isOpen={resetModalOpen}
+        title="Reset Assessment"
+        message="Are you sure you want to clear your current progress and reset telemetry logs?"
+        confirmText="Reset"
+        cancelText="Cancel"
+        onConfirm={confirmReset}
+        onCancel={() => setResetModalOpen(false)}
+      />
 
       {/* Interactive Telemetry Diagnostics HUD */}
       <div className="diagnostics-hud">

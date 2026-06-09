@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, BarChart, Bar, Legend } from 'recharts';
 import { Activity, ShieldCheck, Database, BarChart3, Radio, Sliders, ChevronRight, Terminal as TermIcon } from 'lucide-react';
+import ScrollReveal from '../components/animation/ScrollReveal';
+import GlowCard from '../components/ui/GlowCard';
 import './Dashboard.css';
 
 export default function Dashboard() {
@@ -112,11 +114,10 @@ export default function Dashboard() {
     { mean_predicted: 1.0, fraction_positive: 1.0, perfect: 1.0 }
   ];
 
-  // Threshold calibration logic math (Total = 1800 samples)
+  // Threshold calibration logic math
   const totalPositives = 1200;
   const totalNegatives = 600;
 
-  // Formula models that depend on threshold
   const tprVal = 0.98 * (1 - threshold * threshold);
   const fprVal = 0.85 * Math.pow(1 - threshold, 1.5);
 
@@ -136,7 +137,7 @@ export default function Dashboard() {
       {/* Sidebar Navigation */}
       <aside className="dashboard-sidebar">
         <div className="sidebar-title">
-          <Activity size={18} style={{ color: 'var(--accent-primary)' }} />
+          <Activity size={18} style={{ color: 'var(--accent-cyan)' }} />
           <span>AlterScore HUD</span>
         </div>
         <nav className="sidebar-menu">
@@ -159,269 +160,290 @@ export default function Dashboard() {
       <main className="dashboard-content">
         <header className="dashboard-header">
           <span className="dashboard-subtitle">Analytical Console</span>
-          <h1 className="dashboard-title">Model Command Center</h1>
+          <h1 className="dashboard-title gradient-text">Model Command Center</h1>
         </header>
 
         {/* Top Level KPIs */}
         <section className="kpi-row">
-          <div className="kpi-card">
-            <div className="kpi-label">Active Classifier</div>
-            <div className="kpi-val" style={{ color: 'var(--accent-primary)', fontSize: '15px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Stacking Ensemble
-            </div>
-          </div>
-          <div className="kpi-card">
-            <div className="kpi-label">Calibration Gap (ECE)</div>
-            <div className="kpi-val">0.034</div>
-          </div>
-          <div className="kpi-card">
-            <div className="kpi-label">Max Feature Drift (PSI)</div>
-            <div className="kpi-val" style={{ color: 'var(--accent-emerald)' }}>0.12 (Stable)</div>
-          </div>
-          <div className="kpi-card">
-            <div className="kpi-label">Validation Set AUC</div>
-            <div className="kpi-val">0.812</div>
-          </div>
+          <ScrollReveal direction="up" delay={50} className="kpi-reveal">
+            <GlowCard className="kpi-card">
+              <div className="kpi-label">Active Classifier</div>
+              <div className="kpi-val" style={{ color: 'var(--accent-primary)', fontSize: '15px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Stacking Ensemble
+              </div>
+            </GlowCard>
+          </ScrollReveal>
+          
+          <ScrollReveal direction="up" delay={150} className="kpi-reveal">
+            <GlowCard className="kpi-card">
+              <div className="kpi-label">Calibration Gap (ECE)</div>
+              <div className="kpi-val">0.034</div>
+            </GlowCard>
+          </ScrollReveal>
+
+          <ScrollReveal direction="up" delay={250} className="kpi-reveal">
+            <GlowCard className="kpi-card">
+              <div className="kpi-label">Max Feature Drift (PSI)</div>
+              <div className="kpi-val" style={{ color: 'var(--accent-emerald)' }}>0.12 (Stable)</div>
+            </GlowCard>
+          </ScrollReveal>
+
+          <ScrollReveal direction="up" delay={350} className="kpi-reveal">
+            <GlowCard className="kpi-card">
+              <div className="kpi-label">Validation Set AUC</div>
+              <div className="kpi-val">0.812</div>
+            </GlowCard>
+          </ScrollReveal>
         </section>
 
         {/* Model Metrics Table */}
-        <section className="panel-card" style={{ marginBottom: '32px' }}>
-          <div className="panel-header">
-            <h3 className="panel-title">Production Model Leaderboard</h3>
-            <span className="panel-badge">Validation Months 11-12</span>
-          </div>
-          <div className="dashboard-table-wrapper">
-            <table className="dashboard-table">
-              <thead>
-                <tr>
-                  <th>Model Name</th>
-                  <th>Type</th>
-                  <th>ROC AUC</th>
-                  <th>PR AUC</th>
-                  <th>KS Stat</th>
-                  <th>Brier Score</th>
-                  <th>ECE</th>
-                </tr>
-              </thead>
-              <tbody>
-                {modelStats.map((m, idx) => (
-                  <tr key={idx} className={m.selected ? 'highlighted' : ''}>
-                    <td style={{ fontWeight: 600 }}>{m.name} {m.selected && '✓'}</td>
-                    <td>{m.type}</td>
-                    <td className="mono">{m.auc.toFixed(3)}</td>
-                    <td className="mono">{m.pr.toFixed(3)}</td>
-                    <td className="mono">{m.ks.toFixed(3)}</td>
-                    <td className="mono">{m.brier.toFixed(3)}</td>
-                    <td className="mono" style={{ color: m.ece <= 0.04 ? 'var(--accent-emerald)' : 'var(--text-secondary)' }}>
-                      {m.ece.toFixed(3)}
-                    </td>
+        <ScrollReveal direction="up" delay={100}>
+          <section className="panel-card" style={{ marginBottom: '32px' }}>
+            <div className="panel-header">
+              <h3 className="panel-title">Production Model Leaderboard</h3>
+              <span className="panel-badge">Validation Months 11-12</span>
+            </div>
+            <div className="dashboard-table-wrapper">
+              <table className="dashboard-table">
+                <thead>
+                  <tr>
+                    <th>Model Name</th>
+                    <th>Type</th>
+                    <th>ROC AUC</th>
+                    <th>PR AUC</th>
+                    <th>KS Stat</th>
+                    <th>Brier Score</th>
+                    <th>ECE</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+                </thead>
+                <tbody>
+                  {modelStats.map((m, idx) => (
+                    <tr key={idx} className={m.selected ? 'highlighted' : ''}>
+                      <td style={{ fontWeight: 600 }}>{m.name} {m.selected && '✓'}</td>
+                      <td>{m.type}</td>
+                      <td className="mono">{m.auc.toFixed(3)}</td>
+                      <td className="mono">{m.pr.toFixed(3)}</td>
+                      <td className="mono">{m.ks.toFixed(3)}</td>
+                      <td className="mono">{m.brier.toFixed(3)}</td>
+                      <td className="mono" style={{ color: m.ece <= 0.04 ? 'var(--accent-emerald)' : 'var(--text-secondary)' }}>
+                        {m.ece.toFixed(3)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </ScrollReveal>
 
         {/* Charts: ROC Curve & Score Distribution */}
         <div className="grid-6-6">
-          <div className="panel-card">
-            <div className="panel-header">
-              <h3 className="panel-title">ROC Curves (Overlaid)</h3>
-              <span className="panel-badge">Sensitivity</span>
+          <ScrollReveal direction="left" delay={200}>
+            <div className="panel-card">
+              <div className="panel-header">
+                <h3 className="panel-title">ROC Curves (Overlaid)</h3>
+                <span className="panel-badge">Sensitivity</span>
+              </div>
+              <div className="chart-container">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={rocCurvePoints}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
+                    <XAxis dataKey="fpr" stroke="var(--text-muted)" fontSize={10} label={{ value: 'False Positive Rate', position: 'insideBottom', offset: -5 }} />
+                    <YAxis stroke="var(--text-muted)" fontSize={10} />
+                    <Tooltip contentStyle={{ background: '#0B1221', border: '1px solid var(--bg-border)' }} />
+                    <Line type="monotone" dataKey="Stacking" stroke="var(--accent-primary)" strokeWidth={2.5} dot={false} name="Ensemble (0.81)" />
+                    <Line type="monotone" dataKey="TabNet" stroke="var(--accent-cyan)" strokeWidth={1.5} dot={false} name="TabNet (0.79)" />
+                    <Line type="monotone" dataKey="LogReg" stroke="var(--text-muted)" strokeWidth={1} dot={false} name="LogReg (0.72)" />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             </div>
-            <div className="chart-container">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={rocCurvePoints}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
-                  <XAxis dataKey="fpr" stroke="var(--text-muted)" fontSize={10} label={{ value: 'False Positive Rate', position: 'insideBottom', offset: -5 }} />
-                  <YAxis stroke="var(--text-muted)" fontSize={10} />
-                  <Tooltip contentStyle={{ background: '#0B1221', border: '1px solid var(--bg-border)' }} />
-                  <Line type="monotone" dataKey="Stacking" stroke="var(--accent-primary)" strokeWidth={2.5} dot={false} name="Ensemble (0.81)" />
-                  <Line type="monotone" dataKey="TabNet" stroke="var(--accent-cyan)" strokeWidth={1.5} dot={false} name="TabNet (0.79)" />
-                  <Line type="monotone" dataKey="LogReg" stroke="var(--text-muted)" strokeWidth={1} dot={false} name="LogReg (0.72)" />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
+          </ScrollReveal>
 
-          <div className="panel-card">
-            <div className="panel-header">
-              <h3 className="panel-title">Population Score Distribution</h3>
-              <span className="panel-badge">Histogram</span>
+          <ScrollReveal direction="right" delay={200}>
+            <div className="panel-card">
+              <div className="panel-header">
+                <h3 className="panel-title">Population Score Distribution</h3>
+                <span className="panel-badge">Histogram</span>
+              </div>
+              <div className="chart-container">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={scoreDistribution}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
+                    <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={9} />
+                    <YAxis stroke="var(--text-muted)" fontSize={10} />
+                    <Tooltip contentStyle={{ background: '#0B1221', border: '1px solid var(--bg-border)' }} />
+                    <Bar dataKey="count" fill="var(--accent-primary)" radius={[3, 3, 0, 0]}>
+                      {scoreDistribution.map((entry, idx) => (
+                        <Area key={`cell-${idx}`} fill={entry.fill} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
-            <div className="chart-container">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={scoreDistribution}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
-                  <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={9} />
-                  <YAxis stroke="var(--text-muted)" fontSize={10} />
-                  <Tooltip contentStyle={{ background: '#0B1221', border: '1px solid var(--bg-border)' }} />
-                  <Bar dataKey="count" fill="var(--accent-primary)" radius={[3, 3, 0, 0]}>
-                    {scoreDistribution.map((entry, idx) => (
-                      <Area key={`cell-${idx}`} fill={entry.fill} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
+          </ScrollReveal>
         </div>
 
         {/* Interactive Threshold Calibration Hud */}
-        <section className="panel-card" style={{ marginBottom: '32px' }}>
-          <div className="panel-header" style={{ borderBottom: '1px solid var(--bg-border)', paddingBottom: '12px' }}>
-            <h3 className="panel-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Sliders size={16} style={{ color: 'var(--accent-cyan)' }} />
-              <span>Interactive Decision Threshold Calibrator</span>
-            </h3>
-            <span className="panel-badge">Underwriting Sim</span>
-          </div>
+        <ScrollReveal direction="up" delay={100}>
+          <section className="panel-card" style={{ marginBottom: '32px' }}>
+            <div className="panel-header" style={{ borderBottom: '1px solid var(--bg-border)', paddingBottom: '12px' }}>
+              <h3 className="panel-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Sliders size={16} style={{ color: 'var(--accent-cyan)' }} />
+                <span>Interactive Decision Threshold Calibrator</span>
+              </h3>
+              <span className="panel-badge">Underwriting Sim</span>
+            </div>
 
-          <div className="calibrator-hud" style={{ marginTop: '20px' }}>
-            
-            {/* Left Box: Slider and details */}
-            <div className="calibrator-slider-box">
-              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.6 }}>
-                Slide the threshold probability below. High values reduce false positive defaults but defer more borrowers. Lower values increase approval volume but introduce higher default rates.
-              </p>
-              
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                <span>Underwrite Threshold</span>
-                <span className="mono" style={{ color: 'var(--accent-cyan)', fontSize: '14px', fontWeight: 700 }}>
-                  p ≥ {threshold.toFixed(2)}
-                </span>
+            <div className="calibrator-hud" style={{ marginTop: '20px' }}>
+              <div className="calibrator-slider-box">
+                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.6 }}>
+                  Slide the threshold probability below. High values reduce false positive defaults but defer more borrowers. Lower values increase approval volume but introduce higher default rates.
+                </p>
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                  <span>Underwrite Threshold</span>
+                  <span className="mono" style={{ color: 'var(--accent-cyan)', fontSize: '14px', fontWeight: 700 }}>
+                    p ≥ {threshold.toFixed(2)}
+                  </span>
+                </div>
+
+                <input
+                  type="range"
+                  min="0.10"
+                  max="0.90"
+                  step="0.05"
+                  value={threshold}
+                  onChange={(e) => setThreshold(parseFloat(e.target.value))}
+                  className="optimizer-input-range"
+                  style={{ width: '100%', marginBottom: '24px' }}
+                />
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                  <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--bg-border)', padding: '10px', borderRadius: '6px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '9px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Approval Rate</div>
+                    <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-number)', fontFamily: 'var(--font-mono)' }}>
+                      {(approvalRate * 100).toFixed(1)}%
+                    </div>
+                  </div>
+                  <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--bg-border)', padding: '10px', borderRadius: '6px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '9px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Default Rate</div>
+                    <div style={{ fontSize: '16px', fontWeight: 700, color: defaultRate > 0.1 ? 'var(--accent-rose)' : 'var(--accent-emerald)', fontFamily: 'var(--font-mono)' }}>
+                      {(defaultRate * 100).toFixed(1)}%
+                    </div>
+                  </div>
+                  <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--bg-border)', padding: '10px', borderRadius: '6px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '9px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>F1 Score</div>
+                    <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-number)', fontFamily: 'var(--font-mono)' }}>
+                      {f1.toFixed(3)}
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <input
-                type="range"
-                min="0.10"
-                max="0.90"
-                step="0.05"
-                value={threshold}
-                onChange={(e) => setThreshold(parseFloat(e.target.value))}
-                className="optimizer-input-range"
-                style={{ width: '100%', marginBottom: '24px' }}
-              />
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
-                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--bg-border)', padding: '10px', borderRadius: '6px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '9px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Approval Rate</div>
-                  <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-number)', fontFamily: 'var(--font-mono)' }}>
-                    {(approvalRate * 100).toFixed(1)}%
-                  </div>
+              <div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', textAlign: 'center' }}>
+                  Confusion Matrix (N = 1800)
                 </div>
-                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--bg-border)', padding: '10px', borderRadius: '6px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '9px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Default Rate</div>
-                  <div style={{ fontSize: '16px', fontWeight: 700, color: defaultRate > 0.1 ? 'var(--accent-rose)' : 'var(--accent-emerald)', fontFamily: 'var(--font-mono)' }}>
-                    {(defaultRate * 100).toFixed(1)}%
+                <div className="matrix-grid">
+                  <div className="matrix-cell">
+                    <div className="matrix-num">{tp}</div>
+                    <div className="matrix-lbl">True Positive (Approve)</div>
                   </div>
-                </div>
-                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--bg-border)', padding: '10px', borderRadius: '6px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '9px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>F1 Score</div>
-                  <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-number)', fontFamily: 'var(--font-mono)' }}>
-                    {f1.toFixed(3)}
+                  <div className="matrix-cell" style={{ borderLeftColor: 'rgba(244, 63, 94, 0.2)' }}>
+                    <div className="matrix-num" style={{ color: 'var(--accent-rose)' }}>{fp}</div>
+                    <div className="matrix-lbl">False Positive (Default)</div>
+                  </div>
+                  <div className="matrix-cell" style={{ borderTopColor: 'rgba(251, 191, 36, 0.2)' }}>
+                    <div className="matrix-num" style={{ color: 'var(--accent-amber)' }}>{fn}</div>
+                    <div className="matrix-lbl">False Negative (Reject)</div>
+                  </div>
+                  <div className="matrix-cell">
+                    <div className="matrix-num">{tn}</div>
+                    <div className="matrix-lbl">True Negative (Reject)</div>
                   </div>
                 </div>
               </div>
             </div>
-
-            {/* Right Box: Confusion Matrix */}
-            <div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', textAlign: 'center' }}>
-                Confusion Matrix (N = 1800)
-              </div>
-              <div className="matrix-grid">
-                <div className="matrix-cell">
-                  <div className="matrix-num">{tp}</div>
-                  <div className="matrix-lbl">True Positive (Approve)</div>
-                </div>
-                <div className="matrix-cell" style={{ borderLeftColor: 'rgba(244, 63, 94, 0.2)' }}>
-                  <div className="matrix-num" style={{ color: 'var(--accent-rose)' }}>{fp}</div>
-                  <div className="matrix-lbl">False Positive (Default)</div>
-                </div>
-                <div className="matrix-cell" style={{ borderTopColor: 'rgba(251, 191, 36, 0.2)' }}>
-                  <div className="matrix-num" style={{ color: 'var(--accent-amber)' }}>{fn}</div>
-                  <div className="matrix-lbl">False Negative (Reject)</div>
-                </div>
-                <div className="matrix-cell">
-                  <div className="matrix-num">{tn}</div>
-                  <div className="matrix-lbl">True Negative (Reject)</div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </section>
+          </section>
+        </ScrollReveal>
 
         {/* Charts: Calibration Curve & Global Importance */}
         <div className="grid-6-6">
-          <div className="panel-card">
-            <div className="panel-header">
-              <h3 className="panel-title">Global Feature Importance (SHAP)</h3>
-              <span className="panel-badge">Top Contributing Features</span>
+          <ScrollReveal direction="left" delay={200}>
+            <div className="panel-card">
+              <div className="panel-header">
+                <h3 className="panel-title">Global Feature Importance (SHAP)</h3>
+                <span className="panel-badge">Top Contributing Features</span>
+              </div>
+              <div className="chart-container">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={globalImportance} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
+                    <XAxis type="number" stroke="var(--text-muted)" fontSize={10} />
+                    <YAxis dataKey="name" type="category" stroke="var(--text-muted)" fontSize={9} width={120} />
+                    <Tooltip contentStyle={{ background: '#0B1221', border: '1px solid var(--bg-border)' }} />
+                    <Bar dataKey="score" fill="var(--accent-primary)" radius={[0, 3, 3, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
-            <div className="chart-container">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={globalImportance} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
-                  <XAxis type="number" stroke="var(--text-muted)" fontSize={10} />
-                  <YAxis dataKey="name" type="category" stroke="var(--text-muted)" fontSize={9} width={120} />
-                  <Tooltip contentStyle={{ background: '#0B1221', border: '1px solid var(--bg-border)' }} />
-                  <Bar dataKey="score" fill="var(--accent-primary)" radius={[0, 3, 3, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
+          </ScrollReveal>
 
-          <div className="panel-card">
-            <div className="panel-header">
-              <h3 className="panel-title">Calibration Curves</h3>
-              <span className="panel-badge">Expected Calibration Gap</span>
+          <ScrollReveal direction="right" delay={200}>
+            <div className="panel-card">
+              <div className="panel-header">
+                <h3 className="panel-title">Calibration Curves</h3>
+                <span className="panel-badge">Expected Calibration Gap</span>
+              </div>
+              <div className="chart-container">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={calibrationPoints}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
+                    <XAxis dataKey="mean_predicted" stroke="var(--text-muted)" fontSize={10} label={{ value: 'Mean Predicted Prob', position: 'insideBottom', offset: -5 }} />
+                    <YAxis stroke="var(--text-muted)" fontSize={10} />
+                    <Tooltip contentStyle={{ background: '#0B1221', border: '1px solid var(--bg-border)' }} />
+                    <Line type="monotone" dataKey="perfect" stroke="var(--text-muted)" strokeDasharray="5 5" name="Perfect Calibration" dot={false} />
+                    <Line type="monotone" dataKey="fraction_positive" stroke="var(--accent-emerald)" strokeWidth={2} name="Ensemble ECE (0.034)" />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             </div>
-            <div className="chart-container">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={calibrationPoints}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
-                  <XAxis dataKey="mean_predicted" stroke="var(--text-muted)" fontSize={10} label={{ value: 'Mean Predicted Prob', position: 'insideBottom', offset: -5 }} />
-                  <YAxis stroke="var(--text-muted)" fontSize={10} />
-                  <Tooltip contentStyle={{ background: '#0B1221', border: '1px solid var(--bg-border)' }} />
-                  <Line type="monotone" dataKey="perfect" stroke="var(--text-muted)" strokeDasharray="5 5" name="Perfect Calibration" dot={false} />
-                  <Line type="monotone" dataKey="fraction_positive" stroke="var(--accent-emerald)" strokeWidth={2} name="Ensemble ECE (0.034)" />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
+          </ScrollReveal>
         </div>
 
         {/* Live System Logging Panel */}
-        <section className="panel-card" style={{ border: '1px solid rgba(6, 182, 212, 0.2)' }}>
-          <div className="panel-header">
-            <h3 className="panel-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <TermIcon size={14} style={{ color: 'var(--accent-cyan)' }} />
-              <span>Real-time API Traffic Streamer</span>
-            </h3>
-            <span className="panel-badge">Signal Node Log</span>
-          </div>
+        <ScrollReveal direction="up" delay={300}>
+          <section className="panel-card" style={{ border: '1px solid rgba(6, 182, 212, 0.2)' }}>
+            <div className="panel-header">
+              <h3 className="panel-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <TermIcon size={14} style={{ color: 'var(--accent-cyan)' }} />
+                <span>Real-time API Traffic Streamer</span>
+              </h3>
+              <span className="panel-badge">Signal Node Log</span>
+            </div>
 
-          <div className="terminal-screen" ref={logTerminalRef}>
-            {logs.map((log, idx) => (
-              <div key={idx} className="log-line">
-                <span className="timestamp">[{log.time}] </span>
-                <span className="method">{log.method} </span>
-                <span className="path">{log.path} </span>
-                {log.score !== undefined ? (
-                  <>
-                    <span className="status-ok">200 OK </span>
-                    <span>- session_id: {log.id}... </span>
-                    <span>- score: <span className="score-val">{log.score}</span></span>
-                  </>
-                ) : (
-                  <span className="status-ok">200 OK - {log.label}</span>
-                )}
-              </div>
-            ))}
-          </div>
-        </section>
+            <div className="terminal-screen" ref={logTerminalRef}>
+              {logs.map((log, idx) => (
+                <div key={idx} className="log-line">
+                  <span className="timestamp">[{log.time}] </span>
+                  <span className="method">{log.method} </span>
+                  <span className="path">{log.path} </span>
+                  {log.score !== undefined ? (
+                    <>
+                      <span className="status-ok">200 OK </span>
+                      <span>- session_id: {log.id}... </span>
+                      <span>- score: <span className="score-val">{log.score}</span></span>
+                    </>
+                  ) : (
+                    <span className="status-ok">200 OK - {log.label}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+        </ScrollReveal>
 
       </main>
     </div>

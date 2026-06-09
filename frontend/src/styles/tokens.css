@@ -88,4 +88,27 @@
   --shadow-score-fair:      0 0 0 1px #FBBF24, 0 0 48px rgba(251, 191, 36, 0.20);
   --shadow-score-poor:      0 0 0 1px #F97316, 0 0 48px rgba(249, 115, 22, 0.20);
   --shadow-score-very-poor: 0 0 0 1px #F43F5E, 0 0 48px rgba(244, 63, 94, 0.20);
+
+  /* Animation Timings & Easings */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);  /* Satisfying elastic spring physics */
+  --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);     /* Smooth exponential ease-out */
+  --ease-in-out-smooth: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-fast: 200ms;
+  --duration-normal: 400ms;
+  --duration-slow: 800ms;
+  --duration-cinematic: 1200ms;
+
+  /* Premium Gradients */
+  --gradient-hero: linear-gradient(135deg, #4C6EF5 0%, #7C3AED 50%, #06B6D4 100%);
+  --gradient-accent: linear-gradient(90deg, #4C6EF5, #7C3AED, #06B6D4);
+  --gradient-accent-vertical: linear-gradient(180deg, #7C3AED, #4C6EF5);
+  --gradient-text: linear-gradient(135deg, #FFFFFF 20%, #A5B4FC 100%);
+  --gradient-glow: linear-gradient(135deg, rgba(76, 110, 245, 0.4) 0%, rgba(124, 58, 237, 0.4) 100%);
+
+  /* Neon/Glow Effects */
+  --glow-cyan: 0 0 24px rgba(6, 182, 212, 0.3);
+  --glow-indigo: 0 0 24px rgba(76, 110, 245, 0.3);
+  --glow-violet: 0 0 24px rgba(124, 58, 237, 0.3);
+  --glow-emerald: 0 0 24px rgba(16, 185, 129, 0.3);
 }
+

@@ -41,17 +41,17 @@ export default function SignalCanvas() {
         x: e.clientX,
         y: e.clientY,
         radius: 0,
-        maxRadius: 180 + Math.random() * 80,
-        opacity: 0.8,
-        speed: 4 + Math.random() * 2,
-        glyphs: Array.from({ length: 8 }, () => ({
-          dx: (Math.random() - 0.5) * 50,
-          dy: (Math.random() - 0.5) * 50,
-          text: ['0', '1', 'CRT', 'NLP', 'Δ', 'ψ', '847', 'locus'][Math.floor(Math.random() * 8)],
+        maxRadius: 240 + Math.random() * 100, // Stronger ripple radius
+        opacity: 0.9,
+        speed: 5 + Math.random() * 3,
+        glyphs: Array.from({ length: 12 }, () => ({
+          dx: (Math.random() - 0.5) * 80,
+          dy: (Math.random() - 0.5) * 80,
+          text: ['0', '1', 'CRT', 'NLP', 'Δ', 'ψ', '847', 'locus', 'AUC', 'SHAP', 'DiCE'][Math.floor(Math.random() * 11)],
         }))
       });
       // Limit total impulses
-      if (impulsesRef.current.length > 5) {
+      if (impulsesRef.current.length > 8) {
         impulsesRef.current.shift();
       }
     };
@@ -60,43 +60,43 @@ export default function SignalCanvas() {
     window.addEventListener('mouseleave', handleMouseLeave);
     window.addEventListener('click', handleMouseClick);
 
-    // Initialize Particles
-    const particleCount = Math.min(Math.floor((width * height) / 10000), 150);
+    // Initialize Particles (Increased density)
+    const particleCount = Math.min(Math.floor((width * height) / 8000), 220);
     const particles = Array.from({ length: particleCount }, () => ({
       x: Math.random() * width,
       y: Math.random() * height,
-      vx: (Math.random() - 0.5) * 0.4,
-      vy: (Math.random() - 0.5) * 0.4,
-      radius: Math.random() * 1.2 + 0.6,
+      vx: (Math.random() - 0.5) * 0.45,
+      vy: (Math.random() - 0.5) * 0.45,
+      radius: Math.random() * 1.5 + 0.6,
     }));
 
     // Initialize Glyphs
     const glyphTexts = ['CRT', 'NLP', 'locus', '0.72', '847', 'Δψ', '0.96', 'PSI', 'ROC', 'AUC', 'SHAP', 'DiCE'];
-    const glyphs = Array.from({ length: 15 }, () => ({
+    const glyphs = Array.from({ length: 18 }, () => ({
       x: Math.random() * width,
       y: Math.random() * height,
       text: glyphTexts[Math.floor(Math.random() * glyphTexts.length)],
-      opacity: Math.random() * 0.04 + 0.04,
-      speed: Math.random() * 0.2 + 0.1,
-      size: Math.floor(Math.random() * 3) + 9, // 9px to 11px
+      opacity: Math.random() * 0.05 + 0.05,
+      speed: Math.random() * 0.25 + 0.1,
+      size: Math.floor(Math.random() * 3) + 9,
     }));
 
     // Waveform Settings
     const waveCount = 5;
     const waves = Array.from({ length: waveCount }, (_, i) => ({
       frequency: 0.002 + i * 0.001,
-      amplitude: 25 + i * 12,
+      amplitude: 30 + i * 15,
       speed: 0.015 - i * 0.002,
       phase: Math.random() * Math.PI * 2,
       y: height * 0.35 + (height * 0.3 * (i / waveCount)),
-      alpha: 0.22 - i * 0.03,
+      alpha: 0.25 - i * 0.03,
     }));
 
     // Radar Scanline Settings
     let scanX = -100;
-    const scanSpeed = 3.5;
+    const scanSpeed = 4.0;
     let timeSinceLastScan = 0;
-    const scanInterval = 5000; // ms
+    const scanInterval = 6000;
 
     let lastTime = performance.now();
 
@@ -110,7 +110,6 @@ export default function SignalCanvas() {
         ctx.fillStyle = '#020409';
         ctx.fillRect(0, 0, width, height);
 
-        // Simple static radial glow
         const gradient = ctx.createRadialGradient(width / 2, height / 2, 50, width / 2, height / 2, width * 0.7);
         gradient.addColorStop(0, '#060B14');
         gradient.addColorStop(1, '#020409');
@@ -124,14 +123,38 @@ export default function SignalCanvas() {
 
       // Subtle Center radial gradient glow
       const radialGlow = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, width * 0.8);
-      radialGlow.addColorStop(0, 'rgba(76, 110, 245, 0.04)');
-      radialGlow.addColorStop(0.5, 'rgba(124, 58, 237, 0.015)');
+      radialGlow.addColorStop(0, 'rgba(76, 110, 245, 0.03)');
+      radialGlow.addColorStop(0.5, 'rgba(124, 58, 237, 0.01)');
       radialGlow.addColorStop(1, 'transparent');
       ctx.fillStyle = radialGlow;
       ctx.fillRect(0, 0, width, height);
 
-      // Draw Particles & Connections
-      ctx.strokeStyle = 'rgba(76, 110, 245, 0.04)';
+      // --- Animated Aurora Waves Background Blobs ---
+      const timeVal = now * 0.0004;
+      const g1x = width * 0.35 + Math.sin(timeVal) * 200;
+      const g1y = height * 0.45 + Math.cos(timeVal * 0.85) * 120;
+      const g2x = width * 0.65 + Math.cos(timeVal * 1.15) * 200;
+      const g2y = height * 0.55 + Math.sin(timeVal * 0.75) * 120;
+      const auroraRadius = Math.min(width, height) * 0.55;
+
+      // Aurora 1 (Cyan/Indigo)
+      const aurGrad1 = ctx.createRadialGradient(g1x, g1y, 0, g1x, g1y, auroraRadius);
+      aurGrad1.addColorStop(0, 'rgba(6, 182, 212, 0.055)');
+      aurGrad1.addColorStop(0.5, 'rgba(76, 110, 245, 0.02)');
+      aurGrad1.addColorStop(1, 'transparent');
+      ctx.fillStyle = aurGrad1;
+      ctx.fillRect(0, 0, width, height);
+
+      // Aurora 2 (Violet)
+      const aurGrad2 = ctx.createRadialGradient(g2x, g2y, 0, g2x, g2y, auroraRadius);
+      aurGrad2.addColorStop(0, 'rgba(124, 58, 237, 0.055)');
+      aurGrad2.addColorStop(0.5, 'rgba(76, 110, 245, 0.025)');
+      aurGrad2.addColorStop(1, 'transparent');
+      ctx.fillStyle = aurGrad2;
+      ctx.fillRect(0, 0, width, height);
+
+      // Draw Particles & Connections (Increased connection range)
+      ctx.strokeStyle = 'rgba(76, 110, 245, 0.035)';
       ctx.lineWidth = 0.8;
       particles.forEach((p, idx) => {
         // Move
@@ -145,27 +168,28 @@ export default function SignalCanvas() {
         // Draw point
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(76, 110, 245, 0.15)';
+        ctx.fillStyle = 'rgba(76, 110, 245, 0.2)';
         ctx.fill();
 
-        // Connect to neighbors
+        // Connect to neighbors (Increased maxDist to 110)
         for (let j = idx + 1; j < particles.length; j++) {
           const p2 = particles[j];
           const distSq = (p.x - p2.x) ** 2 + (p.y - p2.y) ** 2;
-          const maxDist = 90;
+          const maxDist = 110;
           if (distSq < maxDist * maxDist) {
             const dist = Math.sqrt(distSq);
-            const alpha = (1 - dist / maxDist) * 0.09;
+            const alpha = (1 - dist / maxDist) * 0.1;
             
-            // Mouse proximity highlights connections
+            // Mouse proximity highlights connections (Stronger pull)
             let hoverBonus = 0;
             if (mouseRef.current.active) {
               const mx = mouseRef.current.x;
               const my = mouseRef.current.y;
               const mDistSq1 = (p.x - mx) ** 2 + (p.y - my) ** 2;
               const mDistSq2 = (p2.x - mx) ** 2 + (p2.y - my) ** 2;
-              if (mDistSq1 < 15000 || mDistSq2 < 15000) {
-                hoverBonus = 0.12 * (1 - Math.min(mDistSq1, mDistSq2) / 15000);
+              const maxGlowDist = 18000;
+              if (mDistSq1 < maxGlowDist || mDistSq2 < maxGlowDist) {
+                hoverBonus = 0.16 * (1 - Math.min(mDistSq1, mDistSq2) / maxGlowDist);
               }
             }
 
@@ -182,13 +206,12 @@ export default function SignalCanvas() {
       waves.forEach((w, idx) => {
         w.phase += w.speed;
         ctx.beginPath();
-        ctx.lineWidth = idx === 0 ? 1.5 : 0.8;
+        ctx.lineWidth = idx === 0 ? 1.6 : 0.8;
 
         for (let x = 0; x < width; x += 4) {
-          // Calculate standard sine wave
           let y = w.y + Math.sin(x * w.frequency + w.phase) * w.amplitude;
 
-          // Mouse attraction/repulsion distortion
+          // Mouse attraction/repulsion distortion (Intensified range)
           if (mouseRef.current.active) {
             const mx = mouseRef.current.x;
             const my = mouseRef.current.y;
@@ -196,9 +219,8 @@ export default function SignalCanvas() {
             const dy = y - my;
             const dist = Math.sqrt(dx * dx + dy * dy);
             
-            if (dist < 180) {
-              // Lens/ripple distortion effect on the waves near mouse
-              const strength = (1 - dist / 180) * 45;
+            if (dist < 200) {
+              const strength = (1 - dist / 200) * 55;
               const angle = Math.atan2(dy, dx);
               y += Math.sin(angle) * strength;
             }
@@ -214,7 +236,7 @@ export default function SignalCanvas() {
         const gradient = ctx.createLinearGradient(0, 0, width, 0);
         gradient.addColorStop(0, 'transparent');
         gradient.addColorStop(0.2, `rgba(76, 110, 245, ${w.alpha})`);
-        gradient.addColorStop(0.5, `rgba(124, 58, 237, ${w.alpha * 1.2})`);
+        gradient.addColorStop(0.5, `rgba(124, 58, 237, ${w.alpha * 1.3})`);
         gradient.addColorStop(0.8, `rgba(6, 182, 212, ${w.alpha})`);
         gradient.addColorStop(1, 'transparent');
 
@@ -231,45 +253,42 @@ export default function SignalCanvas() {
           g.y = Math.random() * height;
         }
 
-        // Draw glyph
         ctx.fillStyle = `rgba(125, 211, 252, ${g.opacity})`;
         ctx.fillText(g.text, g.x, g.y);
       });
 
       // Draw Impulse Ripples (Clicks)
-      impulsesRef.current.forEach((imp, iIdx) => {
+      impulsesRef.current.forEach((imp) => {
         imp.radius += imp.speed;
-        imp.opacity -= 0.012;
+        imp.opacity -= 0.01;
 
         if (imp.opacity <= 0 || imp.radius >= imp.maxRadius) {
-          // Mark for cleanup later
           return;
         }
 
-        // Ripple ring
-        ctx.strokeStyle = `rgba(76, 110, 245, ${imp.opacity * 0.4})`;
-        ctx.lineWidth = 1.5;
+        // Ripple ring 1
+        ctx.strokeStyle = `rgba(76, 110, 245, ${imp.opacity * 0.45})`;
+        ctx.lineWidth = 2.0;
         ctx.beginPath();
         ctx.arc(imp.x, imp.y, imp.radius, 0, Math.PI * 2);
         ctx.stroke();
 
-        // Sub-ring
-        ctx.strokeStyle = `rgba(6, 182, 212, ${imp.opacity * 0.2})`;
-        ctx.lineWidth = 0.5;
+        // Ripple ring 2
+        ctx.strokeStyle = `rgba(6, 182, 212, ${imp.opacity * 0.25})`;
+        ctx.lineWidth = 0.8;
         ctx.beginPath();
-        ctx.arc(imp.x, imp.y, imp.radius * 0.7, 0, Math.PI * 2);
+        ctx.arc(imp.x, imp.y, imp.radius * 0.72, 0, Math.PI * 2);
         ctx.stroke();
 
         // Expanding digital glyphs
-        ctx.font = '7px JetBrains Mono';
-        ctx.fillStyle = `rgba(16, 185, 129, ${imp.opacity * 0.7})`;
+        ctx.font = '8px JetBrains Mono';
+        ctx.fillStyle = `rgba(16, 185, 129, ${imp.opacity * 0.85})`;
         imp.glyphs.forEach((gl) => {
           const gx = imp.x + gl.dx * (imp.radius / imp.maxRadius);
           const gy = imp.y + gl.dy * (imp.radius / imp.maxRadius);
           ctx.fillText(gl.text, gx, gy);
         });
       });
-      // Remove dead impulses
       impulsesRef.current = impulsesRef.current.filter((imp) => imp.opacity > 0);
 
       // Draw Vertical Scan Line (Radar Sweep)
@@ -282,19 +301,18 @@ export default function SignalCanvas() {
       if (scanX >= -50 && scanX < width + 100) {
         scanX += scanSpeed;
 
-        const scanGlow = ctx.createLinearGradient(scanX - 50, 0, scanX + 2, 0);
+        const scanGlow = ctx.createLinearGradient(scanX - 60, 0, scanX + 2, 0);
         scanGlow.addColorStop(0, 'transparent');
-        scanGlow.addColorStop(0.8, 'rgba(76, 110, 245, 0.05)');
-        scanGlow.addColorStop(1, 'rgba(6, 182, 212, 0.25)');
+        scanGlow.addColorStop(0.8, 'rgba(76, 110, 245, 0.06)');
+        scanGlow.addColorStop(1, 'rgba(6, 182, 212, 0.3)');
 
         ctx.fillStyle = scanGlow;
-        ctx.fillRect(scanX - 50, 0, 52, height);
+        ctx.fillRect(scanX - 60, 0, 62, height);
 
-        // Core bright line
-        ctx.fillStyle = 'rgba(6, 182, 212, 0.7)';
-        ctx.fillRect(scanX, 0, 1.5, height);
+        ctx.fillStyle = 'rgba(6, 182, 212, 0.75)';
+        ctx.fillRect(scanX, 0, 1.8, height);
       } else {
-        scanX = -100; // Reset
+        scanX = -100;
       }
 
       animationId = requestAnimationFrame(draw);

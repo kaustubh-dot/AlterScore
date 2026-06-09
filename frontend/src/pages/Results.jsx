@@ -1,16 +1,16 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { ShieldCheck, TrendingUp, Sparkles, Sliders, RotateCcw, LayoutDashboard, AlertCircle } from 'lucide-react';
+import ScrollReveal from '../components/animation/ScrollReveal';
+import GlowCard from '../components/ui/GlowCard';
 import './Results.css';
 
 export default function Results() {
   const location = useLocation();
   const navigate = useNavigate();
   
-  // Retrieve score data from navigation state
   const scoreData = location.state;
   
-  // Redirect back if opened directly without a score payload
   if (!scoreData) {
     return (
       <div className="results-layout" style={{ justifyContent: 'center', alignItems: 'center' }}>
@@ -118,15 +118,12 @@ export default function Results() {
 
   // Trigger Cinematic Reveal Animation
   useEffect(() => {
-    // Stage 1: Draw circle ring
     const t1 = setTimeout(() => {
       setAnimationStep(1);
-      // Fills progress based on initial credit score
       const percentage = (scoreData.credit_score - 300) / 550;
       setRingOffset(440 - 440 * percentage);
     }, 200);
 
-    // Stage 2: Count up score number
     const t2 = setTimeout(() => {
       setAnimationStep(2);
       let start = 300;
@@ -151,12 +148,10 @@ export default function Results() {
       requestAnimationFrame(step);
     }, 800);
 
-    // Stage 3: Glowing pulse
     const t3 = setTimeout(() => {
       setAnimationStep(3);
     }, 2000);
 
-    // Stage 4: Fade in content
     const t4 = setTimeout(() => {
       setAnimationStep(4);
     }, 2800);
@@ -211,13 +206,26 @@ export default function Results() {
               />
             </svg>
 
+            {/* Particle Burst */}
+            {animationStep >= 2 && (
+              <div className="particle-burst">
+                <div className="particle p1" style={{ '--color': bandColor }} />
+                <div className="particle p2" style={{ '--color': bandColor }} />
+                <div className="particle p3" style={{ '--color': bandColor }} />
+                <div className="particle p4" style={{ '--color': bandColor }} />
+                <div className="particle p5" style={{ '--color': bandColor }} />
+                <div className="particle p6" style={{ '--color': bandColor }} />
+              </div>
+            )}
+
             {/* Data values inside circle */}
             <div className="score-center-data">
               <span 
                 className="score-number"
                 style={{ 
                   color: animationStep >= 2 ? bandColor : 'var(--text-ghost)',
-                  opacity: animationStep >= 2 ? 1 : 0.2
+                  opacity: animationStep >= 2 ? 1 : 0.2,
+                  textShadow: animationStep >= 3 ? `0 0 12px ${bandColor}80` : 'none'
                 }}
               >
                 {displayScore}
@@ -242,158 +250,162 @@ export default function Results() {
             }}
           >
             <p className="probability-label">{(repaymentProb * 100).toFixed(1)}% Repayment Probability</p>
-            <p className="percentile-label">Higher than {percentile}% of applicant cohort</p>
+            <p className="percentile-label">Higher than {percentile}% of cohort</p>
           </div>
         </section>
 
         {/* Info Grid (Bands & Loan Limits) */}
         <div className={`info-cards-row fade-in-content ${animationStep >= 4 ? 'visible' : ''}`}>
-          <div className="result-card">
-            <span className="card-kicker">Risk Assessment</span>
-            <h3 className="card-title">Band Verdict</h3>
-            <p className="card-body">{bandDesc}</p>
-          </div>
+          <ScrollReveal direction="up" delay={100}>
+            <GlowCard className="result-card">
+              <span className="card-kicker">Risk Assessment</span>
+              <h3 className="card-title">Band Verdict</h3>
+              <p className="card-body">{bandDesc}</p>
+            </GlowCard>
+          </ScrollReveal>
 
-          <div className="result-card">
-            <span className="card-kicker">Lending Access</span>
-            <h3 className="card-title">Approved Loan Limit</h3>
-            {minAmount > 0 ? (
-              <p className="loan-amount-range">
-                ₹{minAmount.toLocaleString('en-IN')} – ₹{maxAmount.toLocaleString('en-IN')}
-              </p>
-            ) : (
-              <p className="loan-amount-range" style={{ color: 'var(--accent-rose)' }}>Deferred</p>
-            )}
-            <p className="card-body">Subject to final contract underwriting and verified telemetry consistency.</p>
-          </div>
+          <ScrollReveal direction="up" delay={200}>
+            <GlowCard className="result-card">
+              <span className="card-kicker">Lending Access</span>
+              <h3 className="card-title">Approved Loan Limit</h3>
+              {minAmount > 0 ? (
+                <p className="loan-amount-range">
+                  ₹{minAmount.toLocaleString('en-IN')} – ₹{maxAmount.toLocaleString('en-IN')}
+                </p>
+              ) : (
+                <p className="loan-amount-range" style={{ color: 'var(--accent-rose)' }}>Deferred</p>
+              )}
+              <p className="card-body">Subject to telemetry consistency.</p>
+            </GlowCard>
+          </ScrollReveal>
         </div>
 
         {/* SHAP Feature Contribution Bars */}
-        <section className={`shap-panel fade-in-content ${animationStep >= 4 ? 'visible' : ''}`}>
-          <div className="section-header" style={{ textAlign: 'left', marginBottom: '24px' }}>
-            <span className="section-eyebrow">Explainable AI</span>
-            <h2 className="section-title" style={{ fontSize: 'var(--text-xl)' }}>What Drove Your Score</h2>
-            <p className="section-desc" style={{ fontSize: 'var(--text-xs)' }}>
-              SHAP contribution values. Positive factors pushed your score up, negative factors pulled it down.
-            </p>
-          </div>
+        <ScrollReveal direction="up" delay={300}>
+          <section className={`shap-panel fade-in-content ${animationStep >= 4 ? 'visible' : ''}`}>
+            <div className="section-header" style={{ textAlign: 'left', marginBottom: '24px' }}>
+              <span className="section-eyebrow">Explainable AI</span>
+              <h2 className="section-title" style={{ fontSize: 'var(--text-xl)' }}>What Drove Your Score</h2>
+            </div>
 
-          <div className="shap-table result-card">
-            {scoreData.explanation.map((item, idx) => {
-              const isPos = item.direction === 'positive';
-              const maxShap = 0.15; // normalize max bar width
-              const percentage = Math.min((Math.abs(item.shap_value) / maxShap) * 100, 100);
-              
-              return (
-                <div key={idx} className="shap-row">
-                  <span className="shap-feature-name">{item.display_name}</span>
-                  <div className="shap-bar-container">
-                    <div 
-                      className={`shap-bar-fill loaded`}
-                      style={{ 
-                        width: `${percentage}%`,
-                        backgroundColor: isPos ? 'var(--accent-emerald)' : 'var(--accent-rose)',
-                      }}
-                    />
+            <GlowCard className="shap-table result-card">
+              {scoreData.explanation.map((item, idx) => {
+                const isPos = item.direction === 'positive';
+                const maxShap = 0.15; // normalize max bar width
+                const percentage = Math.min((Math.abs(item.shap_value) / maxShap) * 100, 100);
+                
+                return (
+                  <div key={idx} className="shap-row">
+                    <span className="shap-feature-name">{item.display_name}</span>
+                    <div className="shap-bar-container">
+                      <div 
+                        className={`shap-bar-fill loaded shimmer-bg`}
+                        style={{ 
+                          width: `${percentage}%`,
+                          backgroundColor: isPos ? 'var(--accent-emerald)' : 'var(--accent-rose)',
+                        }}
+                      />
+                    </div>
+                    <span className={`shap-value-badge ${isPos ? 'positive' : 'negative'}`}>
+                      {isPos ? '+' : ''}{Math.round(item.shap_value * 1000)} pts
+                    </span>
                   </div>
-                  <span className={`shap-value-badge ${isPos ? 'positive' : 'negative'}`}>
-                    {isPos ? '+' : ''}{Math.round(item.shap_value * 1000)} pts
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </section>
+                );
+              })}
+            </GlowCard>
+          </section>
+        </ScrollReveal>
 
         {/* SCORE OPTIMIZER PLAYGROUND WIDGET */}
-        <section className={`optimizer-widget fade-in-content ${animationStep >= 4 ? 'visible' : ''}`}>
-          <div className="optimizer-header">
-            <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0, fontSize: '15px' }}>
-              <Sliders size={16} style={{ color: 'var(--accent-cyan)' }} />
-              <span>Score Optimizer Playground</span>
-            </h3>
-            <span className="optimizer-tag">Simulation HUD</span>
-          </div>
-
-          <div className="optimizer-sliders">
-            <div className="slider-group">
-              <div className="slider-label-row">
-                <span className="slider-name">Deliberation Pace (Average response time)</span>
-                <span className="slider-val">
-                  {optPace.toFixed(1)}s {optPace < 2.5 ? '(Rapid/Gaming Flag)' : '(Deliberate)'}
-                </span>
-              </div>
-              <input
-                type="range"
-                min="1.0"
-                max="8.0"
-                step="0.5"
-                value={optPace}
-                onChange={(e) => setOptPace(parseFloat(e.target.value))}
-                className="optimizer-input-range"
-              />
+        <ScrollReveal direction="up" delay={400}>
+          <section className={`optimizer-widget fade-in-content ${animationStep >= 4 ? 'visible' : ''}`}>
+            <div className="optimizer-header">
+              <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0, fontSize: '15px' }}>
+                <Sliders size={16} style={{ color: 'var(--accent-cyan)' }} />
+                <span>Score Optimizer Playground</span>
+              </h3>
+              <span className="optimizer-tag">Simulation HUD</span>
             </div>
 
-            <div className="slider-group">
-              <div className="slider-label-row">
-                <span className="slider-name">Cognitive Reflection (CRT correctness)</span>
-                <span className="slider-val">{optCRT} / 2 Correct</span>
+            <div className="optimizer-sliders">
+              <div className="slider-group">
+                <div className="slider-label-row">
+                  <span className="slider-name">Deliberation Pace (Average response time)</span>
+                  <span className="slider-val">
+                    {optPace.toFixed(1)}s {optPace < 2.5 ? '(Rapid/Gaming Flag)' : '(Deliberate)'}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="1.0"
+                  max="8.0"
+                  step="0.5"
+                  value={optPace}
+                  onChange={(e) => setOptPace(parseFloat(e.target.value))}
+                  className="optimizer-input-range"
+                />
               </div>
-              <input
-                type="range"
-                min="0"
-                max="2"
-                step="1"
-                value={optCRT}
-                onChange={(e) => setOptCRT(parseInt(e.target.value))}
-                className="optimizer-input-range"
-              />
+
+              <div className="slider-group">
+                <div className="slider-label-row">
+                  <span className="slider-name">Cognitive Reflection (CRT correctness)</span>
+                  <span className="slider-val">{optCRT} / 2 Correct</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="2"
+                  step="1"
+                  value={optCRT}
+                  onChange={(e) => setOptCRT(parseInt(e.target.value))}
+                  className="optimizer-input-range"
+                />
+              </div>
+
+              <div className="slider-group">
+                <div className="slider-label-row">
+                  <span className="slider-name">Decision Frame Consistency (Matched trap questions)</span>
+                  <span className="slider-val">
+                    {optConsistency === 1 ? '100% Consistent (Match)' : '0% Mismatch (Gaming Flag)'}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="1"
+                  value={optConsistency}
+                  onChange={(e) => setOptConsistency(parseInt(e.target.value))}
+                  className="optimizer-input-range"
+                />
+              </div>
             </div>
 
-            <div className="slider-group">
-              <div className="slider-label-row">
-                <span className="slider-name">Decision Frame Consistency (Mathed trap questions)</span>
-                <span className="slider-val">
-                  {optConsistency === 1 ? '100% Consistent (Match)' : '0% Mismatch (Gaming Flag)'}
-                </span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="1"
-                value={optConsistency}
-                onChange={(e) => setOptConsistency(parseInt(e.target.value))}
-                className="optimizer-input-range"
-              />
+            <div className="optimizer-summary">
+              <p>
+                *Simulating behavioral adjustments calculates shifts against the Stacking Calibration pipeline. Increasing deliberation times above 3.5s and completing the matching scenarios consistently eliminates system flags.
+              </p>
             </div>
-          </div>
-
-          <div className="optimizer-summary">
-            <p>
-              *Simulating behavioral adjustments calculates shifts against the Stacking Stacking Calibration pipeline. Increasing deliberation times above 3.5s and completing the matching scenarios consistently eliminates system flags.
-            </p>
-          </div>
-        </section>
+          </section>
+        </ScrollReveal>
 
         {/* DiCE-ML Counterfactual Suggestions */}
         <section className={`dice-panel fade-in-content ${animationStep >= 4 ? 'visible' : ''}`}>
           <div className="section-header" style={{ textAlign: 'left', marginBottom: '24px' }}>
             <span className="section-eyebrow">Counterfactual Recommendations</span>
             <h2 className="section-title" style={{ fontSize: 'var(--text-xl)' }}>What Could Move You Up</h2>
-            <p className="section-desc" style={{ fontSize: 'var(--text-xs)' }}>
-              Alternative profiles simulated by DiCE. Actionable paths to qualify for higher limits.
-            </p>
           </div>
 
           <div className="dice-list">
             {scoreData.counterfactual_actions.map((act, idx) => (
-              <div key={idx} className="dice-card">
-                <span className="dice-feature-change">
-                  Gain: +{act.estimated_score_gain} Pts
-                </span>
-                <span className="dice-description">{act.plain_language}</span>
-              </div>
+              <ScrollReveal direction="scale" delay={idx * 100} key={idx}>
+                <GlowCard className="dice-card">
+                  <span className="dice-feature-change">
+                    Gain: +{act.estimated_score_gain} Pts
+                  </span>
+                  <span className="dice-description">{act.plain_language}</span>
+                </GlowCard>
+              </ScrollReveal>
             ))}
           </div>
         </section>
@@ -407,24 +419,31 @@ export default function Results() {
 
           <div className="tips-list">
             {scoreData.improvement_tips.map((tip, idx) => (
-              <div key={idx} className="tip-card">
-                <h4 className="tip-header">{tip.title}</h4>
-                <p className="tip-body">{tip.body}</p>
-              </div>
+              <ScrollReveal direction="scale" delay={idx * 100} key={idx}>
+                <GlowCard className="tip-card">
+                  <h4 className="tip-header">{tip.title}</h4>
+                  <p className="tip-body">{tip.body}</p>
+                </GlowCard>
+              </ScrollReveal>
             ))}
           </div>
         </section>
 
         {/* Navigation CTAs */}
         <div className={`actions-row fade-in-content ${animationStep >= 4 ? 'visible' : ''}`}>
-          <Link to="/assessment" className="btn btn-ghost">
-            <RotateCcw size={14} />
-            <span>Retake Assessment</span>
-          </Link>
-          <Link to="/dashboard" className="btn btn-primary">
-            <LayoutDashboard size={14} />
-            <span>Go to Analytics Dashboard</span>
-          </Link>
+          <ScrollReveal direction="up" delay={100}>
+            <Link to="/assessment" className="btn btn-ghost">
+              <RotateCcw size={14} />
+              <span>Retake Assessment</span>
+            </Link>
+          </ScrollReveal>
+
+          <ScrollReveal direction="up" delay={200}>
+            <Link to="/dashboard" className="btn btn-primary">
+              <LayoutDashboard size={14} />
+              <span>Analytics Dashboard</span>
+            </Link>
+          </ScrollReveal>
         </div>
 
       </div>

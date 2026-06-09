@@ -46,17 +46,20 @@
   color: var(--text-secondary);
   text-decoration: none;
   font-size: var(--text-sm);
-  transition: all 180ms ease;
+  transition: all var(--duration-fast) var(--ease-smooth);
   font-family: var(--font-body);
+  position: relative;
+  overflow: hidden;
 }
 
 .sidebar-item:hover, .sidebar-item.active {
   color: var(--text-primary);
-  background: var(--bg-muted);
+  background: rgba(6, 182, 212, 0.05);
+  box-shadow: 0 0 16px rgba(6, 182, 212, 0.05);
 }
 
 .sidebar-item.active {
-  border-left: 2.5px solid var(--accent-primary);
+  border-left: 2.5px solid var(--accent-cyan);
 }
 
 .sidebar-footer {
@@ -94,7 +97,7 @@
 .dashboard-subtitle {
   font-family: var(--font-mono);
   font-size: var(--text-xs);
-  color: var(--accent-primary);
+  color: var(--accent-cyan);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   margin-bottom: var(--space-2);
@@ -120,12 +123,13 @@
   }
 }
 
+.kpi-reveal {
+  width: 100%;
+}
+
 .kpi-card {
-  background: var(--bg-elevated);
-  border: 1px solid var(--bg-border);
-  border-radius: var(--radius-lg);
+  width: 100%;
   padding: var(--space-5);
-  box-shadow: var(--shadow-card);
 }
 
 .kpi-label {
@@ -227,6 +231,10 @@
   color: var(--text-secondary);
 }
 
+.dashboard-table tr {
+  transition: all var(--duration-fast) var(--ease-smooth);
+}
+
 .dashboard-table tr:hover td {
   background: rgba(255, 255, 255, 0.02);
   color: var(--text-primary);
@@ -275,6 +283,12 @@
   border: 1px solid var(--bg-border);
   border-radius: var(--radius-md);
   padding: var(--space-4);
+  transition: all var(--duration-fast) var(--ease-smooth);
+}
+
+.matrix-cell:hover {
+  border-color: rgba(76, 110, 245, 0.2);
+  transform: translateY(-1px);
 }
 
 .matrix-num {

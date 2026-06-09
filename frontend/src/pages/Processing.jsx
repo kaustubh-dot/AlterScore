@@ -34,16 +34,13 @@ export default function Processing({ payload, onComplete }) {
 
     const computeScore = async () => {
       try {
-        // Post payload to backend
         const response = await axios.post('/api/score', payload);
-        // Let animation finish before proceeding
         const delay = Math.max(3600 - (Date.now() - startTime), 500);
         setTimeout(() => {
           onComplete(response.data);
         }, delay);
       } catch (err) {
         console.warn('Backend connection failed, invoking local simulation engine...', err);
-        // Invoke high-fidelity fallback engine
         const mockResult = generateMockScore(payload);
         const elapsed = Date.now() - startTime;
         const delay = Math.max(3600 - elapsed, 500);
@@ -57,30 +54,21 @@ export default function Processing({ payload, onComplete }) {
     computeScore();
   }, [payload, onComplete]);
 
-  // High fidelity mock generator matching backend logic
   const generateMockScore = (payload) => {
     const answers = payload.answers || {};
     const behavioral = payload.behavioral || {};
     
     let baseScore = 580; // Baseline prior
     
-    // 1. Numeracy scoring (+20 pts each)
     if (Number(answers.numeracy_q1) === 6600) baseScore += 25;
     if (Number(answers.numeracy_q2) === 1120) baseScore += 25;
-    
-    // 2. Fin literacy (+30 pts)
     if (Number(answers.financial_literacy_q1) === 1) baseScore += 30;
-    
-    // 3. CRT scoring (+35 pts each)
     if (Number(answers.CRT_q1) === 5) baseScore += 35;
     if (Number(answers.CRT_q2) === 47) baseScore += 35;
     
-    // 4. Open Text Length (+25 pts if substantial)
     const words = (answers.open_response_text || '').trim().split(/\s+/).filter(Boolean).length;
     if (words > 25) baseScore += 25;
     
-    // 5. Scenario mapping additions
-    // Check scenario selections
     const s1 = answers.scenario_s1 || {};
     const s2 = answers.scenario_s2 || {};
     const s3 = answers.scenario_s3 || {};
@@ -94,8 +82,6 @@ export default function Processing({ payload, onComplete }) {
     if (s3.primary === 's3_b' || s3.primary === 's3_c') baseScore += 20;
     if (s4.primary === 's4_d' || s4.primary === 's4_b') baseScore += 20;
     
-    // 6. Consistency Trap check (s1 vs s8)
-    // s8_a: s1_a, s8_b: s1_b, s8_c: s1_c, s8_d: s1_d
     const mirrorMap = { 's8_a': 's1_a', 's8_b': 's1_b', 's8_c': 's1_c', 's8_d': 's1_d' };
     let consistency = 0.5;
     if (s1.primary && s8.primary) {
@@ -108,21 +94,13 @@ export default function Processing({ payload, onComplete }) {
       }
     }
     
-    // 7. Telemetry deductions
-    // Speed gaming penalty
     const isGaming = behavioral.avg_response_time_ms < 2500;
     if (isGaming) baseScore -= 70;
-    
-    // Attention blurs penalty
     if (behavioral.dropout_count > 3) baseScore -= (behavioral.dropout_count * 5);
-    
-    // Scroll hesitation
     if (behavioral.scroll_hesitation_score > 0.8) baseScore -= 15;
 
-    // Clamp score to valid bounds
     const finalScore = Math.max(300, Math.min(850, baseScore));
     
-    // Get band
     let band = 'fair';
     let bandDesc = 'Eligible for microloans up to ₹12,000. Moderate risk profile.';
     let minAmount = 5000;
@@ -158,7 +136,6 @@ export default function Processing({ payload, onComplete }) {
     const repaymentProb = 0.35 + ((finalScore - 300) / 550) * 0.63;
     const percentile = Math.round(((finalScore - 300) / 550) * 98);
 
-    // Build mock explanation list
     const explanation = [
       {
         feature: 'future_orientation',
@@ -202,7 +179,6 @@ export default function Processing({ payload, onComplete }) {
       }
     ];
 
-    // Build mock counterfactual actions
     const counterfactual_actions = [
       {
         feature: 'CRT_score',
@@ -227,7 +203,6 @@ export default function Processing({ payload, onComplete }) {
       }
     ];
 
-    // Build mock improvement tips
     const improvement_tips = [
       {
         feature: 'scenario_consistency_score',
@@ -263,9 +238,10 @@ export default function Processing({ payload, onComplete }) {
   return (
     <div className="processing-layout">
       <SignalCanvas />
+      <div className="processing-glow-orb" />
       
       <div className="processing-container container">
-        <div className="terminal-card">
+        <div className="terminal-card shimmer-border">
           <div className="terminal-header">
             <Terminal size={14} className="terminal-icon" />
             <span className="terminal-title">inference_engine.sh</span>
