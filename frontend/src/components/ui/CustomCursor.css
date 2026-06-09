@@ -1,0 +1,64 @@
+.cursor-dot {
+  width: 6px;
+  height: 6px;
+  background-color: var(--accent-cyan);
+  border-radius: 50%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate3d(-50%, -50%, 0);
+  transition: width 0.2s var(--ease-smooth), height 0.2s var(--ease-smooth), background-color 0.2s var(--ease-smooth);
+}
+
+.cursor-dot.hover {
+  width: 10px;
+  height: 10px;
+  background-color: var(--accent-emerald);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+}
+
+.cursor-dot.active {
+  transform: translate3d(-50%, -50%, 0) scale(0.6);
+}
+
+.cursor-ring {
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(6, 182, 212, 0.45);
+  border-radius: 50%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 9998;
+  transition: width 0.25s var(--ease-spring), height 0.25s var(--ease-spring), border-color 0.25s var(--ease-smooth), background-color 0.25s var(--ease-smooth);
+  box-shadow: 0 0 8px rgba(6, 182, 212, 0.08);
+}
+
+.cursor-ring.hover {
+  width: 48px;
+  height: 48px;
+  border-color: rgba(16, 185, 129, 0.5);
+  background-color: rgba(16, 185, 129, 0.04);
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.12);
+}
+
+.cursor-ring.active {
+  width: 24px;
+  height: 24px;
+  border-color: var(--accent-cyan);
+  background-color: rgba(6, 182, 212, 0.12);
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.25);
+}
+
+.cursor-dot.hidden, .cursor-ring.hidden {
+  opacity: 0;
+}
+
+@media (pointer: fine) {
+  body, button, a, input, select, textarea, .option-pill, .scenario-pill, .likert-option, .badge-tag, .btn, .option-pill-btn {
+    cursor: none !important;
+  }
+}

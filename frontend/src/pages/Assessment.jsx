@@ -4,6 +4,7 @@ import axios from 'axios';
 import { ArrowLeft, ArrowRight, RefreshCw, Terminal, Eye, ShieldCheck } from 'lucide-react';
 import { QUESTIONS, SECTIONS } from '../data/questions';
 import Modal from '../components/ui/Modal';
+import GlitchText from '../components/animation/GlitchText';
 import './Assessment.css';
 import Processing from './Processing';
 
@@ -417,11 +418,13 @@ export default function Assessment() {
       <div className="assessment-layout">
         <div className="assessment-container container">
           <div className="assessment-wrapper">
-            <div className="consent-card animate-fade-up">
+            <div className="consent-card tech-card animate-fade-up">
               <div className="consent-icon animate-pulse-glow">
                 <Terminal size={32} />
               </div>
-              <h2 className="consent-title gradient-text-accent">Signal Authorization</h2>
+              <h2 className="consent-title gradient-text-accent">
+                <GlitchText text="Signal Authorization" />
+              </h2>
               <div className="consent-text">
                 <p style={{ textAlign: 'center', marginBottom: '24px', color: 'var(--text-secondary)' }}>
                   We measure analytical reasoning and behavioral telemetry, not transactions.
@@ -481,7 +484,7 @@ export default function Assessment() {
           </div>
 
           {/* Question Card */}
-          <div className={`question-card slide-${direction}`}>
+          <div className={`question-card tech-card slide-${direction}`}>
             <p className="question-text">{currentQ.question}</p>
             {currentQ.hint && <p className="question-hint">{currentQ.hint}</p>}
             

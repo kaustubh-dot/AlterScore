@@ -6,12 +6,14 @@ import Landing from './pages/Landing';
 import Assessment from './pages/Assessment';
 import Results from './pages/Results';
 import Dashboard from './pages/Dashboard';
+import CustomCursor from './components/ui/CustomCursor';
 import './styles/global.css';
 
 export default function App() {
   return (
     <Router>
       <div className="app-container">
+        <CustomCursor />
         {/* Render nav only on non-assessment screens to keep focus */}
         <Routes>
           <Route path="/assessment" element={null} />

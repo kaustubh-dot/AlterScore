@@ -19,6 +19,20 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(18, 30, 49, 0.22) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(18, 30, 49, 0.22) 1px, transparent 1px);
+  background-size: 50px 50px;
+  background-position: center center;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
 h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
   line-height: 1.25;
@@ -361,6 +375,57 @@ h1, h2, h3, h4, h5, h6 {
 
 .text-glow {
   text-shadow: 0 0 12px rgba(124, 58, 237, 0.4);
+}
+
+.tech-card {
+  position: relative;
+  background: rgba(11, 18, 33, 0.55);
+  border: 1px solid var(--bg-border);
+  clip-path: polygon(
+    0% 0px, 
+    calc(100% - 16px) 0px, 
+    100% 16px, 
+    100% 100%, 
+    16px 100%, 
+    0% calc(100% - 16px)
+  );
+  box-shadow: var(--shadow-card);
+  transition: all var(--duration-normal) var(--ease-smooth);
+}
+
+.tech-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(135deg, transparent 50%, var(--accent-cyan) 50%);
+  pointer-events: none;
+  opacity: 0.6;
+  transition: opacity var(--duration-fast);
+}
+
+.tech-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(315deg, transparent 50%, var(--accent-cyan) 50%);
+  pointer-events: none;
+  opacity: 0.6;
+  transition: opacity var(--duration-fast);
+}
+
+.tech-card:hover {
+  border-color: rgba(6, 182, 212, 0.3);
+  box-shadow: var(--shadow-hover), 0 0 16px rgba(6, 182, 212, 0.05);
+}
+
+.tech-card:hover::before, .tech-card:hover::after {
+  opacity: 1;
 }
 
 /* Accessibility settings */
