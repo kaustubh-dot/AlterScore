@@ -1,0 +1,102 @@
+/* Preloader Overlay Styles (Awwwards Editorial Layout) */
+
+.preloader-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: #080809;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: var(--space-12) var(--space-8);
+  transition: transform 800ms cubic-bezier(0.76, 0, 0.24, 1);
+  will-change: transform;
+  overflow: hidden;
+}
+
+/* Slide Curtain upwards on load complete */
+.preloader-overlay.exit-slide {
+  transform: translateY(-100%);
+}
+
+/* Tactical Background Grid in Preloader */
+.preloader-grid-lines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.01) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.01) 1px, transparent 1px);
+  background-size: 100px 100px;
+  background-position: center;
+  z-index: 0;
+}
+
+.preloader-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.preloader-header {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.preloader-kicker {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.preloader-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+}
+
+.preloader-counter-wrapper {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+}
+
+.preloader-number {
+  font-family: var(--font-display);
+  font-size: clamp(6rem, 15vw, 12rem);
+  font-weight: 300;
+  line-height: 0.95;
+  color: #FFFFFF;
+  letter-spacing: -0.04em;
+}
+
+.preloader-percent {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin-left: var(--space-2);
+}
+
+.preloader-footer {
+  display: flex;
+  justify-content: flex-start;
+  border-top: 1px solid var(--bg-border);
+  padding-top: var(--space-4);
+}
+
+.preloader-status {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}

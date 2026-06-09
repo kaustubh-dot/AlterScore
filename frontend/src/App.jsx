@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
@@ -7,12 +7,26 @@ import Assessment from './pages/Assessment';
 import Results from './pages/Results';
 import Dashboard from './pages/Dashboard';
 import CustomCursor from './components/ui/CustomCursor';
+import Preloader from './components/ui/Preloader';
 import './styles/global.css';
 
 export default function App() {
+  const [showPreloader, setShowPreloader] = useState(() => {
+    // Only run preloader once per session to prevent exhaustion on reload/navigation
+    return sessionStorage.getItem('alterscore_session_loaded') !== 'true';
+  });
+
+  const handlePreloadComplete = () => {
+    sessionStorage.setItem('alterscore_session_loaded', 'true');
+    setShowPreloader(false);
+  };
+
   return (
     <Router>
       <div className="app-container">
+        {showPreloader && (
+          <Preloader onComplete={handlePreloadComplete} />
+        )}
         <CustomCursor />
         {/* Render nav only on non-assessment screens to keep focus */}
         <Routes>
