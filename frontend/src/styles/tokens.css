@@ -1,0 +1,91 @@
+/* CSS Design Tokens for AlterScore */
+
+:root {
+  /* Background Palette (Dark First) */
+  --bg-void:      #020409;    /* Absolute black-navy — the abyss */
+  --bg-surface:   #060B14;    /* Primary page background */
+  --bg-elevated:  #0B1221;    /* Cards, panels */
+  --bg-overlay:   #0F1A2E;    /* Modals, drawers */
+  --bg-border:    #111E33;    /* Subtle borders */
+  --bg-muted:     #162035;    /* Hover states, subtle highlights */
+
+  /* Signal Accent Colors */
+  --accent-primary:       #4C6EF5;    /* Electric Indigo — primary CTA, active states */
+  --accent-primary-glow:  rgba(76, 110, 245, 0.125);  /* Glow version for ambient light effects */
+  --accent-secondary:     #7C3AED;    /* Deep violet — secondary CTAs, selected states */
+  --accent-cyan:          #06B6D4;    /* Cold cyan — data, numbers, telemetry values */
+  --accent-emerald:       #10B981;    /* Success, high scores, positive signals */
+  --accent-amber:         #F59E0B;    /* Warning, medium risk, attention */
+  --accent-rose:          #F43F5E;    /* Danger, low scores, flags, anomalies */
+
+  /* Score Band Colors (Credit Score Visualization) */
+  --score-excellent:  #10B981;   /* 750–850: Emerald */
+  --score-good:       #34D399;   /* 650–749: Soft Green */
+  --score-fair:       #FBBF24;   /* 550–649: Amber */
+  --score-poor:       #F97316;   /* 450–549: Orange */
+  --score-very-poor:  #F43F5E;   /* 300–449: Rose */
+
+  /* Text Hierarchy */
+  --text-primary:    #F1F5F9;    /* Almost white — primary body text */
+  --text-secondary:  #94A3B8;    /* Slate-400 — supporting copy */
+  --text-muted:      #475569;    /* Slate-600 — captions, labels, metadata */
+  --text-ghost:      #1E293B;    /* Near-invisible — watermarks, decorative text */
+  --text-accent:     #818CF8;    /* Indigo-400 — highlighted terms, link text */
+  --text-number:     #7DD3FC;    /* Sky blue — all numeric data values */
+
+  /* Fonts */
+  --font-display:  'DM Serif Display', Georgia, serif;
+  --font-body:     'Inter', -apple-system, sans-serif;
+  --font-mono:     'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Typography Scale */
+  --text-xs:    0.625rem;  /* 10px */
+  --text-sm:    0.75rem;   /* 12px */
+  --text-base:  0.875rem;  /* 14px */
+  --text-md:    1rem;      /* 16px */
+  --text-lg:    1.125rem;  /* 18px */
+  --text-xl:    1.25rem;   /* 20px */
+  --text-2xl:   1.5rem;    /* 24px */
+  --text-3xl:   2rem;      /* 32px */
+  --text-4xl:   2.75rem;   /* 44px */
+  --text-5xl:   3.75rem;   /* 60px */
+  --text-6xl:   5rem;      /* 80px */
+  --text-7xl:   7rem;      /* 112px */
+
+  /* Spacing Scale (8px base) */
+  --space-1:   4px;
+  --space-2:   8px;
+  --space-3:   12px;
+  --space-4:   16px;
+  --space-5:   20px;
+  --space-6:   24px;
+  --space-8:   32px;
+  --space-10:  40px;
+  --space-12:  48px;
+  --space-16:  64px;
+  --space-20:  80px;
+  --space-24:  96px;
+  --space-32:  128px;
+
+  /* Border Radius */
+  --radius-sm:   4px;    /* Chips, small tags */
+  --radius-md:   8px;    /* Inputs, small cards */
+  --radius-lg:   12px;   /* Standard cards */
+  --radius-xl:   16px;   /* Large panels */
+  --radius-2xl:  24px;   /* Feature sections */
+  --radius-full: 9999px; /* Pills, avatars */
+
+  /* Elevation Shadows & Glows */
+  --shadow-card:  0 0 0 1px rgba(76, 110, 245, 0.08),
+                  0 4px 24px rgba(0, 0, 0, 0.5);
+  --shadow-focus: 0 0 0 1px #4C6EF5,
+                  0 0 16px rgba(76, 110, 245, 0.25);
+  --shadow-hover: 0 0 0 1px rgba(76, 110, 245, 0.20),
+                  0 8px 32px rgba(76, 110, 245, 0.12);
+
+  --shadow-score-excellent: 0 0 0 1px #10B981, 0 0 48px rgba(16, 185, 129, 0.25);
+  --shadow-score-good:      0 0 0 1px #34D399, 0 0 48px rgba(52, 211, 153, 0.20);
+  --shadow-score-fair:      0 0 0 1px #FBBF24, 0 0 48px rgba(251, 191, 36, 0.20);
+  --shadow-score-poor:      0 0 0 1px #F97316, 0 0 48px rgba(249, 115, 22, 0.20);
+  --shadow-score-very-poor: 0 0 0 1px #F43F5E, 0 0 48px rgba(244, 63, 94, 0.20);
+}
