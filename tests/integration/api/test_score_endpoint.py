@@ -106,6 +106,24 @@ def test_debug_score_endpoint_returns_pipeline_breakdown(trained_model_dir) -> N
     assert "explanation_generation_inputs" in parsed
 
 
+def test_debug_score_endpoint_requires_explicit_opt_in(trained_model_dir) -> None:
+    settings = load_settings(
+        {
+            "ALTERSCORE_REPO_ROOT": str(trained_model_dir),
+            "ALTERSCORE_RUNTIME_MODEL_PATH": "models/artifacts/logistic_best.pkl",
+        }
+    )
+    payload = _load_valid_score_payload()
+    app = create_app(settings)
+
+    with TestClient(app) as client:
+        response = client.post("/api/debug-score", json=payload)
+
+    assert response.status_code == 404
+    parsed = response.json()
+    assert parsed["error"]["code"] == "DEBUG_NOT_AVAILABLE"
+
+
 def test_debug_score_endpoint_returns_404_in_production(trained_model_dir) -> None:
     settings = load_settings(
         {

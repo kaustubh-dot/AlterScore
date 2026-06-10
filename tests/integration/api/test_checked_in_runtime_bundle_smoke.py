@@ -86,11 +86,20 @@ def test_checked_in_bundle_health_endpoint_reports_validated_optional_status() -
 
     assert response.status_code == 200
     payload = HealthResponse.model_validate(response.json())
-    assert payload.status == "ok"
+    assert payload.status == "degraded"
     assert payload.artifact_source == "manifest"
     assert payload.manifest_backed is True
     assert payload.manifest_version is not None
     assert payload.model_version == "0.3.0"
+    assert payload.promotion_gate is not None
+    assert payload.promotion_gate.policy_version == "promotion_gate_policy_v1"
+    assert payload.promotion_gate.status == "failed"
+    assert set(payload.promotion_gate.blocking_failures) >= {
+        "expected_calibration_error",
+        "calibration_parity_ece",
+        "individual_fairness_flagged_share",
+        "individual_fairness_max_score_gap",
+    }
     assert "shap_explainer" in payload.artifacts_loaded
     assert "dice_explainer" in payload.artifacts_loaded
     assert payload.missing_artifacts == []

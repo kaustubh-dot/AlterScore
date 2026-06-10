@@ -14,6 +14,16 @@ TimeOfDay = Literal["morning", "afternoon", "evening", "night"]
 DeviceType = Literal["mobile", "desktop", "tablet"]
 ExplanationDirection = Literal["positive", "negative"]
 
+_SCENARIO_OPTION_PREFIXES = {
+    "scenario_s1": "s1_",
+    "scenario_s2": "s2_",
+    "scenario_s3": "s3_",
+    "scenario_s4": "s4_",
+    "scenario_s5": "s5_",
+    "scenario_s6": "s6_",
+    "scenario_s8": "s8_",
+}
+
 
 class ScenarioAnswer(SchemaModel):
     """A single scenario question response with optional secondary pick and telemetry."""
@@ -31,9 +41,12 @@ class ScenarioAnswer(SchemaModel):
         default=0, ge=0, le=50, description="Number of answer changes before final pick"
     )
 
-    @field_validator("primary")
+    @field_validator("primary", "least")
     @classmethod
-    def validate_primary_format(cls, v: str) -> str:
+    def validate_option_format(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
+
         # Option IDs follow the pattern: s{n}_{letter} e.g. s1_a, s8_d
         import re
 
@@ -83,6 +96,23 @@ class AnswerPayload(SchemaModel):
         """Return a plain dict suitable for passing to parsers and analyzers."""
         return self.model_dump()
 
+    @model_validator(mode="after")
+    def validate_scenario_option_prefixes(self) -> "AnswerPayload":
+        for field_name, expected_prefix in _SCENARIO_OPTION_PREFIXES.items():
+            scenario_answer = getattr(self, field_name)
+            _validate_scenario_option_prefix(
+                scenario_answer.primary,
+                field_name=field_name,
+                expected_prefix=expected_prefix,
+            )
+            if scenario_answer.least is not None:
+                _validate_scenario_option_prefix(
+                    scenario_answer.least,
+                    field_name=field_name,
+                    expected_prefix=expected_prefix,
+                )
+        return self
+
 
 class BehavioralPayload(SchemaModel):
     avg_response_time_ms: float = Field(..., ge=100, le=120000)
@@ -94,6 +124,18 @@ class BehavioralPayload(SchemaModel):
     time_of_day: TimeOfDay
     device_type: DeviceType
     typing_speed_wpm: float = Field(default=0.0, ge=0, le=200)
+
+
+def _validate_scenario_option_prefix(
+    option_id: str,
+    *,
+    field_name: str,
+    expected_prefix: str,
+) -> None:
+    if not option_id.startswith(expected_prefix):
+        raise ValueError(
+            f"{field_name} option '{option_id}' must start with '{expected_prefix}'."
+        )
 
 
 class ScoreRequest(SchemaModel):

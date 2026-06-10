@@ -77,6 +77,16 @@
     "verdict": "see psi_report_monotonic.json",
     "note": "PSI computed on base features; model does not alter feature distribution."
   },
-  "promotion_status": "promoted",
-  "promotion_notes": "Monotonic XGBoost candidate promoted to production (v2 assessment). Retrained on v2-calibrated synthetic data: scenario-driven features floored at 0.25, risk_consistency_flag rate tightened to match v2 runtime. Guaranteed monotonicity constraints on all key behavioral features."
+  "score_mapping": {
+    "method": "log_odds",
+    "score_base": 500.0,
+    "log_odds_factor": 80.0,
+    "probability_clip_min": 0.01,
+    "probability_clip_max": 0.99,
+    "score_min": 300,
+    "score_max": 850,
+    "calibration": "none"
+  },
+  "promotion_status": "review_required",
+  "promotion_notes": "Monotonic XGBoost remains the checked-in runtime bundle, but promotion gates now flag calibration and individual-fairness issues. Keep serving only as a prototype/demo runtime until calibrated probabilities and fairness gates are regenerated and pass."
 }

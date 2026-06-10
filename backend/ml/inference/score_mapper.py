@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
@@ -10,14 +11,99 @@ import numpy as np
 
 from backend.app.core.constants import RISK_BANDS, SCORE_MIN, SCORE_MAX
 
+SCORE_MAPPING_METHOD_LOG_ODDS = "log_odds"
 
-def probability_to_score(prob_repay: float) -> int:
+
+@dataclass(frozen=True)
+class ScoreMappingConfig:
+    method: str = SCORE_MAPPING_METHOD_LOG_ODDS
+    score_base: float = 500.0
+    log_odds_factor: float = 80.0
+    probability_clip_min: float = 0.01
+    probability_clip_max: float = 0.99
+    score_min: int = SCORE_MIN
+    score_max: int = SCORE_MAX
+    calibration: str = "none"
+
+
+DEFAULT_SCORE_MAPPING_CONFIG = ScoreMappingConfig()
+
+
+def probability_to_score(
+    prob_repay: float,
+    mapping_config: Mapping[str, Any] | ScoreMappingConfig | None = None,
+) -> int:
     """Map repayment probability to the documented 300-850 score range."""
 
-    probability = float(np.clip(prob_repay, 0.01, 0.99))
-    log_odds = np.log(probability / (1.0 - probability))
-    score = 500.0 + (log_odds * 80.0)
-    return int(np.clip(score, SCORE_MIN, SCORE_MAX))
+    return int(score_mapping_debug(prob_repay, mapping_config)["final_credit_score"])
+
+
+def score_mapping_debug(
+    prob_repay: float,
+    mapping_config: Mapping[str, Any] | ScoreMappingConfig | None = None,
+) -> dict[str, Any]:
+    """Return score-mapping internals for debug traces and tests."""
+
+    config = resolve_score_mapping_config(mapping_config)
+    if config.method != SCORE_MAPPING_METHOD_LOG_ODDS:
+        raise ValueError(f"Unsupported score mapping method: {config.method}.")
+
+    probability = float(
+        np.clip(
+            prob_repay,
+            config.probability_clip_min,
+            config.probability_clip_max,
+        )
+    )
+    log_odds = float(np.log(probability / (1.0 - probability)))
+    raw_score = config.score_base + (log_odds * config.log_odds_factor)
+    final_credit_score = int(np.clip(raw_score, config.score_min, config.score_max))
+    return {
+        "method": config.method,
+        "calibration": config.calibration,
+        "raw_repayment_probability": float(prob_repay),
+        "clipped_probability_for_score_mapping": probability,
+        "log_odds": log_odds,
+        "score_base": config.score_base,
+        "log_odds_factor": config.log_odds_factor,
+        "raw_score_before_clamp": raw_score,
+        "score_min": config.score_min,
+        "score_max": config.score_max,
+        "final_credit_score": final_credit_score,
+    }
+
+
+def resolve_score_mapping_config(
+    mapping_config: Mapping[str, Any] | ScoreMappingConfig | None = None,
+) -> ScoreMappingConfig:
+    """Resolve manifest score-mapping parameters with conservative defaults."""
+
+    if mapping_config is None:
+        return DEFAULT_SCORE_MAPPING_CONFIG
+    if isinstance(mapping_config, ScoreMappingConfig):
+        _validate_score_mapping_config(mapping_config)
+        return mapping_config
+
+    resolved = ScoreMappingConfig(
+        method=_mapping_string(mapping_config, "method", SCORE_MAPPING_METHOD_LOG_ODDS),
+        score_base=_mapping_float(mapping_config, "score_base", 500.0),
+        log_odds_factor=_mapping_float(mapping_config, "log_odds_factor", 80.0),
+        probability_clip_min=_mapping_float(
+            mapping_config,
+            "probability_clip_min",
+            0.01,
+        ),
+        probability_clip_max=_mapping_float(
+            mapping_config,
+            "probability_clip_max",
+            0.99,
+        ),
+        score_min=_mapping_int(mapping_config, "score_min", SCORE_MIN),
+        score_max=_mapping_int(mapping_config, "score_max", SCORE_MAX),
+        calibration=_mapping_string(mapping_config, "calibration", "none"),
+    )
+    _validate_score_mapping_config(resolved)
+    return resolved
 
 
 def get_risk_band(score: int) -> str:
@@ -117,9 +203,62 @@ def _is_numeric_sequence(values: Any) -> bool:
     return isinstance(values, Sequence) and not isinstance(values, (str, bytes))
 
 
+def _mapping_float(
+    mapping: Mapping[str, Any],
+    key: str,
+    default: float,
+) -> float:
+    value = mapping.get(key, default)
+    try:
+        return float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"score_mapping.{key} must be numeric.") from exc
+
+
+def _mapping_int(
+    mapping: Mapping[str, Any],
+    key: str,
+    default: int,
+) -> int:
+    value = mapping.get(key, default)
+    try:
+        return int(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"score_mapping.{key} must be an integer.") from exc
+
+
+def _mapping_string(
+    mapping: Mapping[str, Any],
+    key: str,
+    default: str,
+) -> str:
+    value = mapping.get(key, default)
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"score_mapping.{key} must be a non-empty string.")
+    return value.strip()
+
+
+def _validate_score_mapping_config(config: ScoreMappingConfig) -> None:
+    if config.method != SCORE_MAPPING_METHOD_LOG_ODDS:
+        raise ValueError(f"Unsupported score mapping method: {config.method}.")
+    if config.log_odds_factor <= 0.0:
+        raise ValueError("score_mapping.log_odds_factor must be positive.")
+    if not (0.0 < config.probability_clip_min < config.probability_clip_max < 1.0):
+        raise ValueError(
+            "score_mapping probability clips must satisfy 0 < min < max < 1."
+        )
+    if config.score_min >= config.score_max:
+        raise ValueError("score_mapping.score_min must be lower than score_max.")
+
+
 __all__ = [
+    "DEFAULT_SCORE_MAPPING_CONFIG",
+    "SCORE_MAPPING_METHOD_LOG_ODDS",
+    "ScoreMappingConfig",
     "compute_percentile",
     "get_loan_eligibility",
     "get_risk_band",
     "probability_to_score",
+    "resolve_score_mapping_config",
+    "score_mapping_debug",
 ]

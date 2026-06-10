@@ -93,6 +93,31 @@ def test_score_request_schema_excludes_protected_attributes() -> None:
         ScoreRequest.model_validate(payload)
 
 
+@pytest.mark.parametrize(
+    ("field_name", "bad_option"),
+    [
+        ("scenario_s1", {"primary": "s2_a"}),
+        ("scenario_s2", {"primary": "s1_a"}),
+        ("scenario_s8", {"primary": "s1_b"}),
+        ("scenario_s4", {"primary": "s4_b", "least": "s5_a"}),
+    ],
+)
+def test_scenario_options_must_match_their_question_prefix(
+    field_name: str,
+    bad_option: dict,
+) -> None:
+    payload = build_valid_score_request_payload()
+    payload["answers"][field_name] = {
+        "first_click_ms": 8000,
+        "change_count": 0,
+        "least": None,
+        **bad_option,
+    }
+
+    with pytest.raises(ValidationError):
+        ScoreRequest.model_validate(payload)
+
+
 def test_score_response_serializes_expected_top_level_fields() -> None:
     response = ScoreResponse.model_validate(
         {

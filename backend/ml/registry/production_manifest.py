@@ -11,6 +11,7 @@ import re
 from typing import Any, Final
 
 from backend.app.core.paths import resolve_repo_path
+from backend.ml.inference.score_mapper import resolve_score_mapping_config
 
 MANIFEST_REQUIRED_ARTIFACT_KEYS: Final[tuple[str, ...]] = (
     "runtime_model",
@@ -74,6 +75,7 @@ class ProductionManifest:
     metrics_summary: dict[str, Any]
     fairness_summary: dict[str, Any]
     drift_summary: dict[str, Any]
+    score_mapping: dict[str, Any] | None
     promotion_status: str | None
     promotion_notes: str | None
     raw_payload: dict[str, Any]
@@ -132,6 +134,14 @@ def load_production_manifest(path: str | Path) -> ProductionManifest:
     fairness_summary = _require_mapping(payload, "fairness_summary")
     drift_summary = _require_mapping(payload, "drift_summary")
 
+    score_mapping = payload.get("score_mapping")
+    if score_mapping is not None:
+        if not isinstance(score_mapping, dict):
+            raise ValueError(
+                "production manifest 'score_mapping' field must be a JSON object when present."
+            )
+        resolve_score_mapping_config(score_mapping)
+
     promotion_status = payload.get("promotion_status")
     if promotion_status is not None and (
         not isinstance(promotion_status, str) or not promotion_status.strip()
@@ -187,6 +197,7 @@ def load_production_manifest(path: str | Path) -> ProductionManifest:
         metrics_summary=metrics_summary,
         fairness_summary=fairness_summary,
         drift_summary=drift_summary,
+        score_mapping=score_mapping,
         promotion_status=None if promotion_status is None else str(promotion_status),
         promotion_notes=None if promotion_notes is None else str(promotion_notes),
         raw_payload=payload,

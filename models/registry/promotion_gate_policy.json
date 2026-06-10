@@ -1,0 +1,24 @@
+{
+  "policy_schema_version": "1.0.0",
+  "policy_version": "promotion_gate_policy_v1",
+  "thresholds": {
+    "min_test_auc_roc": 0.75,
+    "max_expected_calibration_error": 0.08,
+    "max_individual_fairness_flagged_share": 0.05,
+    "max_individual_fairness_score_gap": 100,
+    "max_subgroup_auc_gap": 0.075,
+    "max_post_governance_auc_drop": 0.01,
+    "max_post_governance_approval_rate_drop": 0.05,
+    "max_drift_psi_alert": 0.3
+  },
+  "rationale": {
+    "min_test_auc_roc": "Candidate must clear a minimum discrimination floor on the held-out temporal test split.",
+    "max_expected_calibration_error": "Displayed probabilities and score bands must be calibrated enough for lending-adjacent use.",
+    "max_individual_fairness_flagged_share": "Similar applicants should rarely receive materially different scores.",
+    "max_individual_fairness_score_gap": "Large score gaps between similar applicant profiles require review before promotion.",
+    "max_subgroup_auc_gap": "Subgroup ranking performance must stay close to the overall model.",
+    "max_post_governance_auc_drop": "Post-model governance adjustments must not materially damage model ranking quality.",
+    "max_post_governance_approval_rate_drop": "Large approval-rate swings from governance adjustments are advisory review items.",
+    "max_drift_psi_alert": "Feature-distribution drift at or above alert level blocks promotion."
+  }
+}

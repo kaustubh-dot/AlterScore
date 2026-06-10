@@ -29,6 +29,7 @@ class Settings:
     request_log_path: Path
     log_level: str
     cors_origins: tuple[str, ...]
+    enable_debug_score: bool
 
 
 def _split_csv(value: str | None) -> tuple[str, ...]:
@@ -36,6 +37,12 @@ def _split_csv(value: str | None) -> tuple[str, ...]:
         return ()
 
     return tuple(item.strip() for item in value.split(",") if item.strip())
+
+
+def _env_flag(value: str | None, *, default: bool = False) -> bool:
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
 def load_settings(env: Mapping[str, str] | None = None) -> Settings:
@@ -75,6 +82,7 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         request_log_path=request_log_path,
         log_level=source.get("ALTERSCORE_LOG_LEVEL", "INFO").upper(),
         cors_origins=cors_origins or DEFAULT_CORS_ORIGINS,
+        enable_debug_score=_env_flag(source.get("ALTERSCORE_ENABLE_DEBUG_SCORE")),
     )
 
 

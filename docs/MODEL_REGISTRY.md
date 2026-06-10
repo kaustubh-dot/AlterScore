@@ -37,6 +37,7 @@ This file tracks expected model artifacts, promotion criteria, and the registry 
 | PSI report | `models/reports/psi_report_monotonic.json` | Drift job | Yes for dashboard | Train months `1-8` vs test months `11-12` on the canonical 35 inputs only |
 | Population percentiles | `models/reports/population_percentiles_monotonic.json` | Evaluation job | Yes | Score percentile lookup plus saved score histogram for the active runtime |
 | Model manifest | `models/registry/production_manifest.json` | Promotion step | Yes | Single serving bundle declaration |
+| Promotion gate policy | `models/registry/promotion_gate_policy.json` | Governance policy | Yes for promotion review | Versioned thresholds for AUC, calibration, fairness, governance-impact, and drift gates |
 
 ## Production Manifest Schema
 
@@ -127,6 +128,16 @@ Manifest contract notes:
     "max_psi": null,
     "verdict": null
   },
+  "score_mapping": {
+    "method": "log_odds",
+    "score_base": 500.0,
+    "log_odds_factor": 80.0,
+    "probability_clip_min": 0.01,
+    "probability_clip_max": 0.99,
+    "score_min": 300,
+    "score_max": 850,
+    "calibration": "none"
+  },
   "promotion_status": "promoted",
   "promotion_notes": "Monotonic XGBoost candidate promoted to production runtime."
 }
@@ -148,15 +159,17 @@ Manifest contract notes:
 
 ## Promotion Gates
 
-- Stacking ensemble AUC on months 11-12 test split is at least 0.75, target above 0.78.
+- Gate thresholds are versioned in `models/registry/promotion_gate_policy.json`.
+- Run `python -m backend.ml.registry.promotion_gates --manifest models/registry/production_manifest.json` before release; use `--require-clean-pass` for promotion-candidate review.
+- Runtime AUC on months 11-12 test split is at least 0.75, target above 0.78.
 - Ensemble beats simulated loan officer by at least 0.05 AUC.
 - Ensemble beats or ties all individual production candidates.
-- Brier score and ECE are reported after calibration.
-- Score mapping is monotonic from repayment probability to 300-850 score.
+- Brier score and ECE are reported after calibration, and expected calibration error must clear the active policy threshold.
+- Score mapping is monotonic from repayment probability to 300-850 score and its parameters are declared in `production_manifest.json`.
 - SHAP explanations are non-trivial and produce top factors.
 - DICE actions produce 1-3 valid actions and never suggest protected attributes.
 - PSI report exists and no core feature has PSI above 0.30 without explanation.
-- Fairness report exists and subgroups with at least 30 samples are evaluated.
+- Fairness report exists, subgroup performance is evaluated, and individual-fairness proxy failures block promotion.
 - Feature list excludes protected attributes and temporal metadata.
 - Artifacts load in a clean backend process.
 

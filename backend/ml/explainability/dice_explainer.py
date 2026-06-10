@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Final, Mapping, Sequence
+from typing import Any, Callable, Final, Mapping, Sequence
 
 import joblib
 import numpy as np
@@ -21,6 +21,8 @@ from backend.ml.preprocessing.feature_registry import (
 from backend.ml.preprocessing.pipeline import transform_features
 
 DEFAULT_DICE_EXPLAINER_PATH: Final[Path] = MODEL_EXPLAINERS_DIR / "dice_explainer.pkl"
+ProbabilityAdjuster = Callable[[float, Mapping[str, Any]], float]
+ScoreMapper = Callable[[float], int]
 DEFAULT_COUNTERFACTUAL_POLICIES: Final[dict[str, dict[str, Any]]] = {
     "numeracy_score": {
         "direction": "increase",
@@ -196,6 +198,8 @@ class PersistedDiceExplainer:
         current_probability: float,
         current_credit_score: int,
         shap_contributions: Mapping[str, float] | None = None,
+        candidate_probability_adjuster: ProbabilityAdjuster | None = None,
+        candidate_score_mapper: ScoreMapper | None = None,
     ) -> list[dict[str, Any]]:
         self.validate(
             expected_feature_names=ALL_MODEL_FEATURES,
@@ -232,9 +236,18 @@ class PersistedDiceExplainer:
             candidate_probability = _predict_repayment_probability(
                 model, candidate_processed
             )
-            candidate_credit_score = probability_to_score(candidate_probability)
+            adjusted_candidate_probability = (
+                candidate_probability_adjuster(candidate_probability, candidate_row)
+                if candidate_probability_adjuster is not None
+                else candidate_probability
+            )
+            candidate_credit_score = (
+                candidate_score_mapper(adjusted_candidate_probability)
+                if candidate_score_mapper is not None
+                else probability_to_score(adjusted_candidate_probability)
+            )
             estimated_score_gain = candidate_credit_score - current_credit_score
-            probability_gain = candidate_probability - current_probability
+            probability_gain = adjusted_candidate_probability - current_probability
             if estimated_score_gain < self.min_score_gain and probability_gain < float(
                 self.min_probability_gain
             ):

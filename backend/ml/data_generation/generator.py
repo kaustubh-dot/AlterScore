@@ -176,8 +176,12 @@ def generate_synthetic_dataset(
             feature_counts[s_feat][i] += _SECONDARY_WEIGHT
 
     for f in feature_accumulators:
-        avg_contributions = np.where(
-            feature_counts[f] > 0, feature_accumulators[f] / feature_counts[f], 0.5
+        avg_contributions = np.full(row_count, 0.5, dtype=float)
+        np.divide(
+            feature_accumulators[f],
+            feature_counts[f],
+            out=avg_contributions,
+            where=feature_counts[f] > 0,
         )
         feature_accumulators[f] = 0.5 * 0.40 + avg_contributions * 0.60
         feature_accumulators[f] = np.clip(feature_accumulators[f], 0.0, 1.0)
@@ -402,7 +406,10 @@ def generate_synthetic_dataset(
     repayment_logit = (
         2.8 * (psychological_credit_index - 0.52)
         + 2.3 * (repayment_intention_score - 0.20)
-        + 1.4 * (engagement_score - 0.16)
+        + 1.2 * (numeracy_score - 0.50)
+        + 0.5 * (financial_literacy_score - 0.50)
+        + 2.0 * (engagement_score - 0.225)
+        - 1.35 * (scroll_hesitation_score - 0.50)
         + 0.9 * (text_agency_score - 0.55)
         + 0.6 * text_problem_solving_flag
         + 0.4 * (risk_balance - 0.5)

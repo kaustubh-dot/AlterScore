@@ -28,11 +28,16 @@ A model is treated as production-ready only if it is:
 
 ## Hard Gates
 
-The repository currently treats these as hard promotion requirements:
+The repository currently treats these as hard promotion requirements. Numeric
+thresholds are versioned in `models/registry/promotion_gate_policy.json` and
+checked with `python -m backend.ml.registry.promotion_gates`.
 
 - monotonic acceptance gate
 - pairwise counterfactual acceptance gate
-- fairness gate
+- fairness gate, including subgroup and individual-fairness proxy checks
+- calibration gate
+- drift gate
+- post-governance impact gate
 - production bundle compatibility
 
 These thresholds must not be weakened during cleanup or release preparation.
