@@ -614,10 +614,10 @@ def extract_nlp_features(text: str) -> dict[str, float | np.ndarray]:
     tokens = _tokenize(normalized_text)
 
     if not _validate_text_quality(text, tokens):
-        # Softened penalty: neutral instead of harsh punishment
+        # Zero signal: gibberish/spam text demonstrates no agency or effort
         return {
             "text_sentiment_compound": 0.0,
-            "text_agency_score": 0.2,
+            "text_agency_score": 0.0,
             "text_problem_solving_flag": 0.0,
             "_embedding_raw": np.zeros(RAW_EMBEDDING_DIM, dtype=float),
         }
@@ -687,7 +687,7 @@ def extract_nlp_feature_batch(
 def _default_nlp_features() -> dict[str, float | np.ndarray]:
     return {
         "text_sentiment_compound": 0.0,
-        "text_agency_score": 0.3,
+        "text_agency_score": 0.0,
         "text_problem_solving_flag": 0.0,
         "_embedding_raw": np.zeros(RAW_EMBEDDING_DIM, dtype=float),
     }

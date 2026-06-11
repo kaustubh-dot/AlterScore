@@ -741,34 +741,46 @@ def _calculate_governance_multiplier(
         )
 
     # 10. Scenario Straight-Lining Penalty
-    # If the user selected the same option position in >= 85% of scenario questions
-    # and has supporting evidence of low engagement or fast pacing.
+    # Selecting the same option position in >= 85% of scenario questions is
+    # strong gaming evidence by itself — no compound evidence required.
     straight_lining_ratio = float(
         feature_row.get("scenario_straight_lining_ratio", 0.0)
     )
     if straight_lining_ratio >= 0.85:
-        text_agency = float(feature_row.get("text_agency_score", 0.3))
-        text_problem = float(feature_row.get("text_problem_solving_flag", 1.0))
-        consistency = float(feature_row.get("scenario_consistency_score", 0.5))
+        penalty = 0.18
+        multiplier -= penalty
+        reasons.append(
+            f"Straight-lining response pattern detected (ratio: {straight_lining_ratio:.1%}) "
+            f"— same option position selected across nearly all scenarios"
+        )
 
-        has_speed_evidence = (scenario_fast_gaming >= 1.0) or (avg_time < 2000.0)
-        has_low_effort_text = (text_agency < 0.2) or (text_problem == 0.0)
-        has_inconsistency = consistency < 0.5
-
-        if has_speed_evidence or has_low_effort_text or has_inconsistency:
-            penalty = 0.06
-            multiplier -= penalty
-            reasons.append(
-                f"Suspicious straight-lining response pattern (ratio: {straight_lining_ratio:.1%}) "
-                f"supported by low-engagement/speed telemetry"
-            )
+    # 11. Cognitive Zero Penalty
+    # Getting ALL objective questions wrong is near-impossible without random input.
+    # Numeracy, CRT, and financial literacy are the only objectively-scored questions;
+    # scoring zero on all three requires missing every tolerance band.
+    cognitive_numeracy = float(feature_row.get("numeracy_score", 1.0))
+    cognitive_crt = float(feature_row.get("CRT_score", 1.0))
+    cognitive_fin_lit = float(feature_row.get("financial_literacy_score", 1.0))
+    cognitive_zero_profile = (
+        cognitive_numeracy <= 0.05
+        and cognitive_crt <= 0.05
+        and cognitive_fin_lit <= 0.05
+    )
+    if cognitive_zero_profile:
+        penalty = 0.15
+        multiplier -= penalty
+        reasons.append(
+            "Zero demonstrated cognitive ability across all objective questions "
+            f"(numeracy: {cognitive_numeracy:.2f}, CRT: {cognitive_crt:.2f}, "
+            f"financial_literacy: {cognitive_fin_lit:.2f})"
+        )
 
     severe_fast_invalid_profile = (
         avg_time < 1000.0
         and session_duration < 60.0
-        and float(feature_row.get("numeracy_score", 1.0)) <= 0.05
-        and float(feature_row.get("CRT_score", 1.0)) <= 0.05
-        and float(feature_row.get("financial_literacy_score", 1.0)) <= 0.05
+        and cognitive_numeracy <= 0.05
+        and cognitive_crt <= 0.05
+        and cognitive_fin_lit <= 0.05
         and float(feature_row.get("text_problem_solving_flag", 1.0)) <= 0.05
     )
     if severe_fast_invalid_profile:

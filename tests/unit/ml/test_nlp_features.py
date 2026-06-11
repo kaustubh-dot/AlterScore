@@ -19,7 +19,7 @@ def test_empty_text_returns_neutral_defaults() -> None:
     result = extract_nlp_features("")
 
     assert result["text_sentiment_compound"] == 0.0
-    assert result["text_agency_score"] == 0.3
+    assert result["text_agency_score"] == 0.0
     assert result["text_problem_solving_flag"] == 0.0
     np.testing.assert_array_equal(result["_embedding_raw"], np.zeros(RAW_EMBEDDING_DIM))
 

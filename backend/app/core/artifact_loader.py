@@ -1063,7 +1063,12 @@ def _validate_loaded_single_model_runtime(
             preprocessor.transform(probe_features),
             dtype=float,
         )
-        probe_probabilities = model.predict_proba(processed_features)
+        try:
+            probe_probabilities = model.predict_proba(processed_features)
+        except AttributeError as e:
+            print("ERROR IN PREDICT PROBA. model:", type(model))
+            print("VARS:", vars(model))
+            raise e
         _validate_probability_matrix("runtime model", probe_probabilities)
     except Exception as exc:
         invalid_artifacts.add("runtime_model")

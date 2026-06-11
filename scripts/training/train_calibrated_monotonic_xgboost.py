@@ -88,11 +88,11 @@ MODEL_NAME: Final[str] = "xgboost_monotonic"
 MODEL_TYPE: Final[str] = "classical_monotonic"
 VALIDATION_SPLIT: Final[str] = "validation_months_9_10"
 TEST_SPLIT: Final[str] = "test_months_11_12"
-DEFAULT_SCORE_BASE: Final[float] = 575.0
-DEFAULT_SCORE_LOG_ODDS_FACTOR: Final[float] = 28.0
-DEFAULT_MODEL_VERSION: Final[str] = "0.4.0"
-DEFAULT_MANIFEST_VERSION: Final[str] = "xgboost_monotonic_calibrated_v1"
-DEFAULT_CODE_REF: Final[str] = "codex-scoring-calibration-roadmap"
+DEFAULT_SCORE_BASE: Final[float] = 500.0
+DEFAULT_SCORE_LOG_ODDS_FACTOR: Final[float] = 40.0
+DEFAULT_MODEL_VERSION: Final[str] = "0.5.0"
+DEFAULT_MANIFEST_VERSION: Final[str] = "xgboost_monotonic_calibrated_v2"
+DEFAULT_CODE_REF: Final[str] = "main"
 
 
 @dataclass(frozen=True)

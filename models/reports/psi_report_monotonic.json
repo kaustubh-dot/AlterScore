@@ -1,5 +1,5 @@
 {
-  "max_psi": 0.0147,
+  "max_psi": 0.0152,
   "verdict": "stable",
   "thresholds": {
     "stable_below": 0.2,
@@ -9,17 +9,7 @@
   "top_drifted_features": [
     {
       "feature": "repayment_intention_score",
-      "psi": 0.0147,
-      "status": "stable"
-    },
-    {
-      "feature": "text_sentiment_compound",
-      "psi": 0.0133,
-      "status": "stable"
-    },
-    {
-      "feature": "delay_discounting_rate",
-      "psi": 0.0117,
+      "psi": 0.0152,
       "status": "stable"
     },
     {
@@ -28,8 +18,8 @@
       "status": "stable"
     },
     {
-      "feature": "social_capital_score",
-      "psi": 0.009,
+      "feature": "psychological_credit_index",
+      "psi": 0.0081,
       "status": "stable"
     },
     {
@@ -39,39 +29,39 @@
     },
     {
       "feature": "future_orientation",
-      "psi": 0.0071,
+      "psi": 0.007,
       "status": "stable"
     },
     {
-      "feature": "text_agency_score",
-      "psi": 0.0068,
+      "feature": "social_capital_score",
+      "psi": 0.007,
+      "status": "stable"
+    },
+    {
+      "feature": "delay_discounting_rate",
+      "psi": 0.0061,
       "status": "stable"
     },
     {
       "feature": "conscientiousness_score",
-      "psi": 0.0062,
+      "psi": 0.0053,
       "status": "stable"
     },
     {
-      "feature": "behavioral_trust_score",
-      "psi": 0.0055,
+      "feature": "locus_of_control",
+      "psi": 0.0051,
+      "status": "stable"
+    },
+    {
+      "feature": "risk_response_speed_ratio",
+      "psi": 0.0047,
       "status": "stable"
     }
   ],
   "all_features": [
     {
       "feature": "repayment_intention_score",
-      "psi": 0.0147,
-      "status": "stable"
-    },
-    {
-      "feature": "text_sentiment_compound",
-      "psi": 0.0133,
-      "status": "stable"
-    },
-    {
-      "feature": "delay_discounting_rate",
-      "psi": 0.0117,
+      "psi": 0.0152,
       "status": "stable"
     },
     {
@@ -80,8 +70,8 @@
       "status": "stable"
     },
     {
-      "feature": "social_capital_score",
-      "psi": 0.009,
+      "feature": "psychological_credit_index",
+      "psi": 0.0081,
       "status": "stable"
     },
     {
@@ -91,42 +81,27 @@
     },
     {
       "feature": "future_orientation",
-      "psi": 0.0071,
+      "psi": 0.007,
       "status": "stable"
     },
     {
-      "feature": "text_agency_score",
-      "psi": 0.0068,
+      "feature": "social_capital_score",
+      "psi": 0.007,
+      "status": "stable"
+    },
+    {
+      "feature": "delay_discounting_rate",
+      "psi": 0.0061,
       "status": "stable"
     },
     {
       "feature": "conscientiousness_score",
-      "psi": 0.0062,
-      "status": "stable"
-    },
-    {
-      "feature": "behavioral_trust_score",
-      "psi": 0.0055,
-      "status": "stable"
-    },
-    {
-      "feature": "locus_of_control",
       "psi": 0.0053,
       "status": "stable"
     },
     {
-      "feature": "text_semantic_dim1",
-      "psi": 0.0052,
-      "status": "stable"
-    },
-    {
-      "feature": "psychological_credit_index",
-      "psi": 0.005,
-      "status": "stable"
-    },
-    {
-      "feature": "typing_speed_wpm",
-      "psi": 0.0049,
+      "feature": "locus_of_control",
+      "psi": 0.0051,
       "status": "stable"
     },
     {
@@ -145,8 +120,33 @@
       "status": "stable"
     },
     {
+      "feature": "text_agency_score",
+      "psi": 0.0047,
+      "status": "stable"
+    },
+    {
+      "feature": "text_semantic_dim1",
+      "psi": 0.0047,
+      "status": "stable"
+    },
+    {
+      "feature": "behavioral_trust_score",
+      "psi": 0.0046,
+      "status": "stable"
+    },
+    {
       "feature": "engagement_score",
       "psi": 0.0043,
+      "status": "stable"
+    },
+    {
+      "feature": "typing_speed_wpm",
+      "psi": 0.0042,
+      "status": "stable"
+    },
+    {
+      "feature": "text_sentiment_compound",
+      "psi": 0.004,
       "status": "stable"
     },
     {
@@ -165,12 +165,12 @@
       "status": "stable"
     },
     {
-      "feature": "cognitive_load_index",
-      "psi": 0.0025,
+      "feature": "text_semantic_dim2",
+      "psi": 0.0029,
       "status": "stable"
     },
     {
-      "feature": "text_problem_solving_flag",
+      "feature": "cognitive_load_index",
       "psi": 0.0025,
       "status": "stable"
     },
@@ -180,8 +180,8 @@
       "status": "stable"
     },
     {
-      "feature": "text_semantic_dim2",
-      "psi": 0.0023,
+      "feature": "text_problem_solving_flag",
+      "psi": 0.0024,
       "status": "stable"
     },
     {

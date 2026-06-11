@@ -105,7 +105,6 @@ def generate_synthetic_dataset(
 
     rng = np.random.default_rng(seed)
     cohort_month = _build_cohort_months(row_count)
-    month_offset = cohort_month.astype(float) - 1.0
 
     capacity = rng.normal(0.0, 1.0, row_count)
     discipline = 0.38 * capacity + rng.normal(0.0, 0.92, row_count)
@@ -183,8 +182,9 @@ def generate_synthetic_dataset(
             out=avg_contributions,
             where=feature_counts[f] > 0,
         )
-        feature_accumulators[f] = 0.5 * 0.40 + avg_contributions * 0.60
-        feature_accumulators[f] = np.clip(feature_accumulators[f], 0.0, 1.0)
+        # Use raw codebook averages — no artificial floor.
+        # Matches the runtime scenario_analyzer which now uses weighted_avg directly.
+        feature_accumulators[f] = np.clip(avg_contributions, 0.0, 1.0)
 
     future_orientation = feature_accumulators["future_orientation"]
     conscientiousness_score = feature_accumulators["conscientiousness_score"]
@@ -413,7 +413,7 @@ def generate_synthetic_dataset(
         - 0.7 * answer_change_rate
         - 0.12 * dropout_count
         + rng.normal(0.0, 0.42, row_count)
-        - 0.60
+        - 1.35  # Offset tuned for un-floored scenario features to maintain ~35% default rate
     )
     repayment_probability = _sigmoid(repayment_logit)
     repayment_label = (rng.random(row_count) < repayment_probability).astype(int)

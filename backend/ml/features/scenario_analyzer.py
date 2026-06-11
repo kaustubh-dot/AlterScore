@@ -143,14 +143,17 @@ def analyze_scenario_responses(
             )
             weight_accumulator[feature] = weight_accumulator.get(feature, 0.0) + weight
 
-    # True weighted average blended with 0.5 prior (60/40 ratio) to match training
+    # True weighted average from codebook — no artificial floor.
+    # The raw codebook averages directly reflect option quality: worst options
+    # produce values near 0.10-0.30, best options near 0.80-1.00.
     feature_contributions: dict[str, float] = {}
     for feature_name, sum_weighted in feature_accumulator.items():
         sum_weights = weight_accumulator.get(feature_name, 0.0)
         if sum_weights > 0:
             weighted_avg = sum_weighted / sum_weights
-            blended_avg = 0.20 + 0.60 * weighted_avg
-            feature_contributions[feature_name] = float(min(max(blended_avg, 0.0), 1.0))
+            feature_contributions[feature_name] = float(
+                min(max(weighted_avg, 0.0), 1.0)
+            )
 
     # Consistency check: S1 vs S8
     scenario_consistency_score = _compute_consistency_score(answer_values)
