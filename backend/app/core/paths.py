@@ -15,9 +15,7 @@ def discover_repo_root(start: Path | None = None) -> Path:
         current = current.parent
 
     for candidate in (current, *current.parents):
-        if (candidate / "backend").is_dir() and (
-            candidate / "models"
-        ).is_dir():
+        if (candidate / "backend").is_dir() and (candidate / "models").is_dir():
             return candidate
 
     raise RuntimeError("Could not locate the AlterScore repository root.")
