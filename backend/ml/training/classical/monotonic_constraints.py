@@ -120,8 +120,18 @@ def build_monotonic_constraint_vector(
     """Return one monotonic constraint integer per transformed model feature."""
 
     return tuple(
-        int(direction_map.get(feature_name, 0)) for feature_name in feature_names
+        int(direction_map.get(_canonical_feature_name(feature_name), 0))
+        for feature_name in feature_names
     )
+
+
+def _canonical_feature_name(feature_name: str) -> str:
+    """Map sklearn-transformed feature names back to registry feature names."""
+
+    for prefix in ("num__", "cat__"):
+        if feature_name.startswith(prefix):
+            return feature_name[len(prefix) :]
+    return feature_name
 
 
 __all__ = [

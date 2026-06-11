@@ -54,6 +54,7 @@ def test_load_settings_uses_defaults_with_empty_env() -> None:
     assert settings.request_log_path == REQUEST_LOG_PATH
     assert settings.log_level == "INFO"
     assert settings.cors_origins == DEFAULT_CORS_ORIGINS
+    assert settings.enable_debug_score is False
 
 
 def test_load_settings_supports_environment_overrides(tmp_path: Path) -> None:
@@ -67,6 +68,7 @@ def test_load_settings_supports_environment_overrides(tmp_path: Path) -> None:
             "ALTERSCORE_REQUEST_LOG_PATH": "runtime/logs/test_requests.jsonl",
             "ALTERSCORE_LOG_LEVEL": "debug",
             "ALTERSCORE_CORS_ORIGINS": "http://localhost:5173, http://localhost:3000",
+            "ALTERSCORE_ENABLE_DEBUG_SCORE": "yes",
         }
     )
 
@@ -90,3 +92,4 @@ def test_load_settings_supports_environment_overrides(tmp_path: Path) -> None:
         "http://localhost:5173",
         "http://localhost:3000",
     )
+    assert settings.enable_debug_score is True

@@ -12,6 +12,26 @@ from backend.app.schemas.common import SchemaModel
 HealthStatus = Literal["ok", "degraded", "error"]
 DriftStatus = Literal["stable", "watch", "alert"]
 FairnessFlag = Literal["green", "yellow", "red"]
+PromotionGateStatus = Literal["pass", "warn", "fail", "skip"]
+PromotionGateSummaryStatus = Literal["passed", "warning", "failed", "not_evaluated"]
+
+
+class PromotionGateCheck(SchemaModel):
+    name: str = Field(..., min_length=1)
+    status: PromotionGateStatus
+    message: str = Field(..., min_length=1)
+    metric_value: float | None = None
+    threshold: float | None = None
+    blocking: bool
+
+
+class PromotionGateSummary(SchemaModel):
+    status: PromotionGateSummaryStatus
+    promotion_status: str | None = None
+    policy_version: str | None = None
+    blocking_failures: list[str]
+    warnings: list[str]
+    checks: list[PromotionGateCheck]
 
 
 class HealthResponse(SchemaModel):
@@ -25,6 +45,8 @@ class HealthResponse(SchemaModel):
     artifacts_loaded: list[str]
     missing_artifacts: list[str]
     invalid_artifacts: list[str]
+    artifact_warnings: dict[str, str] = Field(default_factory=dict)
+    promotion_gate: PromotionGateSummary | None = None
     timestamp: datetime
 
 

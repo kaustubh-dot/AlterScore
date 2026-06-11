@@ -64,6 +64,7 @@ DEFAULT_METRICS_PATH: Final[Path] = MODEL_REPORTS_DIR / "metrics.json"
 DEFAULT_POPULATION_PERCENTILES_PATH: Final[Path] = (
     MODEL_REPORTS_DIR / "population_percentiles.json"
 )
+AUTO_OUTPUT_PATH: Final[object] = object()
 BASELINE_MODEL_ORDER: Final[tuple[str, ...]] = (
     "majority_class",
     "logistic_regression",
@@ -173,15 +174,35 @@ def train_baselines(
     population_percentiles_path: (
         str | Path | None
     ) = DEFAULT_POPULATION_PERCENTILES_PATH,
-    psi_report_path: str | Path | None = DEFAULT_PSI_REPORT_PATH,
-    fairness_report_path: str | Path | None = DEFAULT_FAIRNESS_REPORT_PATH,
-    global_importance_path: str | Path | None = DEFAULT_GLOBAL_IMPORTANCE_PATH,
-    dice_explainer_path: str | Path | None = DEFAULT_DICE_EXPLAINER_PATH,
+    psi_report_path: str | Path | None | object = AUTO_OUTPUT_PATH,
+    fairness_report_path: str | Path | None | object = AUTO_OUTPUT_PATH,
+    global_importance_path: str | Path | None | object = AUTO_OUTPUT_PATH,
+    dice_explainer_path: str | Path | None | object = AUTO_OUTPUT_PATH,
     random_state: int = DEFAULT_RANDOM_STATE,
 ) -> BaselineTrainingArtifacts:
     """Fit the first baseline suite on the documented temporal splits."""
 
     np.random.seed(random_state)
+    resolved_psi_report_path = _resolve_auto_output_path(
+        psi_report_path,
+        anchor_path=metrics_path,
+        filename=DEFAULT_PSI_REPORT_PATH.name,
+    )
+    resolved_fairness_report_path = _resolve_auto_output_path(
+        fairness_report_path,
+        anchor_path=metrics_path,
+        filename=DEFAULT_FAIRNESS_REPORT_PATH.name,
+    )
+    resolved_global_importance_path = _resolve_auto_output_path(
+        global_importance_path,
+        anchor_path=metrics_path,
+        filename=DEFAULT_GLOBAL_IMPORTANCE_PATH.name,
+    )
+    resolved_dice_explainer_path = _resolve_auto_output_path(
+        dice_explainer_path,
+        anchor_path=logistic_artifact_path,
+        filename=DEFAULT_DICE_EXPLAINER_PATH.name,
+    )
     resolved_dataset, resolved_dataset_path = _load_dataset(dataset, dataset_path)
     aligned_dataset, raw_text_embeddings = align_text_features_from_raw_text(
         resolved_dataset
@@ -361,16 +382,19 @@ def train_baselines(
         _save_json(metrics_payload, metrics_path)
     if population_percentiles_path is not None:
         _save_json(population_percentiles_payload, population_percentiles_path)
-    if psi_report_path is not None:
-        _save_json(psi_report, psi_report_path)
-    if fairness_report_path is not None:
-        save_fairness_report(fairness_report, fairness_report_path)
-    if global_importance_path is not None:
-        save_global_importance_report(global_importance_report, global_importance_path)
-    if dice_explainer_path is not None:
+    if resolved_psi_report_path is not None:
+        _save_json(psi_report, resolved_psi_report_path)
+    if resolved_fairness_report_path is not None:
+        save_fairness_report(fairness_report, resolved_fairness_report_path)
+    if resolved_global_importance_path is not None:
+        save_global_importance_report(
+            global_importance_report,
+            resolved_global_importance_path,
+        )
+    if resolved_dice_explainer_path is not None:
         save_persisted_dice_explainer(
             build_default_persisted_dice_explainer(model_name="logistic_regression"),
-            dice_explainer_path,
+            resolved_dice_explainer_path,
         )
 
     return BaselineTrainingArtifacts(
@@ -396,15 +420,23 @@ def train_baselines(
             if population_percentiles_path is None
             else Path(population_percentiles_path)
         ),
-        psi_report_path=None if psi_report_path is None else Path(psi_report_path),
+        psi_report_path=(
+            None if resolved_psi_report_path is None else Path(resolved_psi_report_path)
+        ),
         fairness_report_path=(
-            None if fairness_report_path is None else Path(fairness_report_path)
+            None
+            if resolved_fairness_report_path is None
+            else Path(resolved_fairness_report_path)
         ),
         global_importance_path=(
-            None if global_importance_path is None else Path(global_importance_path)
+            None
+            if resolved_global_importance_path is None
+            else Path(resolved_global_importance_path)
         ),
         dice_explainer_path=(
-            None if dice_explainer_path is None else Path(dice_explainer_path)
+            None
+            if resolved_dice_explainer_path is None
+            else Path(resolved_dice_explainer_path)
         ),
         model_stats=model_stats,
         baseline_metrics=baseline_metrics,
@@ -455,7 +487,23 @@ def _save_json(payload: Any, path: str | Path) -> None:
     output_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
 
+def _resolve_auto_output_path(
+    value: str | Path | None | object,
+    *,
+    anchor_path: str | Path | None,
+    filename: str,
+) -> Path | None:
+    if value is None:
+        return None
+    if value is not AUTO_OUTPUT_PATH:
+        return Path(value)
+    if anchor_path is None:
+        return None
+    return Path(anchor_path).parent / filename
+
+
 __all__ = [
+    "AUTO_OUTPUT_PATH",
     "BASELINE_MODEL_ORDER",
     "BaselineTrainingArtifacts",
     "DEFAULT_BASELINE_METRICS_PATH",

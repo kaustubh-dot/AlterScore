@@ -114,6 +114,7 @@ models/reports/*
 !models/reports/*_monotonic.json
 models/registry/*
 !models/registry/production_manifest.json
+!models/registry/promotion_gate_policy.json
 
 # Experiment outputs
 experiments/runs/*

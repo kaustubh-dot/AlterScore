@@ -111,11 +111,11 @@ def debug_score_request(
     request: Request, payload: ScoreRequest
 ) -> dict[str, Any] | JSONResponse:
     settings = request.app.state.settings
-    if settings.environment != "local":
+    if settings.environment != "local" or not settings.enable_debug_score:
         return _error_response(
             status_code=status.HTTP_404_NOT_FOUND,
             code="DEBUG_NOT_AVAILABLE",
-            message="Debug scoring is only available in the local development environment.",
+            message="Debug scoring is not available in this environment.",
             request_id=f"{payload.session_id}:debug",
         )
 

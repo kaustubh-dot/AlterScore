@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import json
 from pathlib import Path
 from typing import Any, Final
@@ -51,6 +52,7 @@ def build_fairness_report(
     calibration_bins: int = CALIBRATION_PARITY_BIN_COUNT,
     similarity_threshold: float = INDIVIDUAL_FAIRNESS_SIMILARITY_THRESHOLD,
     score_gap_threshold: int = INDIVIDUAL_FAIRNESS_SCORE_GAP_THRESHOLD,
+    score_mapping_config: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Build the documented subgroup fairness payload for one held-out split."""
 
@@ -69,7 +71,10 @@ def build_fairness_report(
 
     overall_auc = _safe_roc_auc_score(y_true_array, y_prob_array)
     scores = np.asarray(
-        [probability_to_score(probability) for probability in y_prob_array],
+        [
+            probability_to_score(probability, score_mapping_config)
+            for probability in y_prob_array
+        ],
         dtype=int,
     )
     approved = scores >= int(approval_score_threshold)
@@ -103,6 +108,7 @@ def build_fairness_report(
             protected_frame,
             approval_score_threshold=approval_score_threshold,
             min_group_samples=min_group_samples,
+            score_mapping_config=score_mapping_config,
         ),
     }
 
@@ -178,6 +184,7 @@ def build_fairness_report_for_candidate_probabilities(
     feature_frame: pd.DataFrame | None = None,
     approval_score_threshold: int = APPROVAL_SCORE_THRESHOLD,
     min_group_samples: int = MIN_GROUP_SAMPLES,
+    score_mapping_config: Mapping[str, Any] | None = None,
 ) -> tuple[dict[str, Any], str]:
     """Select the current best candidate model and build its fairness report."""
 
@@ -202,6 +209,7 @@ def build_fairness_report_for_candidate_probabilities(
             feature_frame=feature_frame,
             approval_score_threshold=approval_score_threshold,
             min_group_samples=min_group_samples,
+            score_mapping_config=score_mapping_config,
         ),
         selected_model_name,
     )
@@ -284,6 +292,7 @@ def build_post_governance_impact_report(
     *,
     approval_score_threshold: int = APPROVAL_SCORE_THRESHOLD,
     min_group_samples: int = MIN_GROUP_SAMPLES,
+    score_mapping_config: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Compare subgroup outcomes before and after post-model governance."""
 
@@ -303,11 +312,17 @@ def build_post_governance_impact_report(
     _validate_fairness_inputs(y_true_array, governed_prob_array, protected_frame)
 
     model_scores = np.asarray(
-        [probability_to_score(probability) for probability in model_prob_array],
+        [
+            probability_to_score(probability, score_mapping_config)
+            for probability in model_prob_array
+        ],
         dtype=int,
     )
     governed_scores = np.asarray(
-        [probability_to_score(probability) for probability in governed_prob_array],
+        [
+            probability_to_score(probability, score_mapping_config)
+            for probability in governed_prob_array
+        ],
         dtype=int,
     )
     model_approved = model_scores >= int(approval_score_threshold)

@@ -70,3 +70,7 @@ def test_train_baselines_persists_finite_evaluation_and_percentile_artifacts(
         == 1_200
     )
     assert 0 <= compute_percentile(560, population_percentiles) <= 100
+    assert artifacts.psi_report_path == tmp_path / "psi_report.json"
+    assert artifacts.fairness_report_path == tmp_path / "fairness_report.json"
+    assert artifacts.global_importance_path == tmp_path / "global_importance.json"
+    assert artifacts.dice_explainer_path == tmp_path / "dice_explainer.pkl"

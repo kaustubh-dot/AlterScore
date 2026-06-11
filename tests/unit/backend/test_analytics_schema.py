@@ -41,6 +41,24 @@ def test_health_response_matches_documented_contract_shape() -> None:
             ],
             "missing_artifacts": [],
             "invalid_artifacts": [],
+            "artifact_warnings": {},
+            "promotion_gate": {
+                "status": "passed",
+                "promotion_status": "promoted",
+                "policy_version": "promotion_gate_policy_v1",
+                "blocking_failures": [],
+                "warnings": [],
+                "checks": [
+                    {
+                        "name": "test_auc_roc",
+                        "status": "pass",
+                        "message": "AUC threshold passed.",
+                        "metric_value": 0.78,
+                        "threshold": 0.75,
+                        "blocking": True,
+                    }
+                ],
+            },
             "timestamp": datetime(2026, 5, 13, tzinfo=timezone.utc),
         }
     )
@@ -56,6 +74,8 @@ def test_health_response_matches_documented_contract_shape() -> None:
         "artifacts_loaded",
         "missing_artifacts",
         "invalid_artifacts",
+        "artifact_warnings",
+        "promotion_gate",
         "timestamp",
     }
 

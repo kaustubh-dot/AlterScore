@@ -28,11 +28,16 @@ A model is treated as production-ready only if it is:
 
 ## Hard Gates
 
-The repository currently treats these as hard promotion requirements:
+The repository currently treats these as hard promotion requirements. Numeric
+thresholds are versioned in `models/registry/promotion_gate_policy.json` and
+checked with `python -m backend.ml.registry.promotion_gates`.
 
 - monotonic acceptance gate
 - pairwise counterfactual acceptance gate
-- fairness gate
+- fairness gate, including subgroup and individual-fairness proxy checks
+- calibration gate
+- drift gate
+- post-governance impact gate
 - production bundle compatibility
 
 These thresholds must not be weakened during cleanup or release preparation.
@@ -41,8 +46,8 @@ These thresholds must not be weakened during cleanup or release preparation.
 
 Primary governed evaluation scripts:
 
-- [scripts/train_monotonic_tree_candidates.py](C:/Kaustubh/Projects/AlterScore/scripts/train_monotonic_tree_candidates.py)
-- [scripts/fairness_harden_xgboost_candidate.py](C:/Kaustubh/Projects/AlterScore/scripts/fairness_harden_xgboost_candidate.py)
+- [scripts/training/train_calibrated_monotonic_xgboost.py](C:/Kaustubh/Projects/AlterScore/scripts/training/train_calibrated_monotonic_xgboost.py)
+- [scripts/training/promote_monotonic_xgboost.py](C:/Kaustubh/Projects/AlterScore/scripts/training/promote_monotonic_xgboost.py) (compatibility wrapper for the calibrated trainer)
 
 Research-only supporting script retained for governance comparison:
 
@@ -60,8 +65,9 @@ Promotion requires the full governance stack to remain green.
 
 ## Current Operating Position
 
-The active checked-in runtime is monotonic `XGBoost`.
+The active checked-in runtime is calibrated monotonic `XGBoost`.
 
-The current promotion-readiness work is to reconcile the checked-in monotonic
-reports with the governed full-run review, especially the
-`gender=non_binary` fairness attention item.
+The current manifest is promoted because all blocking gates pass under
+`promotion_gate_policy_v1`. The remaining governance watch item is PSI:
+`avg_response_time_ms` is in `watch` at `0.2052`, below the blocking `0.30`
+alert threshold.

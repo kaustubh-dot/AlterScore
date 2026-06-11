@@ -51,6 +51,7 @@ Current runtime note:
 - The checked-in local backend now starts from `models/registry/production_manifest.json` by default and reports that manifest-backed state explicitly in `/api/health`.
 - `ALTERSCORE_RUNTIME_MODEL_PATH` remains an explicit dev/test override path, and candidate selection remains a last-resort fallback only when neither a manifest nor an explicit runtime override is available.
 - `artifacts_loaded` reflects successful startup load, validation, and manifest-checksum verification rather than bare file presence, and `invalid_artifacts` is reserved for present-but-unusable artifacts such as checksum mismatches or deserialize failures.
+- `promotion_gate` is evaluated from the manifest-declared metrics, fairness, and PSI reports using `models/registry/promotion_gate_policy.json`.
 
 ### Response
 
@@ -79,6 +80,15 @@ Current runtime note:
   ],
   "missing_artifacts": [],
   "invalid_artifacts": [],
+  "artifact_warnings": {},
+  "promotion_gate": {
+    "status": "passed",
+    "promotion_status": "promoted",
+    "policy_version": "promotion_gate_policy_v1",
+    "blocking_failures": [],
+    "warnings": [],
+    "checks": []
+  },
   "timestamp": "2026-05-13T00:00:00Z"
 }
 ```

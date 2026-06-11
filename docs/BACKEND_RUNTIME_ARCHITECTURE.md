@@ -6,7 +6,7 @@ deployment, and ML engineers must understand before modifying runtime code.
 ## Active Runtime Model
 
 `models/registry/production_manifest.json` points to `xgboost_monotonic`
-(model version `0.3.0`) as the active runtime model. It is a single
+(model version `0.4.0`) as the active runtime model. It is a single calibrated
 monotonic constrained-tree scorer loaded from:
 
 ```text
@@ -108,22 +108,21 @@ If a scoring-critical artifact fails validation, `/api/score` returns `503`.
 ## Current Caveats
 
 - The checked-in runtime report is the operational source of truth: held-out
-  test AUC is `0.7596` before post-model governance and `0.7590` after the
-  governance multiplier. Older governed-review figures such as `0.8040` and
-  `0.8090` are historical experiment results from different candidate/report
-  contexts.
+  test AUC is `0.7549`, ECE is `0.0353`, and post-governance AUC is `0.7543`.
+  Older governed-review figures such as `0.8040` and `0.8090` are historical
+  experiment results from different candidate/report contexts.
 - The fairness report includes subgroup metrics, calibration parity, a
   full-profile individual-fairness proxy, and post-governance subgroup impact.
-- `production_manifest.json` still records a historical `code_ref` value and
-  should be replaced with an explicit branch/commit identifier during the next
-  formal promotion.
+- `production_manifest.json` records `codex-scoring-calibration-roadmap` as the
+  current code reference; replace it with an immutable commit identifier during
+  the next formal release cut.
 
 ## Environment Constraints
 
 | Component | Version | Notes |
 |---|---|---|
 | Python | `3.12.x` recommended | Python `3.10` is the syntax floor; Python `3.14.x` is not the recommended local setup path |
-| scikit-learn | `>=1.8.0,<1.9.0` | Required by checked-in artifacts |
+| scikit-learn | `>=1.5.0,<1.6.0` | Required by checked-in calibrated artifacts |
 | XGBoost | `>=2.1.3,<2.2` | Required by the active monotonic runtime |
 | PyTorch / pytorch-tabnet | Runtime dependencies | Still required while reference ensemble/TabNet artifacts remain loadable and tested |
 | Node.js | `>=18 <25` | Frontend build |

@@ -9,6 +9,7 @@ Before marking the backend as ready for a new release or promoting to production
 - [ ] **Data Drift Acceptable:** `/api/drift-report` shows no core feature with PSI > 0.30 (Alert) without documented explanation.
 - [ ] **Fairness Maintained:** `/api/fairness-report` shows acceptable AUC deviation (< 0.07 gap) across demographic groups.
 - [ ] **Calibration Intact:** `/api/calibration-curve` shows the predicted probability reliably matches the fraction of positive outcomes.
+- [ ] **Promotion Gates Clean:** `python -m backend.ml.registry.promotion_gates --manifest models/registry/production_manifest.json --require-clean-pass` passes against `models/registry/promotion_gate_policy.json`.
 - [ ] **API Contracts Unchanged:** No breaking changes introduced to the request/response payloads defined in `API_CONTRACTS.md`.
 
 ## 2. Manifest Promotion Checklist
@@ -17,9 +18,10 @@ Models are not promoted manually by copying files. We use `production_manifest.j
 
 1. **Verify candidate training completed:** `models/registry/candidate_manifest.json` exists.
 2. **Review Governance Reports:** Compare `metrics.json`, `fairness_report.json`, and `psi_report.json` against the active model.
-3. **Execute Promotion:** Run `python -m backend.ml.training.ensemble.promote_ensemble`.
-4. **Audit Checksums:** Verify that `production_manifest.json` has updated SHA256 hashes for all 18+ ensemble and base model artifacts.
-5. **Commit Manifest:** The `production_manifest.json` and all `models/` artifacts must be committed to source control (tracked by LFS if applicable).
+3. **Run Promotion Gates:** Run `python -m backend.ml.registry.promotion_gates --manifest models/registry/candidate_manifest.json --require-clean-pass`.
+4. **Execute Promotion:** Run `python -m backend.ml.training.ensemble.promote_ensemble`.
+5. **Audit Checksums:** Verify that `production_manifest.json` has updated SHA256 hashes for all 18+ ensemble and base model artifacts.
+6. **Commit Manifest:** The `production_manifest.json`, `promotion_gate_policy.json`, and all `models/` artifacts must be committed to source control (tracked by LFS if applicable).
 
 ## 3. Runtime Validation Workflow
 

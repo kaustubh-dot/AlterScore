@@ -1,342 +1,327 @@
 {
-  "overall_auc": 0.7596,
-  "overall_approval_rate": 0.425,
-  "overall_default_rate": 0.3122,
-  "worst_auc_gap": 0.0637,
+  "overall_auc": 0.7549,
+  "overall_approval_rate": 0.945,
+  "overall_default_rate": 0.3622,
+  "worst_auc_gap": 0.0558,
   "flagged_groups": [],
   "verdict": "Model shows acceptable fairness across all tested demographic groups. No subgroup shows AUC deviation >4% from the overall model.",
   "groups": {
     "gender": {
       "female": {
         "n_samples": 836,
-        "auc": 0.7695,
-        "auc_gap_from_overall": 0.01,
-        "approval_rate": 0.4342,
-        "fpr": 0.1758,
-        "fnr": 0.4517,
-        "mean_score": 523.5,
+        "auc": 0.7708,
+        "auc_gap_from_overall": 0.0159,
+        "approval_rate": 0.9402,
+        "fpr": 0.8571,
+        "fnr": 0.0148,
+        "mean_score": 594.7,
         "flag": "green"
       },
       "male": {
         "n_samples": 915,
-        "auc": 0.7464,
-        "auc_gap_from_overall": 0.0132,
-        "approval_rate": 0.4197,
-        "fpr": 0.1837,
-        "fnr": 0.4747,
-        "mean_score": 522.7,
+        "auc": 0.7419,
+        "auc_gap_from_overall": 0.013,
+        "approval_rate": 0.9508,
+        "fpr": 0.9018,
+        "fnr": 0.0207,
+        "mean_score": 594.8,
         "flag": "green"
       },
       "non_binary": {
         "n_samples": 49,
-        "auc": 0.8144,
-        "auc_gap_from_overall": 0.0548,
-        "approval_rate": 0.3673,
-        "fpr": 0.1304,
-        "fnr": 0.4231,
-        "mean_score": 506.8,
+        "auc": 0.7441,
+        "auc_gap_from_overall": 0.0108,
+        "approval_rate": 0.9184,
+        "fpr": 0.8636,
+        "fnr": 0.037,
+        "mean_score": 593.9,
         "flag": "green"
       }
     },
     "age_group": {
       "18-25": {
         "n_samples": 459,
-        "auc": 0.7494,
-        "auc_gap_from_overall": 0.0102,
-        "approval_rate": 0.4248,
-        "fpr": 0.1797,
-        "fnr": 0.4804,
-        "mean_score": 524.7,
+        "auc": 0.7484,
+        "auc_gap_from_overall": 0.0066,
+        "approval_rate": 0.9586,
+        "fpr": 0.8954,
+        "fnr": 0.0098,
+        "mean_score": 596.3,
         "flag": "green"
       },
       "26-35": {
         "n_samples": 656,
-        "auc": 0.7507,
-        "auc_gap_from_overall": 0.0089,
-        "approval_rate": 0.4466,
-        "fpr": 0.1814,
-        "fnr": 0.4336,
-        "mean_score": 524.0,
+        "auc": 0.7372,
+        "auc_gap_from_overall": 0.0178,
+        "approval_rate": 0.9421,
+        "fpr": 0.8793,
+        "fnr": 0.0236,
+        "mean_score": 594.3,
         "flag": "green"
       },
       "36-50": {
         "n_samples": 512,
-        "auc": 0.7727,
-        "auc_gap_from_overall": 0.0132,
-        "approval_rate": 0.3848,
-        "fpr": 0.1686,
-        "fnr": 0.5059,
-        "mean_score": 515.7,
+        "auc": 0.7862,
+        "auc_gap_from_overall": 0.0313,
+        "approval_rate": 0.9355,
+        "fpr": 0.8622,
+        "fnr": 0.019,
+        "mean_score": 592.7,
         "flag": "green"
       },
       "50+": {
         "n_samples": 173,
-        "auc": 0.778,
-        "auc_gap_from_overall": 0.0184,
-        "approval_rate": 0.4624,
-        "fpr": 0.1897,
-        "fnr": 0.4,
-        "mean_score": 532.3,
+        "auc": 0.7437,
+        "auc_gap_from_overall": 0.0112,
+        "approval_rate": 0.948,
+        "fpr": 0.9014,
+        "fnr": 0.0196,
+        "mean_score": 598.0,
         "flag": "green"
       }
     },
     "region": {
       "rural": {
         "n_samples": 630,
-        "auc": 0.7656,
-        "auc_gap_from_overall": 0.006,
-        "approval_rate": 0.4206,
-        "fpr": 0.1602,
-        "fnr": 0.4528,
-        "mean_score": 521.1,
+        "auc": 0.7581,
+        "auc_gap_from_overall": 0.0031,
+        "approval_rate": 0.9333,
+        "fpr": 0.8542,
+        "fnr": 0.0179,
+        "mean_score": 593.8,
         "flag": "green"
       },
       "semi-urban": {
         "n_samples": 622,
-        "auc": 0.7666,
-        "auc_gap_from_overall": 0.0071,
-        "approval_rate": 0.4051,
-        "fpr": 0.181,
-        "fnr": 0.4806,
-        "mean_score": 518.5,
+        "auc": 0.7451,
+        "auc_gap_from_overall": 0.0099,
+        "approval_rate": 0.9453,
+        "fpr": 0.8866,
+        "fnr": 0.0182,
+        "mean_score": 592.9,
         "flag": "green"
       },
       "urban": {
         "n_samples": 548,
-        "auc": 0.739,
-        "auc_gap_from_overall": 0.0206,
-        "approval_rate": 0.4526,
-        "fpr": 0.1986,
-        "fnr": 0.4552,
-        "mean_score": 529.2,
+        "auc": 0.7589,
+        "auc_gap_from_overall": 0.004,
+        "approval_rate": 0.958,
+        "fpr": 0.908,
+        "fnr": 0.0187,
+        "mean_score": 597.8,
         "flag": "green"
       }
     },
     "education_level": {
       "graduate": {
         "n_samples": 345,
-        "auc": 0.8232,
-        "auc_gap_from_overall": 0.0637,
-        "approval_rate": 0.4,
-        "fpr": 0.099,
-        "fnr": 0.4754,
-        "mean_score": 522.5,
+        "auc": 0.8097,
+        "auc_gap_from_overall": 0.0548,
+        "approval_rate": 0.9594,
+        "fpr": 0.9091,
+        "fnr": 0.0134,
+        "mean_score": 595.4,
         "flag": "green"
       },
       "none": {
         "n_samples": 183,
-        "auc": 0.8109,
-        "auc_gap_from_overall": 0.0514,
-        "approval_rate": 0.4863,
-        "fpr": 0.2,
-        "fnr": 0.3906,
-        "mean_score": 525.6,
+        "auc": 0.6992,
+        "auc_gap_from_overall": 0.0558,
+        "approval_rate": 0.9672,
+        "fpr": 0.9492,
+        "fnr": 0.0242,
+        "mean_score": 597.9,
         "flag": "green"
       },
       "primary": {
         "n_samples": 395,
-        "auc": 0.7212,
-        "auc_gap_from_overall": 0.0384,
-        "approval_rate": 0.4152,
-        "fpr": 0.2212,
-        "fnr": 0.5071,
-        "mean_score": 524.1,
+        "auc": 0.7225,
+        "auc_gap_from_overall": 0.0324,
+        "approval_rate": 0.9468,
+        "fpr": 0.9037,
+        "fnr": 0.0308,
+        "mean_score": 594.2,
         "flag": "green"
       },
       "secondary": {
         "n_samples": 877,
-        "auc": 0.7437,
-        "auc_gap_from_overall": 0.0158,
-        "approval_rate": 0.4265,
-        "fpr": 0.1843,
-        "fnr": 0.4521,
-        "mean_score": 521.4,
+        "auc": 0.7595,
+        "auc_gap_from_overall": 0.0046,
+        "approval_rate": 0.9339,
+        "fpr": 0.8487,
+        "fnr": 0.013,
+        "mean_score": 594.0,
         "flag": "green"
       }
     }
   },
   "calibration_parity": {
     "n_bins": 10,
-    "overall_expected_calibration_error": 0.1253,
-    "max_ece_gap": 0.0422,
+    "overall_expected_calibration_error": 0.0353,
+    "max_ece_gap": 0.1467,
     "evaluated_group_count": 14,
     "skipped_group_count": 0,
     "groups": {
       "gender": {
         "female": {
           "n_samples": 836,
-          "expected_calibration_error": 0.1285,
-          "ece_gap_from_overall": 0.0032,
-          "mean_predicted_probability": 0.5653,
-          "observed_repayment_rate": 0.6938,
+          "expected_calibration_error": 0.0377,
+          "ece_gap_from_overall": 0.0025,
+          "mean_predicted_probability": 0.6376,
+          "observed_repayment_rate": 0.6483,
           "points": [
             {
-              "mean_predicted": 0.0601,
-              "fraction_positive": 0.1481,
-              "count": 27
+              "mean_predicted": 0.1826,
+              "fraction_positive": 0.1622,
+              "count": 37
             },
             {
-              "mean_predicted": 0.1516,
-              "fraction_positive": 0.3016,
-              "count": 63
+              "mean_predicted": 0.2,
+              "fraction_positive": 0.1538,
+              "count": 13
             },
             {
-              "mean_predicted": 0.252,
-              "fraction_positive": 0.3704,
-              "count": 54
+              "mean_predicted": 0.3271,
+              "fraction_positive": 0.34,
+              "count": 50
             },
             {
-              "mean_predicted": 0.3499,
-              "fraction_positive": 0.6154,
-              "count": 65
+              "mean_predicted": 0.4759,
+              "fraction_positive": 0.4427,
+              "count": 131
             },
             {
-              "mean_predicted": 0.4512,
-              "fraction_positive": 0.6047,
-              "count": 86
+              "mean_predicted": 0.5818,
+              "fraction_positive": 0.5586,
+              "count": 111
             },
             {
-              "mean_predicted": 0.555,
-              "fraction_positive": 0.6697,
-              "count": 109
+              "mean_predicted": 0.6496,
+              "fraction_positive": 0.6991,
+              "count": 113
             },
             {
-              "mean_predicted": 0.6518,
-              "fraction_positive": 0.7972,
-              "count": 143
+              "mean_predicted": 0.7293,
+              "fraction_positive": 0.7661,
+              "count": 218
             },
             {
-              "mean_predicted": 0.7505,
-              "fraction_positive": 0.8828,
-              "count": 145
+              "mean_predicted": 0.8509,
+              "fraction_positive": 0.9324,
+              "count": 74
             },
             {
-              "mean_predicted": 0.8422,
-              "fraction_positive": 0.886,
-              "count": 114
-            },
-            {
-              "mean_predicted": 0.9228,
-              "fraction_positive": 0.9667,
-              "count": 30
+              "mean_predicted": 0.955,
+              "fraction_positive": 0.9213,
+              "count": 89
             }
           ]
         },
         "male": {
           "n_samples": 915,
-          "expected_calibration_error": 0.1303,
-          "ece_gap_from_overall": 0.005,
-          "mean_predicted_probability": 0.5621,
-          "observed_repayment_rate": 0.6907,
+          "expected_calibration_error": 0.0417,
+          "ece_gap_from_overall": 0.0065,
+          "mean_predicted_probability": 0.6389,
+          "observed_repayment_rate": 0.6328,
           "points": [
             {
-              "mean_predicted": 0.0587,
-              "fraction_positive": 0.1,
-              "count": 30
+              "mean_predicted": 0.182,
+              "fraction_positive": 0.2069,
+              "count": 29
             },
             {
-              "mean_predicted": 0.1536,
-              "fraction_positive": 0.3667,
-              "count": 60
+              "mean_predicted": 0.2,
+              "fraction_positive": 0.375,
+              "count": 16
             },
             {
-              "mean_predicted": 0.2642,
-              "fraction_positive": 0.4921,
-              "count": 63
+              "mean_predicted": 0.3258,
+              "fraction_positive": 0.339,
+              "count": 59
             },
             {
-              "mean_predicted": 0.3566,
-              "fraction_positive": 0.5802,
-              "count": 81
+              "mean_predicted": 0.4766,
+              "fraction_positive": 0.4551,
+              "count": 156
             },
             {
-              "mean_predicted": 0.4526,
-              "fraction_positive": 0.5784,
-              "count": 102
+              "mean_predicted": 0.5766,
+              "fraction_positive": 0.5254,
+              "count": 118
             },
             {
-              "mean_predicted": 0.5592,
-              "fraction_positive": 0.6721,
-              "count": 122
+              "mean_predicted": 0.6498,
+              "fraction_positive": 0.5568,
+              "count": 88
             },
             {
-              "mean_predicted": 0.6518,
-              "fraction_positive": 0.7947,
-              "count": 151
+              "mean_predicted": 0.7278,
+              "fraction_positive": 0.7591,
+              "count": 274
             },
             {
-              "mean_predicted": 0.7463,
-              "fraction_positive": 0.8562,
-              "count": 160
+              "mean_predicted": 0.8495,
+              "fraction_positive": 0.8876,
+              "count": 89
             },
             {
-              "mean_predicted": 0.8405,
-              "fraction_positive": 0.8947,
-              "count": 114
-            },
-            {
-              "mean_predicted": 0.9306,
-              "fraction_positive": 0.9062,
-              "count": 32
+              "mean_predicted": 0.9574,
+              "fraction_positive": 0.907,
+              "count": 86
             }
           ]
         },
         "non_binary": {
           "n_samples": 49,
-          "expected_calibration_error": 0.0867,
-          "ece_gap_from_overall": 0.0387,
-          "mean_predicted_probability": 0.5205,
-          "observed_repayment_rate": 0.5306,
+          "expected_calibration_error": 0.182,
+          "ece_gap_from_overall": 0.1467,
+          "mean_predicted_probability": 0.6179,
+          "observed_repayment_rate": 0.551,
           "points": [
             {
-              "mean_predicted": 0.063,
-              "fraction_positive": 0.0,
-              "count": 5
-            },
-            {
-              "mean_predicted": 0.1333,
-              "fraction_positive": 0.3333,
-              "count": 3
-            },
-            {
-              "mean_predicted": 0.2251,
-              "fraction_positive": 0.3333,
-              "count": 3
-            },
-            {
-              "mean_predicted": 0.3716,
-              "fraction_positive": 0.2,
-              "count": 5
-            },
-            {
-              "mean_predicted": 0.4605,
+              "mean_predicted": 0.1579,
               "fraction_positive": 0.5,
-              "count": 6
+              "count": 2
             },
             {
-              "mean_predicted": 0.5407,
-              "fraction_positive": 0.4,
-              "count": 5
+              "mean_predicted": 0.2,
+              "fraction_positive": 0.0,
+              "count": 2
             },
             {
-              "mean_predicted": 0.6402,
-              "fraction_positive": 0.7143,
+              "mean_predicted": 0.3258,
+              "fraction_positive": 0.5,
+              "count": 4
+            },
+            {
+              "mean_predicted": 0.4818,
+              "fraction_positive": 0.1111,
+              "count": 9
+            },
+            {
+              "mean_predicted": 0.5893,
+              "fraction_positive": 0.6667,
+              "count": 3
+            },
+            {
+              "mean_predicted": 0.6495,
+              "fraction_positive": 0.5714,
               "count": 7
             },
             {
-              "mean_predicted": 0.7558,
-              "fraction_positive": 0.8333,
-              "count": 6
+              "mean_predicted": 0.7205,
+              "fraction_positive": 0.7857,
+              "count": 14
             },
             {
-              "mean_predicted": 0.8238,
-              "fraction_positive": 0.8333,
-              "count": 6
-            },
-            {
-              "mean_predicted": 0.9437,
+              "mean_predicted": 0.8526,
               "fraction_positive": 1.0,
-              "count": 3
+              "count": 2
+            },
+            {
+              "mean_predicted": 0.9693,
+              "fraction_positive": 0.6667,
+              "count": 6
             }
           ]
         }
@@ -344,237 +329,217 @@
       "age_group": {
         "18-25": {
           "n_samples": 459,
-          "expected_calibration_error": 0.157,
-          "ece_gap_from_overall": 0.0317,
-          "mean_predicted_probability": 0.5671,
-          "observed_repayment_rate": 0.7211,
+          "expected_calibration_error": 0.0475,
+          "ece_gap_from_overall": 0.0122,
+          "mean_predicted_probability": 0.6496,
+          "observed_repayment_rate": 0.6667,
           "points": [
             {
-              "mean_predicted": 0.0695,
-              "fraction_positive": 0.0,
+              "mean_predicted": 0.1741,
+              "fraction_positive": 0.1111,
+              "count": 9
+            },
+            {
+              "mean_predicted": 0.2,
+              "fraction_positive": 0.2,
               "count": 10
             },
             {
-              "mean_predicted": 0.148,
-              "fraction_positive": 0.4194,
-              "count": 31
+              "mean_predicted": 0.3281,
+              "fraction_positive": 0.3793,
+              "count": 29
             },
             {
-              "mean_predicted": 0.2587,
-              "fraction_positive": 0.4865,
-              "count": 37
+              "mean_predicted": 0.4774,
+              "fraction_positive": 0.4533,
+              "count": 75
             },
             {
-              "mean_predicted": 0.3523,
-              "fraction_positive": 0.6,
-              "count": 40
+              "mean_predicted": 0.5778,
+              "fraction_positive": 0.6226,
+              "count": 53
             },
             {
-              "mean_predicted": 0.4555,
-              "fraction_positive": 0.6667,
-              "count": 42
+              "mean_predicted": 0.6503,
+              "fraction_positive": 0.6182,
+              "count": 55
             },
             {
-              "mean_predicted": 0.5565,
-              "fraction_positive": 0.7164,
-              "count": 67
+              "mean_predicted": 0.7284,
+              "fraction_positive": 0.7863,
+              "count": 131
             },
             {
-              "mean_predicted": 0.6534,
-              "fraction_positive": 0.7848,
-              "count": 79
+              "mean_predicted": 0.8499,
+              "fraction_positive": 0.9184,
+              "count": 49
             },
             {
-              "mean_predicted": 0.7508,
-              "fraction_positive": 0.8904,
-              "count": 73
-            },
-            {
-              "mean_predicted": 0.8368,
-              "fraction_positive": 0.9032,
-              "count": 62
-            },
-            {
-              "mean_predicted": 0.9252,
-              "fraction_positive": 0.9444,
-              "count": 18
+              "mean_predicted": 0.9551,
+              "fraction_positive": 0.8958,
+              "count": 48
             }
           ]
         },
         "26-35": {
           "n_samples": 656,
-          "expected_calibration_error": 0.1268,
-          "ece_gap_from_overall": 0.0015,
-          "mean_predicted_probability": 0.566,
-          "observed_repayment_rate": 0.689,
+          "expected_calibration_error": 0.0357,
+          "ece_gap_from_overall": 0.0004,
+          "mean_predicted_probability": 0.636,
+          "observed_repayment_rate": 0.6463,
           "points": [
             {
-              "mean_predicted": 0.0559,
-              "fraction_positive": 0.2222,
-              "count": 27
+              "mean_predicted": 0.186,
+              "fraction_positive": 0.2308,
+              "count": 26
             },
             {
-              "mean_predicted": 0.156,
-              "fraction_positive": 0.275,
-              "count": 40
+              "mean_predicted": 0.2,
+              "fraction_positive": 0.3333,
+              "count": 12
             },
             {
-              "mean_predicted": 0.2563,
-              "fraction_positive": 0.4615,
+              "mean_predicted": 0.3258,
+              "fraction_positive": 0.359,
               "count": 39
             },
             {
-              "mean_predicted": 0.3608,
-              "fraction_positive": 0.6034,
-              "count": 58
+              "mean_predicted": 0.4767,
+              "fraction_positive": 0.4623,
+              "count": 106
             },
             {
-              "mean_predicted": 0.4493,
-              "fraction_positive": 0.5541,
-              "count": 74
+              "mean_predicted": 0.5797,
+              "fraction_positive": 0.5889,
+              "count": 90
             },
             {
-              "mean_predicted": 0.5594,
-              "fraction_positive": 0.625,
-              "count": 80
+              "mean_predicted": 0.6495,
+              "fraction_positive": 0.6164,
+              "count": 73
             },
             {
-              "mean_predicted": 0.6547,
-              "fraction_positive": 0.8333,
-              "count": 114
+              "mean_predicted": 0.7278,
+              "fraction_positive": 0.7647,
+              "count": 187
             },
             {
-              "mean_predicted": 0.7464,
-              "fraction_positive": 0.8661,
-              "count": 112
+              "mean_predicted": 0.85,
+              "fraction_positive": 0.9032,
+              "count": 62
             },
             {
-              "mean_predicted": 0.8405,
-              "fraction_positive": 0.8851,
-              "count": 87
-            },
-            {
-              "mean_predicted": 0.9296,
-              "fraction_positive": 0.88,
-              "count": 25
+              "mean_predicted": 0.9566,
+              "fraction_positive": 0.8852,
+              "count": 61
             }
           ]
         },
         "36-50": {
           "n_samples": 512,
-          "expected_calibration_error": 0.1202,
-          "ece_gap_from_overall": 0.0051,
-          "mean_predicted_probability": 0.5448,
-          "observed_repayment_rate": 0.6641,
+          "expected_calibration_error": 0.0505,
+          "ece_gap_from_overall": 0.0153,
+          "mean_predicted_probability": 0.6241,
+          "observed_repayment_rate": 0.6172,
           "points": [
             {
-              "mean_predicted": 0.0589,
-              "fraction_positive": 0.0476,
-              "count": 21
+              "mean_predicted": 0.1754,
+              "fraction_positive": 0.16,
+              "count": 25
             },
             {
-              "mean_predicted": 0.1519,
-              "fraction_positive": 0.3182,
-              "count": 44
+              "mean_predicted": 0.2,
+              "fraction_positive": 0.25,
+              "count": 8
             },
             {
-              "mean_predicted": 0.2611,
-              "fraction_positive": 0.4062,
-              "count": 32
+              "mean_predicted": 0.3258,
+              "fraction_positive": 0.2857,
+              "count": 35
             },
             {
-              "mean_predicted": 0.3486,
-              "fraction_positive": 0.5714,
-              "count": 42
+              "mean_predicted": 0.4745,
+              "fraction_positive": 0.3953,
+              "count": 86
             },
             {
-              "mean_predicted": 0.4517,
-              "fraction_positive": 0.5968,
-              "count": 62
+              "mean_predicted": 0.5826,
+              "fraction_positive": 0.4925,
+              "count": 67
             },
             {
-              "mean_predicted": 0.5547,
-              "fraction_positive": 0.6957,
-              "count": 69
+              "mean_predicted": 0.6495,
+              "fraction_positive": 0.7167,
+              "count": 60
             },
             {
-              "mean_predicted": 0.6488,
-              "fraction_positive": 0.7342,
-              "count": 79
+              "mean_predicted": 0.7268,
+              "fraction_positive": 0.7551,
+              "count": 147
             },
             {
-              "mean_predicted": 0.75,
-              "fraction_positive": 0.8571,
-              "count": 91
+              "mean_predicted": 0.8493,
+              "fraction_positive": 0.9189,
+              "count": 37
             },
             {
-              "mean_predicted": 0.8431,
-              "fraction_positive": 0.9074,
-              "count": 54
-            },
-            {
-              "mean_predicted": 0.9277,
-              "fraction_positive": 1.0,
-              "count": 18
+              "mean_predicted": 0.9588,
+              "fraction_positive": 0.9574,
+              "count": 47
             }
           ]
         },
         "50+": {
           "n_samples": 173,
-          "expected_calibration_error": 0.0831,
-          "ece_gap_from_overall": 0.0422,
-          "mean_predicted_probability": 0.5887,
-          "observed_repayment_rate": 0.6647,
+          "expected_calibration_error": 0.0829,
+          "ece_gap_from_overall": 0.0477,
+          "mean_predicted_probability": 0.6532,
+          "observed_repayment_rate": 0.5896,
           "points": [
             {
-              "mean_predicted": 0.0641,
-              "fraction_positive": 0.0,
-              "count": 4
-            },
-            {
-              "mean_predicted": 0.1507,
-              "fraction_positive": 0.3636,
-              "count": 11
-            },
-            {
-              "mean_predicted": 0.2499,
+              "mean_predicted": 0.1951,
               "fraction_positive": 0.25,
-              "count": 12
+              "count": 8
             },
             {
-              "mean_predicted": 0.3478,
-              "fraction_positive": 0.4545,
-              "count": 11
+              "mean_predicted": 0.2,
+              "fraction_positive": 0.0,
+              "count": 1
             },
             {
-              "mean_predicted": 0.4591,
-              "fraction_positive": 0.5,
-              "count": 16
+              "mean_predicted": 0.3258,
+              "fraction_positive": 0.4,
+              "count": 10
             },
             {
-              "mean_predicted": 0.556,
-              "fraction_positive": 0.55,
-              "count": 20
-            },
-            {
-              "mean_predicted": 0.6414,
-              "fraction_positive": 0.8276,
+              "mean_predicted": 0.4786,
+              "fraction_positive": 0.4483,
               "count": 29
             },
             {
-              "mean_predicted": 0.7457,
-              "fraction_positive": 0.8571,
-              "count": 35
+              "mean_predicted": 0.5715,
+              "fraction_positive": 0.3182,
+              "count": 22
             },
             {
-              "mean_predicted": 0.8463,
-              "fraction_positive": 0.8387,
-              "count": 31
+              "mean_predicted": 0.6495,
+              "fraction_positive": 0.5,
+              "count": 20
             },
             {
-              "mean_predicted": 0.9264,
-              "fraction_positive": 1.0,
-              "count": 4
+              "mean_predicted": 0.7355,
+              "fraction_positive": 0.7073,
+              "count": 41
+            },
+            {
+              "mean_predicted": 0.8534,
+              "fraction_positive": 0.8824,
+              "count": 17
+            },
+            {
+              "mean_predicted": 0.9552,
+              "fraction_positive": 0.88,
+              "count": 25
             }
           ]
         }
@@ -582,178 +547,163 @@
       "region": {
         "rural": {
           "n_samples": 630,
-          "expected_calibration_error": 0.1157,
-          "ece_gap_from_overall": 0.0096,
-          "mean_predicted_probability": 0.5578,
-          "observed_repayment_rate": 0.673,
+          "expected_calibration_error": 0.0495,
+          "ece_gap_from_overall": 0.0142,
+          "mean_predicted_probability": 0.6295,
+          "observed_repayment_rate": 0.619,
           "points": [
             {
-              "mean_predicted": 0.0649,
-              "fraction_positive": 0.1613,
-              "count": 31
+              "mean_predicted": 0.1806,
+              "fraction_positive": 0.1034,
+              "count": 29
             },
             {
-              "mean_predicted": 0.1536,
-              "fraction_positive": 0.3111,
-              "count": 45
+              "mean_predicted": 0.2,
+              "fraction_positive": 0.3077,
+              "count": 13
             },
             {
-              "mean_predicted": 0.2549,
-              "fraction_positive": 0.3947,
-              "count": 38
+              "mean_predicted": 0.3275,
+              "fraction_positive": 0.2564,
+              "count": 39
             },
             {
-              "mean_predicted": 0.354,
-              "fraction_positive": 0.6538,
-              "count": 52
+              "mean_predicted": 0.4764,
+              "fraction_positive": 0.4455,
+              "count": 110
             },
             {
-              "mean_predicted": 0.4481,
-              "fraction_positive": 0.5286,
-              "count": 70
+              "mean_predicted": 0.5775,
+              "fraction_positive": 0.6076,
+              "count": 79
             },
             {
-              "mean_predicted": 0.5595,
-              "fraction_positive": 0.65,
-              "count": 80
+              "mean_predicted": 0.6497,
+              "fraction_positive": 0.5753,
+              "count": 73
             },
             {
-              "mean_predicted": 0.6535,
-              "fraction_positive": 0.7788,
-              "count": 104
+              "mean_predicted": 0.7277,
+              "fraction_positive": 0.7679,
+              "count": 168
             },
             {
-              "mean_predicted": 0.7488,
-              "fraction_positive": 0.8866,
-              "count": 97
+              "mean_predicted": 0.8474,
+              "fraction_positive": 0.8824,
+              "count": 51
             },
             {
-              "mean_predicted": 0.8448,
-              "fraction_positive": 0.8736,
-              "count": 87
-            },
-            {
-              "mean_predicted": 0.9289,
-              "fraction_positive": 0.9231,
-              "count": 26
+              "mean_predicted": 0.9565,
+              "fraction_positive": 0.8824,
+              "count": 68
             }
           ]
         },
         "semi-urban": {
           "n_samples": 622,
-          "expected_calibration_error": 0.1103,
-          "ece_gap_from_overall": 0.015,
-          "mean_predicted_probability": 0.5521,
-          "observed_repayment_rate": 0.6624,
+          "expected_calibration_error": 0.0255,
+          "ece_gap_from_overall": 0.0097,
+          "mean_predicted_probability": 0.6281,
+          "observed_repayment_rate": 0.6174,
           "points": [
             {
-              "mean_predicted": 0.0538,
-              "fraction_positive": 0.1,
-              "count": 20
+              "mean_predicted": 0.1814,
+              "fraction_positive": 0.2,
+              "count": 25
             },
             {
-              "mean_predicted": 0.15,
-              "fraction_positive": 0.25,
-              "count": 44
+              "mean_predicted": 0.2,
+              "fraction_positive": 0.2222,
+              "count": 9
             },
             {
-              "mean_predicted": 0.2589,
-              "fraction_positive": 0.449,
-              "count": 49
+              "mean_predicted": 0.3258,
+              "fraction_positive": 0.3333,
+              "count": 42
             },
             {
-              "mean_predicted": 0.3529,
-              "fraction_positive": 0.4643,
-              "count": 56
+              "mean_predicted": 0.4761,
+              "fraction_positive": 0.4571,
+              "count": 105
             },
             {
-              "mean_predicted": 0.4549,
-              "fraction_positive": 0.6061,
-              "count": 66
+              "mean_predicted": 0.5818,
+              "fraction_positive": 0.506,
+              "count": 83
             },
             {
-              "mean_predicted": 0.555,
-              "fraction_positive": 0.6463,
-              "count": 82
+              "mean_predicted": 0.6498,
+              "fraction_positive": 0.6296,
+              "count": 81
             },
             {
-              "mean_predicted": 0.6505,
-              "fraction_positive": 0.7928,
-              "count": 111
+              "mean_predicted": 0.7289,
+              "fraction_positive": 0.7257,
+              "count": 175
             },
             {
-              "mean_predicted": 0.7484,
-              "fraction_positive": 0.8454,
-              "count": 97
+              "mean_predicted": 0.8503,
+              "fraction_positive": 0.9216,
+              "count": 51
             },
             {
-              "mean_predicted": 0.8363,
-              "fraction_positive": 0.8961,
-              "count": 77
-            },
-            {
-              "mean_predicted": 0.9263,
-              "fraction_positive": 0.95,
-              "count": 20
+              "mean_predicted": 0.957,
+              "fraction_positive": 0.9412,
+              "count": 51
             }
           ]
         },
         "urban": {
           "n_samples": 548,
-          "expected_calibration_error": 0.1562,
-          "ece_gap_from_overall": 0.0309,
-          "mean_predicted_probability": 0.5796,
-          "observed_repayment_rate": 0.7336,
+          "expected_calibration_error": 0.0732,
+          "ece_gap_from_overall": 0.038,
+          "mean_predicted_probability": 0.6582,
+          "observed_repayment_rate": 0.6825,
           "points": [
             {
-              "mean_predicted": 0.0553,
-              "fraction_positive": 0.0,
-              "count": 11
+              "mean_predicted": 0.184,
+              "fraction_positive": 0.3571,
+              "count": 14
             },
             {
-              "mean_predicted": 0.1529,
-              "fraction_positive": 0.4595,
-              "count": 37
+              "mean_predicted": 0.2,
+              "fraction_positive": 0.2222,
+              "count": 9
             },
             {
-              "mean_predicted": 0.2591,
-              "fraction_positive": 0.4545,
-              "count": 33
+              "mean_predicted": 0.3258,
+              "fraction_positive": 0.4688,
+              "count": 32
             },
             {
-              "mean_predicted": 0.3562,
-              "fraction_positive": 0.6512,
-              "count": 43
+              "mean_predicted": 0.477,
+              "fraction_positive": 0.4074,
+              "count": 81
             },
             {
-              "mean_predicted": 0.4541,
-              "fraction_positive": 0.6379,
-              "count": 58
-            },
-            {
-              "mean_predicted": 0.5562,
-              "fraction_positive": 0.7027,
-              "count": 74
-            },
-            {
-              "mean_predicted": 0.6506,
-              "fraction_positive": 0.814,
-              "count": 86
-            },
-            {
-              "mean_predicted": 0.7481,
-              "fraction_positive": 0.8718,
-              "count": 117
-            },
-            {
-              "mean_predicted": 0.8411,
-              "fraction_positive": 0.9,
+              "mean_predicted": 0.5783,
+              "fraction_positive": 0.5143,
               "count": 70
             },
             {
-              "mean_predicted": 0.9272,
-              "fraction_positive": 0.9474,
-              "count": 19
+              "mean_predicted": 0.6495,
+              "fraction_positive": 0.7222,
+              "count": 54
+            },
+            {
+              "mean_predicted": 0.7282,
+              "fraction_positive": 0.7975,
+              "count": 163
+            },
+            {
+              "mean_predicted": 0.8524,
+              "fraction_positive": 0.9206,
+              "count": 63
+            },
+            {
+              "mean_predicted": 0.9563,
+              "fraction_positive": 0.9032,
+              "count": 62
             }
           ]
         }
@@ -761,237 +711,212 @@
       "education_level": {
         "graduate": {
           "n_samples": 345,
-          "expected_calibration_error": 0.1456,
-          "ece_gap_from_overall": 0.0203,
-          "mean_predicted_probability": 0.5628,
-          "observed_repayment_rate": 0.7072,
+          "expected_calibration_error": 0.0751,
+          "ece_gap_from_overall": 0.0398,
+          "mean_predicted_probability": 0.6454,
+          "observed_repayment_rate": 0.6493,
           "points": [
             {
-              "mean_predicted": 0.0603,
-              "fraction_positive": 0.3333,
+              "mean_predicted": 0.1783,
+              "fraction_positive": 0.2222,
               "count": 9
             },
             {
-              "mean_predicted": 0.1584,
-              "fraction_positive": 0.2083,
-              "count": 24
+              "mean_predicted": 0.2,
+              "fraction_positive": 0.2,
+              "count": 5
             },
             {
-              "mean_predicted": 0.2452,
+              "mean_predicted": 0.3258,
               "fraction_positive": 0.25,
-              "count": 24
+              "count": 20
             },
             {
-              "mean_predicted": 0.3515,
-              "fraction_positive": 0.6296,
-              "count": 27
+              "mean_predicted": 0.4777,
+              "fraction_positive": 0.3509,
+              "count": 57
             },
             {
-              "mean_predicted": 0.457,
-              "fraction_positive": 0.4524,
-              "count": 42
+              "mean_predicted": 0.579,
+              "fraction_positive": 0.5098,
+              "count": 51
             },
             {
-              "mean_predicted": 0.5573,
-              "fraction_positive": 0.8409,
-              "count": 44
+              "mean_predicted": 0.6495,
+              "fraction_positive": 0.7105,
+              "count": 38
             },
             {
-              "mean_predicted": 0.6462,
-              "fraction_positive": 0.8136,
-              "count": 59
+              "mean_predicted": 0.7279,
+              "fraction_positive": 0.8211,
+              "count": 95
             },
             {
-              "mean_predicted": 0.7486,
-              "fraction_positive": 0.9206,
-              "count": 63
+              "mean_predicted": 0.8505,
+              "fraction_positive": 0.8919,
+              "count": 37
             },
             {
-              "mean_predicted": 0.8402,
-              "fraction_positive": 0.9524,
-              "count": 42
-            },
-            {
-              "mean_predicted": 0.9221,
-              "fraction_positive": 1.0,
-              "count": 11
+              "mean_predicted": 0.9534,
+              "fraction_positive": 0.9697,
+              "count": 33
             }
           ]
         },
         "none": {
           "n_samples": 183,
-          "expected_calibration_error": 0.1337,
-          "ece_gap_from_overall": 0.0084,
-          "mean_predicted_probability": 0.5715,
-          "observed_repayment_rate": 0.6995,
+          "expected_calibration_error": 0.0669,
+          "ece_gap_from_overall": 0.0316,
+          "mean_predicted_probability": 0.661,
+          "observed_repayment_rate": 0.6776,
           "points": [
             {
-              "mean_predicted": 0.0658,
-              "fraction_positive": 0.0,
-              "count": 8
+              "mean_predicted": 0.1823,
+              "fraction_positive": 0.5,
+              "count": 6
             },
             {
-              "mean_predicted": 0.1546,
-              "fraction_positive": 0.3333,
-              "count": 12
+              "mean_predicted": 0.3258,
+              "fraction_positive": 0.8,
+              "count": 5
             },
             {
-              "mean_predicted": 0.2745,
+              "mean_predicted": 0.4761,
+              "fraction_positive": 0.4516,
+              "count": 31
+            },
+            {
+              "mean_predicted": 0.5787,
               "fraction_positive": 0.4615,
-              "count": 13
+              "count": 26
             },
             {
-              "mean_predicted": 0.3553,
-              "fraction_positive": 0.5385,
-              "count": 13
-            },
-            {
-              "mean_predicted": 0.4506,
-              "fraction_positive": 0.6471,
-              "count": 17
-            },
-            {
-              "mean_predicted": 0.5567,
-              "fraction_positive": 0.619,
+              "mean_predicted": 0.6495,
+              "fraction_positive": 0.8095,
               "count": 21
             },
             {
-              "mean_predicted": 0.6623,
-              "fraction_positive": 0.8182,
-              "count": 33
+              "mean_predicted": 0.7261,
+              "fraction_positive": 0.7167,
+              "count": 60
             },
             {
-              "mean_predicted": 0.7491,
-              "fraction_positive": 0.8649,
-              "count": 37
+              "mean_predicted": 0.8497,
+              "fraction_positive": 0.8333,
+              "count": 12
             },
             {
-              "mean_predicted": 0.8481,
-              "fraction_positive": 0.9565,
-              "count": 23
-            },
-            {
-              "mean_predicted": 0.93,
-              "fraction_positive": 1.0,
-              "count": 6
+              "mean_predicted": 0.9559,
+              "fraction_positive": 0.9545,
+              "count": 22
             }
           ]
         },
         "primary": {
           "n_samples": 395,
-          "expected_calibration_error": 0.1551,
-          "ece_gap_from_overall": 0.0297,
-          "mean_predicted_probability": 0.5645,
-          "observed_repayment_rate": 0.7139,
+          "expected_calibration_error": 0.0582,
+          "ece_gap_from_overall": 0.0229,
+          "mean_predicted_probability": 0.6354,
+          "observed_repayment_rate": 0.6582,
           "points": [
             {
-              "mean_predicted": 0.0629,
-              "fraction_positive": 0.0714,
-              "count": 14
-            },
-            {
-              "mean_predicted": 0.161,
-              "fraction_positive": 0.5714,
-              "count": 21
-            },
-            {
-              "mean_predicted": 0.2696,
-              "fraction_positive": 0.5357,
-              "count": 28
-            },
-            {
-              "mean_predicted": 0.3592,
-              "fraction_positive": 0.5278,
-              "count": 36
-            },
-            {
-              "mean_predicted": 0.4479,
-              "fraction_positive": 0.6304,
-              "count": 46
-            },
-            {
-              "mean_predicted": 0.5561,
-              "fraction_positive": 0.7193,
-              "count": 57
-            },
-            {
-              "mean_predicted": 0.6515,
-              "fraction_positive": 0.8438,
-              "count": 64
-            },
-            {
-              "mean_predicted": 0.7489,
-              "fraction_positive": 0.8305,
-              "count": 59
-            },
-            {
-              "mean_predicted": 0.8412,
-              "fraction_positive": 0.8947,
-              "count": 57
-            },
-            {
-              "mean_predicted": 0.9327,
-              "fraction_positive": 0.8462,
+              "mean_predicted": 0.1832,
+              "fraction_positive": 0.3077,
               "count": 13
+            },
+            {
+              "mean_predicted": 0.2,
+              "fraction_positive": 0.5,
+              "count": 8
+            },
+            {
+              "mean_predicted": 0.3258,
+              "fraction_positive": 0.4,
+              "count": 20
+            },
+            {
+              "mean_predicted": 0.4739,
+              "fraction_positive": 0.44,
+              "count": 75
+            },
+            {
+              "mean_predicted": 0.5779,
+              "fraction_positive": 0.5918,
+              "count": 49
+            },
+            {
+              "mean_predicted": 0.6495,
+              "fraction_positive": 0.725,
+              "count": 40
+            },
+            {
+              "mean_predicted": 0.7263,
+              "fraction_positive": 0.7479,
+              "count": 119
+            },
+            {
+              "mean_predicted": 0.851,
+              "fraction_positive": 0.9714,
+              "count": 35
+            },
+            {
+              "mean_predicted": 0.9571,
+              "fraction_positive": 0.8333,
+              "count": 36
             }
           ]
         },
         "secondary": {
           "n_samples": 877,
-          "expected_calibration_error": 0.1064,
-          "ece_gap_from_overall": 0.0189,
-          "mean_predicted_probability": 0.5595,
-          "observed_repayment_rate": 0.6659,
+          "expected_calibration_error": 0.0398,
+          "ece_gap_from_overall": 0.0046,
+          "mean_predicted_probability": 0.6309,
+          "observed_repayment_rate": 0.6157,
           "points": [
             {
-              "mean_predicted": 0.0564,
-              "fraction_positive": 0.0968,
-              "count": 31
+              "mean_predicted": 0.1817,
+              "fraction_positive": 0.1,
+              "count": 40
             },
             {
-              "mean_predicted": 0.1469,
-              "fraction_positive": 0.3043,
-              "count": 69
+              "mean_predicted": 0.2,
+              "fraction_positive": 0.1667,
+              "count": 18
             },
             {
-              "mean_predicted": 0.2531,
-              "fraction_positive": 0.4545,
-              "count": 55
+              "mean_predicted": 0.3268,
+              "fraction_positive": 0.3235,
+              "count": 68
             },
             {
-              "mean_predicted": 0.3526,
-              "fraction_positive": 0.6,
-              "count": 75
+              "mean_predicted": 0.4774,
+              "fraction_positive": 0.4737,
+              "count": 133
             },
             {
-              "mean_predicted": 0.4525,
-              "fraction_positive": 0.618,
-              "count": 89
+              "mean_predicted": 0.5802,
+              "fraction_positive": 0.5566,
+              "count": 106
             },
             {
-              "mean_predicted": 0.5572,
-              "fraction_positive": 0.5789,
-              "count": 114
+              "mean_predicted": 0.6499,
+              "fraction_positive": 0.5413,
+              "count": 109
             },
             {
-              "mean_predicted": 0.6513,
+              "mean_predicted": 0.73,
               "fraction_positive": 0.7586,
-              "count": 145
+              "count": 232
             },
             {
-              "mean_predicted": 0.748,
-              "fraction_positive": 0.8618,
-              "count": 152
+              "mean_predicted": 0.8497,
+              "fraction_positive": 0.9012,
+              "count": 81
             },
             {
-              "mean_predicted": 0.8395,
-              "fraction_positive": 0.8482,
-              "count": 112
-            },
-            {
-              "mean_predicted": 0.9271,
-              "fraction_positive": 0.9429,
-              "count": 35
+              "mean_predicted": 0.9577,
+              "fraction_positive": 0.9,
+              "count": 90
             }
           ]
         }
@@ -1037,148 +962,154 @@
     "similarity_threshold": 0.9,
     "score_gap_threshold": 50,
     "evaluated_applicants": 1800,
-    "evaluated_pairs": 4421,
-    "flagged_pair_count": 955,
-    "flagged_pair_share": 0.216,
-    "max_score_gap": 165,
-    "mean_score_gap": 32.9,
-    "p95_score_gap": 81.0,
+    "evaluated_pairs": 4975,
+    "flagged_pair_count": 220,
+    "flagged_pair_share": 0.0442,
+    "max_score_gap": 95,
+    "mean_score_gap": 13.25,
+    "p95_score_gap": 44.0,
     "worst_pairs": [
       {
-        "row_position_a": 45,
-        "row_position_b": 580,
-        "score_a": 360,
-        "score_b": 525,
-        "score_gap": 165,
-        "cosine_similarity": 0.9087,
+        "row_position_a": 586,
+        "row_position_b": 1702,
+        "score_a": 703,
+        "score_b": 608,
+        "score_gap": 95,
+        "cosine_similarity": 0.9006,
         "differing_attributes": [
           "gender",
-          "age_group"
-        ]
-      },
-      {
-        "row_position_a": 1069,
-        "row_position_b": 1456,
-        "score_a": 492,
-        "score_b": 328,
-        "score_gap": 164,
-        "cosine_similarity": 0.901,
-        "differing_attributes": [
           "age_group",
           "education_level"
         ]
       },
       {
-        "row_position_a": 482,
-        "row_position_b": 1728,
-        "score_a": 737,
-        "score_b": 577,
-        "score_gap": 160,
+        "row_position_a": 489,
+        "row_position_b": 1568,
+        "score_a": 592,
+        "score_b": 659,
+        "score_gap": 67,
+        "cosine_similarity": 0.9011,
+        "differing_attributes": [
+          "gender",
+          "age_group",
+          "region"
+        ]
+      },
+      {
+        "row_position_a": 297,
+        "row_position_b": 1273,
+        "score_a": 592,
+        "score_b": 659,
+        "score_gap": 67,
+        "cosine_similarity": 0.9074,
+        "differing_attributes": [
+          "age_group",
+          "region",
+          "education_level"
+        ]
+      },
+      {
+        "row_position_a": 729,
+        "row_position_b": 1199,
+        "score_a": 592,
+        "score_b": 659,
+        "score_gap": 67,
+        "cosine_similarity": 0.9022,
+        "differing_attributes": [
+          "gender",
+          "age_group",
+          "region",
+          "education_level"
+        ]
+      },
+      {
+        "row_position_a": 241,
+        "row_position_b": 667,
+        "score_a": 659,
+        "score_b": 592,
+        "score_gap": 67,
+        "cosine_similarity": 0.9021,
+        "differing_attributes": [
+          "gender",
+          "region",
+          "education_level"
+        ]
+      },
+      {
+        "row_position_a": 667,
+        "row_position_b": 989,
+        "score_a": 592,
+        "score_b": 659,
+        "score_gap": 67,
+        "cosine_similarity": 0.9052,
+        "differing_attributes": [
+          "gender",
+          "region"
+        ]
+      },
+      {
+        "row_position_a": 524,
+        "row_position_b": 1351,
+        "score_a": 600,
+        "score_b": 659,
+        "score_gap": 59,
+        "cosine_similarity": 0.9101,
+        "differing_attributes": [
+          "gender",
+          "age_group",
+          "region",
+          "education_level"
+        ]
+      },
+      {
+        "row_position_a": 964,
+        "row_position_b": 1748,
+        "score_a": 600,
+        "score_b": 659,
+        "score_gap": 59,
+        "cosine_similarity": 0.9103,
+        "differing_attributes": [
+          "age_group",
+          "region",
+          "education_level"
+        ]
+      },
+      {
+        "row_position_a": 354,
+        "row_position_b": 1351,
+        "score_a": 600,
+        "score_b": 659,
+        "score_gap": 59,
+        "cosine_similarity": 0.9,
+        "differing_attributes": [
+          "gender",
+          "age_group",
+          "education_level"
+        ]
+      },
+      {
+        "row_position_a": 216,
+        "row_position_b": 1497,
+        "score_a": 659,
+        "score_b": 600,
+        "score_gap": 59,
         "cosine_similarity": 0.9018,
         "differing_attributes": [
-          "gender",
-          "age_group",
-          "region",
-          "education_level"
-        ]
-      },
-      {
-        "row_position_a": 275,
-        "row_position_b": 1026,
-        "score_a": 374,
-        "score_b": 518,
-        "score_gap": 144,
-        "cosine_similarity": 0.9098,
-        "differing_attributes": [
-          "gender",
-          "age_group",
-          "region",
-          "education_level"
-        ]
-      },
-      {
-        "row_position_a": 410,
-        "row_position_b": 775,
-        "score_a": 759,
-        "score_b": 617,
-        "score_gap": 142,
-        "cosine_similarity": 0.9119,
-        "differing_attributes": [
-          "gender",
-          "region"
-        ]
-      },
-      {
-        "row_position_a": 759,
-        "row_position_b": 1241,
-        "score_a": 520,
-        "score_b": 378,
-        "score_gap": 142,
-        "cosine_similarity": 0.9028,
-        "differing_attributes": [
-          "education_level"
-        ]
-      },
-      {
-        "row_position_a": 852,
-        "row_position_b": 1205,
-        "score_a": 441,
-        "score_b": 300,
-        "score_gap": 141,
-        "cosine_similarity": 0.9014,
-        "differing_attributes": [
-          "education_level"
-        ]
-      },
-      {
-        "row_position_a": 257,
-        "row_position_b": 708,
-        "score_a": 425,
-        "score_b": 560,
-        "score_gap": 135,
-        "cosine_similarity": 0.9051,
-        "differing_attributes": [
-          "age_group",
-          "education_level"
-        ]
-      },
-      {
-        "row_position_a": 397,
-        "row_position_b": 406,
-        "score_a": 608,
-        "score_b": 743,
-        "score_gap": 135,
-        "cosine_similarity": 0.9039,
-        "differing_attributes": [
-          "gender",
-          "age_group",
-          "region"
-        ]
-      },
-      {
-        "row_position_a": 468,
-        "row_position_b": 1367,
-        "score_a": 553,
-        "score_b": 418,
-        "score_gap": 135,
-        "cosine_similarity": 0.9019,
-        "differing_attributes": [
-          "age_group",
           "region",
           "education_level"
         ]
       }
     ],
-    "verdict": "Individual fairness proxy found 955 of 4421 demographically different, psychometrically similar pairs with score gaps above 50 points. Review feature collection and calibration before promotion."
+    "verdict": "Individual fairness proxy found 220 of 4975 demographically different, psychometrically similar pairs with score gaps above 50 points. Review feature collection and calibration before promotion."
   },
   "post_governance_impact": {
     "available": true,
-    "overall_auc_after_governance": 0.759,
-    "overall_approval_rate_before_governance": 0.425,
-    "overall_approval_rate_after_governance": 0.3994,
-    "overall_approval_rate_delta": -0.0256,
-    "mean_score_delta": -5.9,
-    "worst_auc_gap_after_governance": 0.0651,
+    "overall_auc_after_governance": 0.7543,
+    "overall_approval_rate_before_governance": 0.945,
+    "overall_approval_rate_after_governance": 0.945,
+    "overall_approval_rate_delta": 0.0,
+    "mean_score_delta": -0.2,
+    "worst_auc_gap_after_governance": 0.0542,
     "flagged_groups_after_governance": [],
     "evaluated_group_count": 14,
     "skipped_group_count": 0,
@@ -1186,176 +1117,176 @@
       "gender": {
         "female": {
           "n_samples": 836,
-          "post_governance_auc": 0.7682,
-          "post_governance_auc_gap_from_overall": 0.0092,
-          "approval_rate_before_governance": 0.4342,
-          "approval_rate_after_governance": 0.4067,
-          "approval_rate_delta": -0.0275,
-          "mean_score_before_governance": 523.5,
-          "mean_score_after_governance": 517.6,
-          "mean_score_delta": -5.9,
+          "post_governance_auc": 0.7708,
+          "post_governance_auc_gap_from_overall": 0.0165,
+          "approval_rate_before_governance": 0.9402,
+          "approval_rate_after_governance": 0.9402,
+          "approval_rate_delta": 0.0,
+          "mean_score_before_governance": 594.7,
+          "mean_score_after_governance": 594.6,
+          "mean_score_delta": -0.1,
           "flag": "green"
         },
         "male": {
           "n_samples": 915,
-          "post_governance_auc": 0.7463,
-          "post_governance_auc_gap_from_overall": 0.0127,
-          "approval_rate_before_governance": 0.4197,
-          "approval_rate_after_governance": 0.3967,
-          "approval_rate_delta": -0.023,
-          "mean_score_before_governance": 522.7,
-          "mean_score_after_governance": 516.8,
-          "mean_score_delta": -5.9,
+          "post_governance_auc": 0.7408,
+          "post_governance_auc_gap_from_overall": 0.0134,
+          "approval_rate_before_governance": 0.9508,
+          "approval_rate_after_governance": 0.9508,
+          "approval_rate_delta": 0.0,
+          "mean_score_before_governance": 594.8,
+          "mean_score_after_governance": 594.6,
+          "mean_score_delta": -0.2,
           "flag": "green"
         },
         "non_binary": {
           "n_samples": 49,
-          "post_governance_auc": 0.8144,
-          "post_governance_auc_gap_from_overall": 0.0554,
-          "approval_rate_before_governance": 0.3673,
-          "approval_rate_after_governance": 0.3265,
-          "approval_rate_delta": -0.0408,
-          "mean_score_before_governance": 506.8,
-          "mean_score_after_governance": 500.4,
-          "mean_score_delta": -6.4,
+          "post_governance_auc": 0.7458,
+          "post_governance_auc_gap_from_overall": 0.0085,
+          "approval_rate_before_governance": 0.9184,
+          "approval_rate_after_governance": 0.9184,
+          "approval_rate_delta": 0.0,
+          "mean_score_before_governance": 593.9,
+          "mean_score_after_governance": 593.7,
+          "mean_score_delta": -0.2,
           "flag": "green"
         }
       },
       "age_group": {
         "18-25": {
           "n_samples": 459,
-          "post_governance_auc": 0.7487,
-          "post_governance_auc_gap_from_overall": 0.0103,
-          "approval_rate_before_governance": 0.4248,
-          "approval_rate_after_governance": 0.4009,
-          "approval_rate_delta": -0.024,
-          "mean_score_before_governance": 524.7,
-          "mean_score_after_governance": 518.7,
-          "mean_score_delta": -6.0,
+          "post_governance_auc": 0.749,
+          "post_governance_auc_gap_from_overall": 0.0053,
+          "approval_rate_before_governance": 0.9586,
+          "approval_rate_after_governance": 0.9586,
+          "approval_rate_delta": 0.0,
+          "mean_score_before_governance": 596.3,
+          "mean_score_after_governance": 596.2,
+          "mean_score_delta": -0.1,
           "flag": "green"
         },
         "26-35": {
           "n_samples": 656,
-          "post_governance_auc": 0.7496,
-          "post_governance_auc_gap_from_overall": 0.0093,
-          "approval_rate_before_governance": 0.4466,
-          "approval_rate_after_governance": 0.4162,
-          "approval_rate_delta": -0.0305,
-          "mean_score_before_governance": 524.0,
-          "mean_score_after_governance": 518.2,
-          "mean_score_delta": -5.9,
+          "post_governance_auc": 0.7357,
+          "post_governance_auc_gap_from_overall": 0.0185,
+          "approval_rate_before_governance": 0.9421,
+          "approval_rate_after_governance": 0.9421,
+          "approval_rate_delta": 0.0,
+          "mean_score_before_governance": 594.3,
+          "mean_score_after_governance": 594.2,
+          "mean_score_delta": -0.1,
           "flag": "green"
         },
         "36-50": {
           "n_samples": 512,
-          "post_governance_auc": 0.7726,
-          "post_governance_auc_gap_from_overall": 0.0136,
-          "approval_rate_before_governance": 0.3848,
-          "approval_rate_after_governance": 0.3633,
-          "approval_rate_delta": -0.0215,
-          "mean_score_before_governance": 515.7,
-          "mean_score_after_governance": 509.9,
-          "mean_score_delta": -5.8,
+          "post_governance_auc": 0.7861,
+          "post_governance_auc_gap_from_overall": 0.0318,
+          "approval_rate_before_governance": 0.9355,
+          "approval_rate_after_governance": 0.9355,
+          "approval_rate_delta": 0.0,
+          "mean_score_before_governance": 592.7,
+          "mean_score_after_governance": 592.5,
+          "mean_score_delta": -0.2,
           "flag": "green"
         },
         "50+": {
           "n_samples": 173,
-          "post_governance_auc": 0.7759,
-          "post_governance_auc_gap_from_overall": 0.0169,
-          "approval_rate_before_governance": 0.4624,
-          "approval_rate_after_governance": 0.4393,
-          "approval_rate_delta": -0.0231,
-          "mean_score_before_governance": 532.3,
-          "mean_score_after_governance": 526.4,
-          "mean_score_delta": -6.0,
+          "post_governance_auc": 0.7419,
+          "post_governance_auc_gap_from_overall": 0.0123,
+          "approval_rate_before_governance": 0.948,
+          "approval_rate_after_governance": 0.948,
+          "approval_rate_delta": 0.0,
+          "mean_score_before_governance": 598.0,
+          "mean_score_after_governance": 597.8,
+          "mean_score_delta": -0.2,
           "flag": "green"
         }
       },
       "region": {
         "rural": {
           "n_samples": 630,
-          "post_governance_auc": 0.766,
-          "post_governance_auc_gap_from_overall": 0.0071,
-          "approval_rate_before_governance": 0.4206,
-          "approval_rate_after_governance": 0.3937,
-          "approval_rate_delta": -0.027,
-          "mean_score_before_governance": 521.1,
-          "mean_score_after_governance": 515.0,
-          "mean_score_delta": -6.0,
+          "post_governance_auc": 0.7588,
+          "post_governance_auc_gap_from_overall": 0.0046,
+          "approval_rate_before_governance": 0.9333,
+          "approval_rate_after_governance": 0.9333,
+          "approval_rate_delta": 0.0,
+          "mean_score_before_governance": 593.8,
+          "mean_score_after_governance": 593.7,
+          "mean_score_delta": -0.1,
           "flag": "green"
         },
         "semi-urban": {
           "n_samples": 622,
-          "post_governance_auc": 0.7653,
-          "post_governance_auc_gap_from_overall": 0.0063,
-          "approval_rate_before_governance": 0.4051,
-          "approval_rate_after_governance": 0.3778,
-          "approval_rate_delta": -0.0273,
-          "mean_score_before_governance": 518.5,
-          "mean_score_after_governance": 512.7,
-          "mean_score_delta": -5.8,
+          "post_governance_auc": 0.744,
+          "post_governance_auc_gap_from_overall": 0.0103,
+          "approval_rate_before_governance": 0.9453,
+          "approval_rate_after_governance": 0.9453,
+          "approval_rate_delta": 0.0,
+          "mean_score_before_governance": 592.9,
+          "mean_score_after_governance": 592.8,
+          "mean_score_delta": -0.2,
           "flag": "green"
         },
         "urban": {
           "n_samples": 548,
-          "post_governance_auc": 0.7379,
-          "post_governance_auc_gap_from_overall": 0.0211,
-          "approval_rate_before_governance": 0.4526,
-          "approval_rate_after_governance": 0.4307,
-          "approval_rate_delta": -0.0219,
-          "mean_score_before_governance": 529.2,
-          "mean_score_after_governance": 523.3,
-          "mean_score_delta": -5.9,
+          "post_governance_auc": 0.757,
+          "post_governance_auc_gap_from_overall": 0.0028,
+          "approval_rate_before_governance": 0.958,
+          "approval_rate_after_governance": 0.958,
+          "approval_rate_delta": 0.0,
+          "mean_score_before_governance": 597.8,
+          "mean_score_after_governance": 597.7,
+          "mean_score_delta": -0.2,
           "flag": "green"
         }
       },
       "education_level": {
         "graduate": {
           "n_samples": 345,
-          "post_governance_auc": 0.8241,
-          "post_governance_auc_gap_from_overall": 0.0651,
-          "approval_rate_before_governance": 0.4,
-          "approval_rate_after_governance": 0.3826,
-          "approval_rate_delta": -0.0174,
-          "mean_score_before_governance": 522.5,
-          "mean_score_after_governance": 516.8,
-          "mean_score_delta": -5.7,
+          "post_governance_auc": 0.8085,
+          "post_governance_auc_gap_from_overall": 0.0542,
+          "approval_rate_before_governance": 0.9594,
+          "approval_rate_after_governance": 0.9594,
+          "approval_rate_delta": 0.0,
+          "mean_score_before_governance": 595.4,
+          "mean_score_after_governance": 595.3,
+          "mean_score_delta": -0.1,
           "flag": "green"
         },
         "none": {
           "n_samples": 183,
-          "post_governance_auc": 0.8109,
-          "post_governance_auc_gap_from_overall": 0.052,
-          "approval_rate_before_governance": 0.4863,
-          "approval_rate_after_governance": 0.4699,
-          "approval_rate_delta": -0.0164,
-          "mean_score_before_governance": 525.6,
-          "mean_score_after_governance": 519.7,
-          "mean_score_delta": -5.9,
+          "post_governance_auc": 0.7004,
+          "post_governance_auc_gap_from_overall": 0.0539,
+          "approval_rate_before_governance": 0.9672,
+          "approval_rate_after_governance": 0.9672,
+          "approval_rate_delta": 0.0,
+          "mean_score_before_governance": 597.9,
+          "mean_score_after_governance": 597.7,
+          "mean_score_delta": -0.2,
           "flag": "green"
         },
         "primary": {
           "n_samples": 395,
-          "post_governance_auc": 0.7196,
-          "post_governance_auc_gap_from_overall": 0.0393,
-          "approval_rate_before_governance": 0.4152,
-          "approval_rate_after_governance": 0.3747,
-          "approval_rate_delta": -0.0405,
-          "mean_score_before_governance": 524.1,
-          "mean_score_after_governance": 518.1,
-          "mean_score_delta": -6.0,
+          "post_governance_auc": 0.7199,
+          "post_governance_auc_gap_from_overall": 0.0343,
+          "approval_rate_before_governance": 0.9468,
+          "approval_rate_after_governance": 0.9468,
+          "approval_rate_delta": 0.0,
+          "mean_score_before_governance": 594.2,
+          "mean_score_after_governance": 594.1,
+          "mean_score_delta": -0.1,
           "flag": "green"
         },
         "secondary": {
           "n_samples": 877,
-          "post_governance_auc": 0.7428,
-          "post_governance_auc_gap_from_overall": 0.0162,
-          "approval_rate_before_governance": 0.4265,
-          "approval_rate_after_governance": 0.4025,
-          "approval_rate_delta": -0.0239,
-          "mean_score_before_governance": 521.4,
-          "mean_score_after_governance": 515.5,
-          "mean_score_delta": -5.9,
+          "post_governance_auc": 0.7595,
+          "post_governance_auc_gap_from_overall": 0.0053,
+          "approval_rate_before_governance": 0.9339,
+          "approval_rate_after_governance": 0.9339,
+          "approval_rate_delta": 0.0,
+          "mean_score_before_governance": 594.0,
+          "mean_score_after_governance": 593.9,
+          "mean_score_delta": -0.2,
           "flag": "green"
         }
       }

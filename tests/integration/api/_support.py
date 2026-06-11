@@ -30,5 +30,6 @@ def build_runtime_settings(tmp_path) -> Settings:
         {
             "ALTERSCORE_REPO_ROOT": str(tmp_path),
             "ALTERSCORE_RUNTIME_MODEL_PATH": "models/artifacts/logistic_best.pkl",
+            "ALTERSCORE_ENABLE_DEBUG_SCORE": "true",
         }
     )

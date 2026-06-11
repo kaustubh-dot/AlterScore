@@ -7,9 +7,11 @@ from functools import lru_cache
 import json
 from pathlib import Path
 from typing import Any, Callable, Final
+import warnings
 
 import joblib
 import numpy as np
+import pandas as pd
 
 from backend.app.core.paths import MODEL_ARTIFACTS_DIR, resolve_repo_path
 from backend.app.core.settings import Settings, get_settings
@@ -28,7 +30,10 @@ from backend.ml.inference.ensemble_adapter import (
     EnsembleInferenceBundle,
     predict_ensemble_proba,
 )
-from backend.ml.preprocessing.feature_registry import ALL_MODEL_FEATURES
+from backend.ml.preprocessing.feature_registry import (
+    ALL_MODEL_FEATURES,
+    NUMERIC_FEATURES,
+)
 from backend.ml.registry.production_manifest import (
     MANIFEST_REQUIRED_ARTIFACT_KEYS,
     ProductionManifest,
@@ -208,6 +213,7 @@ class ArtifactLoadReport:
     missing_artifacts: tuple[str, ...]
     invalid_artifacts: tuple[str, ...]
     artifact_errors: dict[str, str]
+    artifact_warnings: dict[str, str]
     scoring_ready: bool
 
 
@@ -265,6 +271,7 @@ def _load_runtime_artifact_bundle_impl(
     loaded_artifacts: set[str] = set()
     invalid_artifacts: set[str] = set()
     artifact_errors: dict[str, str] = {}
+    artifact_warnings: dict[str, str] = {}
     manifest_checksums = (
         {key: entry.sha256 for key, entry in manifest.artifacts.items()}
         if manifest is not None
@@ -297,6 +304,7 @@ def _load_runtime_artifact_bundle_impl(
         loaded_artifacts=loaded_artifacts,
         invalid_artifacts=invalid_artifacts,
         artifact_errors=artifact_errors,
+        artifact_warnings=artifact_warnings,
     )
     preprocessor = _load_validated_artifact(
         artifact_key="preprocessor",
@@ -307,6 +315,7 @@ def _load_runtime_artifact_bundle_impl(
         loaded_artifacts=loaded_artifacts,
         invalid_artifacts=invalid_artifacts,
         artifact_errors=artifact_errors,
+        artifact_warnings=artifact_warnings,
     )
     text_pca = _load_validated_artifact(
         artifact_key="text_pca",
@@ -317,6 +326,7 @@ def _load_runtime_artifact_bundle_impl(
         loaded_artifacts=loaded_artifacts,
         invalid_artifacts=invalid_artifacts,
         artifact_errors=artifact_errors,
+        artifact_warnings=artifact_warnings,
     )
     shap_explainer = _load_validated_artifact(
         artifact_key="shap_explainer",
@@ -330,6 +340,7 @@ def _load_runtime_artifact_bundle_impl(
         loaded_artifacts=loaded_artifacts,
         invalid_artifacts=invalid_artifacts,
         artifact_errors=artifact_errors,
+        artifact_warnings=artifact_warnings,
     )
     dice_explainer = _load_validated_artifact(
         artifact_key="dice_explainer",
@@ -343,6 +354,7 @@ def _load_runtime_artifact_bundle_impl(
         loaded_artifacts=loaded_artifacts,
         invalid_artifacts=invalid_artifacts,
         artifact_errors=artifact_errors,
+        artifact_warnings=artifact_warnings,
     )
     metrics_payload = _load_validated_artifact(
         artifact_key="metrics",
@@ -353,6 +365,7 @@ def _load_runtime_artifact_bundle_impl(
         loaded_artifacts=loaded_artifacts,
         invalid_artifacts=invalid_artifacts,
         artifact_errors=artifact_errors,
+        artifact_warnings=artifact_warnings,
     )
     baseline_metrics = _load_validated_artifact(
         artifact_key="baseline_metrics",
@@ -363,6 +376,7 @@ def _load_runtime_artifact_bundle_impl(
         loaded_artifacts=loaded_artifacts,
         invalid_artifacts=invalid_artifacts,
         artifact_errors=artifact_errors,
+        artifact_warnings=artifact_warnings,
     )
     fairness_report = _load_validated_artifact(
         artifact_key="fairness_report",
@@ -373,6 +387,7 @@ def _load_runtime_artifact_bundle_impl(
         loaded_artifacts=loaded_artifacts,
         invalid_artifacts=invalid_artifacts,
         artifact_errors=artifact_errors,
+        artifact_warnings=artifact_warnings,
     )
     psi_report = _load_validated_artifact(
         artifact_key="psi_report",
@@ -383,6 +398,7 @@ def _load_runtime_artifact_bundle_impl(
         loaded_artifacts=loaded_artifacts,
         invalid_artifacts=invalid_artifacts,
         artifact_errors=artifact_errors,
+        artifact_warnings=artifact_warnings,
     )
     global_importance = _load_validated_artifact(
         artifact_key="global_importance",
@@ -397,6 +413,7 @@ def _load_runtime_artifact_bundle_impl(
         loaded_artifacts=loaded_artifacts,
         invalid_artifacts=invalid_artifacts,
         artifact_errors=artifact_errors,
+        artifact_warnings=artifact_warnings,
     )
     population_percentiles = _load_validated_artifact(
         artifact_key="population_percentiles",
@@ -410,7 +427,17 @@ def _load_runtime_artifact_bundle_impl(
         loaded_artifacts=loaded_artifacts,
         invalid_artifacts=invalid_artifacts,
         artifact_errors=artifact_errors,
+        artifact_warnings=artifact_warnings,
     )
+
+    if base_report.runtime_model_type != "ensemble":
+        _validate_loaded_single_model_runtime(
+            model=model,
+            preprocessor=preprocessor,
+            invalid_artifacts=invalid_artifacts,
+            artifact_errors=artifact_errors,
+            loaded_artifacts=loaded_artifacts,
+        )
 
     # Eagerly check scoring-critical artifacts before attempting expensive ensemble loading
     _pre_ensemble_report = _finalize_artifact_report(
@@ -418,6 +445,7 @@ def _load_runtime_artifact_bundle_impl(
         loaded_artifacts=loaded_artifacts,
         invalid_artifacts=invalid_artifacts,
         artifact_errors=artifact_errors,
+        artifact_warnings=artifact_warnings,
     )
     base_scoring_ready = all(
         artifact_key in loaded_artifacts for artifact_key in SCORING_CRITICAL_ARTIFACTS
@@ -457,6 +485,7 @@ def _load_runtime_artifact_bundle_impl(
                     loaded_artifacts=loaded_artifacts,
                     invalid_artifacts=invalid_artifacts,
                     artifact_errors=artifact_errors,
+                    artifact_warnings=artifact_warnings,
                 )
             if stacking_config is not None:
                 base_model_order = tuple(stacking_config["base_model_order"])
@@ -486,6 +515,7 @@ def _load_runtime_artifact_bundle_impl(
         loaded_artifacts=loaded_artifacts,
         invalid_artifacts=invalid_artifacts,
         artifact_errors=artifact_errors,
+        artifact_warnings=artifact_warnings,
     )
     if strict and not report.scoring_ready:
         raise ArtifactLoadError(_format_scoring_ready_error(report))
@@ -599,6 +629,7 @@ def _resolve_artifact_state(
             missing_artifacts=missing_artifacts,
             invalid_artifacts=(),
             artifact_errors={},
+            artifact_warnings={},
             scoring_ready=False,
         ),
         manifest,
@@ -742,6 +773,7 @@ def _load_validated_artifact(
     loaded_artifacts: set[str],
     invalid_artifacts: set[str],
     artifact_errors: dict[str, str],
+    artifact_warnings: dict[str, str],
 ) -> Any | None:
     if path is None or not path.is_file():
         return None
@@ -754,16 +786,37 @@ def _load_validated_artifact(
                     "artifact checksum does not match the production manifest: "
                     f"expected {expected_sha256}, got {actual_sha256}."
                 )
-        payload = loader(path)
-        if validator is not None:
-            validator(payload)
+        with warnings.catch_warnings(record=True) as caught_warnings:
+            warnings.simplefilter("always")
+            payload = loader(path)
+            if validator is not None:
+                validator(payload)
     except Exception as exc:
         invalid_artifacts.add(artifact_key)
         artifact_errors[artifact_key] = f"{type(exc).__name__}: {exc}"
         return None
 
+    relevant_warnings = [
+        f"{type(item.message).__name__}: {item.message}"
+        for item in caught_warnings
+        if _is_artifact_load_warning(item.message)
+    ]
+    if relevant_warnings:
+        artifact_warnings[artifact_key] = " | ".join(relevant_warnings)
+
     loaded_artifacts.add(artifact_key)
     return payload
+
+
+def _is_artifact_load_warning(warning_message: Warning) -> bool:
+    warning_type_name = type(warning_message).__name__
+    message = str(warning_message).lower()
+    return (
+        warning_type_name == "InconsistentVersionWarning"
+        or "trying to unpickle estimator" in message
+        or "serialized model" in message
+        or "generated by an older version" in message
+    )
 
 
 def _finalize_artifact_report(
@@ -772,6 +825,7 @@ def _finalize_artifact_report(
     loaded_artifacts: set[str],
     invalid_artifacts: set[str],
     artifact_errors: dict[str, str],
+    artifact_warnings: dict[str, str],
 ) -> ArtifactLoadReport:
     required_scoring_artifacts = _required_scoring_artifacts(base_report)
     return replace(
@@ -779,6 +833,7 @@ def _finalize_artifact_report(
         artifacts_loaded=tuple(sorted(loaded_artifacts)),
         invalid_artifacts=tuple(sorted(invalid_artifacts)),
         artifact_errors=dict(sorted(artifact_errors.items())),
+        artifact_warnings=dict(sorted(artifact_warnings.items())),
         scoring_ready=all(
             artifact_key in loaded_artifacts
             for artifact_key in required_scoring_artifacts
@@ -989,6 +1044,45 @@ def _validate_loaded_ensemble_runtime(
             f"{type(exc).__name__}: {exc}"
         )
         loaded_artifacts.discard("base_models")
+
+
+def _validate_loaded_single_model_runtime(
+    *,
+    model: Any | None,
+    preprocessor: Any | None,
+    invalid_artifacts: set[str],
+    artifact_errors: dict[str, str],
+    loaded_artifacts: set[str],
+) -> None:
+    if model is None or preprocessor is None:
+        return
+
+    try:
+        probe_features = _build_runtime_probe_feature_frame()
+        processed_features = np.asarray(
+            preprocessor.transform(probe_features),
+            dtype=float,
+        )
+        probe_probabilities = model.predict_proba(processed_features)
+        _validate_probability_matrix("runtime model", probe_probabilities)
+    except Exception as exc:
+        invalid_artifacts.add("runtime_model")
+        artifact_errors["runtime_model"] = (
+            "Loaded runtime model failed a one-row preprocess/predict probe: "
+            f"{type(exc).__name__}: {exc}"
+        )
+        loaded_artifacts.discard("runtime_model")
+
+
+def _build_runtime_probe_feature_frame() -> pd.DataFrame:
+    row: dict[str, Any] = {feature_name: 0.0 for feature_name in NUMERIC_FEATURES}
+    row.update(
+        {
+            "device_type": "mobile",
+            "time_of_day": "afternoon",
+        }
+    )
+    return pd.DataFrame([row], columns=ALL_MODEL_FEATURES)
 
 
 def _validate_probability_matrix(model_name: str, probabilities: Any) -> None:

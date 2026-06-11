@@ -6,7 +6,7 @@ import json
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Final
 
 import numpy as np
 
@@ -34,12 +34,19 @@ from backend.ml.inference.score_mapper import (
     compute_percentile,
     get_loan_eligibility,
     get_risk_band,
+    probability_to_score,
+    score_mapping_debug,
 )
 from backend.ml.preprocessing.pipeline import transform_features
 
 from backend.app.core.constants import MAX_EXPLANATION_ITEMS, TIP_LIBRARY
 
 logger = logging.getLogger(__name__)
+
+GOVERNED_PROBABILITY_MIN: Final[float] = 0.000001
+GOVERNED_PROBABILITY_MAX: Final[float] = 0.99
+DEFAULT_GOVERNANCE_MULTIPLIER_MIN: Final[float] = 0.65
+SEVERE_GOVERNANCE_MULTIPLIER_MIN: Final[float] = 0.000001
 
 
 @dataclass(frozen=True)
@@ -124,28 +131,22 @@ class ScoringService:
         )
         repayment_probability = float(model_debug["repayment_probability"])
 
-        # Apply Post-Model Governance Multiplier Layer
-        governance_features = {
-            **assembled.feature_row,
-            "scenario_consistency_score": assembled.behavioral_features.get(
-                "scenario_consistency_score", 0.5
-            ),
-            "scenario_fast_gaming": assembled.behavioral_features.get(
-                "scenario_fast_gaming", 0.0
-            ),
-            "scenario_straight_lining_ratio": assembled.behavioral_features.get(
-                "scenario_straight_lining_ratio", 0.0
-            ),
-        }
-        gov_multiplier, gov_reasons = _calculate_governance_multiplier(
-            governance_features
-        )
-        adjusted_probability = max(
-            0.01, min(0.99, repayment_probability * gov_multiplier)
+        adjusted_probability, gov_multiplier, gov_reasons = (
+            _apply_governance_adjustment(
+                repayment_probability,
+                assembled.feature_row,
+                assembled.behavioral_features,
+            )
         )
 
-        score_mapping_debug = _build_score_mapping_debug(adjusted_probability)
-        credit_score = int(score_mapping_debug["final_credit_score"])
+        score_mapping_config = _score_mapping_config_from_manifest(
+            self.artifacts.manifest
+        )
+        score_mapping_details = score_mapping_debug(
+            adjusted_probability,
+            score_mapping_config,
+        )
+        credit_score = int(score_mapping_details["final_credit_score"])
         risk_band = get_risk_band(credit_score)
         percentile = compute_percentile(
             credit_score,
@@ -165,6 +166,17 @@ class ScoringService:
             if self.ensemble_bundle is not None
             else self.artifacts.model
         )
+
+        def adjust_counterfactual_probability(
+            candidate_probability: float,
+            candidate_row: dict[str, Any],
+        ) -> float:
+            return _apply_governance_adjustment(
+                candidate_probability,
+                candidate_row,
+                assembled.behavioral_features,
+            )[0]
+
         counterfactual_actions = _build_counterfactual_actions(
             dice_explainer=self.artifacts.dice_explainer,
             runtime_model_name=self.artifacts.report.runtime_model_name,
@@ -173,8 +185,13 @@ class ScoringService:
             feature_row=assembled.feature_row,
             feature_frame=assembled.feature_frame,
             current_credit_score=credit_score,
-            current_probability=repayment_probability,
+            current_probability=adjusted_probability,
             shap_contributions=shap_contributions,
+            candidate_probability_adjuster=adjust_counterfactual_probability,
+            candidate_score_mapper=lambda probability: probability_to_score(
+                probability,
+                score_mapping_config,
+            ),
         )
 
         response = ScoreResponse.model_validate(
@@ -220,7 +237,7 @@ class ScoringService:
             "feature_row": _to_jsonable(assembled.feature_row),
             "preprocessing": preprocessor_debug,
             "model_debug": model_debug,
-            "score_mapping": score_mapping_debug,
+            "score_mapping": score_mapping_details,
             "final_score": {
                 "credit_score": credit_score,
                 "risk_band": risk_band,
@@ -233,7 +250,8 @@ class ScoringService:
             },
             "explanation": [item.model_dump(mode="json") for item in explanation_items],
             "counterfactual_generation_inputs": {
-                "current_probability": round(repayment_probability, 6),
+                "current_probability": round(adjusted_probability, 6),
+                "base_probability": round(repayment_probability, 6),
                 "current_credit_score": credit_score,
                 "feature_row": _to_jsonable(assembled.feature_row),
                 "shap_contributions": _to_jsonable(shap_contributions),
@@ -421,20 +439,6 @@ def _build_model_debug(
     }
 
 
-def _build_score_mapping_debug(repayment_probability: float) -> dict[str, Any]:
-    clipped_probability = float(np.clip(repayment_probability, 0.01, 0.99))
-    log_odds = float(np.log(clipped_probability / (1.0 - clipped_probability)))
-    raw_score = 500.0 + (log_odds * 80.0)
-    final_credit_score = int(np.clip(raw_score, 300, 850))
-    return {
-        "raw_repayment_probability": float(repayment_probability),
-        "clipped_probability_for_score_mapping": clipped_probability,
-        "log_odds": log_odds,
-        "raw_score_before_clamp": raw_score,
-        "final_credit_score": final_credit_score,
-    }
-
-
 def _compute_shap_contributions(
     shap_explainer: Any | None,
     processed_row: np.ndarray,
@@ -513,6 +517,8 @@ def _build_counterfactual_actions(
     current_credit_score: int,
     current_probability: float,
     shap_contributions: dict[str, float],
+    candidate_probability_adjuster: Any | None = None,
+    candidate_score_mapper: Any | None = None,
 ) -> list[CounterfactualAction]:
     explainer = dice_explainer or build_default_persisted_dice_explainer(
         model_name=runtime_model_name or "logistic_regression",
@@ -525,6 +531,8 @@ def _build_counterfactual_actions(
         current_probability=current_probability,
         current_credit_score=current_credit_score,
         shap_contributions=shap_contributions,
+        candidate_probability_adjuster=candidate_probability_adjuster,
+        candidate_score_mapper=candidate_score_mapper,
     )
     return [CounterfactualAction.model_validate(action) for action in raw_actions]
 
@@ -593,12 +601,60 @@ def _build_improvement_tips(feature_row: dict[str, Any]) -> list[ImprovementTip]
     ]
 
 
+def _apply_governance_adjustment(
+    repayment_probability: float,
+    feature_row: dict[str, Any],
+    scenario_signals: dict[str, Any],
+) -> tuple[float, float, list[str]]:
+    governance_features = _build_governance_feature_row(
+        feature_row,
+        scenario_signals,
+    )
+    multiplier, reasons = _calculate_governance_multiplier(governance_features)
+    adjusted_probability = max(
+        GOVERNED_PROBABILITY_MIN,
+        min(GOVERNED_PROBABILITY_MAX, float(repayment_probability) * multiplier),
+    )
+    return adjusted_probability, multiplier, reasons
+
+
+def _build_governance_feature_row(
+    feature_row: dict[str, Any],
+    scenario_signals: dict[str, Any],
+) -> dict[str, Any]:
+    return {
+        **feature_row,
+        "scenario_consistency_score": scenario_signals.get(
+            "scenario_consistency_score", 0.5
+        ),
+        "scenario_fast_gaming": scenario_signals.get("scenario_fast_gaming", 0.0),
+        "scenario_straight_lining_ratio": scenario_signals.get(
+            "scenario_straight_lining_ratio", 0.0
+        ),
+    }
+
+
+def _score_mapping_config_from_manifest(
+    manifest: dict[str, Any] | None,
+) -> dict[str, Any] | None:
+    if manifest is None:
+        return None
+
+    score_mapping = manifest.get("score_mapping")
+    if score_mapping is None:
+        return None
+    if not isinstance(score_mapping, dict):
+        raise ValueError("production manifest score_mapping must be a JSON object.")
+    return score_mapping
+
+
 def _calculate_governance_multiplier(
     feature_row: dict[str, Any],
 ) -> tuple[float, list[str]]:
-    """Compute a bounded post-model multiplier [0.65, 1.0] and return warning logs."""
+    """Compute a bounded post-model multiplier and return warning logs."""
     reasons = []
     multiplier = 1.0
+    minimum_multiplier = DEFAULT_GOVERNANCE_MULTIPLIER_MIN
 
     # 2 & 8. Contradiction Severity Tiers
     # Checked from consistency S1/S8 and self-desirability honesty traps.
@@ -611,6 +667,7 @@ def _calculate_governance_multiplier(
     soft_contradiction = scenario_consistency == 0.65
 
     avg_time = float(feature_row.get("avg_response_time_ms", 5000.0))
+    session_duration = float(feature_row.get("session_duration_sec", 300.0))
     change_rate = float(feature_row.get("answer_change_rate", 0.0))
     engagement = float(feature_row.get("engagement_score", 1.0))
     is_malicious_telemetry = (
@@ -706,7 +763,23 @@ def _calculate_governance_multiplier(
                 f"supported by low-engagement/speed telemetry"
             )
 
-    final_multiplier = max(0.65, min(1.0, multiplier))
+    severe_fast_invalid_profile = (
+        avg_time < 1000.0
+        and session_duration < 60.0
+        and float(feature_row.get("numeracy_score", 1.0)) <= 0.05
+        and float(feature_row.get("CRT_score", 1.0)) <= 0.05
+        and float(feature_row.get("financial_literacy_score", 1.0)) <= 0.05
+        and float(feature_row.get("text_problem_solving_flag", 1.0)) <= 0.05
+    )
+    if severe_fast_invalid_profile:
+        minimum_multiplier = SEVERE_GOVERNANCE_MULTIPLIER_MIN
+        multiplier = min(multiplier, SEVERE_GOVERNANCE_MULTIPLIER_MIN)
+        reasons.append(
+            "Mechanically fast completion with no demonstrated cognitive, "
+            "financial-literacy, or problem-solving signal"
+        )
+
+    final_multiplier = max(minimum_multiplier, min(1.0, multiplier))
     return final_multiplier, reasons
 
 

@@ -1,11 +1,11 @@
 {
   "manifest_schema_version": "1.0.0",
-  "manifest_version": "xgboost_monotonic_v2",
-  "model_version": "0.3.0",
-  "run_id": "20260527_051352_xgboost_monotonic_promotion",
-  "created_at": "2026-05-27T05:13:52Z",
-  "code_ref": "antigravity/dev",
-  "data_version": "synthetic_v2.0.0",
+  "manifest_version": "xgboost_monotonic_calibrated_v1",
+  "model_version": "0.4.0",
+  "run_id": "20260611_051632_xgboost_monotonic_calibrated",
+  "created_at": "2026-06-11T05:16:34Z",
+  "code_ref": "codex-scoring-calibration-roadmap",
+  "data_version": "synthetic_v2.0.0_generated",
   "feature_registry_version": "0.1.0",
   "runtime_model_name": "xgboost_monotonic",
   "runtime_model_type": "classical_monotonic",
@@ -18,65 +18,238 @@
   "artifacts": {
     "runtime_model": {
       "path": "models/artifacts/xgboost_monotonic.pkl",
-      "sha256": "e8db3f68072b1a902f83f152fcd956dd8eaeeba5f4e4e517b88206bb7d8376d2"
+      "sha256": "84a97387c58983b0b7ed18bf80191beb08ebb00254597b0dc4048429d8013691"
     },
     "preprocessor": {
       "path": "models/preprocessors/preprocessor_monotonic.pkl",
-      "sha256": "68fddac6dc1428e36ed72da894372feccc97e4d2415a34e29769086504ea8de5"
+      "sha256": "72292ec00173b088dd5050000f068101aa3e7848617421285ebdcfda577e5db6"
     },
     "text_pca": {
       "path": "models/preprocessors/text_pca.pkl",
-      "sha256": "e6b76e0f24feba5bd702f932bb06c648f4e53ccf85d6ac04860b10e148b6832e"
+      "sha256": "3c21c86d2738f2edb36f1917f8102027f8457ddac0730fc8c89ae8c68e613931"
     },
     "shap_explainer": {
       "path": "models/explainers/shap_explainer_monotonic.pkl",
-      "sha256": "a481124b37b2d564e15bb87064abae91c3a409b9a263af9f80dc5ffe994d0822"
+      "sha256": "1f80e9870a9979f84d452676f3d9c0cd5e0a9acfcdc52227e706de2b0e43b549"
     },
     "dice_explainer": {
       "path": "models/explainers/dice_explainer_monotonic.pkl",
-      "sha256": "f607566ae6309189c820da2037f957573cbcb4b7bba1dd877eb1891ab5ce2c22"
+      "sha256": "52bdf4e86e3572aa7ec56f501e7d1247068123f8d3f1c39bcbdb498c45fb4293"
     },
     "metrics": {
       "path": "models/reports/metrics_monotonic.json",
-      "sha256": "4ef704c816284835bf64fa60c35065ba8e076b6508991ce401f48651ffb9f115"
+      "sha256": "bde24fc8d9474956e6dcd840bb19c01e9fb9135f83f5336f604e3b8183c2be22"
     },
     "baseline_metrics": {
       "path": "models/reports/baseline_metrics_monotonic.json",
-      "sha256": "d5ae74ed51cfac62b9764ffc7b762b840d119781f147234f0654e4b64359c170"
+      "sha256": "b31adb313a088760f8c5ffb5f4c79460b71d2f398b63cedd2faac084f430c2a4"
     },
     "fairness_report": {
       "path": "models/reports/fairness_report_monotonic.json",
-      "sha256": "c338177a6b9fbc1ab875a3490fac5405731b867cf70e5575937cedd6da60b34a"
+      "sha256": "abae2ca7412d2ad0f8d4a5bfff21808c5209483ba92a858e1ff67dc490d4e915"
     },
     "psi_report": {
       "path": "models/reports/psi_report_monotonic.json",
-      "sha256": "cb511b0ac08eee3830bb831e0bcd04e6dab5a1591d5640692db9e7eef579a8f0"
+      "sha256": "9efe2bb34dad676216b9150cf975df756659e1caefbf43550eeaa338122bc188"
     },
     "global_importance": {
       "path": "models/reports/global_importance_monotonic.json",
-      "sha256": "2cb3c5ba095a46e65b35ea76485482547608373ce485184a47dfa8e74dfa3ac2"
+      "sha256": "da7485e018e7bf0a5e95ef4ac0ce10f65f13ec6e5459ab266799c13a7473e14e"
     },
     "population_percentiles": {
       "path": "models/reports/population_percentiles_monotonic.json",
-      "sha256": "b00a3283414640517bca65303082a3920bc83349ee278630c768c3befd42e12d"
+      "sha256": "32852a1b97c275039182eebfbc9ef9b18541292ff51e19c0990e7a2f72388a40"
     }
   },
   "metrics_summary": {
     "test_split": "test_months_11_12",
-    "test_auc_roc": 0.7596,
-    "calibration": "none"
+    "test_auc_roc": 0.7549,
+    "expected_calibration_error": 0.0353,
+    "calibration": "isotonic"
   },
   "fairness_summary": {
-    "overall_auc": 0.7596,
+    "overall_auc": 0.7549,
+    "worst_auc_gap": 0.0558,
     "post_governance_available": true,
-    "post_governance_overall_auc": 0.759,
-    "individual_fairness_flagged_pair_share": 0.216,
+    "post_governance_overall_auc": 0.7543,
+    "individual_fairness_flagged_pair_share": 0.0442,
+    "individual_fairness_max_score_gap": 95,
     "verdict": "Model shows acceptable fairness across all tested demographic groups. No subgroup shows AUC deviation >4% from the overall model."
   },
   "drift_summary": {
-    "verdict": "see psi_report_monotonic.json",
-    "note": "PSI computed on base features; model does not alter feature distribution."
+    "max_psi": 0.2052,
+    "verdict": "watch"
+  },
+  "score_mapping": {
+    "method": "log_odds",
+    "score_base": 575.0,
+    "log_odds_factor": 28.0,
+    "probability_clip_min": 1e-06,
+    "probability_clip_max": 0.99,
+    "score_min": 300,
+    "score_max": 850,
+    "calibration": "isotonic"
+  },
+  "training_summary": {
+    "row_count": 10000,
+    "seed": 42,
+    "training_device": "cuda",
+    "parallel_workers": -1,
+    "calibration": "isotonic",
+    "xgboost_params": {
+      "n_estimators": 320,
+      "learning_rate": 0.035,
+      "max_depth": 2,
+      "min_child_weight": 12,
+      "reg_lambda": 3.0,
+      "gamma": 0.05,
+      "subsample": 0.88,
+      "colsample_bytree": 0.9,
+      "objective": "binary:logistic",
+      "eval_metric": "logloss",
+      "random_state": 42,
+      "n_jobs": -1,
+      "tree_method": "hist",
+      "device": "cuda",
+      "monotone_constraints": [
+        1,
+        1,
+        1,
+        1,
+        -1,
+        0,
+        -1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        -1,
+        0,
+        -1,
+        -1,
+        0,
+        0,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "verbosity": 0
+    },
+    "monotonic_constraint_counts": {
+      "positive": 13,
+      "negative": 5,
+      "zero": 17
+    },
+    "masked_features": [
+      "behavioral_trust_score",
+      "cognitive_consistency_index",
+      "cognitive_load_index",
+      "engagement_score",
+      "impulsivity_index",
+      "psychological_credit_index",
+      "repayment_intention_score",
+      "text_semantic_dim1",
+      "text_semantic_dim2"
+    ]
   },
   "promotion_status": "promoted",
-  "promotion_notes": "Monotonic XGBoost candidate promoted to production (v2 assessment). Retrained on v2-calibrated synthetic data: scenario-driven features floored at 0.25, risk_consistency_flag rate tightened to match v2 runtime. Guaranteed monotonicity constraints on all key behavioral features."
+  "promotion_notes": "Calibrated monotonic XGBoost bundle regenerated from the deterministic synthetic v2 generator. The runtime model uses isotonic calibration, manifest-backed score mapping, active monotonic constraints, and promotion-gate-aligned reports.",
+  "promotion_gate_summary": {
+    "status": "warning",
+    "promotion_status": "promoted",
+    "policy_version": "promotion_gate_policy_v1",
+    "blocking_failures": [],
+    "warnings": [
+      "drift_max_psi"
+    ],
+    "checks": [
+      {
+        "name": "test_auc_roc",
+        "status": "pass",
+        "message": "Test AUC-ROC must be at least 0.750 for xgboost_monotonic.",
+        "metric_value": 0.7549,
+        "threshold": 0.75,
+        "blocking": true
+      },
+      {
+        "name": "expected_calibration_error",
+        "status": "pass",
+        "message": "Expected calibration error must stay below 0.080.",
+        "metric_value": 0.0353,
+        "threshold": 0.08,
+        "blocking": true
+      },
+      {
+        "name": "subgroup_auc_gap",
+        "status": "pass",
+        "message": "Worst subgroup AUC gap must be <= 0.075.",
+        "metric_value": 0.0558,
+        "threshold": 0.075,
+        "blocking": true
+      },
+      {
+        "name": "calibration_parity_ece",
+        "status": "pass",
+        "message": "Fairness calibration parity ECE must stay below 0.080.",
+        "metric_value": 0.0353,
+        "threshold": 0.08,
+        "blocking": true
+      },
+      {
+        "name": "individual_fairness_flagged_share",
+        "status": "pass",
+        "message": "Similar-pair score-gap flagged share must stay below 0.050.",
+        "metric_value": 0.0442,
+        "threshold": 0.05,
+        "blocking": true
+      },
+      {
+        "name": "individual_fairness_max_score_gap",
+        "status": "pass",
+        "message": "Maximum similar-pair score gap must stay below 100 points.",
+        "metric_value": 95.0,
+        "threshold": 100.0,
+        "blocking": true
+      },
+      {
+        "name": "post_governance_auc_drop",
+        "status": "pass",
+        "message": "Post-governance AUC drop must stay below 0.010.",
+        "metric_value": 0.0006000000000000449,
+        "threshold": 0.01,
+        "blocking": true
+      },
+      {
+        "name": "post_governance_approval_rate_delta",
+        "status": "pass",
+        "message": "Absolute post-governance approval-rate shift must stay below 0.050.",
+        "metric_value": 0.0,
+        "threshold": 0.05,
+        "blocking": false
+      },
+      {
+        "name": "drift_max_psi",
+        "status": "warn",
+        "message": "Maximum PSI must stay below 0.30.",
+        "metric_value": 0.2052,
+        "threshold": 0.3,
+        "blocking": false
+      }
+    ]
+  }
 }

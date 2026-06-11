@@ -19,6 +19,18 @@ def test_build_monotonic_constraint_vector_matches_feature_registry_length() -> 
     assert constraints[ALL_MODEL_FEATURES.index("device_type")] == 0
 
 
+def test_build_monotonic_constraint_vector_handles_sklearn_feature_prefixes() -> None:
+    constraints = build_monotonic_constraint_vector(
+        (
+            "num__numeracy_score",
+            "num__scroll_hesitation_score",
+            "cat__device_type",
+        )
+    )
+
+    assert constraints == (1, -1, 0)
+
+
 def test_monotonic_tree_active_features_exclude_masked_and_operational_inputs() -> None:
     assert "device_type" not in MONOTONIC_TREE_ACTIVE_FEATURES
     assert "time_of_day" not in MONOTONIC_TREE_ACTIVE_FEATURES
