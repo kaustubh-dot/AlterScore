@@ -62,7 +62,7 @@ Production candidates must satisfy all of the following, not just aggregate AUC:
 The constrained-tree production track now has a dedicated feature-policy layer
 in [backend/ml/training/classical/monotonic_constraints.py](C:/Kaustubh/Projects/AlterScore/backend/ml/training/classical/monotonic_constraints.py)
 and a governed candidate-training entry point in
-[scripts/train_monotonic_tree_candidates.py](C:/Kaustubh/Projects/AlterScore/scripts/train_monotonic_tree_candidates.py).
+[scripts/training/train_calibrated_monotonic_xgboost.py](C:/Kaustubh/Projects/AlterScore/scripts/training/train_calibrated_monotonic_xgboost.py).
 
 This superseded the earlier production ensemble as the default runtime while
 keeping the ensemble artifacts available for benchmark and rollback/reference
@@ -70,7 +70,7 @@ work.
 
 ## Current Production Candidate
 
-The current active governed production runtime is monotonic `XGBoost`.
+The current active governed production runtime is calibrated monotonic `XGBoost`.
 
 The latest full-scale governed comparison and fairness-hardening review showed:
 
@@ -82,11 +82,13 @@ The latest full-scale governed comparison and fairness-hardening review showed:
   remained the preferred operating point in that review
 
 The checked-in promoted bundle is the operational source of truth. Its current
-reports show held-out AUC `0.7596` before post-model governance and `0.7590`
-after post-model governance, stable PSI, subgroup fairness passing under the
-bounded AUC-gap policy, and individual-fairness proxy flagged-pair share
-`0.2160`. Older governed-review figures such as `0.8040` and `0.8090` are
-historical experiment/report contexts, not the active manifest metric.
+reports show held-out AUC `0.7549`, ECE `0.0353`, post-governance AUC
+`0.7543`, subgroup fairness passing under the bounded AUC-gap policy, and
+individual-fairness proxy flagged-pair share `0.0442` with max similar-pair
+score gap `99`. PSI is in non-blocking `watch` at `0.2052` on
+`avg_response_time_ms`, below the `0.30` alert threshold. Older governed-review
+figures such as `0.8040` and `0.8090` are historical experiment/report
+contexts, not the active manifest metric.
 
 This is an important architecture outcome:
 

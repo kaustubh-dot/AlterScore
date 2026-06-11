@@ -6,7 +6,7 @@ import json
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Final
 
 import numpy as np
 
@@ -42,6 +42,11 @@ from backend.ml.preprocessing.pipeline import transform_features
 from backend.app.core.constants import MAX_EXPLANATION_ITEMS, TIP_LIBRARY
 
 logger = logging.getLogger(__name__)
+
+GOVERNED_PROBABILITY_MIN: Final[float] = 0.001
+GOVERNED_PROBABILITY_MAX: Final[float] = 0.99
+DEFAULT_GOVERNANCE_MULTIPLIER_MIN: Final[float] = 0.65
+SEVERE_GOVERNANCE_MULTIPLIER_MIN: Final[float] = 0.001
 
 
 @dataclass(frozen=True)
@@ -607,8 +612,8 @@ def _apply_governance_adjustment(
     )
     multiplier, reasons = _calculate_governance_multiplier(governance_features)
     adjusted_probability = max(
-        0.01,
-        min(0.99, float(repayment_probability) * multiplier),
+        GOVERNED_PROBABILITY_MIN,
+        min(GOVERNED_PROBABILITY_MAX, float(repayment_probability) * multiplier),
     )
     return adjusted_probability, multiplier, reasons
 
@@ -646,9 +651,10 @@ def _score_mapping_config_from_manifest(
 def _calculate_governance_multiplier(
     feature_row: dict[str, Any],
 ) -> tuple[float, list[str]]:
-    """Compute a bounded post-model multiplier [0.65, 1.0] and return warning logs."""
+    """Compute a bounded post-model multiplier and return warning logs."""
     reasons = []
     multiplier = 1.0
+    minimum_multiplier = DEFAULT_GOVERNANCE_MULTIPLIER_MIN
 
     # 2 & 8. Contradiction Severity Tiers
     # Checked from consistency S1/S8 and self-desirability honesty traps.
@@ -661,6 +667,7 @@ def _calculate_governance_multiplier(
     soft_contradiction = scenario_consistency == 0.65
 
     avg_time = float(feature_row.get("avg_response_time_ms", 5000.0))
+    session_duration = float(feature_row.get("session_duration_sec", 300.0))
     change_rate = float(feature_row.get("answer_change_rate", 0.0))
     engagement = float(feature_row.get("engagement_score", 1.0))
     is_malicious_telemetry = (
@@ -756,7 +763,23 @@ def _calculate_governance_multiplier(
                 f"supported by low-engagement/speed telemetry"
             )
 
-    final_multiplier = max(0.65, min(1.0, multiplier))
+    severe_fast_invalid_profile = (
+        avg_time < 1000.0
+        and session_duration < 60.0
+        and float(feature_row.get("numeracy_score", 1.0)) <= 0.05
+        and float(feature_row.get("CRT_score", 1.0)) <= 0.05
+        and float(feature_row.get("financial_literacy_score", 1.0)) <= 0.05
+        and float(feature_row.get("text_problem_solving_flag", 1.0)) <= 0.05
+    )
+    if severe_fast_invalid_profile:
+        minimum_multiplier = SEVERE_GOVERNANCE_MULTIPLIER_MIN
+        multiplier = min(multiplier, SEVERE_GOVERNANCE_MULTIPLIER_MIN)
+        reasons.append(
+            "Mechanically fast completion with no demonstrated cognitive, "
+            "financial-literacy, or problem-solving signal"
+        )
+
+    final_multiplier = max(minimum_multiplier, min(1.0, multiplier))
     return final_multiplier, reasons
 
 

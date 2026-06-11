@@ -46,8 +46,8 @@ These thresholds must not be weakened during cleanup or release preparation.
 
 Primary governed evaluation scripts:
 
-- [scripts/train_monotonic_tree_candidates.py](C:/Kaustubh/Projects/AlterScore/scripts/train_monotonic_tree_candidates.py)
-- [scripts/fairness_harden_xgboost_candidate.py](C:/Kaustubh/Projects/AlterScore/scripts/fairness_harden_xgboost_candidate.py)
+- [scripts/training/train_calibrated_monotonic_xgboost.py](C:/Kaustubh/Projects/AlterScore/scripts/training/train_calibrated_monotonic_xgboost.py)
+- [scripts/training/promote_monotonic_xgboost.py](C:/Kaustubh/Projects/AlterScore/scripts/training/promote_monotonic_xgboost.py) (compatibility wrapper for the calibrated trainer)
 
 Research-only supporting script retained for governance comparison:
 
@@ -65,8 +65,9 @@ Promotion requires the full governance stack to remain green.
 
 ## Current Operating Position
 
-The active checked-in runtime is monotonic `XGBoost`.
+The active checked-in runtime is calibrated monotonic `XGBoost`.
 
-The current promotion-readiness work is to reconcile the checked-in monotonic
-reports with the governed full-run review, especially the
-`gender=non_binary` fairness attention item.
+The current manifest is promoted because all blocking gates pass under
+`promotion_gate_policy_v1`. The remaining governance watch item is PSI:
+`avg_response_time_ms` is in `watch` at `0.2052`, below the blocking `0.30`
+alert threshold.

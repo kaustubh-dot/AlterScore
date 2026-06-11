@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 import numpy as np
@@ -285,12 +286,16 @@ def build_population_percentiles_payload(
     *,
     model_name: str,
     bucket_width: int = SCORE_HISTOGRAM_BUCKET_WIDTH,
+    score_mapping_config: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Build percentile lookup and histogram payloads from scored population probabilities."""
 
     probability_array = np.asarray(y_prob, dtype=float)
     scores = np.asarray(
-        [probability_to_score(probability) for probability in probability_array],
+        [
+            probability_to_score(probability, score_mapping_config)
+            for probability in probability_array
+        ],
         dtype=int,
     )
     if scores.size == 0:

@@ -89,13 +89,13 @@ The active production model is a manifest-backed, highly optimized **Monotonic X
 | Metric / Attribute | Value / Status | Description |
 | :--- | :--- | :--- |
 | 🚀 **Runtime Model** | `xgboost_monotonic` | Governed monotonic tree classifier |
-| 📦 **Manifest Version** | `xgboost_monotonic_v2` | Verified JSON-manifest production registry |
+| 📦 **Manifest Version** | `xgboost_monotonic_calibrated_v1` | Verified JSON-manifest production registry |
 | 📂 **Model Registry Manifest** | `models/registry/production_manifest.json` | Hash-verified production manifest file |
-| 🎯 **Checked-in Test AUC** | **`0.7547`** | Robust classification power |
-| 📐 **Checked-in Brier Score** | *N/A (Monotonic)* | Pure monotonic classification model |
-| 🔍 **Checked-in ECE** | *N/A (Monotonic)* | Pure monotonic classification model |
-| 📊 **Drift Verdict** | **`stable`** | No critical population drift detected (PSI stable) |
-| ⚖️ **Fairness Review** | **`passed`** | Acceptable fairness across all demographic subgroups |
+| 🎯 **Checked-in Test AUC** | **`0.7549`** | Temporal test split discrimination |
+| 📐 **Checked-in Brier Score** | **`0.1903`** | Calibrated probability error on the test split |
+| 🔍 **Checked-in ECE** | **`0.0353`** | Isotonic-calibrated probability reliability |
+| 📊 **Drift Verdict** | **`watch`** | Non-blocking PSI watch on `avg_response_time_ms` |
+| ⚖️ **Fairness Review** | **`passed`** | Blocking fairness gates pass; max similar-pair gap is 99 |
 
 > [!NOTE]
 > The highly complex calibrated stacking ensemble has been archived in the repository as a baseline reference and instant hot-rollback target.
@@ -151,11 +151,11 @@ Ensure model health, reproducibility, and API contract compliance:
 # Run automated behavioral persona regression suite & integration tests
 .\venv\Scripts\pytest tests/unit tests/integration -m "not slow" -n 6 --basetemp=.runtime/pytest-temp
 
-# Train and compare governed monotonic tree candidates (Archived Dev Scripts)
-.\venv\Scripts\python.exe archive/research_experiments/train_monotonic_tree_candidates.py --row-count 10000
+# Rebuild the calibrated monotonic runtime bundle with GPU XGBoost
+.\venv\Scripts\python.exe scripts\training\train_calibrated_monotonic_xgboost.py --device cuda
 
-# Execute fairness hardening and review for XGBoost candidate (Archived Dev Scripts)
-.\venv\Scripts\python.exe archive/research_experiments/fairness_harden_xgboost_candidate.py --row-count 10000
+# Evaluate manifest-backed promotion gates
+.\venv\Scripts\python.exe -m backend.ml.registry.promotion_gates
 ```
 
 ---

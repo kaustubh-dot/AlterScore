@@ -57,7 +57,7 @@ def test_checked_in_bundle_loader_validates_real_runtime_artifacts() -> None:
     assert bundle.report.source == "manifest"
     assert bundle.report.runtime_model_name == "xgboost_monotonic"
     assert bundle.report.manifest_version is not None
-    assert bundle.report.model_version == "0.3.0"
+    assert bundle.report.model_version == "0.4.0"
     assert bundle.report.scoring_ready is True
     assert bundle.manifest is not None
     assert bundle.shap_explainer is not None
@@ -86,20 +86,16 @@ def test_checked_in_bundle_health_endpoint_reports_validated_optional_status() -
 
     assert response.status_code == 200
     payload = HealthResponse.model_validate(response.json())
-    assert payload.status == "degraded"
+    assert payload.status == "ok"
     assert payload.artifact_source == "manifest"
     assert payload.manifest_backed is True
     assert payload.manifest_version is not None
-    assert payload.model_version == "0.3.0"
+    assert payload.model_version == "0.4.0"
     assert payload.promotion_gate is not None
     assert payload.promotion_gate.policy_version == "promotion_gate_policy_v1"
-    assert payload.promotion_gate.status == "failed"
-    assert set(payload.promotion_gate.blocking_failures) >= {
-        "expected_calibration_error",
-        "calibration_parity_ece",
-        "individual_fairness_flagged_share",
-        "individual_fairness_max_score_gap",
-    }
+    assert payload.promotion_gate.status == "warning"
+    assert payload.promotion_gate.blocking_failures == []
+    assert payload.promotion_gate.warnings == ["drift_max_psi"]
     assert "shap_explainer" in payload.artifacts_loaded
     assert "dice_explainer" in payload.artifacts_loaded
     assert payload.missing_artifacts == []
@@ -198,6 +194,6 @@ def test_checked_in_bundle_score_endpoint_appends_to_runtime_log_path() -> None:
     assert entries[0]["session_id"] == parsed.session_id
     assert entries[0]["artifact_source"] == "manifest"
     assert entries[0]["manifest_version"] is not None
-    assert entries[0]["model_version"] == "0.3.0"
+    assert entries[0]["model_version"] == "0.4.0"
 
     log_path.unlink()

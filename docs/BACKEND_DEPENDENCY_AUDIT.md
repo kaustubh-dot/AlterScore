@@ -199,7 +199,7 @@ Potential errors:
 
 Recommendation:
 
-- keep a strict minor-family range: `scikit-learn>=1.8,<1.9`
+- keep a strict minor-family range matching the regenerated artifacts: `scikit-learn>=1.5,<1.6`
 
 ### `torch`
 
@@ -387,7 +387,7 @@ The new ranges are intentionally conservative.
 Remaining risk:
 
 - allowing a newer patch or nearby minor inside each family can still surface behavior differences compared with the exact versions originally used
-- the biggest compatibility-sensitive package remains `scikit-learn`, which is why its range stays narrow at `>=1.8,<1.9`
+- the biggest compatibility-sensitive package remains `scikit-learn`, which is why its range stays narrow at `>=1.5,<1.6`
 - `torch` and `pytorch-tabnet` remain a long-term maintenance risk if the project later moves to Python 3.13/3.14
 
 Why the changes are still justified:

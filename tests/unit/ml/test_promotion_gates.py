@@ -107,14 +107,17 @@ def test_promotion_gates_warn_for_watch_level_drift() -> None:
     assert result["warnings"] == ["drift_max_psi"]
 
 
-def test_review_required_manifest_can_be_checked_without_blocking_ci() -> None:
+def test_current_manifest_is_promoted_without_blocking_gate_failures() -> None:
     result = build_promotion_gate_summary_from_manifest(PRODUCTION_MANIFEST_PATH)
 
-    assert result["promotion_status"] == "review_required"
+    assert result["promotion_status"] == "promoted"
     assert result["policy_version"] == "promotion_gate_policy_v1"
-    assert result["status"] == "failed"
+    assert result["status"] in {"passed", "warning"}
+    assert result["blocking_failures"] == []
     assert promotion_gate_exit_code(result) == 0
-    assert promotion_gate_exit_code(result, require_clean_pass=True) == 1
+    assert promotion_gate_exit_code(result, require_clean_pass=True) == (
+        0 if result["status"] == "passed" else 1
+    )
 
 
 def test_promotion_gate_policy_file_is_versioned() -> None:
@@ -125,7 +128,7 @@ def test_promotion_gate_policy_file_is_versioned() -> None:
     assert policy.max_expected_calibration_error == 0.08
 
 
-def test_cli_returns_success_for_current_review_required_manifest_quiet() -> None:
+def test_cli_returns_success_for_current_promoted_manifest_quiet() -> None:
     exit_code = main(["--manifest", str(PRODUCTION_MANIFEST_PATH), "--quiet"])
 
     assert exit_code == 0

@@ -118,6 +118,48 @@ def test_build_fairness_report_includes_governance_detail_sections() -> None:
     assert report["post_governance_impact"]["available"] is False
 
 
+def test_build_fairness_report_uses_supplied_score_mapping_config() -> None:
+    protected_frame = _protected_frame(
+        row_count=4,
+        gender=["female", "male", "female", "male"],
+        region=["urban", "urban", "rural", "rural"],
+    )
+    feature_frame = _psychometric_feature_frame(
+        [[0.7] * len(FULL_PROFILE_SIMILARITY_FEATURES) for _ in range(4)]
+    )
+    y_true = [0, 1, 0, 1]
+    y_prob = [0.05, 0.95, 0.10, 0.90]
+
+    default_report = build_fairness_report(
+        y_true,
+        y_prob,
+        protected_frame,
+        feature_frame=feature_frame,
+        min_group_samples=2,
+    )
+    compressed_report = build_fairness_report(
+        y_true,
+        y_prob,
+        protected_frame,
+        feature_frame=feature_frame,
+        min_group_samples=2,
+        score_mapping_config={
+            "method": "log_odds",
+            "score_base": 500,
+            "log_odds_factor": 20,
+            "probability_clip_min": 0.01,
+            "probability_clip_max": 0.99,
+            "score_min": 300,
+            "score_max": 850,
+            "calibration": "isotonic",
+        },
+    )
+
+    assert compressed_report["individual_fairness_proxy"]["max_score_gap"] < (
+        default_report["individual_fairness_proxy"]["max_score_gap"]
+    )
+
+
 def test_post_governance_impact_report_exposes_subgroup_score_deltas() -> None:
     protected_frame = _protected_frame(
         row_count=8,

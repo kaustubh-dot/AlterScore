@@ -19,7 +19,7 @@ troubleshooting, and contributor onboarding.
 | Python | `3.12.x` | Recommended local interpreter family |
 | Node.js | `>=18 <25` | Frontend development/build |
 | npm | `>=9 <12` | Use `npm.cmd` on Windows PowerShell if needed |
-| scikit-learn | `>=1.8,<1.9` | Required by checked-in artifacts |
+| scikit-learn | `>=1.5,<1.6` | Required by checked-in calibrated artifacts |
 
 Not recommended for this repo's normal local setup:
 

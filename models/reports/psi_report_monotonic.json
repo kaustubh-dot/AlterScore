@@ -18,11 +18,6 @@
       "status": "stable"
     },
     {
-      "feature": "cognitive_load_index",
-      "psi": 0.1189,
-      "status": "stable"
-    },
-    {
       "feature": "typing_speed_wpm",
       "psi": 0.0991,
       "status": "stable"
@@ -35,6 +30,11 @@
     {
       "feature": "repayment_intention_score",
       "psi": 0.0147,
+      "status": "stable"
+    },
+    {
+      "feature": "text_sentiment_compound",
+      "psi": 0.0133,
       "status": "stable"
     },
     {
@@ -53,8 +53,8 @@
       "status": "stable"
     },
     {
-      "feature": "text_sentiment_compound",
-      "psi": 0.0088,
+      "feature": "impulsivity_index",
+      "psi": 0.008,
       "status": "stable"
     }
   ],
@@ -70,11 +70,6 @@
       "status": "stable"
     },
     {
-      "feature": "cognitive_load_index",
-      "psi": 0.1189,
-      "status": "stable"
-    },
-    {
       "feature": "typing_speed_wpm",
       "psi": 0.0991,
       "status": "stable"
@@ -87,6 +82,11 @@
     {
       "feature": "repayment_intention_score",
       "psi": 0.0147,
+      "status": "stable"
+    },
+    {
+      "feature": "text_sentiment_compound",
+      "psi": 0.0133,
       "status": "stable"
     },
     {
@@ -105,18 +105,8 @@
       "status": "stable"
     },
     {
-      "feature": "text_sentiment_compound",
-      "psi": 0.0088,
-      "status": "stable"
-    },
-    {
-      "feature": "text_agency_score",
-      "psi": 0.0081,
-      "status": "stable"
-    },
-    {
-      "feature": "text_semantic_dim2",
-      "psi": 0.0075,
+      "feature": "impulsivity_index",
+      "psi": 0.008,
       "status": "stable"
     },
     {
@@ -125,13 +115,8 @@
       "status": "stable"
     },
     {
-      "feature": "impulsivity_index",
-      "psi": 0.0069,
-      "status": "stable"
-    },
-    {
-      "feature": "behavioral_trust_score",
-      "psi": 0.0063,
+      "feature": "text_agency_score",
+      "psi": 0.0068,
       "status": "stable"
     },
     {
@@ -140,8 +125,8 @@
       "status": "stable"
     },
     {
-      "feature": "text_semantic_dim1",
-      "psi": 0.0054,
+      "feature": "behavioral_trust_score",
+      "psi": 0.0055,
       "status": "stable"
     },
     {
@@ -150,8 +135,8 @@
       "status": "stable"
     },
     {
-      "feature": "engagement_score",
-      "psi": 0.005,
+      "feature": "text_semantic_dim1",
+      "psi": 0.0052,
       "status": "stable"
     },
     {
@@ -162,6 +147,11 @@
     {
       "feature": "scroll_hesitation_score",
       "psi": 0.0047,
+      "status": "stable"
+    },
+    {
+      "feature": "engagement_score",
+      "psi": 0.0043,
       "status": "stable"
     },
     {
@@ -180,17 +170,27 @@
       "status": "stable"
     },
     {
+      "feature": "cognitive_load_index",
+      "psi": 0.0025,
+      "status": "stable"
+    },
+    {
+      "feature": "text_problem_solving_flag",
+      "psi": 0.0025,
+      "status": "stable"
+    },
+    {
       "feature": "honesty_score",
       "psi": 0.0024,
       "status": "stable"
     },
     {
-      "feature": "resilience_score",
-      "psi": 0.0022,
+      "feature": "text_semantic_dim2",
+      "psi": 0.0023,
       "status": "stable"
     },
     {
-      "feature": "text_problem_solving_flag",
+      "feature": "resilience_score",
       "psi": 0.0022,
       "status": "stable"
     },
