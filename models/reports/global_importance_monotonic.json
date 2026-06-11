@@ -5,154 +5,154 @@
     {
       "feature": "scroll_hesitation_score",
       "display_name": "Scroll Hesitation Score",
-      "mean_abs_shap": 0.2294,
+      "mean_abs_shap": 0.2336,
       "category": "behavioral",
       "rank": 1
     },
     {
       "feature": "session_duration_sec",
       "display_name": "Session Duration (sec)",
-      "mean_abs_shap": 0.1308,
+      "mean_abs_shap": 0.1307,
       "category": "behavioral",
       "rank": 2
     },
     {
       "feature": "numeracy_score",
       "display_name": "Numeracy Score",
-      "mean_abs_shap": 0.0917,
+      "mean_abs_shap": 0.087,
       "category": "psychometric",
       "rank": 3
     },
     {
       "feature": "financial_literacy_score",
       "display_name": "Financial Literacy Score",
-      "mean_abs_shap": 0.0707,
+      "mean_abs_shap": 0.0693,
       "category": "psychometric",
       "rank": 4
     },
     {
       "feature": "CRT_score",
       "display_name": "CRT Score",
-      "mean_abs_shap": 0.0682,
+      "mean_abs_shap": 0.0594,
       "category": "psychometric",
       "rank": 5
     },
     {
       "feature": "answer_change_rate",
       "display_name": "Answer Change Rate",
-      "mean_abs_shap": 0.0517,
+      "mean_abs_shap": 0.0522,
       "category": "behavioral",
       "rank": 6
     },
     {
       "feature": "typing_speed_wpm",
       "display_name": "Typing Speed (WPM)",
-      "mean_abs_shap": 0.0396,
+      "mean_abs_shap": 0.0476,
       "category": "behavioral",
       "rank": 7
     },
     {
-      "feature": "dropout_count",
-      "display_name": "Dropout Count",
-      "mean_abs_shap": 0.0333,
-      "category": "behavioral",
-      "rank": 8
-    },
-    {
       "feature": "honesty_score",
       "display_name": "Honesty Score",
-      "mean_abs_shap": 0.0333,
+      "mean_abs_shap": 0.0351,
       "category": "psychometric",
-      "rank": 9
+      "rank": 8
     },
     {
       "feature": "avg_response_time_ms",
       "display_name": "Average Response Time (ms)",
-      "mean_abs_shap": 0.0325,
+      "mean_abs_shap": 0.033,
+      "category": "behavioral",
+      "rank": 9
+    },
+    {
+      "feature": "dropout_count",
+      "display_name": "Dropout Count",
+      "mean_abs_shap": 0.032,
       "category": "behavioral",
       "rank": 10
     },
     {
       "feature": "resilience_score",
       "display_name": "Business Resilience",
-      "mean_abs_shap": 0.029,
+      "mean_abs_shap": 0.0285,
       "category": "psychometric",
       "rank": 11
     },
     {
       "feature": "locus_of_control",
       "display_name": "Proactive Problem Solving",
-      "mean_abs_shap": 0.0256,
+      "mean_abs_shap": 0.027,
       "category": "psychometric",
       "rank": 12
     },
     {
       "feature": "risk_attitude",
       "display_name": "Risk Attitude",
-      "mean_abs_shap": 0.0253,
+      "mean_abs_shap": 0.026,
       "category": "psychometric",
       "rank": 13
     },
     {
       "feature": "text_agency_score",
       "display_name": "Text Agency Score",
-      "mean_abs_shap": 0.0226,
+      "mean_abs_shap": 0.0232,
       "category": "nlp",
       "rank": 14
     },
     {
-      "feature": "delay_discounting_rate",
-      "display_name": "Delay Discounting Rate",
-      "mean_abs_shap": 0.021,
+      "feature": "future_orientation",
+      "display_name": "Long-Term Financial Planning",
+      "mean_abs_shap": 0.019,
       "category": "psychometric",
       "rank": 15
     },
     {
-      "feature": "future_orientation",
-      "display_name": "Long-Term Financial Planning",
-      "mean_abs_shap": 0.0204,
-      "category": "psychometric",
+      "feature": "text_sentiment_compound",
+      "display_name": "Text Sentiment Compound",
+      "mean_abs_shap": 0.0178,
+      "category": "nlp",
       "rank": 16
     },
     {
-      "feature": "text_sentiment_compound",
-      "display_name": "Text Sentiment Compound",
-      "mean_abs_shap": 0.0166,
-      "category": "nlp",
+      "feature": "delay_discounting_rate",
+      "display_name": "Delay Discounting Rate",
+      "mean_abs_shap": 0.017,
+      "category": "psychometric",
       "rank": 17
     },
     {
       "feature": "risk_response_speed_ratio",
       "display_name": "Risk Response Speed Ratio",
-      "mean_abs_shap": 0.0158,
+      "mean_abs_shap": 0.0165,
       "category": "behavioral",
       "rank": 18
     },
     {
       "feature": "social_capital_score",
       "display_name": "Network Support Reliance",
-      "mean_abs_shap": 0.0142,
+      "mean_abs_shap": 0.0152,
       "category": "psychometric",
       "rank": 19
     },
     {
       "feature": "loss_aversion_score",
       "display_name": "Financial Risk Tolerance",
-      "mean_abs_shap": 0.0138,
+      "mean_abs_shap": 0.0148,
       "category": "psychometric",
       "rank": 20
     },
     {
       "feature": "conscientiousness_score",
       "display_name": "Financial Consistency and Follow-Through",
-      "mean_abs_shap": 0.0108,
+      "mean_abs_shap": 0.0113,
       "category": "psychometric",
       "rank": 21
     },
     {
       "feature": "text_problem_solving_flag",
       "display_name": "Text Problem Solving Flag",
-      "mean_abs_shap": 0.0039,
+      "mean_abs_shap": 0.004,
       "category": "nlp",
       "rank": 22
     },

@@ -1,32 +1,12 @@
 {
-  "max_psi": 0.2052,
-  "verdict": "watch",
+  "max_psi": 0.0147,
+  "verdict": "stable",
   "thresholds": {
     "stable_below": 0.2,
     "watch_below": 0.3,
     "alert_at_or_above": 0.3
   },
   "top_drifted_features": [
-    {
-      "feature": "avg_response_time_ms",
-      "psi": 0.2052,
-      "status": "watch"
-    },
-    {
-      "feature": "session_duration_sec",
-      "psi": 0.1206,
-      "status": "stable"
-    },
-    {
-      "feature": "typing_speed_wpm",
-      "psi": 0.0991,
-      "status": "stable"
-    },
-    {
-      "feature": "risk_response_speed_ratio",
-      "psi": 0.0574,
-      "status": "stable"
-    },
     {
       "feature": "repayment_intention_score",
       "psi": 0.0147,
@@ -56,29 +36,29 @@
       "feature": "impulsivity_index",
       "psi": 0.008,
       "status": "stable"
+    },
+    {
+      "feature": "future_orientation",
+      "psi": 0.0071,
+      "status": "stable"
+    },
+    {
+      "feature": "text_agency_score",
+      "psi": 0.0068,
+      "status": "stable"
+    },
+    {
+      "feature": "conscientiousness_score",
+      "psi": 0.0062,
+      "status": "stable"
+    },
+    {
+      "feature": "behavioral_trust_score",
+      "psi": 0.0055,
+      "status": "stable"
     }
   ],
   "all_features": [
-    {
-      "feature": "avg_response_time_ms",
-      "psi": 0.2052,
-      "status": "watch"
-    },
-    {
-      "feature": "session_duration_sec",
-      "psi": 0.1206,
-      "status": "stable"
-    },
-    {
-      "feature": "typing_speed_wpm",
-      "psi": 0.0991,
-      "status": "stable"
-    },
-    {
-      "feature": "risk_response_speed_ratio",
-      "psi": 0.0574,
-      "status": "stable"
-    },
     {
       "feature": "repayment_intention_score",
       "psi": 0.0147,
@@ -145,7 +125,22 @@
       "status": "stable"
     },
     {
+      "feature": "typing_speed_wpm",
+      "psi": 0.0049,
+      "status": "stable"
+    },
+    {
+      "feature": "risk_response_speed_ratio",
+      "psi": 0.0047,
+      "status": "stable"
+    },
+    {
       "feature": "scroll_hesitation_score",
+      "psi": 0.0047,
+      "status": "stable"
+    },
+    {
+      "feature": "session_duration_sec",
       "psi": 0.0047,
       "status": "stable"
     },
@@ -192,6 +187,11 @@
     {
       "feature": "resilience_score",
       "psi": 0.0022,
+      "status": "stable"
+    },
+    {
+      "feature": "avg_response_time_ms",
+      "psi": 0.002,
       "status": "stable"
     },
     {
