@@ -140,9 +140,7 @@ def train_calibrated_monotonic_xgboost(
         text_pca_random_state=seed,
         text_pca_artifact_path=text_pca_path,
     )
-    policy_frame = neutralize_operational_metadata_for_training(
-        prepared.feature_frame
-    )
+    policy_frame = neutralize_operational_metadata_for_training(prepared.feature_frame)
     policy_frame, mask_replacements = apply_monotonic_tree_feature_masking(
         policy_frame,
         train_mask=aligned_dataset["cohort_month"].isin(range(1, 9)),
@@ -156,9 +154,7 @@ def train_calibrated_monotonic_xgboost(
     )
     processed_features = transform_features(preprocessor, policy_frame)
     transformed_feature_names = preprocessor.get_feature_names_out().tolist()
-    monotonic_constraints = build_monotonic_constraint_vector(
-        transformed_feature_names
-    )
+    monotonic_constraints = build_monotonic_constraint_vector(transformed_feature_names)
     constraint_counts = _count_constraints(monotonic_constraints)
 
     train_mask = prepared.feature_frame.index.isin(prepared.train.indices)
@@ -386,18 +382,16 @@ def train_calibrated_monotonic_xgboost(
         "metrics_summary": {
             "test_split": TEST_SPLIT,
             "test_auc_roc": test_metrics["auc_roc"],
-            "expected_calibration_error": test_metrics[
-                "expected_calibration_error"
-            ],
+            "expected_calibration_error": test_metrics["expected_calibration_error"],
             "calibration": "isotonic",
         },
         "fairness_summary": {
             "overall_auc": fairness_report["overall_auc"],
             "worst_auc_gap": fairness_report["worst_auc_gap"],
             "post_governance_available": True,
-            "post_governance_overall_auc": fairness_report[
-                "post_governance_impact"
-            ]["overall_auc_after_governance"],
+            "post_governance_overall_auc": fairness_report["post_governance_impact"][
+                "overall_auc_after_governance"
+            ],
             "individual_fairness_flagged_pair_share": fairness_report[
                 "individual_fairness_proxy"
             ]["flagged_pair_share"],

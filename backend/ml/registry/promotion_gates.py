@@ -27,7 +27,9 @@ PROMOTED_STATUS: Final[str] = "promoted"
 PROMOTION_GATE_POLICY_RELATIVE_PATH: Final[Path] = Path(
     "models/registry/promotion_gate_policy.json"
 )
-PROMOTION_GATE_POLICY_PATH: Final[Path] = REPO_ROOT / PROMOTION_GATE_POLICY_RELATIVE_PATH
+PROMOTION_GATE_POLICY_PATH: Final[Path] = (
+    REPO_ROOT / PROMOTION_GATE_POLICY_RELATIVE_PATH
+)
 PROMOTION_COMPATIBLE_GATE_STATUSES: Final[frozenset[GateSummaryStatus]] = frozenset(
     {"passed", "warning"}
 )
@@ -313,8 +315,7 @@ def _evaluate_metrics_gates(
             name="expected_calibration_error",
             metric_value=ece,
             threshold=policy.max_expected_calibration_error,
-            passing=ece is not None
-            and ece <= policy.max_expected_calibration_error,
+            passing=ece is not None and ece <= policy.max_expected_calibration_error,
             message=(
                 "Expected calibration error must stay below "
                 f"{policy.max_expected_calibration_error:.3f}."
@@ -436,8 +437,7 @@ def _evaluate_fairness_gates(
             metric_value=abs(approval_delta) if approval_delta is not None else None,
             threshold=policy.max_post_governance_approval_rate_drop,
             passing=approval_delta is not None
-            and abs(approval_delta)
-            <= policy.max_post_governance_approval_rate_drop,
+            and abs(approval_delta) <= policy.max_post_governance_approval_rate_drop,
             message=(
                 "Absolute post-governance approval-rate shift must stay below "
                 f"{policy.max_post_governance_approval_rate_drop:.3f}."
@@ -609,7 +609,9 @@ def _required_policy_string(payload: Mapping[str, Any], field_name: str) -> str:
 def _required_threshold(payload: Mapping[str, Any], field_name: str) -> float:
     value = _as_float(payload.get(field_name))
     if value is None:
-        raise ValueError(f"promotion gate policy missing numeric threshold {field_name}.")
+        raise ValueError(
+            f"promotion gate policy missing numeric threshold {field_name}."
+        )
     return value
 
 
