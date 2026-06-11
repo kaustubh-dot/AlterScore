@@ -97,3 +97,11 @@ jobs:
         run: |
           python scripts/validation/verify_reproducibility.py
 
+      - name: Promotion gate check
+        run: |
+          python -m backend.ml.registry.promotion_gates \
+            --manifest models/registry/production_manifest.json \
+            --allow-promoted-incompatibility
+        env:
+          ALTERSCORE_ENV: test
+
