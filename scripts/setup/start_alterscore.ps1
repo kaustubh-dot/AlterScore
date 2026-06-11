@@ -8,13 +8,13 @@ Write-Output "========================================================="
 
 # Step 1: Verify Python environment
 Write-Output "▶ Phase 1: Environment Verification..."
-if (Test-Path "venv\Scripts\python.exe") {
-    $pythonVer = & venv\Scripts\python.exe --version
+if (Test-Path ".venv312\Scripts\python.exe") {
+    $pythonVer = & .venv312\Scripts\python.exe --version
     Write-Output "  ✓ Active Virtual Environment found: $pythonVer"
 } else {
-    Write-Output "  ❌ ERROR: Virtual environment 'venv' not found."
-    Write-Output "     Please run: py -3.12 -m venv venv"
-    Write-Output "     Then install dependencies: venv\Scripts\python.exe -m pip install -r backend\requirements.txt"
+    Write-Output "  ❌ ERROR: Virtual environment '.venv312' not found."
+    Write-Output "     Please run: py -3.12 -m venv .venv312"
+    Write-Output "     Then install dependencies: .venv312\Scripts\python.exe -m pip install -r backend\requirements.txt"
     Exit 1
 }
 
@@ -37,12 +37,12 @@ Write-Output "  ✓ Production manifest verified."
 
 # Step 4: Boot backend process in a new window
 Write-Output "`n▶ Phase 2: Launching FastAPI Backend (Port 8000)..."
-Start-Process -FilePath "venv\Scripts\python.exe" -ArgumentList "-m uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000" -WindowStyle Normal
+Start-Process -FilePath ".venv312\Scripts\python.exe" -ArgumentList "-m uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000" -WindowStyle Normal
 Start-Sleep -Seconds 3
 
 # Step 5: Boot frontend process in a new window
 Write-Output "▶ Phase 3: Launching React/Vite Frontend (Port 5173)..."
-Start-Process -FilePath "cmd.exe" -ArgumentList "/c cd frontend && npm run dev -- --host 127.0.0.1 --port 5173" -WindowStyle Normal
+Start-Process -FilePath "cmd.exe" -ArgumentList '/c cd frontend & npm run dev -- --host 127.0.0.1 --port 5173' -WindowStyle Normal
 Start-Sleep -Seconds 3
 
 # Step 6: Health verification loops
