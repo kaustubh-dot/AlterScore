@@ -33,12 +33,12 @@ A production-style manual deployment runbook (`docs/DEPLOYMENT_RUNBOOK.md`) and 
 - Runtime model: `xgboost_monotonic`
 - Runtime type: `classical_monotonic`
 - Score mapping: manifest-declared `log_odds` mapping (`score_base=575`, `log_odds_factor=28`, `probability_clip_min=0.000001`, `probability_clip_max=0.99`, `calibration=isotonic`)
-- Test AUC: `0.7549` (checked-in monotonic runtime re-evaluated on held-out months `11-12`)
-- Expected calibration error: `0.0353` (passes the current promotion gate)
-- Post-governance AUC: `0.7543`
-- Fairness status: Overall AUC `0.7549`, with designated verdict: "Model shows acceptable fairness across all tested demographic groups. No subgroup shows AUC deviation >4% from the overall model."
-- Individual-fairness proxy: flagged-pair share `0.0442`, max similar-pair score gap `95`; both pass the current promotion gate.
-- Drift status: PSI verdict `watch`, max PSI `0.2052` on `avg_response_time_ms`; this is a non-blocking warning below the `0.30` alert threshold.
+- Test AUC: `0.7521` (checked-in monotonic runtime re-evaluated on held-out months `11-12`)
+- Expected calibration error: `0.0316` (passes the current promotion gate)
+- Post-governance AUC: `0.7514`
+- Fairness status: Overall AUC `0.7521`, with designated verdict: "Model shows acceptable fairness across all tested demographic groups. No subgroup shows AUC deviation >4% from the overall model."
+- Individual-fairness proxy: flagged-pair share `0.0069`, max similar-pair score gap `70`; both pass the current promotion gate.
+- Drift status: PSI verdict `stable`, max PSI `0.0147` (all features stable across months, temporal drift resolved).
 - Validity check status: 100% PASS on the python-based score-inflation validity audit.
 
 ## What Is Stable & Verified
@@ -57,11 +57,11 @@ A production-style manual deployment runbook (`docs/DEPLOYMENT_RUNBOOK.md`) and 
   staging, one fixed WebGL canvas, and final assessment CTA handoff.
 - Rollback checklist tied to manifest versions ([ROLLBACK_CHECKLIST.md](file:///C:/Kaustubh/Projects/AlterScore/docs/ROLLBACK_CHECKLIST.md)) fully documented.
 - Minor mobile overflow handling for charts and tables on extremely narrow viewports (<360px) fully implemented.
+- De-trended synthetic generator and retrained model bundle, resolving response-time PSI watch (max PSI is now `0.0147`, verdict: stable).
+- Promotion gate checking (`promotion_gates.py`) wired directly into the CI validation pipeline.
 
 ## What Remains Open (Next Recommended Steps)
 
-* **PSI Watch:** Investigate `avg_response_time_ms` temporal drift and decide whether to de-trend the synthetic generator, monitor it as expected seasonality, or reduce its model influence.
-* **Promotion Gates:** Wire `python -m backend.ml.registry.promotion_gates --manifest models/registry/production_manifest.json` into CI so a promoted manifest cannot pass with failed blocking gates.
 * **Borrower E2E Recheck:** Run one real `/api/score` browser walkthrough on a
   machine with the backend environment installed; the current UI workstation
   does not have `uvicorn` available.

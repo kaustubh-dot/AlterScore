@@ -27,7 +27,7 @@
 
 - [x] Reconcile checked-in monotonic runtime metrics with the governed full-run review metrics.
 - [x] Resolve, harden, or explicitly accept the checked-in fairness attention item for `gender=non_binary`.
-- [ ] Replace manifest `code_ref` historical labels with explicit branch/commit identifiers during the next promotion. Current manifest records `codex-scoring-calibration-roadmap` (the task label under which the bundle was generated). Will update to `main` on the next full training run. Do NOT hand-edit the manifest — regenerate through the training script.
+- [x] Replace manifest `code_ref` historical labels with explicit branch/commit identifiers during the next promotion (locked to `main` during model retraining).
 - [x] Add tests for questions and scoring payload construction (`questions.test.js`, `scorePayload.test.js`, and `run-tests.js`).
 - [x] Render the `/api/confusion-matrix` response.
 - [x] Add independent loading/error/success state per dashboard panel (Createdized async `PanelWrapper` with error boundary limits).
