@@ -16,6 +16,5 @@ if str(REPO_ROOT) not in sys.path:
 
 from scripts.training.train_calibrated_monotonic_xgboost import main
 
-
 if __name__ == "__main__":
     raise SystemExit(main())
