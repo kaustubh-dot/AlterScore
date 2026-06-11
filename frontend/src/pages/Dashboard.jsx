@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, BarChart, Bar, Legend } from 'recharts';
-import { Activity, ShieldCheck, Database, BarChart3, Radio, Sliders, ChevronRight, Terminal as TermIcon } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, BarChart, Bar } from 'recharts';
+import { Activity, BarChart3, Radio, Sliders, Terminal as TermIcon } from 'lucide-react';
 import ScrollReveal from '../components/animation/ScrollReveal';
 import GlowCard from '../components/ui/GlowCard';
 import TextReveal from '../components/animation/TextReveal';
@@ -323,7 +323,7 @@ export default function Dashboard() {
                   style={{ width: '100%', marginBottom: '24px' }}
                 />
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                <div className="calibrator-metrics-row">
                   <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--bg-border)', padding: '10px', borderRadius: '6px', textAlign: 'center' }}>
                     <div style={{ fontSize: '9px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Approval Rate</div>
                     <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-number)', fontFamily: 'var(--font-mono)' }}>
