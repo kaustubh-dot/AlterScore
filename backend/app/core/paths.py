@@ -15,8 +15,8 @@ def discover_repo_root(start: Path | None = None) -> Path:
         current = current.parent
 
     for candidate in (current, *current.parents):
-        if (candidate / "docs" / "AI_WORKFLOW_RULES.md").is_file() and (
-            candidate / "backend"
+        if (candidate / "backend").is_dir() and (
+            candidate / "models"
         ).is_dir():
             return candidate
 

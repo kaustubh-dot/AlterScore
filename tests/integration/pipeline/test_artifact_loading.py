@@ -384,10 +384,9 @@ def _prepare_runtime_bundle(
         artifact_paths["shap_explainer"].parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(
             Path(__file__).resolve().parents[3]
-            / "archive"
             / "models"
             / "explainers"
-            / "shap_explainer.pkl",
+            / "shap_explainer_monotonic.pkl",
             artifact_paths["shap_explainer"],
         )
     return artifact_paths
