@@ -86,7 +86,7 @@ def test_checked_in_bundle_health_endpoint_reports_validated_optional_status() -
 
     assert response.status_code == 200
     payload = HealthResponse.model_validate(response.json())
-    assert payload.status == "ok"
+    assert payload.status == "ok", f"Health payload: {payload.model_dump()}"
     assert payload.artifact_source == "manifest"
     assert payload.manifest_backed is True
     assert payload.manifest_version is not None
