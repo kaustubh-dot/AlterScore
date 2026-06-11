@@ -93,9 +93,9 @@ def test_checked_in_bundle_health_endpoint_reports_validated_optional_status() -
     assert payload.model_version == "0.4.0"
     assert payload.promotion_gate is not None
     assert payload.promotion_gate.policy_version == "promotion_gate_policy_v1"
-    assert payload.promotion_gate.status == "warning"
+    assert payload.promotion_gate.status == "passed"
     assert payload.promotion_gate.blocking_failures == []
-    assert payload.promotion_gate.warnings == ["drift_max_psi"]
+    assert payload.promotion_gate.warnings == []
     assert "shap_explainer" in payload.artifacts_loaded
     assert "dice_explainer" in payload.artifacts_loaded
     assert payload.missing_artifacts == []
