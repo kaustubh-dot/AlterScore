@@ -32,12 +32,12 @@ A production-style manual deployment runbook (`docs/DEPLOYMENT_RUNBOOK.md`) and 
 
 - Runtime model: `xgboost_monotonic`
 - Runtime type: `classical_monotonic`
-- Score mapping: manifest-declared `log_odds` mapping (`score_base=500`, `log_odds_factor=29`, `calibration=isotonic`)
+- Score mapping: manifest-declared `log_odds` mapping (`score_base=575`, `log_odds_factor=28`, `probability_clip_min=0.000001`, `probability_clip_max=0.99`, `calibration=isotonic`)
 - Test AUC: `0.7549` (checked-in monotonic runtime re-evaluated on held-out months `11-12`)
 - Expected calibration error: `0.0353` (passes the current promotion gate)
 - Post-governance AUC: `0.7543`
 - Fairness status: Overall AUC `0.7549`, with designated verdict: "Model shows acceptable fairness across all tested demographic groups. No subgroup shows AUC deviation >4% from the overall model."
-- Individual-fairness proxy: flagged-pair share `0.0442`, max similar-pair score gap `99`; both pass the current promotion gate.
+- Individual-fairness proxy: flagged-pair share `0.0442`, max similar-pair score gap `95`; both pass the current promotion gate.
 - Drift status: PSI verdict `watch`, max PSI `0.2052` on `avg_response_time_ms`; this is a non-blocking warning below the `0.30` alert threshold.
 - Validity check status: 100% PASS on the python-based score-inflation validity audit.
 

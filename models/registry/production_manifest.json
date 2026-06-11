@@ -2,8 +2,8 @@
   "manifest_schema_version": "1.0.0",
   "manifest_version": "xgboost_monotonic_calibrated_v1",
   "model_version": "0.4.0",
-  "run_id": "20260611_045544_xgboost_monotonic_calibrated",
-  "created_at": "2026-06-11T04:55:46Z",
+  "run_id": "20260611_051632_xgboost_monotonic_calibrated",
+  "created_at": "2026-06-11T05:16:34Z",
   "code_ref": "codex-scoring-calibration-roadmap",
   "data_version": "synthetic_v2.0.0_generated",
   "feature_registry_version": "0.1.0",
@@ -38,7 +38,7 @@
     },
     "metrics": {
       "path": "models/reports/metrics_monotonic.json",
-      "sha256": "b1a018d43ad5a9699489ed417c058c43040cf27f4e0111026bb4803b76fd89be"
+      "sha256": "bde24fc8d9474956e6dcd840bb19c01e9fb9135f83f5336f604e3b8183c2be22"
     },
     "baseline_metrics": {
       "path": "models/reports/baseline_metrics_monotonic.json",
@@ -46,7 +46,7 @@
     },
     "fairness_report": {
       "path": "models/reports/fairness_report_monotonic.json",
-      "sha256": "ddc63f1af81cc6162d287f5987a8d768f2fc5748217a60114662b5f10709416e"
+      "sha256": "abae2ca7412d2ad0f8d4a5bfff21808c5209483ba92a858e1ff67dc490d4e915"
     },
     "psi_report": {
       "path": "models/reports/psi_report_monotonic.json",
@@ -58,7 +58,7 @@
     },
     "population_percentiles": {
       "path": "models/reports/population_percentiles_monotonic.json",
-      "sha256": "b162d09e381b7f64776c2ad5c3977b0e98ce30c17dfeb24deae62ba719793fa1"
+      "sha256": "32852a1b97c275039182eebfbc9ef9b18541292ff51e19c0990e7a2f72388a40"
     }
   },
   "metrics_summary": {
@@ -73,7 +73,7 @@
     "post_governance_available": true,
     "post_governance_overall_auc": 0.7543,
     "individual_fairness_flagged_pair_share": 0.0442,
-    "individual_fairness_max_score_gap": 99,
+    "individual_fairness_max_score_gap": 95,
     "verdict": "Model shows acceptable fairness across all tested demographic groups. No subgroup shows AUC deviation >4% from the overall model."
   },
   "drift_summary": {
@@ -82,9 +82,9 @@
   },
   "score_mapping": {
     "method": "log_odds",
-    "score_base": 500.0,
-    "log_odds_factor": 29.0,
-    "probability_clip_min": 0.001,
+    "score_base": 575.0,
+    "log_odds_factor": 28.0,
+    "probability_clip_min": 1e-06,
     "probability_clip_max": 0.99,
     "score_min": 300,
     "score_max": 850,
@@ -222,7 +222,7 @@
         "name": "individual_fairness_max_score_gap",
         "status": "pass",
         "message": "Maximum similar-pair score gap must stay below 100 points.",
-        "metric_value": 99.0,
+        "metric_value": 95.0,
         "threshold": 100.0,
         "blocking": true
       },
@@ -238,7 +238,7 @@
         "name": "post_governance_approval_rate_delta",
         "status": "pass",
         "message": "Absolute post-governance approval-rate shift must stay below 0.050.",
-        "metric_value": 0.0006,
+        "metric_value": 0.0,
         "threshold": 0.05,
         "blocking": false
       },

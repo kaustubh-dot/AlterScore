@@ -52,8 +52,8 @@ Manifest contract notes:
   "manifest_schema_version": "1.0.0",
   "manifest_version": "xgboost_monotonic_calibrated_v1",
   "model_version": "0.4.0",
-  "run_id": "20260611_045544_xgboost_monotonic_calibrated",
-  "created_at": "2026-06-11T04:55:46Z",
+  "run_id": "20260611_051632_xgboost_monotonic_calibrated",
+  "created_at": "2026-06-11T05:16:34Z",
   "code_ref": "codex-scoring-calibration-roadmap",
   "data_version": "synthetic_v2.0.0_generated",
   "feature_registry_version": "0.1.0",
@@ -247,7 +247,7 @@ Current local runtime-artifact status:
 - Default local backend startup now prefers the checked-in manifest-backed bundle, while `ALTERSCORE_RUNTIME_MODEL_PATH` remains an explicit override for tests or intentional direct-model runs.
 - `models/preprocessors/text_pca.pkl` exists and is loaded by the runtime bundle.
 - `models/reports/population_percentiles_monotonic.json` exists and drives the active score distribution response.
-- `models/reports/fairness_report_monotonic.json` exists and is generated offline from held-out months `11-12` using protected attributes only for subgroup evaluation. The model shows acceptable fairness across all tested demographic groups (no subgroup AUC deviation >4% from the overall model), includes post-governance impact, and reports individual-fairness proxy flagged-pair share `0.0442` with max similar-pair score gap `99`.
+- `models/reports/fairness_report_monotonic.json` exists and is generated offline from held-out months `11-12` using protected attributes only for subgroup evaluation. The model shows acceptable fairness across all tested demographic groups (no subgroup AUC deviation >4% from the overall model), includes post-governance impact, and reports individual-fairness proxy flagged-pair share `0.0442` with max similar-pair score gap `95`.
 - `models/reports/psi_report_monotonic.json` exists and reports a `watch` drift verdict (max PSI `0.2052` on `avg_response_time_ms`).
 - `models/reports/global_importance_monotonic.json` exists, is generated offline from the canonical 35 model inputs, and matches the active backend response contract.
 - `models/explainers/shap_explainer_monotonic.pkl` is present on disk, deserializes through `backend.ml.explainability.shap_explainer`, passes runtime validation for the checked-in bundle, and drives the checked-in bundle's per-user score explanations.
@@ -365,7 +365,7 @@ Current local runtime-artifact status:
 - Test AUC: `0.8051`
 - Notes: The `calibrated_stacking` ensemble was successfully promoted to `production_manifest.json` as `stacking_ensemble` (v0.2.0). The ensemble inference adapter (`ensemble_adapter.py`) was implemented to transform 35 preprocessed features → 6 base-model probabilities → meta-learner input. DEC-0016 (the revert decision) was superseded by DEC-0017 (ensemble serving restored). The production manifest now points to `calibrated_stacking.pkl` with all 6 base models and the stacking config verified by SHA256 checksums.
 
-### Calibrated Monotonic XGBoost Promotion Run: `20260611_045544_xgboost_monotonic_calibrated`
+### Calibrated Monotonic XGBoost Promotion Run: `20260611_051632_xgboost_monotonic_calibrated`
 
 - Status: active production runtime
 - Date: 2026-06-11
@@ -377,13 +377,13 @@ Current local runtime-artifact status:
 - Manifest version: `xgboost_monotonic_calibrated_v1`
 - Model version: `0.4.0`
 - Calibration: isotonic, fit on validation months `9-10`
-- Score mapping: `log_odds`, `score_base=500`, `log_odds_factor=29`, `probability_clip_min=0.001`, `calibration=isotonic`
+- Score mapping: `log_odds`, `score_base=575`, `log_odds_factor=28`, `probability_clip_min=0.000001`, `probability_clip_max=0.99`, `calibration=isotonic`
 - Checked-in test AUC: `0.7549`
 - Checked-in test Brier score: `0.1903`
 - Checked-in test ECE: `0.0353`
 - Checked-in post-governance AUC: `0.7543`
 - Checked-in PSI verdict: `watch` (Max PSI `0.2052` on `avg_response_time_ms`)
-- Checked-in fairness status: `passed` (individual-fairness proxy flagged-pair share `0.0442`, max similar-pair score gap `99`)
+- Checked-in fairness status: `passed` (individual-fairness proxy flagged-pair share `0.0442`, max similar-pair score gap `95`)
 - Promotion gates: `warning`, with no blocking failures and one non-blocking `drift_max_psi` warning.
 - Notes: The old runtime-copy promotion flow was replaced with `scripts/training/train_calibrated_monotonic_xgboost.py`, which rebuilds the model, calibration layer, reports, explainers, and manifest from the deterministic synthetic v2 generator. XGBoost training uses CUDA and `n_jobs=-1`; serving saves the calibrated estimator in CPU mode for runtime portability.
 

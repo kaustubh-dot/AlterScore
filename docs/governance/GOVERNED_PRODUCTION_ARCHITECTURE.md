@@ -85,7 +85,7 @@ The checked-in promoted bundle is the operational source of truth. Its current
 reports show held-out AUC `0.7549`, ECE `0.0353`, post-governance AUC
 `0.7543`, subgroup fairness passing under the bounded AUC-gap policy, and
 individual-fairness proxy flagged-pair share `0.0442` with max similar-pair
-score gap `99`. PSI is in non-blocking `watch` at `0.2052` on
+score gap `95`. PSI is in non-blocking `watch` at `0.2052` on
 `avg_response_time_ms`, below the `0.30` alert threshold. Older governed-review
 figures such as `0.8040` and `0.8090` are historical experiment/report
 contexts, not the active manifest metric.

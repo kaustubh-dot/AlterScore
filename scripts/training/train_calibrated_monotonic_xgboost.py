@@ -88,7 +88,8 @@ MODEL_NAME: Final[str] = "xgboost_monotonic"
 MODEL_TYPE: Final[str] = "classical_monotonic"
 VALIDATION_SPLIT: Final[str] = "validation_months_9_10"
 TEST_SPLIT: Final[str] = "test_months_11_12"
-DEFAULT_SCORE_LOG_ODDS_FACTOR: Final[float] = 29.0
+DEFAULT_SCORE_BASE: Final[float] = 575.0
+DEFAULT_SCORE_LOG_ODDS_FACTOR: Final[float] = 28.0
 DEFAULT_MODEL_VERSION: Final[str] = "0.4.0"
 DEFAULT_MANIFEST_VERSION: Final[str] = "xgboost_monotonic_calibrated_v1"
 DEFAULT_CODE_REF: Final[str] = "codex-scoring-calibration-roadmap"
@@ -114,6 +115,7 @@ def train_calibrated_monotonic_xgboost(
     seed: int = DEFAULT_SEED,
     device: str = "cuda",
     allow_cpu_fallback: bool = False,
+    score_base: float = DEFAULT_SCORE_BASE,
     score_log_odds_factor: float = DEFAULT_SCORE_LOG_ODDS_FACTOR,
     code_ref: str = DEFAULT_CODE_REF,
     model_version: str = DEFAULT_MODEL_VERSION,
@@ -199,7 +201,7 @@ def train_calibrated_monotonic_xgboost(
         processed_features,
     )
 
-    score_mapping = _build_score_mapping(score_log_odds_factor)
+    score_mapping = _build_score_mapping(score_base, score_log_odds_factor)
     validation_threshold = optimal_threshold(y_validation, validation_probs)
     model_stats = [
         compute_binary_classification_metrics(
@@ -490,6 +492,12 @@ def _build_arg_parser() -> argparse.ArgumentParser:
         help="Allow training on CPU when the requested CUDA build is unavailable.",
     )
     parser.add_argument(
+        "--score-base",
+        type=float,
+        default=DEFAULT_SCORE_BASE,
+        help="Base credit score assigned to an even-odds repayment probability.",
+    )
+    parser.add_argument(
         "--score-log-odds-factor",
         type=float,
         default=DEFAULT_SCORE_LOG_ODDS_FACTOR,
@@ -513,6 +521,7 @@ def main(argv: Iterable[str] | None = None) -> int:
         seed=args.seed,
         device=args.device,
         allow_cpu_fallback=args.allow_cpu_fallback,
+        score_base=args.score_base,
         score_log_odds_factor=args.score_log_odds_factor,
         code_ref=args.code_ref,
         model_version=args.model_version,
@@ -577,10 +586,13 @@ def _build_xgboost_params(
     }
 
 
-def _build_score_mapping(score_log_odds_factor: float) -> dict[str, Any]:
+def _build_score_mapping(
+    score_base: float,
+    score_log_odds_factor: float,
+) -> dict[str, Any]:
     return {
         "method": "log_odds",
-        "score_base": 500.0,
+        "score_base": float(score_base),
         "log_odds_factor": float(score_log_odds_factor),
         "probability_clip_min": GOVERNED_PROBABILITY_MIN,
         "probability_clip_max": GOVERNED_PROBABILITY_MAX,

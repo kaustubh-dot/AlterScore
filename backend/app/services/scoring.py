@@ -43,10 +43,10 @@ from backend.app.core.constants import MAX_EXPLANATION_ITEMS, TIP_LIBRARY
 
 logger = logging.getLogger(__name__)
 
-GOVERNED_PROBABILITY_MIN: Final[float] = 0.001
+GOVERNED_PROBABILITY_MIN: Final[float] = 0.000001
 GOVERNED_PROBABILITY_MAX: Final[float] = 0.99
 DEFAULT_GOVERNANCE_MULTIPLIER_MIN: Final[float] = 0.65
-SEVERE_GOVERNANCE_MULTIPLIER_MIN: Final[float] = 0.001
+SEVERE_GOVERNANCE_MULTIPLIER_MIN: Final[float] = 0.000001
 
 
 @dataclass(frozen=True)

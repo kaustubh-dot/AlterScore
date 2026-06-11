@@ -95,7 +95,7 @@ The active production model is a manifest-backed, highly optimized **Monotonic X
 | 📐 **Checked-in Brier Score** | **`0.1903`** | Calibrated probability error on the test split |
 | 🔍 **Checked-in ECE** | **`0.0353`** | Isotonic-calibrated probability reliability |
 | 📊 **Drift Verdict** | **`watch`** | Non-blocking PSI watch on `avg_response_time_ms` |
-| ⚖️ **Fairness Review** | **`passed`** | Blocking fairness gates pass; max similar-pair gap is 99 |
+| ⚖️ **Fairness Review** | **`passed`** | Blocking fairness gates pass; max similar-pair gap is 95 |
 
 > [!NOTE]
 > The highly complex calibrated stacking ensemble has been archived in the repository as a baseline reference and instant hot-rollback target.
