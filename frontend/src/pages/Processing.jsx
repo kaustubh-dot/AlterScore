@@ -40,13 +40,29 @@ export default function Processing({ payload, onComplete }) {
           onComplete(response.data);
         }, delay);
       } catch (err) {
-        console.warn('Backend connection failed, invoking local simulation engine...', err);
-        const mockResult = generateMockScore(payload);
-        const elapsed = Date.now() - startTime;
-        const delay = Math.max(3600 - elapsed, 500);
-        setTimeout(() => {
-          onComplete(mockResult);
-        }, delay);
+        if (err.response) {
+          console.error('API Error:', err.response);
+          let errorMsg = 'Invalid answers or behavioral telemetry format.';
+          if (err.response.status === 422) {
+            const details = err.response.data?.detail;
+            if (Array.isArray(details)) {
+              errorMsg = `Validation failed: ${details.map(d => `${d.loc.slice(1).join('.')}: ${d.msg}`).join(', ')}`;
+            } else if (typeof details === 'string') {
+              errorMsg = `Validation failed: ${details}`;
+            }
+          } else {
+            errorMsg = `Server error: ${err.response.statusText || 'Internal server issue.'} (Status: ${err.response.status})`;
+          }
+          setError(errorMsg);
+        } else {
+          console.warn('Backend connection failed, invoking local simulation engine...', err);
+          const mockResult = generateMockScore(payload);
+          const elapsed = Date.now() - startTime;
+          const delay = Math.max(3600 - elapsed, 500);
+          setTimeout(() => {
+            onComplete(mockResult);
+          }, delay);
+        }
       }
     };
 
@@ -236,6 +252,43 @@ export default function Processing({ payload, onComplete }) {
   };
 
   const progressPercent = Math.min((activeStep / steps.length) * 100, 100);
+
+  if (error) {
+    return (
+      <div className="processing-layout">
+        <SignalCanvas />
+        <div className="processing-container container">
+          <div className="processing-card" style={{ borderColor: 'rgba(244, 63, 94, 0.3)' }}>
+            <div className="processing-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+              <div className="consent-icon animate-pulse-glow" style={{ borderColor: 'rgba(244, 63, 94, 0.4)', color: 'var(--accent-rose)' }}>
+                <ShieldAlert size={28} />
+              </div>
+              <span className="processing-title" style={{ color: 'var(--accent-rose)', letterSpacing: '0.08em' }}>Submission Rejected</span>
+            </div>
+            
+            <div className="processing-body" style={{ padding: 'var(--space-6) 0', textAlign: 'center' }}>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: 1.6, marginBottom: '24px', maxWidth: '480px', marginLeft: 'auto', marginRight: 'auto' }}>
+                {error}
+              </p>
+              
+              <button 
+                onClick={() => window.location.reload()} 
+                className="btn btn-primary"
+                style={{ 
+                  margin: '0 auto', 
+                  borderColor: 'rgba(244, 63, 94, 0.3)', 
+                  background: 'rgba(244, 63, 94, 0.1)',
+                  color: '#FFFFFF' 
+                }}
+              >
+                <span>Go Back & Restart</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="processing-layout">
