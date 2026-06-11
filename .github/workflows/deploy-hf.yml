@@ -11,6 +11,7 @@ jobs:
     env:
       HF_TOKEN: ${{ secrets.HF_TOKEN }}
       HF_SPACE_REPO: https://huggingface.co/spaces/coolbot22/alterscore-backend
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
