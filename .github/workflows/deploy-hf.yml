@@ -39,6 +39,7 @@ jobs:
           cp -R models "$SPACE_DIR/models"
           cp -R scripts "$SPACE_DIR/scripts"
           cp Dockerfile "$SPACE_DIR/Dockerfile"
+          cp .gitattributes "$SPACE_DIR/.gitattributes"
 
           cat > "$SPACE_DIR/README.md" <<'EOF'
           ---
