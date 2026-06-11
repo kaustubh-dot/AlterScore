@@ -1,0 +1,16 @@
+name: HF Space Auto Pinger
+
+on:
+  schedule:
+    # Run every 15 minutes to keep the Hugging Face space awake
+    - cron: '*/15 * * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping API Health
+        run: |
+          # We use -f to fail on HTTP errors, -s to silence progress bars, -m 30 to timeout if hung
+          curl -f -s -m 30 https://coolbot22-alterscore-backend.hf.space/api/health || echo "Ping failed, but workflow will continue"
