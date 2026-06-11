@@ -6,7 +6,7 @@
 **Manifest:** `models/registry/production_manifest.json`
 **Manifest Version:** `xgboost_monotonic_calibrated_v1`
 **Promotion Gate Policy:** `models/registry/promotion_gate_policy.json` (`promotion_gate_policy_v1`)
-**Branch:** `codex-scoring-calibration-roadmap` (locked in manifest `code_ref`)
+**Branch:** `main` (merged from `codex-scoring-calibration-roadmap` on 2026-06-11)
 
 ## Status Summary
 
@@ -55,11 +55,11 @@ A production-style manual deployment runbook (`docs/DEPLOYMENT_RUNBOOK.md`) and 
 - Landing route upgraded to an original Sidewave-inspired behavioral twin:
   fixed HUD, approximately 89-viewport desktop scroll corridor, spatial text
   staging, one fixed WebGL canvas, and final assessment CTA handoff.
+- Rollback checklist tied to manifest versions ([ROLLBACK_CHECKLIST.md](file:///C:/Kaustubh/Projects/AlterScore/docs/ROLLBACK_CHECKLIST.md)) fully documented.
+- Minor mobile overflow handling for charts and tables on extremely narrow viewports (<360px) fully implemented.
 
 ## What Remains Open (Next Recommended Steps)
 
-* **Dashboard/Chart Layout:** Minor mobile overflow handling for charts and tables on extremely narrow viewports (e.g. mobile devices below 360px width).
-* **Rollback Checklist:** Rollback checklist tied to manifest versions for quick-response recovery scenarios.
 * **PSI Watch:** Investigate `avg_response_time_ms` temporal drift and decide whether to de-trend the synthetic generator, monitor it as expected seasonality, or reduce its model influence.
 * **Promotion Gates:** Wire `python -m backend.ml.registry.promotion_gates --manifest models/registry/production_manifest.json` into CI so a promoted manifest cannot pass with failed blocking gates.
 * **Borrower E2E Recheck:** Run one real `/api/score` browser walkthrough on a
