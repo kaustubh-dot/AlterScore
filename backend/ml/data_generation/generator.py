@@ -231,7 +231,6 @@ def generate_synthetic_dataset(
         5_900
         - 1_050 * capacity
         - 380 * discipline
-        - 90 * month_offset
         + 250 * (device_type == "mobile")
         + 120 * (time_of_day == "night")
         + rng.normal(0.0, 620.0, row_count),
@@ -270,7 +269,6 @@ def generate_synthetic_dataset(
         0.90
         + 0.24 * (risk_attitude - 0.5)
         - 0.28 * (crt_score - 0.5)
-        - 0.05 * month_offset / 11.0
         + rng.normal(0.0, 0.14, row_count),
         0.30,
         2.50,
@@ -279,7 +277,6 @@ def generate_synthetic_dataset(
         28.0
         + 7.5 * capacity
         + 4.0 * conscientiousness_score
-        + 0.40 * month_offset
         + 1.5 * (device_type == "desktop")
         + rng.normal(0.0, 4.4, row_count),
         10.0,
