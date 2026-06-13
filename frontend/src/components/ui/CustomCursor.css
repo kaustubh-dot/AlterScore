@@ -81,3 +81,48 @@
     cursor: none !important;
   }
 }
+
+/* Assessment variant styles */
+.cursor-dot.assessment {
+  width: 4px;
+  height: 4px;
+  background-color: #ffffff !important;
+  border-radius: 50%;
+  transform: translate3d(-50%, -50%, 0);
+  box-shadow: none !important;
+}
+
+.cursor-dot.assessment.hover {
+  opacity: 0;
+}
+
+.cursor-dot.assessment.active {
+  transform: translate3d(-50%, -50%, 0) scale(0.8);
+}
+
+.cursor-ring.assessment .cursor-ring-inner {
+  width: 24px;
+  height: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  border-radius: 50% !important;
+  animation: none !important;
+  box-shadow: none !important;
+  transition: width 0.2s var(--ease-smooth), height 0.2s var(--ease-smooth), border-color 0.2s var(--ease-smooth);
+}
+
+.cursor-ring.assessment.hover .cursor-ring-inner {
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
+  border-radius: 50% !important;
+  animation: none !important;
+  box-shadow: none !important;
+}
+
+.cursor-ring.assessment.active .cursor-ring-inner {
+  width: 18px;
+  height: 18px;
+  border-color: rgba(255, 255, 255, 0.8) !important;
+  border-radius: 50% !important;
+  box-shadow: none !important;
+}

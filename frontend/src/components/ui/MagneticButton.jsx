@@ -1,4 +1,5 @@
-import React, { useRef, useState } from 'react';
+import { useRef, useState } from 'react';
+import useSound from '../../hooks/useSound';
 
 export default function MagneticButton({
   children,
@@ -11,6 +12,7 @@ export default function MagneticButton({
 }) {
   const ref = useRef(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
+  const { playClick, playHover } = useSound();
 
   const handleMouseMove = (e) => {
     if (disabled || !ref.current) return;
@@ -28,6 +30,21 @@ export default function MagneticButton({
     setPosition({ x: 0, y: 0 });
   };
 
+  const handleMouseEnter = () => {
+    if (!disabled) {
+      playHover();
+    }
+  };
+
+  const handleClick = (e) => {
+    if (!disabled) {
+      playClick();
+      if (onClick) {
+        onClick(e);
+      }
+    }
+  };
+
   const isIdle = position.x === 0 && position.y === 0;
   const style = {
     transform: `translate3d(${position.x}px, ${position.y}px, 0)`,
@@ -42,7 +59,8 @@ export default function MagneticButton({
       ref={ref}
       type={type}
       className={`btn btn-${variant} ${className}`}
-      onClick={onClick}
+      onClick={handleClick}
+      onMouseEnter={handleMouseEnter}
       disabled={disabled}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}

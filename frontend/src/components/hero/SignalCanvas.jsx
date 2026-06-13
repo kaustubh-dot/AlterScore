@@ -1,8 +1,14 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
-export default function SignalCanvas() {
+export default function SignalCanvas({ scrollY = 0 }) {
   const canvasRef = useRef(null);
   const mouseRef = useRef({ x: 0, y: 0, targetX: 0, targetY: 0, active: false });
+  const scrollYRef = useRef(0);
+
+  // Keep scrollY in a ref to avoid recreating the draw loop context on scroll events
+  useEffect(() => {
+    scrollYRef.current = scrollY;
+  }, [scrollY]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -45,6 +51,7 @@ export default function SignalCanvas() {
     }));
 
     let time = 0;
+    let prevScrollY = 0;
 
     // Render loop
     const draw = () => {
@@ -63,7 +70,12 @@ export default function SignalCanvas() {
       m.x += (m.targetX - m.x) * 0.08;
       m.y += (m.targetY - m.y) * 0.08;
 
-      time += 0.004;
+      const currentScrollY = scrollYRef.current;
+      const scrollVelocity = currentScrollY - prevScrollY;
+      prevScrollY = currentScrollY;
+
+      // Time advances faster if scrolling (creates dynamic scroll wind)
+      time += 0.004 + Math.abs(scrollVelocity) * 0.0015;
 
       // 1. Draw Subtle Drafting Grid Layout
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.012)';
@@ -72,7 +84,7 @@ export default function SignalCanvas() {
       
       // Calculate mouse-offset for parallax grid shift
       const gridOffsetX = m.active ? (m.x - width / 2) * 0.015 : 0;
-      const gridOffsetY = m.active ? (m.y - height / 2) * 0.015 : 0;
+      const gridOffsetY = (m.active ? (m.y - height / 2) * 0.015 : 0) - currentScrollY * 0.15; // Vertical scroll parallax on grid
 
       // Vertical lines
       for (let x = gridOffsetX % gridSize; x < width; x += gridSize) {
@@ -91,12 +103,14 @@ export default function SignalCanvas() {
 
       // 2. Draw Scientific Waveforms (Cognitive Signal Traces)
       const waveCount = 2;
+      const scrollAmplitudeMultiplier = 1 + Math.min(currentScrollY / 400, 1.2); // Expand waves as scroll increases
+
       for (let w = 0; w < waveCount; w++) {
         ctx.beginPath();
         ctx.lineWidth = w === 0 ? 0.7 : 0.4;
         
         const phaseShift = w * Math.PI;
-        const amplitude = w === 0 ? 32 : 16;
+        const amplitude = (w === 0 ? 32 : 16) * scrollAmplitudeMultiplier;
         const frequency = w === 0 ? 0.002 : 0.0035;
         const waveSpeed = w === 0 ? 0.8 : 1.2;
 
@@ -104,7 +118,10 @@ export default function SignalCanvas() {
           // Standard wave equation
           let sineY = height * 0.5 + Math.sin(x * frequency + time * waveSpeed + phaseShift) * amplitude;
           
-          // Mouse proximity deformation: wave bends slightly around mouse
+          // Apply vertical scroll parallax
+          sineY -= currentScrollY * 0.25;
+
+          // Mouse proximity deformation
           if (m.active) {
             const dx = x - m.x;
             const dy = sineY - m.y;
@@ -129,8 +146,9 @@ export default function SignalCanvas() {
 
       // 3. Draw Floating Micro-particles with inertia
       particles.forEach((p) => {
+        // Particles drift vertically with scroll speed (wind effect)
         p.x += p.vx;
-        p.y += p.vy;
+        p.y += p.vy - scrollVelocity * 0.05;
 
         // Wrap around screen edges
         if (p.x < 0) p.x = width;
@@ -152,7 +170,7 @@ export default function SignalCanvas() {
         }
 
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y - currentScrollY * 0.4, p.radius, 0, Math.PI * 2); // Scroll parallax on particles
         ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
         ctx.fill();
       });
@@ -170,6 +188,9 @@ export default function SignalCanvas() {
     };
   }, []);
 
+  // Fade canvas to 0 opacity over 500px scroll
+  const opacity = Math.max(0, 1 - scrollY / 500);
+
   return (
     <canvas
       ref={canvasRef}
@@ -182,6 +203,9 @@ export default function SignalCanvas() {
         display: 'block',
         pointerEvents: 'none',
         zIndex: 0,
+        opacity: opacity,
+        transition: 'opacity 0.1s ease-out',
+        willChange: 'opacity'
       }}
     />
   );

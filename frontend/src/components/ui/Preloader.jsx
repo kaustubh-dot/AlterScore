@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Activity } from 'lucide-react';
 import './Preloader.css';
 
@@ -6,6 +6,8 @@ export default function Preloader({ onComplete }) {
   const [percent, setPercent] = useState(0);
   const [blur, setBlur] = useState(30);
   const [opacity, setOpacity] = useState(1);
+  const [completed, setCompleted] = useState(false);
+  
   const startTimeRef = useRef(null);
   const requestRef = useRef(null);
 
@@ -30,7 +32,12 @@ export default function Preloader({ onComplete }) {
 
       // 3) Percent progress (0 to 100 in 1.9s)
       const countProgress = Math.min(elapsed / activeDuration, 1);
-      setPercent(Math.round(countProgress * 100));
+      const currentPercent = Math.round(countProgress * 100);
+      setPercent(currentPercent);
+
+      if (currentPercent === 100) {
+        setCompleted(true);
+      }
 
       if (elapsed < duration) {
         requestRef.current = requestAnimationFrame(step);
@@ -41,7 +48,9 @@ export default function Preloader({ onComplete }) {
 
     requestRef.current = requestAnimationFrame(step);
     return () => {
-      if (requestRef.current) cancelAnimationFrame(requestRef.current);
+      if (requestRef.current) {
+        cancelAnimationFrame(requestRef.current);
+      }
     };
   }, [onComplete]);
 
@@ -63,7 +72,7 @@ export default function Preloader({ onComplete }) {
 
   return (
     <div 
-      className="preloader-overlay"
+      className={`preloader-overlay ${completed ? 'completed' : ''}`}
       style={{
         backdropFilter: `blur(${blur}px)`,
         WebkitBackdropFilter: `blur(${blur}px)`,

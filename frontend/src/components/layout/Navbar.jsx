@@ -1,11 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Activity, ShieldAlert, Cpu } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import { Activity, ShieldCheck, Home } from 'lucide-react';
+import useSound from '../../hooks/useSound';
+import usePageTransition from '../../hooks/usePageTransition';
 import './Navbar.css';
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
+  const { transitionTo } = usePageTransition();
+  const { playClick } = useSound();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -21,26 +25,45 @@ export default function Navbar() {
   }, []);
 
   const isDashboard = location.pathname === '/dashboard';
+  const isAdmin = location.pathname === '/admin';
+
+  // Do not render default navbar options on Admin page to keep sidebar focus
+  if (isAdmin) return null;
 
   return (
     <nav className={`navbar ${scrolled ? 'navbar-scrolled' : ''}`}>
       <div className="navbar-container container">
-        <Link to="/" className="navbar-logo">
+        <button 
+          onClick={() => { playClick(); transitionTo('/'); }}
+          className="navbar-logo font-mono btn-logo-action"
+          style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
+        >
           <Activity className="logo-icon" size={16} />
           <span className="logo-text">AlterScore</span>
-          <span className="logo-tag">v2.0</span>
-        </Link>
+          <span className="logo-tag">
+            <span className="pulse-dot" />
+            <span>v2.0</span>
+          </span>
+        </button>
         <div className="navbar-links">
           {isDashboard ? (
-            <Link to="/" className="navbar-link">
-              <Cpu size={14} />
-              <span>Borrower Flow</span>
-            </Link>
+            <button 
+              onClick={() => { playClick(); transitionTo('/'); }}
+              className="navbar-link"
+              style={{ cursor: 'pointer' }}
+            >
+              <Home size={14} style={{ color: '#ffffff' }} />
+              <span>Home</span>
+            </button>
           ) : (
-            <Link to="/dashboard" className="navbar-link">
-              <ShieldAlert size={14} />
-              <span>Evaluator Dashboard</span>
-            </Link>
+            <button 
+              onClick={() => { playClick(); transitionTo('/dashboard'); }}
+              className="navbar-link"
+              style={{ cursor: 'pointer' }}
+            >
+              <ShieldCheck size={14} style={{ color: '#ffffff' }} />
+              <span>My Dashboard</span>
+            </button>
           )}
         </div>
       </div>

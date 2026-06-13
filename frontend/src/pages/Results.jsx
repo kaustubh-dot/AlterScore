@@ -1,17 +1,99 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { useLocation, useNavigate, Link } from 'react-router-dom';
-import { ShieldCheck, TrendingUp, Sparkles, Sliders, RotateCcw, LayoutDashboard, AlertCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { Sliders, RotateCcw, LayoutDashboard, AlertCircle } from 'lucide-react';
 import ScrollReveal from '../components/animation/ScrollReveal';
 import GlowCard from '../components/ui/GlowCard';
 import TextReveal from '../components/animation/TextReveal';
+import useSound from '../hooks/useSound';
+import usePageTransition from '../hooks/usePageTransition';
 import './Results.css';
 
 export default function Results() {
   const location = useLocation();
-  const navigate = useNavigate();
+  const { transitionTo } = usePageTransition();
+  const { playSuccess, playClick } = useSound();
   
   const scoreData = location.state;
   
+  // Persist score to localStorage for borrower dashboard restoration
+  useEffect(() => {
+    if (scoreData) {
+      localStorage.setItem('alterscore_results', JSON.stringify(scoreData));
+    }
+  }, [scoreData]);
+
+  // Animation Stages
+  const [animationStep, setAnimationStep] = useState(0); // 0: void, 1: ring, 2: countup, 3: glow, 4: content
+  const [displayScore, setDisplayScore] = useState(300);
+  const [ringOffset, setRingOffset] = useState(440); // Circle perimeter for stroke-dashoffset
+
+  // Derived slider metrics based on user's actual choices
+  const [originalVals] = useState(() => {
+    if (!scoreData) return null;
+    const isGaming = scoreData.credit_score < 400 && scoreData.explanation.some(e => e.feature === 'avg_response_time_ms' && e.shap_value < 0);
+    const isCRTCorrect = scoreData.explanation.some(e => e.feature === 'CRT_score' && e.shap_value > 0);
+    const isConsistent = scoreData.explanation.some(e => e.feature === 'scenario_consistency_score' && e.shap_value > 0);
+    return {
+      pace: isGaming ? 1.5 : 5.0,
+      crt: isCRTCorrect ? 2 : 0,
+      consistency: isConsistent ? 1 : 0
+    };
+  });
+
+  // Interactive Optimizer Playground State
+  const [optPace, setOptPace] = useState(() => originalVals?.pace ?? 5.0); // response pace in seconds
+  const [optCRT, setOptCRT] = useState(() => originalVals?.crt ?? 0); // CRT answers correct (0-2)
+  const [optConsistency, setOptConsistency] = useState(() => originalVals?.consistency ?? 0); // 0 (mismatch) or 1 (match)
+
+  // Trigger Cinematic Reveal Animation
+  useEffect(() => {
+    if (!scoreData) return;
+    const t1 = setTimeout(() => {
+      setAnimationStep(1);
+      const percentage = (scoreData.credit_score - 300) / 550;
+      setRingOffset(440 - 440 * percentage);
+    }, 200);
+
+    const t2 = setTimeout(() => {
+      setAnimationStep(2);
+      const target = scoreData.credit_score;
+      const duration = 1200;
+      const startTime = performance.now();
+
+      const step = (timestamp) => {
+        const elapsed = timestamp - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const ease = progress * (2 - progress);
+        const current = 300 + ease * (target - 300);
+        
+        setDisplayScore(Math.floor(current));
+
+        if (progress < 1) {
+          requestAnimationFrame(step);
+        } else {
+          setDisplayScore(target);
+        }
+      };
+      requestAnimationFrame(step);
+    }, 800);
+
+    const t3 = setTimeout(() => {
+      setAnimationStep(3);
+      playSuccess(); // Play cinematic sound chord when glow pops!
+    }, 2000);
+
+    const t4 = setTimeout(() => {
+      setAnimationStep(4);
+    }, 2800);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+      clearTimeout(t4);
+    };
+  }, [scoreData, playSuccess]);
+
   if (!scoreData) {
     return (
       <div className="results-layout" style={{ justifyContent: 'center', alignItems: 'center' }}>
@@ -21,61 +103,28 @@ export default function Results() {
           <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', fontSize: '14px' }}>
             Please complete the psychometric assessment to generate your credit intelligence score.
           </p>
-          <Link to="/assessment" className="btn btn-primary" style={{ width: '100%' }}>
+          <button onClick={() => transitionTo('/assessment')} className="btn btn-primary" style={{ width: '100%' }}>
             Start Assessment
-          </Link>
+          </button>
         </div>
       </div>
     );
   }
 
-  // Animation Stages
-  const [animationStep, setAnimationStep] = useState(0); // 0: void, 1: ring, 2: countup, 3: glow, 4: content
-  const [displayScore, setDisplayScore] = useState(300);
-  const [ringOffset, setRingOffset] = useState(440); // Circle perimeter for stroke-dashoffset
-
-  // Interactive Optimizer Playground State
-  const [optPace, setOptPace] = useState(5.0); // response pace in seconds
-  const [optCRT, setOptCRT] = useState(0); // CRT answers correct (0-2)
-  const [optConsistency, setOptConsistency] = useState(0); // 0 (mismatch) or 1 (match)
-
-  // Derived slider metrics based on user's actual choices
-  const originalPace = useRef(5.0);
-  const originalCRT = useRef(0);
-  const originalConsistency = useRef(0);
-  const initializedSliders = useRef(false);
-
-  // Initialize optimizer sliders to user's actual answers
-  if (scoreData && !initializedSliders.current) {
-    const isGaming = scoreData.credit_score < 400 && scoreData.explanation.some(e => e.feature === 'avg_response_time_ms' && e.shap_value < 0);
-    originalPace.current = isGaming ? 1.5 : 5.0;
-    
-    const isCRTCorrect = scoreData.explanation.some(e => e.feature === 'CRT_score' && e.shap_value > 0);
-    originalCRT.current = isCRTCorrect ? 2 : 0;
-
-    const isConsistent = scoreData.explanation.some(e => e.feature === 'scenario_consistency_score' && e.shap_value > 0);
-    originalConsistency.current = isConsistent ? 1 : 0;
-
-    setOptPace(originalPace.current);
-    setOptCRT(originalCRT.current);
-    setOptConsistency(originalConsistency.current);
-    initializedSliders.current = true;
-  }
-
   // Recalculating score based on sliders in real-time
-  const paceShift = (optPace >= 3.5 && originalPace.current < 2.5) ? 70 : (optPace < 2.5 && originalPace.current >= 3.5) ? -70 : 0;
-  const crtShift = (optCRT - originalCRT.current) * 35;
-  const consistencyShift = (optConsistency - originalConsistency.current) * 75;
+  const paceShift = (originalVals && optPace >= 3.5 && originalVals.pace < 2.5) ? 70 : (originalVals && optPace < 2.5 && originalVals.pace >= 3.5) ? -70 : 0;
+  const crtShift = originalVals ? (optCRT - originalVals.crt) * 35 : 0;
+  const consistencyShift = originalVals ? (optConsistency - originalVals.consistency) * 75 : 0;
   
   const currentScore = Math.max(300, Math.min(850, scoreData.credit_score + paceShift + crtShift + consistencyShift));
 
   // Recalculate bands and numbers based on currentScore
-  let band = 'fair';
-  let bandColor = 'var(--score-fair)';
-  let bandShadow = 'var(--shadow-score-fair)';
-  let minAmount = 5000;
-  let maxAmount = 12000;
-  let bandDesc = 'Microloans up to ₹12,000 approved. Moderate risk conditions apply.';
+  let band;
+  let bandColor;
+  let bandShadow;
+  let minAmount;
+  let maxAmount;
+  let bandDesc;
 
   if (currentScore >= 750) {
     band = 'excellent';
@@ -117,62 +166,10 @@ export default function Results() {
   const repaymentProb = 0.35 + ((currentScore - 300) / 550) * 0.63;
   const percentile = Math.round(((currentScore - 300) / 550) * 98);
 
-  // Trigger Cinematic Reveal Animation
-  useEffect(() => {
-    const t1 = setTimeout(() => {
-      setAnimationStep(1);
-      const percentage = (scoreData.credit_score - 300) / 550;
-      setRingOffset(440 - 440 * percentage);
-    }, 200);
-
-    const t2 = setTimeout(() => {
-      setAnimationStep(2);
-      let start = 300;
-      const target = scoreData.credit_score;
-      const duration = 1200;
-      const startTime = performance.now();
-
-      const step = (timestamp) => {
-        const elapsed = timestamp - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const ease = progress * (2 - progress);
-        const current = 300 + ease * (target - 300);
-        
-        setDisplayScore(Math.floor(current));
-
-        if (progress < 1) {
-          requestAnimationFrame(step);
-        } else {
-          setDisplayScore(target);
-        }
-      };
-      requestAnimationFrame(step);
-    }, 800);
-
-    const t3 = setTimeout(() => {
-      setAnimationStep(3);
-    }, 2000);
-
-    const t4 = setTimeout(() => {
-      setAnimationStep(4);
-    }, 2800);
-
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-      clearTimeout(t3);
-      clearTimeout(t4);
-    };
-  }, [scoreData.credit_score]);
-
-  // Adjust ring stroke offset dynamically on slider updates
-  useEffect(() => {
-    if (animationStep >= 2) {
-      const percentage = (currentScore - 300) / 550;
-      setRingOffset(440 - 440 * percentage);
-      setDisplayScore(currentScore);
-    }
-  }, [currentScore, animationStep]);
+  const scoreToDisplay = (animationStep >= 3) ? currentScore : displayScore;
+  const ringOffsetToDisplay = (animationStep >= 3) 
+    ? (440 - 440 * ((currentScore - 300) / 550)) 
+    : ringOffset;
 
   return (
     <div className="results-layout">
@@ -200,32 +197,24 @@ export default function Results() {
                 cy="100"
                 r="70"
                 fill="transparent"
-                className="score-fill"
-                stroke={bandColor}
-                strokeDasharray="440"
-                strokeDashoffset={animationStep >= 1 ? ringOffset : 440}
+                className="score-progress"
+                style={{
+                  stroke: bandColor,
+                  strokeDashoffset: ringOffsetToDisplay,
+                  transition: 'stroke 0.4s ease, stroke-dashoffset 0.4s var(--ease-smooth)'
+                }}
               />
             </svg>
-
-
-
-            {/* Data values inside circle */}
-            <div className="score-center-data">
+            
+            {/* Realtime Score Counter readout */}
+            <div className="score-text-box">
+              <span className="score-sub">Intel Score</span>
+              <span className="score-num font-mono">{scoreToDisplay}</span>
               <span 
-                className="score-number"
-                style={{ 
-                  color: animationStep >= 2 ? bandColor : 'var(--text-ghost)',
-                  opacity: animationStep >= 2 ? 1 : 0.2,
-                  textShadow: animationStep >= 3 ? `0 0 12px ${bandColor}80` : 'none'
-                }}
-              >
-                {displayScore}
-              </span>
-              <span 
-                className="score-band-label"
-                style={{ 
-                  color: animationStep >= 2 ? bandColor : 'var(--text-ghost)',
-                  opacity: animationStep >= 3 ? 1 : 0
+                className="score-band"
+                style={{
+                  color: bandColor,
+                  textShadow: animationStep >= 3 ? `0 0 10px ${bandColor}40` : 'none'
                 }}
               >
                 <TextReveal text={band} />
@@ -429,17 +418,17 @@ export default function Results() {
         {/* Navigation CTAs */}
         <div className={`actions-row fade-in-content ${animationStep >= 4 ? 'visible' : ''}`}>
           <ScrollReveal direction="up" delay={100}>
-            <Link to="/assessment" className="btn btn-ghost">
+            <button onClick={() => { playClick(); transitionTo('/assessment'); }} className="btn btn-ghost">
               <RotateCcw size={14} />
               <span>Retake Assessment</span>
-            </Link>
+            </button>
           </ScrollReveal>
 
           <ScrollReveal direction="up" delay={200}>
-            <Link to="/dashboard" className="btn btn-primary">
+            <button onClick={() => { playClick(); transitionTo('/dashboard'); }} className="btn btn-primary">
               <LayoutDashboard size={14} />
               <span>Analytics Dashboard</span>
-            </Link>
+            </button>
           </ScrollReveal>
         </div>
 

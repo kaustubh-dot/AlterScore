@@ -1,11 +1,12 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export default function ScrollReveal({
   children,
   direction = 'up', // 'up' | 'scale' | 'left' | 'right'
   delay = 0,        // delay in ms
   duration = 800,   // duration in ms
-  threshold = 0.15  // visibility threshold before triggering
+  threshold = 0.15, // visibility threshold before triggering
+  className = ''
 }) {
   const ref = useRef(null);
   const [isRevealed, setIsRevealed] = useState(false);
@@ -43,7 +44,7 @@ export default function ScrollReveal({
   return (
     <div
       ref={ref}
-      className={`reveal reveal-${direction} ${isRevealed ? 'reveal-active' : ''}`}
+      className={`reveal reveal-${direction} ${className} ${isRevealed ? 'reveal-active' : ''}`}
       style={style}
     >
       {children}

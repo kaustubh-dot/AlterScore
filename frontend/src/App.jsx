@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import Landing from './pages/Landing';
@@ -8,27 +8,74 @@ import Results from './pages/Results';
 import Dashboard from './pages/Dashboard';
 import CustomCursor from './components/ui/CustomCursor';
 import Preloader from './components/ui/Preloader';
+import useLenis from './hooks/useLenis';
+import useSound from './hooks/useSound';
+import { PageTransitionProvider } from './hooks/PageTransitionContext';
 import './styles/global.css';
 
-export default function App() {
+// Admin component will be created, we'll placeholder import it or import it directly.
+// Let's import it directly as it will be created shortly.
+import Admin from './pages/Admin';
+
+function AppContent() {
   const [showPreloader, setShowPreloader] = useState(true);
+  const location = useLocation();
+  const { initAudio } = useSound();
+
+  // Initialize Lenis smooth scroll
+  useLenis();
+
+  // Block scroll on page load during preloader
+  useEffect(() => {
+    if (showPreloader) {
+      document.body.style.overflow = 'hidden';
+      document.body.classList.remove('preloader-done');
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [showPreloader]);
+
+  // Auto-start ambient sound and resume AudioContext on first user interaction
+  useEffect(() => {
+    const handleFirstInteraction = () => {
+      initAudio();
+      window.removeEventListener('click', handleFirstInteraction);
+      window.removeEventListener('keydown', handleFirstInteraction);
+      window.removeEventListener('touchstart', handleFirstInteraction);
+    };
+
+    window.addEventListener('click', handleFirstInteraction);
+    window.addEventListener('keydown', handleFirstInteraction);
+    window.addEventListener('touchstart', handleFirstInteraction);
+
+    return () => {
+      window.removeEventListener('click', handleFirstInteraction);
+      window.removeEventListener('keydown', handleFirstInteraction);
+      window.removeEventListener('touchstart', handleFirstInteraction);
+    };
+  }, [initAudio]);
 
   const handlePreloadComplete = () => {
     setShowPreloader(false);
+    document.body.style.overflow = '';
+    document.body.classList.add('preloader-done');
+    window.dispatchEvent(new CustomEvent('preloadComplete'));
   };
 
+  const isAssessment = location.pathname === '/assessment';
+  const showFooter = location.pathname === '/' || location.pathname === '/results';
+
   return (
-    <Router>
+    <PageTransitionProvider>
       <div className="app-container">
         {showPreloader && (
           <Preloader onComplete={handlePreloadComplete} />
         )}
-        <CustomCursor />
-        {/* Render nav only on non-assessment screens to keep focus */}
-        <Routes>
-          <Route path="/assessment" element={null} />
-          <Route path="*" element={<Navbar />} />
-        </Routes>
+        <CustomCursor variant={isAssessment ? 'assessment' : 'default'} />
+        
+        {/* Render nav only on non-assessment screens */}
+        {!isAssessment && <Navbar />}
 
         <div className="content-wrap">
           <Routes>
@@ -36,14 +83,20 @@ export default function App() {
             <Route path="/assessment" element={<Assessment />} />
             <Route path="/results" element={<Results />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/admin" element={<Admin />} />
           </Routes>
         </div>
 
-        <Routes>
-          <Route path="/assessment" element={null} />
-          <Route path="*" element={<Footer />} />
-        </Routes>
+        {showFooter && <Footer />}
       </div>
+    </PageTransitionProvider>
+  );
+}
+
+export default function App() {
+  return (
+    <Router>
+      <AppContent />
     </Router>
   );
 }

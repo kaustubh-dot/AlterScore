@@ -425,7 +425,7 @@
 
 .spec-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--space-3);
   color: var(--text-secondary);
   font-size: var(--text-sm);
@@ -435,90 +435,33 @@
 .spec-icon {
   color: var(--text-muted);
   flex-shrink: 0;
+  margin-top: 3px;
 }
 
-/* Telemetry Diagnostics HUD - Monochrome Laboratory Readout */
-.diagnostics-hud {
+/* Exit Button - Ghost Monospace */
+.assessment-exit-btn {
   position: fixed;
-  bottom: var(--space-4);
-  right: var(--space-4);
-  z-index: 1200;
-  font-family: var(--font-mono);
-}
-
-.hud-toggle-btn {
-  background: var(--bg-surface);
+  top: 24px;
+  left: 24px;
+  z-index: 1000;
+  background: transparent;
   border: 1px solid var(--bg-border);
-  border-radius: var(--radius-sm);
   color: var(--text-muted);
+  font-family: var(--font-mono);
   font-size: var(--text-xs);
-  padding: 6px 12px;
-  cursor: pointer;
-  transition: all 180ms ease;
-  letter-spacing: 0.08em;
   text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all var(--duration-fast) var(--ease-smooth);
 }
 
-.hud-toggle-btn:hover, .hud-toggle-btn.active {
+.assessment-exit-btn:hover {
   color: #FFFFFF;
   border-color: var(--text-secondary);
-}
-
-.hud-window {
-  background: var(--bg-surface);
-  border: 1px solid var(--bg-border);
-  border-radius: var(--radius-sm);
-  width: 300px;
-  padding: var(--space-4);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-  margin-bottom: var(--space-2);
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.hud-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid var(--bg-border);
-  padding-bottom: var(--space-2);
-  margin-bottom: var(--space-3);
-  color: var(--text-secondary);
-  font-size: var(--text-xs);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.hud-status-dot {
-  width: 5px;
-  height: 5px;
-  background: var(--text-secondary);
-  border-radius: 50%;
-  display: inline-block;
-}
-
-.hud-grid {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  font-size: 11px;
-}
-
-.hud-row {
-  display: flex;
-  justify-content: space-between;
-}
-
-.hud-label {
-  color: var(--text-muted);
-}
-
-.hud-value {
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-
-.hud-value.highlight {
-  color: #FFFFFF;
+  background: var(--bg-muted);
 }

@@ -1,49 +1,28 @@
-import React from 'react';
-import { GitBranch, Database, FileText } from 'lucide-react';
+import { Shield } from 'lucide-react';
+import useSound from '../../hooks/useSound';
+import usePageTransition from '../../hooks/usePageTransition';
 import './Footer.css';
 
 export default function Footer() {
+  const { transitionTo } = usePageTransition();
+  const { playClick } = useSound();
+
   return (
     <footer className="footer">
       <div className="footer-container container">
         <div className="footer-brand">
-          <span className="brand-name">AlterScore</span>
+          <span className="brand-name">© {new Date().getFullYear()} AlterScore</span>
           <span className="brand-separator">•</span>
           <span className="brand-desc">Behavioral Credit Intelligence</span>
-          <span className="brand-separator">•</span>
-          <span className="brand-club">Valiria Club 2025</span>
         </div>
-        <div className="footer-links">
-          <a
-            href="https://huggingface.co/spaces/coolbot22/alterscore-backend"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="footer-link"
-          >
-            <Database size={12} />
-            <span>API Docs</span>
-          </a>
-          <a
-            href="/api/health"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="footer-link"
-          >
-            <Database size={12} />
-            <span>Backend Health</span>
-          </a>
-          <a
-            href="https://github.com/kaustubh-dot/AlterScore"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="footer-link"
-          >
-            <GitBranch size={12} />
-            <span>GitHub</span>
-          </a>
-        </div>
+        <button
+          onClick={() => { playClick(); transitionTo('/admin'); }}
+          className="footer-link footer-admin-link"
+        >
+          <Shield size={12} className="admin-icon" />
+          <span>Operator Panel</span>
+        </button>
       </div>
     </footer>
   );
 }
-

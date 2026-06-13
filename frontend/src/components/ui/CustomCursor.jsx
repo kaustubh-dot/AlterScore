@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import './CustomCursor.css';
 
-export default function CustomCursor() {
+export default function CustomCursor({ variant = 'default' }) {
   const dotRef = useRef(null);
   const ringRef = useRef(null);
   const [hovered, setHovered] = useState(false);
@@ -27,22 +27,17 @@ export default function CustomCursor() {
     const onMouseEnter = () => setHidden(false);
     const onMouseLeave = () => setHidden(true);
 
+    const onMouseOver = (e) => {
+      const target = e.target.closest('a, button, [role="button"], input, select, textarea, .option-pill, .scenario-pill, .likert-option, .badge-tag, .btn, .option-pill-btn');
+      setHovered(!!target);
+    };
+
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mousedown', onMouseDown);
     window.addEventListener('mouseup', onMouseUp);
     document.addEventListener('mouseenter', onMouseEnter);
     document.addEventListener('mouseleave', onMouseLeave);
-
-    const addHoverListeners = () => {
-      const targets = document.querySelectorAll('a, button, [role="button"], input, select, textarea, .option-pill, .scenario-pill, .likert-option, .badge-tag, .btn, .option-pill-btn');
-      targets.forEach(t => {
-        t.addEventListener('mouseenter', () => setHovered(true));
-        t.addEventListener('mouseleave', () => setHovered(false));
-      });
-    };
-
-    addHoverListeners();
-    const interval = setInterval(addHoverListeners, 1000);
+    window.addEventListener('mouseover', onMouseOver);
 
     let animationFrameId;
     const render = () => {
@@ -63,8 +58,8 @@ export default function CustomCursor() {
       window.removeEventListener('mouseup', onMouseUp);
       document.removeEventListener('mouseenter', onMouseEnter);
       document.removeEventListener('mouseleave', onMouseLeave);
+      window.removeEventListener('mouseover', onMouseOver);
       cancelAnimationFrame(animationFrameId);
-      clearInterval(interval);
     };
   }, []);
 
@@ -72,11 +67,11 @@ export default function CustomCursor() {
     <>
       <div 
         ref={dotRef} 
-        className={`cursor-dot ${hidden ? 'hidden' : ''} ${hovered ? 'hover' : ''} ${clicked ? 'active' : ''}`} 
+        className={`cursor-dot ${variant} ${hidden ? 'hidden' : ''} ${hovered ? 'hover' : ''} ${clicked ? 'active' : ''}`} 
       />
       <div 
         ref={ringRef} 
-        className={`cursor-ring ${hidden ? 'hidden' : ''} ${hovered ? 'hover' : ''} ${clicked ? 'active' : ''}`} 
+        className={`cursor-ring ${variant} ${hidden ? 'hidden' : ''} ${hovered ? 'hover' : ''} ${clicked ? 'active' : ''}`} 
       >
         <div className="cursor-ring-inner" />
       </div>
