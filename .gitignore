@@ -140,3 +140,6 @@ Desktop.ini
 
 # Local browser test logs
 frontend/user_browser_errors.json
+
+# Local scratch directory
+scratch/

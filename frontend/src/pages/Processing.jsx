@@ -1,14 +1,15 @@
 import { useEffect, useState, useRef } from 'react';
 import { ShieldAlert, Check } from 'lucide-react';
 import SignalCanvas from '../components/hero/SignalCanvas';
+import useSound from '../hooks/useSound';
 import api from '../lib/api';
 import { formatApiError } from '../utils/apiErrors';
 import './Processing.css';
-
 export default function Processing({ payload, onComplete }) {
   const [activeStep, setActiveStep] = useState(0);
   const [error, setError] = useState(null);
   const requestFiredRef = useRef(false);
+  const { playStep } = useSound();
 
   const steps = [
     { label: 'Parsing psychometric responses' },
@@ -23,10 +24,14 @@ export default function Processing({ payload, onComplete }) {
   useEffect(() => {
     if (activeStep >= steps.length) return;
     const interval = setTimeout(() => {
-      setActiveStep((prev) => prev + 1);
+      setActiveStep((prev) => {
+        const next = prev + 1;
+        playStep();
+        return next;
+      });
     }, 600);
     return () => clearTimeout(interval);
-  }, [activeStep]);
+  }, [activeStep, playStep, steps.length]);
 
   // Firing API request to score
   useEffect(() => {
@@ -65,20 +70,20 @@ export default function Processing({ payload, onComplete }) {
               </div>
               <span className="processing-title" style={{ color: 'var(--accent-rose)', letterSpacing: '0.08em' }}>Submission Rejected</span>
             </div>
-
+            
             <div className="processing-body" style={{ padding: 'var(--space-6) 0', textAlign: 'center' }}>
               <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: 1.6, marginBottom: '24px', maxWidth: '480px', marginLeft: 'auto', marginRight: 'auto' }}>
                 {error}
               </p>
-
-              <button
-                onClick={() => window.location.reload()}
+              
+              <button 
+                onClick={() => window.location.reload()} 
                 className="btn btn-primary"
-                style={{
-                  margin: '0 auto',
-                  borderColor: 'rgba(244, 63, 94, 0.3)',
+                style={{ 
+                  margin: '0 auto', 
+                  borderColor: 'rgba(244, 63, 94, 0.3)', 
                   background: 'rgba(244, 63, 94, 0.1)',
-                  color: '#FFFFFF'
+                  color: '#FFFFFF' 
                 }}
               >
                 <span>Go Back & Restart</span>
@@ -93,28 +98,28 @@ export default function Processing({ payload, onComplete }) {
   return (
     <div className="processing-layout">
       <SignalCanvas />
-
+      
       <div className="processing-container container">
         <div className="processing-card">
           <div className="processing-header">
             <span className="processing-title">Cognitive Pipeline Calibration</span>
             <div className="processing-meter-container">
-              <div
+              <div 
                 className="processing-meter-fill"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
           </div>
-
+          
           <div className="processing-body">
             <div className="steps-list">
               {steps.map((step, idx) => {
                 const isCompleted = idx < activeStep;
                 const isActive = idx === activeStep;
-
+                
                 return (
-                  <div
-                    key={idx}
+                  <div 
+                    key={idx} 
                     className={`step-row ${isCompleted ? 'completed' : ''} ${isActive ? 'active' : ''}`}
                   >
                     <span className="step-icon">
@@ -133,7 +138,7 @@ export default function Processing({ payload, onComplete }) {
                 );
               })}
             </div>
-
+            
             <div className="processing-footer">
               <span className="processing-eta">
                 Calibrating behavioral telemetry • Please wait

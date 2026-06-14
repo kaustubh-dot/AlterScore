@@ -26,7 +26,7 @@ body::after {
   inset: 0;
   z-index: 9999;
   pointer-events: none;
-  opacity: 0.03;
+  opacity: 0.045;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 }
 
@@ -248,6 +248,56 @@ body::after {
   text-decoration-color: var(--text-muted);
 }
 
+/* Global Focus & Selection Polish */
+::selection {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+*:focus-visible {
+  outline: 1px solid rgba(255, 255, 255, 0.4);
+  outline-offset: 4px;
+}
+
+/* Glass, Pulse, Shimmer class definitions */
+.glass {
+  background: rgba(255, 255, 255, 0.02) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+.shimmer-bg {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer-bg::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.04) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmerSweep 2.5s infinite linear;
+  pointer-events: none;
+}
+
+@keyframes shimmerSweep {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0%);
+  }
+}
+
 /* Accessibility settings */
 @media (prefers-reduced-motion: reduce) {
   * {
@@ -266,5 +316,9 @@ body::after {
   .reveal {
     opacity: 1 !important;
     transform: none !important;
+  }
+
+  .shimmer-bg::after {
+    animation: none !important;
   }
 }

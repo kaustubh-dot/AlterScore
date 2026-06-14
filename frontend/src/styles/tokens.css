@@ -64,6 +64,8 @@
   --space-12:  80px;
   --space-16:  96px;
   --space-20:  128px;
+  --space-24:  160px;
+  --space-32:  240px;
 
   /* Border Radius (Extremely minimal, sharp editorial angles) */
   --radius-sm:   2px;

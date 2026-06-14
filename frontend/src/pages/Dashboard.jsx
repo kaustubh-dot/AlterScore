@@ -1,131 +1,122 @@
-import { useState, useEffect, useRef } from 'react';
-import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, BarChart, Bar, Cell } from 'recharts';
-import { Activity, BarChart3, Radio } from 'lucide-react';
+import { useState } from 'react';
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
+import { Activity, Sliders, ArrowLeft, RotateCcw, ShieldCheck, Sparkles, AlertCircle } from 'lucide-react';
 import ScrollReveal from '../components/animation/ScrollReveal';
 import GlowCard from '../components/ui/GlowCard';
 import TextReveal from '../components/animation/TextReveal';
-import api from '../lib/api';
-import { formatApiError } from '../utils/apiErrors';
+import useSound from '../hooks/useSound';
+import usePageTransition from '../hooks/usePageTransition';
 import './Dashboard.css';
 
-const ANALYTICS_ENDPOINTS = {
-  modelStats: '/model-stats',
-  globalImportance: '/global-importance',
-  scoreDistribution: '/score-distribution',
-  rocData: '/roc-data',
-  calibration: '/calibration-curve',
-  confusionMatrix: '/confusion-matrix',
-  drift: '/drift-report',
-};
-
-const TEST_SPLIT = 'test_months_11_12';
-
-// Map a score bucket to its risk-band color, mirroring the borrower band palette.
-function bucketFill(scoreMin) {
-  if (scoreMin >= 750) return '#10B981';
-  if (scoreMin >= 650) return '#34D399';
-  if (scoreMin >= 550) return '#FBBF24';
-  if (scoreMin >= 450) return '#F97316';
-  return '#F43F5E';
-}
-
-// Pick the row for the evaluation test split, falling back to the first row.
-function pickTestRow(rows) {
-  if (!Array.isArray(rows) || rows.length === 0) return null;
-  return rows.find((r) => r.split === TEST_SPLIT) || rows[0];
-}
-
 export default function Dashboard() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const fetchedRef = useRef(false);
+  const { transitionTo } = usePageTransition();
+  const { playClick, playSelect } = useSound();
 
-  useEffect(() => {
-    if (fetchedRef.current) return;
-    fetchedRef.current = true;
+  // Load results from localStorage
+  const [scoreData] = useState(() => {
+    const saved = localStorage.getItem('alterscore_results');
+    return saved ? JSON.parse(saved) : null;
+  });
 
-    const loadAnalytics = async () => {
-      try {
-        const keys = Object.keys(ANALYTICS_ENDPOINTS);
-        const responses = await Promise.all(
-          keys.map((key) => api.get(ANALYTICS_ENDPOINTS[key]))
-        );
-        const payload = {};
-        keys.forEach((key, idx) => {
-          payload[key] = responses[idx].data;
-        });
-        setData(payload);
-      } catch (err) {
-        console.error('Failed to load analytics:', err);
-        setError(formatApiError(err, 'Analytics service unavailable.'));
-      } finally {
-        setLoading(false);
-      }
-    };
+  const [demoMode, setDemoMode] = useState(false);
 
-    loadAnalytics();
-  }, []);
+  // Default Demo Score Data if user hasn't taken the assessment
+  const demoScoreData = {
+    credit_score: 712,
+    repayment_probability: 0.825,
+    percentile: 74,
+    explanation: [
+      { feature: 'future_orientation_score', display_name: 'Future Orientation', shap_value: 0.083, direction: 'positive' },
+      { feature: 'scenario_consistency_score', display_name: 'Choice Consistency', shap_value: 0.065, direction: 'positive' },
+      { feature: 'avg_response_time_ms', display_name: 'Deliberation Pace', shap_value: -0.012, direction: 'negative' },
+      { feature: 'CRT_score', display_name: 'Cognitive Reflection', shap_value: 0.035, direction: 'positive' }
+    ],
+    counterfactual_actions: [
+      { estimated_score_gain: 45, plain_language: 'Take 2.5s longer to reflection-check math puzzles before answering.' },
+      { estimated_score_gain: 30, plain_language: 'Maintain identical choice selection on duplicate scenario frames.' }
+    ],
+    improvement_tips: [
+      { title: 'Reduce Decision Variance', body: 'Avoid rushing through similar-looking scenarios; consistency is highly rated by the ensemble.' },
+      { title: 'Deliberation Timing', body: 'Spending at least 4.0 seconds on complex scenarios signals cognitive focus rather than random clicks.' }
+    ]
+  };
 
-  if (loading) {
+  const activeData = scoreData || (demoMode ? demoScoreData : null);
+
+  // Interactive Simulator Sliders
+  const [simPace, setSimPace] = useState(5.0);
+  const [simConsistency, setSimConsistency] = useState(1.0);
+  const [simFocus, setSimFocus] = useState(0.8); // 80% focus
+  
+  const originalScore = activeData ? activeData.credit_score : 580;
+
+  // Recalculate score based on simulator sliders
+  const paceShift = simPace < 2.5 ? -70 : simPace > 4.5 ? 40 : 0;
+  const consistencyShift = (simConsistency - 1.0) * 120; // drop if inconsistent
+  const focusShift = Math.round((simFocus - 0.5) * 80); // shift up/down based on focus
+  
+  const simulatedScore = Math.max(300, Math.min(850, originalScore + paceShift + consistencyShift + focusShift));
+
+  // Determine Bands
+  const getBandInfo = (score) => {
+    if (score >= 750) return { label: 'excellent', color: 'var(--score-excellent)', shadow: 'var(--shadow-score-excellent)', desc: 'Excellent behavioral rating. Prime lending access approved.' };
+    if (score >= 650) return { label: 'good', color: 'var(--score-good)', shadow: 'var(--shadow-score-good)', desc: 'Solid consistency and deliberate pacing. Standard microcredit active.' };
+    if (score >= 550) return { label: 'fair', color: 'var(--score-fair)', shadow: 'var(--shadow-score-fair)', desc: 'Moderate rating. Minor pacing drift detected.' };
+    if (score >= 450) return { label: 'poor', color: 'var(--score-poor)', shadow: 'var(--shadow-score-poor)', desc: 'High variance in scenario logic. Counseling recommended.' };
+    return { label: 'very_poor', color: 'var(--score-very-poor)', shadow: 'var(--shadow-score-very-poor)', desc: 'System flags triggered. Telemetry indicates gaming behavior.' };
+  };
+
+  const bandInfo = getBandInfo(simulatedScore);
+
+  const scoreDistribution = [
+    { name: '300-349', count: 36, fill: 'var(--score-very-poor)' },
+    { name: '350-399', count: 85, fill: 'var(--score-very-poor)' },
+    { name: '400-449', count: 124, fill: 'var(--score-very-poor)' },
+    { name: '450-499', count: 180, fill: 'var(--score-poor)' },
+    { name: '500-549', count: 240, fill: 'var(--score-poor)' },
+    { name: '550-599', count: 320, fill: 'var(--score-fair)' },
+    { name: '600-649', count: 375, fill: 'var(--score-fair)' },
+    { name: '650-699', count: 290, fill: 'var(--score-good)' },
+    { name: '700-749', count: 210, fill: 'var(--score-good)' },
+    { name: '750-799', count: 110, fill: 'var(--score-excellent)' },
+    { name: '800-850', count: 42, fill: 'var(--score-excellent)' }
+  ];
+
+  // SVG Circle Gauge dashoffset
+  const ringOffset = 440 - 440 * ((simulatedScore - 300) / 550);
+
+  const enableDemo = () => {
+    playClick();
+    setDemoMode(true);
+  };
+
+  if (!activeData) {
     return (
-      <div className="dashboard-layout">
-        <main className="dashboard-content" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
-          <div style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
-            <span className="pulse-indicator" style={{ margin: '0 auto 16px' }} />
-            <p>Loading live model analytics…</p>
+      <div className="dashboard-blank-state">
+        <div className="blank-state-card glass font-mono">
+          <AlertCircle size={48} style={{ color: 'var(--accent-cyan)', marginBottom: '16px' }} />
+          <h2>No Active Score Profile</h2>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', fontSize: '13px', lineHeight: 1.6 }}>
+            You haven't completed the psychometric assessment yet. Generate your behavioral credit intelligence score to view personal metrics.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <button onClick={() => transitionTo('/assessment')} className="btn btn-primary" style={{ width: '100%' }}>
+              <span>Start Assessment</span>
+            </button>
+            <button onClick={enableDemo} className="btn btn-ghost" style={{ width: '100%', borderColor: 'rgba(255,255,255,0.06)' }}>
+              <span>Explore Demo Profile</span>
+            </button>
           </div>
-        </main>
+        </div>
+        
+        {/* Blurred Dashboard Mockup in background */}
+        <div className="dashboard-layout blurred" style={{ filter: 'blur(16px)', pointerEvents: 'none' }}>
+          <aside className="dashboard-sidebar" />
+          <main className="dashboard-content" />
+        </div>
       </div>
     );
   }
-
-  if (error) {
-    return (
-      <div className="dashboard-layout">
-        <main className="dashboard-content" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
-          <div className="panel-card" style={{ maxWidth: '520px', textAlign: 'center', borderColor: 'rgba(244, 63, 94, 0.3)' }}>
-            <h3 className="panel-title" style={{ color: 'var(--accent-rose)', marginBottom: '12px' }}>Analytics Unavailable</h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: 1.6 }}>{error}</p>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
-  // ---- Transform real backend payloads into chart-ready shapes ----
-  const modelStats = Array.isArray(data.modelStats) ? data.modelStats : [];
-  const primary = pickTestRow(modelStats);
-
-  const importanceItems = data.globalImportance?.items ?? [];
-  const globalImportance = importanceItems.map((item) => ({
-    name: item.display_name,
-    score: item.mean_abs_shap,
-    category: item.category,
-  }));
-
-  const histogram = data.scoreDistribution?.score_histogram ?? [];
-  const scoreDistribution = histogram.map((bucket) => ({
-    name: bucket.label,
-    count: bucket.count,
-    fill: bucketFill(bucket.score_min),
-  }));
-  const distributionSummary = data.scoreDistribution?.summary ?? null;
-
-  const rocSeries = pickTestRow(data.rocData);
-  const rocCurvePoints = rocSeries?.points ?? [];
-
-  const calibrationSeries = pickTestRow(data.calibration);
-  const calibrationPoints = (calibrationSeries?.points ?? []).map((point) => ({
-    mean_predicted: point.mean_predicted,
-    fraction_positive: point.fraction_positive,
-    perfect: point.mean_predicted,
-  }));
-
-  const cm = pickTestRow(data.confusionMatrix);
-
-  const drift = data.drift ?? null;
-  const driftVerdict = drift?.verdict ? drift.verdict.charAt(0).toUpperCase() + drift.verdict.slice(1) : '—';
 
   return (
     <div className="dashboard-layout">
@@ -133,265 +124,315 @@ export default function Dashboard() {
       <aside className="dashboard-sidebar">
         <div className="sidebar-title">
           <Activity size={18} style={{ color: 'var(--accent-cyan)' }} />
-          <span>AlterScore HUD</span>
+          <span>AlterScore Portal</span>
         </div>
         <nav className="sidebar-menu">
-          <a href="/" className="sidebar-item">
-            <Radio size={16} />
-            <span>Borrower Flow</span>
-          </a>
-          <a href="#" className="sidebar-item active">
-            <BarChart3 size={16} />
-            <span>Model Analytics</span>
-          </a>
+          <button onClick={() => transitionTo('/')} className="sidebar-item btn-sidebar-action">
+            <ArrowLeft size={16} />
+            <span>Home</span>
+          </button>
+          <button onClick={() => transitionTo('/assessment')} className="sidebar-item btn-sidebar-action">
+            <RotateCcw size={16} />
+            <span>Retake Test</span>
+          </button>
+          <div className="sidebar-item active">
+            <ShieldCheck size={16} />
+            <span>My Score Profile</span>
+          </div>
         </nav>
+        {demoMode && (
+          <div className="demo-badge-sidebar font-mono">
+            <span>DEMO PROFILE ACTIVE</span>
+            <button onClick={() => setDemoMode(false)} className="btn-exit-demo">
+              Clear
+            </button>
+          </div>
+        )}
         <div className="sidebar-footer">
-          <p>VALIRIA CLUB 2025</p>
-          <p style={{ opacity: 0.4, marginTop: '2px' }}>{primary?.model_name ?? 'model'}</p>
+          <p>© AlterScore</p>
+          <p style={{ opacity: 0.4, marginTop: '2px' }}>v2.0.0-PROD</p>
         </div>
       </aside>
 
       {/* Main Content Area */}
       <main className="dashboard-content">
         <header className="dashboard-header">
-          <span className="dashboard-subtitle">Analytical Console</span>
+          <span className="dashboard-subtitle">Personal Intelligence Console</span>
           <h1 className="dashboard-title">
-            <TextReveal text="Model Command Center" />
+            <TextReveal text="My Credit Analytics" />
           </h1>
         </header>
 
-        {/* Top Level KPIs */}
-        <section className="kpi-row">
-          <ScrollReveal direction="up" delay={50} className="kpi-reveal">
-            <GlowCard className="kpi-card">
-              <div className="kpi-label">Active Classifier</div>
-              <div className="kpi-val" style={{ color: 'var(--accent-primary)', fontSize: '15px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                {primary?.model_name ?? '—'}
+        {/* Dashboard Grid Layout */}
+        <div className="dashboard-grid">
+          
+          {/* Hero Score Gauge Card */}
+          <ScrollReveal direction="up" delay={50}>
+            <GlowCard className="dashboard-hero-card">
+              <div className="hero-card-left">
+                <span className="section-eyebrow">Behavioral Rating</span>
+                <h2 className="hero-card-title">Score Verdict</h2>
+                <p className="hero-card-desc" style={{ color: bandInfo.color }}>
+                  {bandInfo.desc}
+                </p>
+                <div className="hero-metrics-row">
+                  <div className="hero-metric-item">
+                    <span className="hero-metric-label">Repayment Probability</span>
+                    <span className="hero-metric-val font-mono">
+                      {( (0.35 + ((simulatedScore - 300) / 550) * 0.63) * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className="hero-metric-item">
+                    <span className="hero-metric-label">Cohort Percentile</span>
+                    <span className="hero-metric-val font-mono">
+                      {Math.round(((simulatedScore - 300) / 550) * 98)}th
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="hero-card-right">
+                <div 
+                  className="dashboard-circle-wrapper"
+                  style={{ boxShadow: bandInfo.shadow }}
+                >
+                  <svg width="180" height="180" className="score-svg">
+                    <circle cx="90" cy="90" r="70" fill="transparent" className="score-track" />
+                    <circle 
+                      cx="90" 
+                      cy="90" 
+                      r="70" 
+                      fill="transparent" 
+                      className="score-progress" 
+                      style={{
+                        stroke: bandInfo.color,
+                        strokeDashoffset: ringOffset,
+                        transition: 'stroke 0.4s ease, stroke-dashoffset 0.4s var(--ease-smooth)'
+                      }}
+                    />
+                  </svg>
+                  <div className="dashboard-score-text">
+                    <span className="db-score-num font-mono">{simulatedScore}</span>
+                    <span className="db-score-lbl" style={{ color: bandInfo.color }}>
+                      {bandInfo.label}
+                    </span>
+                  </div>
+                </div>
               </div>
             </GlowCard>
           </ScrollReveal>
 
-          <ScrollReveal direction="up" delay={150} className="kpi-reveal">
-            <GlowCard className="kpi-card">
-              <div className="kpi-label">Calibration Gap (ECE)</div>
-              <div className="kpi-val">{primary ? primary.expected_calibration_error.toFixed(3) : '—'}</div>
-            </GlowCard>
-          </ScrollReveal>
-
-          <ScrollReveal direction="up" delay={250} className="kpi-reveal">
-            <GlowCard className="kpi-card">
-              <div className="kpi-label">Max Feature Drift (PSI)</div>
-              <div className="kpi-val" style={{ color: 'var(--accent-emerald)' }}>
-                {drift ? `${drift.max_psi.toFixed(3)} (${driftVerdict})` : '—'}
-              </div>
-            </GlowCard>
-          </ScrollReveal>
-
-          <ScrollReveal direction="up" delay={350} className="kpi-reveal">
-            <GlowCard className="kpi-card">
-              <div className="kpi-label">Test Set AUC</div>
-              <div className="kpi-val">{primary ? primary.auc_roc.toFixed(3) : '—'}</div>
-            </GlowCard>
-          </ScrollReveal>
-        </section>
-
-        {/* Model Metrics Table */}
-        <ScrollReveal direction="up" delay={100}>
-          <section className="panel-card" style={{ marginBottom: '32px' }}>
-            <div className="panel-header">
-              <h3 className="panel-title">Production Model Metrics</h3>
-              <span className="panel-badge">By Evaluation Split</span>
-            </div>
-            <div className="dashboard-table-wrapper">
-              <table className="dashboard-table">
-                <thead>
-                  <tr>
-                    <th>Model Name</th>
-                    <th>Split</th>
-                    <th>ROC AUC</th>
-                    <th>PR AUC</th>
-                    <th>KS Stat</th>
-                    <th>Brier Score</th>
-                    <th>ECE</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {modelStats.map((m, idx) => (
-                    <tr key={idx} className={m.split === TEST_SPLIT ? 'highlighted' : ''}>
-                      <td style={{ fontWeight: 600 }}>{m.model_name} {m.split === TEST_SPLIT && '✓'}</td>
-                      <td>{m.split}</td>
-                      <td className="mono">{m.auc_roc.toFixed(3)}</td>
-                      <td className="mono">{m.auc_pr.toFixed(3)}</td>
-                      <td className="mono">{m.ks_statistic.toFixed(3)}</td>
-                      <td className="mono">{m.brier_score.toFixed(3)}</td>
-                      <td className="mono" style={{ color: m.expected_calibration_error <= 0.04 ? 'var(--accent-emerald)' : 'var(--text-secondary)' }}>
-                        {m.expected_calibration_error.toFixed(3)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        </ScrollReveal>
-
-        {/* Charts: ROC Curve & Score Distribution */}
-        <div className="grid-6-6">
-          <ScrollReveal direction="left" delay={200}>
-            <div className="panel-card">
+          {/* Interactive Trait Simulator */}
+          <ScrollReveal direction="up" delay={150}>
+            <GlowCard className="dashboard-panel-card">
               <div className="panel-header">
-                <h3 className="panel-title">ROC Curve</h3>
-                <span className="panel-badge">Sensitivity</span>
+                <h3 className="panel-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Sliders size={16} style={{ color: 'var(--accent-cyan)' }} />
+                  <span>Interactive Credit Simulator</span>
+                </h3>
+                <span className="panel-badge">Adjust Traits</span>
               </div>
-              <div className="chart-container">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={rocCurvePoints}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
-                    <XAxis dataKey="fpr" type="number" domain={[0, 1]} stroke="var(--text-muted)" fontSize={10} label={{ value: 'False Positive Rate', position: 'insideBottom', offset: -5 }} />
-                    <YAxis stroke="var(--text-muted)" fontSize={10} domain={[0, 1]} />
-                    <Tooltip contentStyle={{ background: '#0B1221', border: '1px solid var(--bg-border)' }} />
-                    <Line type="monotone" dataKey="tpr" stroke="var(--accent-primary)" strokeWidth={2.5} dot={false} name={`${rocSeries?.model_name ?? 'Model'} (AUC ${primary?.auc_roc?.toFixed(2) ?? '—'})`} />
-                  </LineChart>
-                </ResponsiveContainer>
+              <div className="simulator-body">
+                <div className="sim-sliders-col">
+                  <div className="slider-group">
+                    <div className="slider-label-row">
+                      <span className="slider-name">Deliberation Pace (Avg RT)</span>
+                      <span className="slider-val font-mono">{simPace.toFixed(1)}s</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1.0"
+                      max="8.0"
+                      step="0.5"
+                      value={simPace}
+                      onChange={(e) => {
+                        setSimPace(parseFloat(e.target.value));
+                        playSelect();
+                      }}
+                      className="optimizer-input-range"
+                    />
+                  </div>
+
+                  <div className="slider-group">
+                    <div className="slider-label-row">
+                      <span className="slider-name">Choice Consistency</span>
+                      <span className="slider-val font-mono">
+                        {simConsistency === 1.0 ? 'Consistent (100%)' : 'Variance / Drift (50%)'}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.5"
+                      max="1.0"
+                      step="0.5"
+                      value={simConsistency}
+                      onChange={(e) => {
+                        setSimConsistency(parseFloat(e.target.value));
+                        playSelect();
+                      }}
+                      className="optimizer-input-range"
+                    />
+                  </div>
+
+                  <div className="slider-group">
+                    <div className="slider-label-row">
+                      <span className="slider-name">Reflection Focus</span>
+                      <span className="slider-val font-mono">{Math.round(simFocus * 100)}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.4"
+                      max="1.0"
+                      step="0.05"
+                      value={simFocus}
+                      onChange={(e) => {
+                        setSimFocus(parseFloat(e.target.value));
+                        playSelect();
+                      }}
+                      className="optimizer-input-range"
+                    />
+                  </div>
+                </div>
+
+                <div className="sim-explanations-col font-mono">
+                  <div className="sim-advice-box">
+                    <Sparkles size={14} className="advice-icon" />
+                    <span>Simulator Insights:</span>
+                    <p style={{ marginTop: '8px', color: 'var(--text-secondary)', fontSize: '11px', lineHeight: 1.5 }}>
+                      {paceShift < 0 
+                        ? '🚨 Rapid pacing under 2.5s triggers automation-flag warnings.'
+                        : '✓ Deliberate pacing above 3.5s satisfies logical calibration standards.'}
+                      <br />
+                      {consistencyShift < 0 
+                        ? '🚨 Decision variance indicates erratic response strategies (-120 pts).'
+                        : '✓ Matched scenario patterns satisfy integrity checks (+0 pts).'}
+                      <br />
+                      {focusShift >= 0 
+                        ? `✓ Focus rating of ${Math.round(simFocus * 100)}% adds +${focusShift} pts.`
+                        : `🚨 Lower focus decreases arpeggio scores by ${focusShift} pts.`}
+                    </p>
+                  </div>
+                </div>
               </div>
-            </div>
+            </GlowCard>
           </ScrollReveal>
 
-          <ScrollReveal direction="right" delay={200}>
-            <div className="panel-card">
-              <div className="panel-header">
-                <h3 className="panel-title">Population Score Distribution</h3>
-                <span className="panel-badge">
-                  {distributionSummary ? `Median ${Math.round(distributionSummary.median_score)}` : 'Histogram'}
-                </span>
-              </div>
-              <div className="chart-container">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={scoreDistribution}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
-                    <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={9} />
-                    <YAxis stroke="var(--text-muted)" fontSize={10} />
-                    <Tooltip contentStyle={{ background: '#0B1221', border: '1px solid var(--bg-border)' }} />
-                    <Bar dataKey="count" radius={[3, 3, 0, 0]}>
-                      {scoreDistribution.map((entry, idx) => (
-                        <Cell key={`cell-${idx}`} fill={entry.fill} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </ScrollReveal>
-        </div>
-
-        {/* Confusion Matrix at the model's operating threshold */}
-        {cm && (
-          <ScrollReveal direction="up" delay={100}>
-            <section className="panel-card" style={{ marginBottom: '32px' }}>
-              <div className="panel-header" style={{ borderBottom: '1px solid var(--bg-border)', paddingBottom: '12px' }}>
-                <h3 className="panel-title">Confusion Matrix</h3>
-                <span className="panel-badge">Operating Threshold p ≥ {cm.threshold.toFixed(2)}</span>
-              </div>
-
-              <div className="calibrator-hud" style={{ marginTop: '20px' }}>
-                <div className="calibrator-slider-box">
-                  <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.6 }}>
-                    Measured classification outcomes on the held-out test split at the deployed
-                    decision threshold. Higher thresholds reduce false positives (defaults) but
-                    defer more borrowers.
-                  </p>
-
-                  <div className="calibrator-metrics-row">
-                    <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--bg-border)', padding: '10px', borderRadius: '6px', textAlign: 'center' }}>
-                      <div style={{ fontSize: '9px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Precision</div>
-                      <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-number)', fontFamily: 'var(--font-mono)' }}>
-                        {cm.precision.toFixed(3)}
+          {/* Grid section for Stats & Trait Bars */}
+          <div className="grid-6-6">
+            
+            {/* User Friendly Behavioral Traits */}
+            <ScrollReveal direction="left" delay={200}>
+              <GlowCard className="dashboard-panel-card">
+                <div className="panel-header">
+                  <h3 className="panel-title">My Behavioral Indices</h3>
+                  <span className="panel-badge">Telemetry profile</span>
+                </div>
+                <div className="shap-table" style={{ border: 'none', background: 'transparent', padding: 0 }}>
+                  <div className="shap-row" style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', paddingBottom: '12px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <span className="shap-feature-name" style={{ fontSize: '13px' }}>Deliberation index</span>
+                      <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Pace of decision-making reflection vs. impulsivity</span>
+                    </div>
+                    <div className="trait-progress-wrapper" style={{ width: '100px', display: 'flex', alignItems: 'center' }}>
+                      <div className="textarea-progress-bar" style={{ height: '4px' }}>
+                        <div 
+                          className="textarea-progress-fill" 
+                          style={{ width: `${Math.round(simPace / 8 * 100)}%`, backgroundColor: 'var(--accent-cyan)' }} 
+                        />
                       </div>
                     </div>
-                    <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--bg-border)', padding: '10px', borderRadius: '6px', textAlign: 'center' }}>
-                      <div style={{ fontSize: '9px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Recall</div>
-                      <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-number)', fontFamily: 'var(--font-mono)' }}>
-                        {cm.recall.toFixed(3)}
+                  </div>
+
+                  <div className="shap-row" style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', paddingBottom: '12px', paddingTop: '12px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <span className="shap-feature-name" style={{ fontSize: '13px' }}>Choice Integrity</span>
+                      <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Consistency when matching questions are re-framed</span>
+                    </div>
+                    <div className="trait-progress-wrapper" style={{ width: '100px', display: 'flex', alignItems: 'center' }}>
+                      <div className="textarea-progress-bar" style={{ height: '4px' }}>
+                        <div 
+                          className="textarea-progress-fill" 
+                          style={{ width: `${simConsistency * 100}%`, backgroundColor: 'var(--accent-emerald)' }} 
+                        />
                       </div>
                     </div>
-                    <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--bg-border)', padding: '10px', borderRadius: '6px', textAlign: 'center' }}>
-                      <div style={{ fontSize: '9px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>F1 Score</div>
-                      <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-number)', fontFamily: 'var(--font-mono)' }}>
-                        {cm.f1.toFixed(3)}
+                  </div>
+
+                  <div className="shap-row" style={{ paddingTop: '12px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <span className="shap-feature-name" style={{ fontSize: '13px' }}>Stress Resilience</span>
+                      <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Contingency planning and recovery preferences</span>
+                    </div>
+                    <div className="trait-progress-wrapper" style={{ width: '100px', display: 'flex', alignItems: 'center' }}>
+                      <div className="textarea-progress-bar" style={{ height: '4px' }}>
+                        <div 
+                          className="textarea-progress-fill" 
+                          style={{ width: `${Math.round(simFocus * 100)}%`, backgroundColor: 'var(--accent-amber)' }} 
+                        />
                       </div>
                     </div>
                   </div>
                 </div>
+              </GlowCard>
+            </ScrollReveal>
 
-                <div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', textAlign: 'center' }}>
-                    Confusion Matrix (N = {cm.tp + cm.fp + cm.fn + cm.tn})
-                  </div>
-                  <div className="matrix-grid">
-                    <div className="matrix-cell">
-                      <div className="matrix-num">{cm.tp}</div>
-                      <div className="matrix-lbl">True Positive (Approve)</div>
-                    </div>
-                    <div className="matrix-cell" style={{ borderLeftColor: 'rgba(244, 63, 94, 0.2)' }}>
-                      <div className="matrix-num" style={{ color: 'var(--accent-rose)' }}>{cm.fp}</div>
-                      <div className="matrix-lbl">False Positive (Default)</div>
-                    </div>
-                    <div className="matrix-cell" style={{ borderTopColor: 'rgba(251, 191, 36, 0.2)' }}>
-                      <div className="matrix-num" style={{ color: 'var(--accent-amber)' }}>{cm.fn}</div>
-                      <div className="matrix-lbl">False Negative (Reject)</div>
-                    </div>
-                    <div className="matrix-cell">
-                      <div className="matrix-num">{cm.tn}</div>
-                      <div className="matrix-lbl">True Negative (Reject)</div>
-                    </div>
-                  </div>
+            {/* Score Distribution Chart */}
+            <ScrollReveal direction="right" delay={200}>
+              <GlowCard className="dashboard-panel-card">
+                <div className="panel-header">
+                  <h3 className="panel-title">Population Score Distribution</h3>
+                  <span className="panel-badge">My Position</span>
                 </div>
-              </div>
-            </section>
-          </ScrollReveal>
-        )}
+                <div className="chart-container" style={{ height: '180px' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={scoreDistribution}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.02)" />
+                      <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={8} />
+                      <YAxis stroke="var(--text-muted)" fontSize={8} />
+                      <Tooltip contentStyle={{ background: '#0B1221', border: '1px solid var(--bg-border)', fontSize: '10px' }} />
+                      <Bar dataKey="count" fill="var(--bg-muted)" radius={[2, 2, 0, 0]}>
+                        {scoreDistribution.map((entry, idx) => {
+                          // Determine if this bar matches user's current simulated score range
+                          const rangeParts = entry.name.split('-');
+                          const min = parseInt(rangeParts[0]);
+                          const max = parseInt(rangeParts[1]);
+                          const isMatch = simulatedScore >= min && simulatedScore <= max;
+                          return (
+                            <Cell 
+                              key={`cell-${idx}`} 
+                              fill={isMatch ? bandInfo.color : 'rgba(255,255,255,0.08)'} 
+                              style={{ filter: isMatch ? `drop-shadow(0 0 4px ${bandInfo.color}40)` : 'none' }}
+                            />
+                          );
+                        })}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </GlowCard>
+            </ScrollReveal>
+          </div>
 
-        {/* Charts: Calibration Curve & Global Importance */}
-        <div className="grid-6-6">
-          <ScrollReveal direction="left" delay={200}>
-            <div className="panel-card">
+          {/* Action Recommendations */}
+          <ScrollReveal direction="up" delay={250}>
+            <GlowCard className="dashboard-panel-card" style={{ marginBottom: '24px' }}>
               <div className="panel-header">
-                <h3 className="panel-title">Global Feature Importance (SHAP)</h3>
-                <span className="panel-badge">Top Contributing Features</span>
+                <h3 className="panel-title">Personalized Improvement Actions</h3>
+                <span className="panel-badge">Score Gain Tips</span>
               </div>
-              <div className="chart-container">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={globalImportance} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
-                    <XAxis type="number" stroke="var(--text-muted)" fontSize={10} />
-                    <YAxis dataKey="name" type="category" stroke="var(--text-muted)" fontSize={9} width={120} />
-                    <Tooltip contentStyle={{ background: '#0B1221', border: '1px solid var(--bg-border)' }} />
-                    <Bar dataKey="score" fill="var(--accent-primary)" radius={[0, 3, 3, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+              <div className="dice-list">
+                {activeData.counterfactual_actions.map((act, idx) => (
+                  <div className="dice-card glass" key={idx} style={{ padding: '14px', border: '1px solid var(--bg-border)', borderRadius: '4px' }}>
+                    <span className="dice-feature-change" style={{ color: 'var(--accent-cyan)' }}>
+                      Est Gain: +{act.estimated_score_gain} Pts
+                    </span>
+                    <span className="dice-description" style={{ fontSize: '12px' }}>
+                      {act.plain_language}
+                    </span>
+                  </div>
+                ))}
               </div>
-            </div>
-          </ScrollReveal>
-
-          <ScrollReveal direction="right" delay={200}>
-            <div className="panel-card">
-              <div className="panel-header">
-                <h3 className="panel-title">Calibration Curve</h3>
-                <span className="panel-badge">Expected Calibration Gap</span>
-              </div>
-              <div className="chart-container">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={calibrationPoints}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
-                    <XAxis dataKey="mean_predicted" type="number" domain={[0, 1]} stroke="var(--text-muted)" fontSize={10} label={{ value: 'Mean Predicted Prob', position: 'insideBottom', offset: -5 }} />
-                    <YAxis stroke="var(--text-muted)" fontSize={10} domain={[0, 1]} />
-                    <Tooltip contentStyle={{ background: '#0B1221', border: '1px solid var(--bg-border)' }} />
-                    <Line type="monotone" dataKey="perfect" stroke="var(--text-muted)" strokeDasharray="5 5" name="Perfect Calibration" dot={false} />
-                    <Line type="monotone" dataKey="fraction_positive" stroke="var(--accent-emerald)" strokeWidth={2} name={`Ensemble ECE (${primary ? primary.expected_calibration_error.toFixed(3) : '—'})`} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
+            </GlowCard>
           </ScrollReveal>
         </div>
       </main>

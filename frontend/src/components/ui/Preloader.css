@@ -126,3 +126,23 @@
   font-size: var(--text-sm);
   color: var(--text-muted);
 }
+
+/* Subtle Glow Highlight on 100% Load */
+.preloader-overlay.completed .preloader-icon-container,
+.preloader-overlay.completed .preloader-icon,
+.preloader-overlay.completed .preloader-percent-num {
+  color: var(--accent-cyan) !important;
+  transition: color 450ms cubic-bezier(0.16, 1, 0.3, 1);
+  text-shadow: 0 0 15px rgba(0, 242, 254, 0.5);
+}
+
+.preloader-overlay.completed .preloader-percent-symbol {
+  color: rgba(0, 242, 254, 0.5) !important;
+  transition: color 450ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.preloader-overlay.completed .ruler-tick.major {
+  background-color: var(--accent-cyan) !important;
+  box-shadow: 0 0 8px var(--accent-cyan);
+  transition: background-color 450ms, box-shadow 450ms;
+}

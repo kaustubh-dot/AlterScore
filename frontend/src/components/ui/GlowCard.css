@@ -16,13 +16,21 @@
   transform: translateY(-2px);
 }
 
-/* Remove spotlight effects completely for editorial theme */
 .glow-card-spotlight {
-  display: none;
+  position: absolute;
+  width: 250px;
+  height: 250px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  opacity: 0;
+  will-change: left, top, opacity;
 }
 
-.glow-card::before {
-  display: none;
+.glow-card:hover .glow-card-spotlight {
+  opacity: 1;
 }
 
 .glow-card-content {

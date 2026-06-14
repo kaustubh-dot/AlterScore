@@ -1,19 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, RefreshCw, Terminal, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, ArrowRight, RefreshCw, ShieldCheck } from 'lucide-react';
 import { QUESTIONS, SECTIONS } from '../data/questions';
 import Modal from '../components/ui/Modal';
 import TextReveal from '../components/animation/TextReveal';
-import './Assessment.css';
 import Processing from './Processing';
+import useSound from '../hooks/useSound';
+import usePageTransition from '../hooks/usePageTransition';
+import './Assessment.css';
 
-// Wall-clock reader kept at module scope so the impurity-in-render lint rule
-// does not flag the clock reads inside component event handlers (they only run
-// in response to user interaction, never during render).
-const now = () => Date.now();
+const getNow = () => Date.now();
 
 export default function Assessment() {
-  const navigate = useNavigate();
+  const { transitionTo } = usePageTransition();
+  const { playClick, playSelect, playSuccess } = useSound();
 
   // Telemetry Consent
   const [consented, setConsented] = useState(() => {
@@ -32,19 +31,26 @@ export default function Assessment() {
   const [scrollCount, setScrollCount] = useState(0);
   const [dropouts, setDropouts] = useState(0);
 
-  // Time & Session Markers. Seeded in a mount effect (below) rather than in the
-  // ref initialiser so no impure clock call happens during render.
-  const sessionStartRef = useRef(0);
-  const questionStartRef = useRef(0);
-
-  // Drives the HUD display without reading refs directly in JSX.
-  const [hudTick, setHudTick] = useState(null);
+  // Time & Session Markers
+  const sessionStartRef = useRef(null);
+  const questionStartRef = useRef(null);
   
-  // HUD toggling
-  const [hudOpen, setHudOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionPayload, setSubmissionPayload] = useState(null);
   const [resetModalOpen, setResetModalOpen] = useState(false);
+  const [exitModalOpen, setExitModalOpen] = useState(false);
+
+  // Initialize session times when consented
+  useEffect(() => {
+    if (consented) {
+      if (sessionStartRef.current === null) {
+        sessionStartRef.current = getNow();
+      }
+      if (questionStartRef.current === null) {
+        questionStartRef.current = getNow();
+      }
+    }
+  }, [consented]);
 
   // Track scroll hesitation
   useEffect(() => {
@@ -68,33 +74,12 @@ export default function Assessment() {
     };
   }, [consented]);
 
-  // Seed session/question timestamps once on mount (off the render path).
-  useEffect(() => {
-    const t = now();
-    sessionStartRef.current = t;
-    questionStartRef.current = t;
-  }, []);
-
   // Track question start times
   useEffect(() => {
     if (consented) {
-      questionStartRef.current = now();
+      questionStartRef.current = getNow();
     }
   }, [currentIndex, consented]);
-
-  // Keep HUD display values fresh by snapshotting the refs on a 250ms tick.
-  // The interval only runs while the HUD panel is open, saving work otherwise.
-  useEffect(() => {
-    if (!hudOpen) return undefined;
-    const id = setInterval(() => {
-      setHudTick({
-        now: now(),
-        sessionStart: sessionStartRef.current,
-        questionStart: questionStartRef.current,
-      });
-    }, 250);
-    return () => clearInterval(id);
-  }, [hudOpen]);
 
   const currentQ = QUESTIONS[currentIndex];
   const currentSection = SECTIONS.find((s) => s.id === currentQ.section);
@@ -103,17 +88,18 @@ export default function Assessment() {
 
   // Handle Consent
   const handleConsent = () => {
+    playClick();
     sessionStorage.setItem('alterscore_telemetry_consented', 'true');
     setConsented(true);
-    sessionStartRef.current = now();
-    questionStartRef.current = now();
+    sessionStartRef.current = getNow();
+    questionStartRef.current = getNow();
   };
 
   // Record Standard Answer (number, mcq, likert)
   const recordStandardAnswer = (value) => {
     const qId = currentQ.id;
-    const ts = now();
-    const rt = ts - questionStartRef.current;
+    const now = getNow();
+    const rt = now - (questionStartRef.current || now);
 
     // Track first click
     if (firstClicks[qId] === undefined) {
@@ -133,8 +119,8 @@ export default function Assessment() {
   // Record Rich Scenario Answer
   const recordScenarioAnswer = (type, optionId) => {
     const qId = currentQ.id;
-    const ts = now();
-    const rt = ts - questionStartRef.current;
+    const now = getNow();
+    const rt = now - (questionStartRef.current || now);
 
     // Track first click
     if (firstClicks[qId] === undefined) {
@@ -146,14 +132,12 @@ export default function Assessment() {
       let updated = { ...prev };
 
       if (type === 'primary') {
-        // If they click primary on something already selected as least, clear least
         if (updated.least === optionId) updated.least = null;
         if (updated.primary !== optionId) {
           updated.change_count += 1;
           updated.primary = optionId;
         }
       } else if (type === 'least') {
-        // If they click least on something already selected as primary, clear primary
         if (updated.primary === optionId) updated.primary = '';
         if (updated.least !== optionId) {
           updated.change_count += 1;
@@ -161,12 +145,10 @@ export default function Assessment() {
         }
       }
 
-      // Record first click ms inside the object
       if (updated.first_click_ms === null) {
         updated.first_click_ms = rt;
       }
 
-      // Save change count telemetry
       setChangeCounts((c) => ({ ...c, [qId]: updated.change_count }));
 
       return {
@@ -181,8 +163,10 @@ export default function Assessment() {
   // Slide Transitions & Next
   const goForward = () => {
     if (isLast) {
+      playSuccess();
       submitAssessment();
     } else {
+      playClick();
       setDirection('exit');
       setTimeout(() => {
         setCurrentIndex((prev) => prev + 1);
@@ -194,6 +178,7 @@ export default function Assessment() {
 
   const goBackward = () => {
     if (!isFirst) {
+      playClick();
       setDirection('exit');
       setTimeout(() => {
         setCurrentIndex((prev) => prev - 1);
@@ -204,10 +189,12 @@ export default function Assessment() {
   };
 
   const handleStartOver = () => {
+    playClick();
     setResetModalOpen(true);
   };
 
   const confirmReset = () => {
+    playClick();
     setAnswers({});
     setCurrentIndex(0);
     setChangeCounts({});
@@ -215,16 +202,26 @@ export default function Assessment() {
     setResponseTimes({});
     setScrollCount(0);
     setDropouts(0);
-    sessionStartRef.current = now();
-    questionStartRef.current = now();
+    sessionStartRef.current = getNow();
+    questionStartRef.current = getNow();
     setResetModalOpen(false);
+  };
+
+  const handleExit = () => {
+    playClick();
+    setExitModalOpen(true);
+  };
+
+  const confirmExit = () => {
+    playClick();
+    transitionTo('/');
   };
 
   // Compile and Submit Telemetry Payload
   const submitAssessment = async () => {
     setIsSubmitting(true);
 
-    const sessionDuration = (now() - sessionStartRef.current) / 1000;
+    const sessionDuration = (getNow() - (sessionStartRef.current || getNow())) / 1000;
     
     // Calculate Average response time
     const rTimes = Object.values(responseTimes);
@@ -303,7 +300,7 @@ export default function Assessment() {
   };
 
   const handleScoreResult = (scoreData) => {
-    navigate('/results', { state: scoreData });
+    transitionTo('/results', { state: scoreData });
   };
 
   const currentAnswer = answers[currentQ.id];
@@ -341,7 +338,7 @@ export default function Assessment() {
           {currentQ.options.map((opt, idx) => (
             <button
               key={idx}
-              onClick={() => recordStandardAnswer(idx)}
+              onClick={() => { recordStandardAnswer(idx); playSelect(); }}
               className={`option-pill ${currentAnswer === idx ? 'selected' : ''}`}
             >
               {opt}
@@ -359,7 +356,7 @@ export default function Assessment() {
             return (
               <button
                 key={idx}
-                onClick={() => recordStandardAnswer(val)}
+                onClick={() => { recordStandardAnswer(val); playSelect(); }}
                 className={`likert-option ${currentAnswer === val ? 'selected' : ''}`}
               >
                 <span className="likert-number">{val}</span>
@@ -386,14 +383,14 @@ export default function Assessment() {
                 <div style={{ flex: 1, paddingRight: '12px' }}>{opt.text}</div>
                 <div style={{ display: 'flex', gap: '6px' }}>
                   <button
-                    onClick={() => recordScenarioAnswer('primary', opt.id)}
+                    onClick={() => { recordScenarioAnswer('primary', opt.id); playSelect(); }}
                     className={`badge-tag ${isPrimary ? 'primary' : 'option-pill-btn'}`}
                     style={{ border: 'none', cursor: 'pointer', padding: '4px 8px', fontSize: '9px' }}
                   >
                     Most
                   </button>
                   <button
-                    onClick={() => recordScenarioAnswer('least', opt.id)}
+                    onClick={() => { recordScenarioAnswer('least', opt.id); playSelect(); }}
                     className={`badge-tag ${isLeast ? 'least' : 'option-pill-btn'}`}
                     style={{ border: 'none', cursor: 'pointer', padding: '4px 8px', fontSize: '9px' }}
                   >
@@ -445,11 +442,16 @@ export default function Assessment() {
   if (!consented) {
     return (
       <div className="assessment-layout">
+        <button onClick={handleExit} className="assessment-exit-btn">
+          <ArrowLeft size={12} />
+          <span>Exit</span>
+        </button>
+
         <div className="assessment-container container">
           <div className="assessment-wrapper">
             <div className="consent-card animate-fade-up">
               <div className="consent-icon animate-pulse-glow">
-                <Terminal size={32} />
+                <ShieldCheck size={32} />
               </div>
               <h2 className="consent-title gradient-text-accent">
                 <TextReveal text="Signal Authorization" />
@@ -480,6 +482,16 @@ export default function Assessment() {
             </div>
           </div>
         </div>
+
+        <Modal
+          isOpen={exitModalOpen}
+          title="Exit Assessment?"
+          message="Your psychometric answers and telemetry session data will be discarded. Are you sure you want to exit?"
+          confirmText="Exit"
+          cancelText="Stay"
+          onConfirm={confirmExit}
+          onCancel={() => { playClick(); setExitModalOpen(false); }}
+        />
       </div>
     );
   }
@@ -499,6 +511,11 @@ export default function Assessment() {
     <div className="assessment-layout">
       {/* Top Progress Rail */}
       <div className="progress-rail" style={{ width: `${progressPercent}%` }} />
+
+      <button onClick={handleExit} className="assessment-exit-btn">
+        <ArrowLeft size={12} />
+        <span>Exit</span>
+      </button>
 
       <div className="assessment-container container">
         <div className="assessment-wrapper">
@@ -566,81 +583,19 @@ export default function Assessment() {
         confirmText="Reset"
         cancelText="Cancel"
         onConfirm={confirmReset}
-        onCancel={() => setResetModalOpen(false)}
+        onCancel={() => { playClick(); setResetModalOpen(false); }}
       />
 
-      {/* Interactive Telemetry Diagnostics HUD */}
-      <div className="diagnostics-hud">
-        {hudOpen && (
-          <div className="hud-window">
-            <div className="hud-header">
-              <span>sys_telemetry.hud</span>
-              <span className="hud-status-dot" />
-            </div>
-            <div className="hud-grid">
-              <div className="hud-row">
-                <span className="hud-label">Active Index:</span>
-                <span className="hud-value highlight">Q{currentIndex + 1}</span>
-              </div>
-              <div className="hud-row">
-                <span className="hud-label">Current Q ID:</span>
-                <span className="hud-value">{currentQ.id}</span>
-              </div>
-              <div className="hud-row">
-                <span className="hud-label">Current RT:</span>
-                <span className="hud-value">
-                  {hudTick ? Math.round(hudTick.now - hudTick.questionStart) : '—'} ms
-                </span>
-              </div>
-              <div className="hud-row">
-                <span className="hud-label">First Click RT:</span>
-                <span className="hud-value">
-                  {firstClicks[currentQ.id] !== undefined ? `${Math.round(firstClicks[currentQ.id])} ms` : 'N/A'}
-                </span>
-              </div>
-              <div className="hud-row">
-                <span className="hud-label">Q Changes:</span>
-                <span className="hud-value">{changeCounts[currentQ.id] || 0}</span>
-              </div>
-              <div className="hud-row">
-                <span className="hud-label">Scroll Hesitations:</span>
-                <span className="hud-value highlight">{scrollCount}</span>
-              </div>
-              <div className="hud-row">
-                <span className="hud-label">Attention Blurs:</span>
-                <span className="hud-value highlight">{dropouts}</span>
-              </div>
-              <div className="hud-row" style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                <span className="hud-label">Session Duration:</span>
-                <span className="hud-value">
-                  {hudTick ? Math.round((hudTick.now - hudTick.sessionStart) / 1000) : '—'}s
-                </span>
-              </div>
-              <div className="hud-row">
-                <span className="hud-label">Avg RT Overall:</span>
-                <span className="hud-value">
-                  {Object.keys(responseTimes).length > 0 
-                    ? `${Math.round(Object.values(responseTimes).reduce((a,b)=>a+b,0) / Object.keys(responseTimes).length)} ms` 
-                    : 'N/A'}
-                </span>
-              </div>
-              <div className="hud-row">
-                <span className="hud-label">Change Rate:</span>
-                <span className="hud-value">
-                  {(Object.values(changeCounts).filter(c=>c>0).length / QUESTIONS.length).toFixed(3)}
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
-        <button
-          onClick={() => setHudOpen(!hudOpen)}
-          className={`hud-toggle-btn ${hudOpen ? 'active' : ''}`}
-        >
-          <Terminal size={12} style={{ marginRight: '6px', display: 'inline', verticalAlign: 'middle' }} />
-          {hudOpen ? 'Hide Diagnostics' : 'Diagnostics Console'}
-        </button>
-      </div>
+      {/* Custom Modal for Exit Confirmation */}
+      <Modal
+        isOpen={exitModalOpen}
+        title="Exit Assessment?"
+        message="Your psychometric answers and telemetry session data will be discarded. Are you sure you want to exit?"
+        confirmText="Exit"
+        cancelText="Stay"
+        onConfirm={confirmExit}
+        onCancel={() => { playClick(); setExitModalOpen(false); }}
+      />
     </div>
   );
 }

@@ -1,0 +1,87 @@
+.page-curtain {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 99998;
+  pointer-events: none;
+}
+
+.curtain-panel {
+  position: fixed;
+  left: 0;
+  width: 100vw;
+  height: 50vh;
+  background-color: var(--bg-void, #080809);
+  pointer-events: all;
+  will-change: transform;
+}
+
+.top-panel {
+  top: 0;
+  transform-origin: top center;
+  transform: scaleY(0);
+}
+
+.bottom-panel {
+  bottom: 0;
+  transform-origin: bottom center;
+  transform: scaleY(0);
+}
+
+.curtain-brand {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 99999;
+  opacity: 0;
+  pointer-events: none;
+  text-align: center;
+  will-change: opacity, transform;
+}
+
+.curtain-brand-text {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl, 32px);
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+}
+
+/* Animations when curtain is closing IN */
+.page-curtain.in .top-panel {
+  transform: scaleY(1);
+  transition: transform 500ms cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.page-curtain.in .bottom-panel {
+  transform: scaleY(1);
+  transition: transform 500ms cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.page-curtain.in .curtain-brand {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1.05);
+  transition: opacity 300ms ease 150ms, transform 500ms cubic-bezier(0.16, 1, 0.3, 1) 150ms;
+}
+
+/* Animations when curtain is opening OUT */
+.page-curtain.out .top-panel {
+  transform: scaleY(0);
+  transition: transform 500ms cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.page-curtain.out .bottom-panel {
+  transform: scaleY(0);
+  transition: transform 500ms cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.page-curtain.out .curtain-brand {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.95);
+  transition: opacity 250ms ease, transform 500ms cubic-bezier(0.16, 1, 0.3, 1);
+}
