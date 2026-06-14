@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import './GlowCard.css';
 
 export default function GlowCard({ children, className = '', ...props }) {

@@ -900,7 +900,13 @@ def _load_sentence_transformer_model() -> Any | None:
     try:
         from sentence_transformers import SentenceTransformer
 
-        return SentenceTransformer(SENTENCE_TRANSFORMER_MODEL_NAME)
+        # Never block scoring on a runtime download. If the transformer model is
+        # not already available locally, fall back to the deterministic hashed
+        # embedding path below instead of attempting network access.
+        return SentenceTransformer(
+            SENTENCE_TRANSFORMER_MODEL_NAME,
+            local_files_only=True,
+        )
     except Exception:
         return None
 

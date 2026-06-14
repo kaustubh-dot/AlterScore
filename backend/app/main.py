@@ -13,6 +13,7 @@ from backend.app.core.artifact_loader import (
     LoadedArtifactBundle,
     load_runtime_artifact_bundle,
 )
+from backend.app.core.rate_limit import configure_rate_limiting
 from backend.app.core.settings import Settings, get_settings
 from backend.app.services.analytics import AnalyticsService
 from backend.app.services.request_logging import RequestLoggingService
@@ -40,10 +41,18 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         version=resolved_settings.api_version,
         lifespan=lifespan,
     )
+    configure_rate_limiting(resolved_settings)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=list(resolved_settings.cors_origins),
-        allow_credentials=True,
+        # Regex allows ephemeral Vercel preview deploys (unique *.vercel.app
+        # hostnames per branch/commit) without enumerating every URL. None in
+        # local dev, where the static allowlist above is sufficient.
+        allow_origin_regex=resolved_settings.cors_origin_regex,
+        # The API is stateless and uses no cookies/auth, so credentials are not
+        # required. Keeping this False avoids the unsafe combination of
+        # credentialed requests with a wildcard/reflected origin.
+        allow_credentials=False,
         allow_methods=["*"],
         allow_headers=["*"],
     )

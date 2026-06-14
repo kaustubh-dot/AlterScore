@@ -207,3 +207,28 @@ def test_score_endpoint_returns_structured_503_when_artifacts_are_missing(
     assert entries[0]["outcome"] == "error"
     assert entries[0]["error_code"] == "ARTIFACTS_NOT_READY"
     assert "missing_artifacts" in entries[0]["details"]
+
+
+def test_score_endpoint_enforces_rate_limit_when_enabled(trained_model_dir) -> None:
+    settings = load_settings(
+        {
+            "ALTERSCORE_REPO_ROOT": str(trained_model_dir),
+            "ALTERSCORE_RUNTIME_MODEL_PATH": "models/artifacts/logistic_best.pkl",
+            "ALTERSCORE_ENV": "production",
+            "ALTERSCORE_SCORE_RATE_LIMIT": "2/minute",
+        }
+    )
+    payload = _load_valid_score_payload()
+    app = create_app(settings)
+
+    with TestClient(app) as client:
+        statuses = [
+            client.post("/api/score", json=payload).status_code for _ in range(3)
+        ]
+        throttled = client.post("/api/score", json=payload)
+
+    assert statuses[0] == 200
+    assert statuses[1] == 200
+    assert throttled.status_code == 429
+    parsed = ErrorResponse.model_validate(throttled.json())
+    assert parsed.error.code == "RATE_LIMITED"

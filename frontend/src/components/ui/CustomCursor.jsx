@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import './CustomCursor.css';
 
 export default function CustomCursor() {
@@ -11,6 +11,11 @@ export default function CustomCursor() {
   useEffect(() => {
     let mouseX = 0, mouseY = 0;
     let ringX = 0, ringY = 0;
+
+    // Hide the native cursor only while this component is mounted. The matching
+    // `cursor: none` rule is scoped to this class so routes that don't render
+    // the custom cursor (e.g. the assessment flow) keep the normal pointer.
+    document.body.classList.add('custom-cursor-active');
 
     const onMouseMove = (e) => {
       mouseX = e.clientX;
@@ -65,6 +70,7 @@ export default function CustomCursor() {
       document.removeEventListener('mouseleave', onMouseLeave);
       cancelAnimationFrame(animationFrameId);
       clearInterval(interval);
+      document.body.classList.remove('custom-cursor-active');
     };
   }, []);
 

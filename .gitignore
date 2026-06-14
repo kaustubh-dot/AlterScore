@@ -39,6 +39,9 @@ frontend/.vite/
 frontend/.logs/
 frontend/.env
 frontend/.env.*
+# Public build-time API base URL (VITE_* vars are baked into the client bundle
+# and are never secret); committed so Vercel builds wire to the backend.
+!frontend/.env.production
 frontend/coverage/
 frontend/.cache/
 frontend/.turbo/

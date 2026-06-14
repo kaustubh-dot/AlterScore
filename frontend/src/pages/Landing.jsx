@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Brain, HeartHandshake, Eye } from 'lucide-react';
 import SignalCanvas from '../components/hero/SignalCanvas';
@@ -19,7 +19,6 @@ function useCountUp(target, duration = 1500, startCount = false) {
     const targetVal = parseFloat(target);
     if (isNaN(targetVal)) return;
 
-    let start = 0;
     const startTime = performance.now();
 
     const updateCount = (timestamp) => {
@@ -108,7 +107,16 @@ export default function Landing() {
             <TextReveal text="Credit intelligence" delay={250} /> <br />
             <TextReveal text="beyond history." delay={450} />
           </h1>
-          
+
+          <ScrollReveal direction="up" delay={550}>
+            <p className="hero-sub">
+              AlterScore reads cognition, behavior, and language — not borrowing
+              history — to assess the 1.4&nbsp;billion adults the traditional credit
+              bureau never sees. A five-minute assessment returns an explainable
+              300–850 score, the risk band behind it, and the factors that moved it.
+            </p>
+          </ScrollReveal>
+
           <ScrollReveal direction="up" delay={650}>
             <div className="hero-cta">
               <MagneticButton onClick={startAssessment} className="btn-large" variant="primary">
@@ -146,6 +154,10 @@ export default function Landing() {
                   <Brain size={20} />
                 </div>
                 <h3 className="feature-title">Cognitive Reflection</h3>
+                <p className="feature-desc">
+                  Numeracy, financial-literacy, and reasoning probes reveal how you
+                  weigh risk and resist fast, intuitive errors under uncertainty.
+                </p>
               </GlowCard>
             </ScrollReveal>
 
@@ -155,6 +167,10 @@ export default function Landing() {
                   <Eye size={20} />
                 </div>
                 <h3 className="feature-title">Silent Telemetry</h3>
+                <p className="feature-desc">
+                  Response timing, hesitation, and answer revisions are captured
+                  passively — signals of deliberation no questionnaire can ask for.
+                </p>
               </GlowCard>
             </ScrollReveal>
 
@@ -164,6 +180,10 @@ export default function Landing() {
                   <HeartHandshake size={20} />
                 </div>
                 <h3 className="feature-title">Resilience & Agency</h3>
+                <p className="feature-desc">
+                  Scenario choices surface future orientation, conscientiousness,
+                  and how you plan and recover when resources are constrained.
+                </p>
               </GlowCard>
             </ScrollReveal>
           </div>
@@ -193,6 +213,10 @@ export default function Landing() {
                     <span className="step-number">01</span>
                   </div>
                   <h3 className="step-title">Profile Agency</h3>
+                  <p className="step-desc">
+                    Answer 27 adaptive psychometric and scenario questions in about
+                    five minutes — no documents, no borrowing history required.
+                  </p>
                 </GlowCard>
               </ScrollReveal>
 
@@ -202,6 +226,10 @@ export default function Landing() {
                     <span className="step-number">02</span>
                   </div>
                   <h3 className="step-title">Parse Telemetry</h3>
+                  <p className="step-desc">
+                    Behavioral signals and open-text language are extracted and
+                    scored by a calibrated, monotonic gradient-boosted model.
+                  </p>
                 </GlowCard>
               </ScrollReveal>
 
@@ -211,6 +239,10 @@ export default function Landing() {
                     <span className="step-number">03</span>
                   </div>
                   <h3 className="step-title">Score Verdict</h3>
+                  <p className="step-desc">
+                    Receive a 300–850 score with its risk band, SHAP-based
+                    explanations, and concrete actions to improve over time.
+                  </p>
                 </GlowCard>
               </ScrollReveal>
             </div>

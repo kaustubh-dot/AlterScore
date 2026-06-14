@@ -1,5 +1,5 @@
-import React from 'react';
-import { GitBranch, Database, FileText } from 'lucide-react';
+import { GitBranch, Database } from 'lucide-react';
+import { getHealthUrl } from '../../lib/api';
 import './Footer.css';
 
 export default function Footer() {
@@ -24,7 +24,7 @@ export default function Footer() {
             <span>API Docs</span>
           </a>
           <a
-            href="/api/health"
+            href={getHealthUrl()}
             target="_blank"
             rel="noopener noreferrer"
             className="footer-link"

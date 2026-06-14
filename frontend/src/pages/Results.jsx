@@ -1,17 +1,110 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { useLocation, useNavigate, Link } from 'react-router-dom';
-import { ShieldCheck, TrendingUp, Sparkles, Sliders, RotateCcw, LayoutDashboard, AlertCircle } from 'lucide-react';
+import { useEffect, useState, useMemo } from 'react';
+import { useLocation, Link } from 'react-router-dom';
+import { Sliders, RotateCcw, LayoutDashboard, AlertCircle } from 'lucide-react';
 import ScrollReveal from '../components/animation/ScrollReveal';
 import GlowCard from '../components/ui/GlowCard';
 import TextReveal from '../components/animation/TextReveal';
 import './Results.css';
 
+// Derive the "as-assessed" optimizer baseline from the score explanation.
+function deriveOriginal(scoreData) {
+  if (!scoreData) return { pace: 5.0, crt: 0, consistency: 0 };
+  const expl = scoreData.explanation || [];
+  const isGaming = scoreData.credit_score < 400
+    && expl.some(e => e.feature === 'avg_response_time_ms' && e.shap_value < 0);
+  const isCRTCorrect = expl.some(e => e.feature === 'CRT_score' && e.shap_value > 0);
+  const isConsistent = expl.some(e => e.feature === 'scenario_consistency_score' && e.shap_value > 0);
+  return {
+    pace: isGaming ? 1.5 : 5.0,
+    crt: isCRTCorrect ? 2 : 0,
+    consistency: isConsistent ? 1 : 0,
+  };
+}
+
+function computeBand(score) {
+  if (score >= 750) return {
+    band: 'excellent', bandColor: 'var(--score-excellent)', bandShadow: 'var(--shadow-score-excellent)',
+    minAmount: 30000, maxAmount: 75000,
+    bandDesc: 'Microloans up to ₹75,000 approved. Extremely low default probability.',
+  };
+  if (score >= 650) return {
+    band: 'good', bandColor: 'var(--score-good)', bandShadow: 'var(--shadow-score-good)',
+    minAmount: 12000, maxAmount: 30000,
+    bandDesc: 'Microloans up to ₹30,000 approved. Solid repayment probability.',
+  };
+  if (score >= 550) return {
+    band: 'fair', bandColor: 'var(--score-fair)', bandShadow: 'var(--shadow-score-fair)',
+    minAmount: 5000, maxAmount: 12000,
+    bandDesc: 'Microloans up to ₹12,000 approved. Moderate risk conditions apply.',
+  };
+  if (score >= 450) return {
+    band: 'poor', bandColor: 'var(--score-poor)', bandShadow: 'var(--shadow-score-poor)',
+    minAmount: 2000, maxAmount: 5000,
+    bandDesc: 'Microloans up to ₹5,000 approved. Sub-prime risk controls active.',
+  };
+  return {
+    band: 'very_poor', bandColor: 'var(--score-very-poor)', bandShadow: 'var(--shadow-score-very-poor)',
+    minAmount: 0, maxAmount: 0,
+    bandDesc: 'Funding deferred. Score below threshold. Credit counselling recommended.',
+  };
+}
+
 export default function Results() {
   const location = useLocation();
-  const navigate = useNavigate();
-  
   const scoreData = location.state;
-  
+
+  // --- All hooks must be declared unconditionally before any early return ---
+
+  // Original (as-assessed) values derived purely from the score data. Memoised
+  // so reads in render are stable and require no mirroring into state.
+  const original = useMemo(() => deriveOriginal(scoreData), [scoreData]);
+
+  // Optimizer slider state, lazily seeded from the original derived values.
+  const [optPace, setOptPace] = useState(original.pace);
+  const [optCRT, setOptCRT] = useState(original.crt);
+  const [optConsistency, setOptConsistency] = useState(original.consistency);
+
+  // Reveal-animation state. `animationStep` gates the staged reveal;
+  // `revealScore` is the count-up value shown only during the reveal window.
+  const [animationStep, setAnimationStep] = useState(0);
+  const [revealScore, setRevealScore] = useState(300);
+  const [revealing, setRevealing] = useState(false);
+
+  // Cinematic reveal animation — drives the staged reveal and the count-up.
+  useEffect(() => {
+    if (!scoreData) return;
+
+    const t1 = setTimeout(() => setAnimationStep(1), 200);
+
+    const t2 = setTimeout(() => {
+      setAnimationStep(2);
+      setRevealing(true);
+      const target = scoreData.credit_score;
+      const duration = 1200;
+      const startTime = performance.now();
+
+      const step = (timestamp) => {
+        const elapsed = timestamp - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const ease = progress * (2 - progress);
+        setRevealScore(Math.floor(300 + ease * (target - 300)));
+        if (progress < 1) {
+          requestAnimationFrame(step);
+        } else {
+          setRevealScore(target);
+          setRevealing(false);
+        }
+      };
+      requestAnimationFrame(step);
+    }, 800);
+
+    const t3 = setTimeout(() => setAnimationStep(3), 2000);
+    const t4 = setTimeout(() => setAnimationStep(4), 2800);
+
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); };
+  }, [scoreData]);
+
+  // --- Early return after all hooks ---
   if (!scoreData) {
     return (
       <div className="results-layout" style={{ justifyContent: 'center', alignItems: 'center' }}>
@@ -29,177 +122,34 @@ export default function Results() {
     );
   }
 
-  // Animation Stages
-  const [animationStep, setAnimationStep] = useState(0); // 0: void, 1: ring, 2: countup, 3: glow, 4: content
-  const [displayScore, setDisplayScore] = useState(300);
-  const [ringOffset, setRingOffset] = useState(440); // Circle perimeter for stroke-dashoffset
-
-  // Interactive Optimizer Playground State
-  const [optPace, setOptPace] = useState(5.0); // response pace in seconds
-  const [optCRT, setOptCRT] = useState(0); // CRT answers correct (0-2)
-  const [optConsistency, setOptConsistency] = useState(0); // 0 (mismatch) or 1 (match)
-
-  // Derived slider metrics based on user's actual choices
-  const originalPace = useRef(5.0);
-  const originalCRT = useRef(0);
-  const originalConsistency = useRef(0);
-  const initializedSliders = useRef(false);
-
-  // Initialize optimizer sliders to user's actual answers
-  if (scoreData && !initializedSliders.current) {
-    const isGaming = scoreData.credit_score < 400 && scoreData.explanation.some(e => e.feature === 'avg_response_time_ms' && e.shap_value < 0);
-    originalPace.current = isGaming ? 1.5 : 5.0;
-    
-    const isCRTCorrect = scoreData.explanation.some(e => e.feature === 'CRT_score' && e.shap_value > 0);
-    originalCRT.current = isCRTCorrect ? 2 : 0;
-
-    const isConsistent = scoreData.explanation.some(e => e.feature === 'scenario_consistency_score' && e.shap_value > 0);
-    originalConsistency.current = isConsistent ? 1 : 0;
-
-    setOptPace(originalPace.current);
-    setOptCRT(originalCRT.current);
-    setOptConsistency(originalConsistency.current);
-    initializedSliders.current = true;
-  }
-
-  // Recalculating score based on sliders in real-time
-  const paceShift = (optPace >= 3.5 && originalPace.current < 2.5) ? 70 : (optPace < 2.5 && originalPace.current >= 3.5) ? -70 : 0;
-  const crtShift = (optCRT - originalCRT.current) * 35;
-  const consistencyShift = (optConsistency - originalConsistency.current) * 75;
-  
+  // Derived values (pure computation from state — safe in render)
+  const paceShift = (optPace >= 3.5 && original.pace < 2.5) ? 70 : (optPace < 2.5 && original.pace >= 3.5) ? -70 : 0;
+  const crtShift = (optCRT - original.crt) * 35;
+  const consistencyShift = (optConsistency - original.consistency) * 75;
   const currentScore = Math.max(300, Math.min(850, scoreData.credit_score + paceShift + crtShift + consistencyShift));
-
-  // Recalculate bands and numbers based on currentScore
-  let band = 'fair';
-  let bandColor = 'var(--score-fair)';
-  let bandShadow = 'var(--shadow-score-fair)';
-  let minAmount = 5000;
-  let maxAmount = 12000;
-  let bandDesc = 'Microloans up to ₹12,000 approved. Moderate risk conditions apply.';
-
-  if (currentScore >= 750) {
-    band = 'excellent';
-    bandColor = 'var(--score-excellent)';
-    bandShadow = 'var(--shadow-score-excellent)';
-    minAmount = 30000;
-    maxAmount = 75000;
-    bandDesc = 'Microloans up to ₹75,000 approved. Extremely low default probability.';
-  } else if (currentScore >= 650) {
-    band = 'good';
-    bandColor = 'var(--score-good)';
-    bandShadow = 'var(--shadow-score-good)';
-    minAmount = 12000;
-    maxAmount = 30000;
-    bandDesc = 'Microloans up to ₹30,000 approved. Solid repayment probability.';
-  } else if (currentScore >= 550) {
-    band = 'fair';
-    bandColor = 'var(--score-fair)';
-    bandShadow = 'var(--shadow-score-fair)';
-    minAmount = 5000;
-    maxAmount = 12000;
-    bandDesc = 'Microloans up to ₹12,000 approved. Moderate risk conditions apply.';
-  } else if (currentScore >= 450) {
-    band = 'poor';
-    bandColor = 'var(--score-poor)';
-    bandShadow = 'var(--shadow-score-poor)';
-    minAmount = 2000;
-    maxAmount = 5000;
-    bandDesc = 'Microloans up to ₹5,000 approved. Sub-prime risk controls active.';
-  } else {
-    band = 'very_poor';
-    bandColor = 'var(--score-very-poor)';
-    bandShadow = 'var(--shadow-score-very-poor)';
-    minAmount = 0;
-    maxAmount = 0;
-    bandDesc = 'Funding deferred. Score below threshold. Credit counselling recommended.';
-  }
-
+  const { band, bandColor, bandShadow, minAmount, maxAmount, bandDesc } = computeBand(currentScore);
   const repaymentProb = 0.35 + ((currentScore - 300) / 550) * 0.63;
   const percentile = Math.round(((currentScore - 300) / 550) * 98);
 
-  // Trigger Cinematic Reveal Animation
-  useEffect(() => {
-    const t1 = setTimeout(() => {
-      setAnimationStep(1);
-      const percentage = (scoreData.credit_score - 300) / 550;
-      setRingOffset(440 - 440 * percentage);
-    }, 200);
-
-    const t2 = setTimeout(() => {
-      setAnimationStep(2);
-      let start = 300;
-      const target = scoreData.credit_score;
-      const duration = 1200;
-      const startTime = performance.now();
-
-      const step = (timestamp) => {
-        const elapsed = timestamp - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const ease = progress * (2 - progress);
-        const current = 300 + ease * (target - 300);
-        
-        setDisplayScore(Math.floor(current));
-
-        if (progress < 1) {
-          requestAnimationFrame(step);
-        } else {
-          setDisplayScore(target);
-        }
-      };
-      requestAnimationFrame(step);
-    }, 800);
-
-    const t3 = setTimeout(() => {
-      setAnimationStep(3);
-    }, 2000);
-
-    const t4 = setTimeout(() => {
-      setAnimationStep(4);
-    }, 2800);
-
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-      clearTimeout(t3);
-      clearTimeout(t4);
-    };
-  }, [scoreData.credit_score]);
-
-  // Adjust ring stroke offset dynamically on slider updates
-  useEffect(() => {
-    if (animationStep >= 2) {
-      const percentage = (currentScore - 300) / 550;
-      setRingOffset(440 - 440 * percentage);
-      setDisplayScore(currentScore);
-    }
-  }, [currentScore, animationStep]);
+  // The number/ring show the count-up value during the reveal window, then
+  // track the live (slider-adjusted) score — both derived, no effect needed.
+  const displayScore = revealing ? revealScore : currentScore;
+  const ringOffset = 440 - 440 * ((displayScore - 300) / 550);
 
   return (
     <div className="results-layout">
       <div className="results-container container">
-        
+
         {/* Cinematic Score Reveal Circle */}
         <section className="score-reveal-section">
-          <div 
+          <div
             className="score-circle-wrapper"
-            style={{ 
-              boxShadow: animationStep >= 3 ? bandShadow : 'none'
-            }}
+            style={{ boxShadow: animationStep >= 3 ? bandShadow : 'none' }}
           >
-            {/* SVG Circle Gauge */}
             <svg width="200" height="200" className="score-svg">
+              <circle cx="100" cy="100" r="70" fill="transparent" className="score-track" />
               <circle
-                cx="100"
-                cy="100"
-                r="70"
-                fill="transparent"
-                className="score-track"
-              />
-              <circle
-                cx="100"
-                cy="100"
-                r="70"
-                fill="transparent"
+                cx="100" cy="100" r="70" fill="transparent"
                 className="score-fill"
                 stroke={bandColor}
                 strokeDasharray="440"
@@ -207,25 +157,22 @@ export default function Results() {
               />
             </svg>
 
-
-
-            {/* Data values inside circle */}
             <div className="score-center-data">
-              <span 
+              <span
                 className="score-number"
-                style={{ 
+                style={{
                   color: animationStep >= 2 ? bandColor : 'var(--text-ghost)',
                   opacity: animationStep >= 2 ? 1 : 0.2,
-                  textShadow: animationStep >= 3 ? `0 0 12px ${bandColor}80` : 'none'
+                  textShadow: animationStep >= 3 ? `0 0 12px ${bandColor}80` : 'none',
                 }}
               >
                 {displayScore}
               </span>
-              <span 
+              <span
                 className="score-band-label"
-                style={{ 
+                style={{
                   color: animationStep >= 2 ? bandColor : 'var(--text-ghost)',
-                  opacity: animationStep >= 3 ? 1 : 0
+                  opacity: animationStep >= 3 ? 1 : 0,
                 }}
               >
                 <TextReveal text={band} />
@@ -233,13 +180,11 @@ export default function Results() {
             </div>
           </div>
 
-          <div 
-            style={{ 
-              opacity: animationStep >= 3 ? 1 : 0, 
-              transform: animationStep >= 3 ? 'translateY(0)' : 'translateY(10px)',
-              transition: 'all 500ms ease'
-            }}
-          >
+          <div style={{
+            opacity: animationStep >= 3 ? 1 : 0,
+            transform: animationStep >= 3 ? 'translateY(0)' : 'translateY(10px)',
+            transition: 'all 500ms ease',
+          }}>
             <p className="probability-label">{(repaymentProb * 100).toFixed(1)}% Repayment Probability</p>
             <p className="percentile-label">Higher than {percentile}% of cohort</p>
           </div>
@@ -280,20 +225,18 @@ export default function Results() {
                 <TextReveal text="What Drove Your Score" />
               </h2>
             </div>
-
             <GlowCard className="shap-table result-card">
               {scoreData.explanation.map((item, idx) => {
                 const isPos = item.direction === 'positive';
-                const maxShap = 0.15; // normalize max bar width
+                const maxShap = 0.15;
                 const percentage = Math.min((Math.abs(item.shap_value) / maxShap) * 100, 100);
-                
                 return (
                   <div key={idx} className="shap-row">
                     <span className="shap-feature-name">{item.display_name}</span>
                     <div className="shap-bar-container">
-                      <div 
-                        className={`shap-bar-fill loaded shimmer-bg`}
-                        style={{ 
+                      <div
+                        className="shap-bar-fill loaded shimmer-bg"
+                        style={{
                           width: `${percentage}%`,
                           backgroundColor: isPos ? 'var(--accent-emerald)' : 'var(--accent-rose)',
                         }}
@@ -309,7 +252,7 @@ export default function Results() {
           </section>
         </ScrollReveal>
 
-        {/* SCORE OPTIMIZER PLAYGROUND WIDGET */}
+        {/* Score Optimizer Playground */}
         <ScrollReveal direction="up" delay={400}>
           <section className={`optimizer-widget fade-in-content ${animationStep >= 4 ? 'visible' : ''}`}>
             <div className="optimizer-header">
@@ -329,10 +272,7 @@ export default function Results() {
                   </span>
                 </div>
                 <input
-                  type="range"
-                  min="1.0"
-                  max="8.0"
-                  step="0.5"
+                  type="range" min="1.0" max="8.0" step="0.5"
                   value={optPace}
                   onChange={(e) => setOptPace(parseFloat(e.target.value))}
                   className="optimizer-input-range"
@@ -345,10 +285,7 @@ export default function Results() {
                   <span className="slider-val">{optCRT} / 2 Correct</span>
                 </div>
                 <input
-                  type="range"
-                  min="0"
-                  max="2"
-                  step="1"
+                  type="range" min="0" max="2" step="1"
                   value={optCRT}
                   onChange={(e) => setOptCRT(parseInt(e.target.value))}
                   className="optimizer-input-range"
@@ -363,10 +300,7 @@ export default function Results() {
                   </span>
                 </div>
                 <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="1"
+                  type="range" min="0" max="1" step="1"
                   value={optConsistency}
                   onChange={(e) => setOptConsistency(parseInt(e.target.value))}
                   className="optimizer-input-range"
@@ -376,7 +310,8 @@ export default function Results() {
 
             <div className="optimizer-summary">
               <p>
-                *Simulating behavioral adjustments calculates shifts against the Stacking Calibration pipeline. Increasing deliberation times above 3.5s and completing the matching scenarios consistently eliminates system flags.
+                *Simulating behavioral adjustments calculates shifts against the Stacking Calibration pipeline.
+                Increasing deliberation times above 3.5s and completing the matching scenarios consistently eliminates system flags.
               </p>
             </div>
           </section>
@@ -390,14 +325,11 @@ export default function Results() {
               <TextReveal text="What Could Move You Up" />
             </h2>
           </div>
-
           <div className="dice-list">
             {scoreData.counterfactual_actions.map((act, idx) => (
               <ScrollReveal direction="scale" delay={idx * 100} key={idx}>
                 <GlowCard className="dice-card">
-                  <span className="dice-feature-change">
-                    Gain: +{act.estimated_score_gain} Pts
-                  </span>
+                  <span className="dice-feature-change">Gain: +{act.estimated_score_gain} Pts</span>
                   <span className="dice-description">{act.plain_language}</span>
                 </GlowCard>
               </ScrollReveal>
@@ -405,7 +337,7 @@ export default function Results() {
           </div>
         </section>
 
-        {/* Improvement tips */}
+        {/* Improvement Tips */}
         <section className={`tips-panel fade-in-content ${animationStep >= 4 ? 'visible' : ''}`}>
           <div className="section-header" style={{ textAlign: 'left', marginBottom: '24px' }}>
             <span className="section-eyebrow">Pacing Guides</span>
@@ -413,7 +345,6 @@ export default function Results() {
               <TextReveal text="System Guidance Tips" />
             </h2>
           </div>
-
           <div className="tips-list">
             {scoreData.improvement_tips.map((tip, idx) => (
               <ScrollReveal direction="scale" delay={idx * 100} key={idx}>
@@ -434,7 +365,6 @@ export default function Results() {
               <span>Retake Assessment</span>
             </Link>
           </ScrollReveal>
-
           <ScrollReveal direction="up" delay={200}>
             <Link to="/dashboard" className="btn btn-primary">
               <LayoutDashboard size={14} />

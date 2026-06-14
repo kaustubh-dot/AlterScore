@@ -29,7 +29,10 @@ class Settings:
     request_log_path: Path
     log_level: str
     cors_origins: tuple[str, ...]
+    cors_origin_regex: str | None
     enable_debug_score: bool
+    rate_limit_enabled: bool
+    score_rate_limit: str
 
 
 def _split_csv(value: str | None) -> tuple[str, ...]:
@@ -72,9 +75,22 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         else resolve_repo_path(REQUEST_LOG_RELATIVE_PATH, repo_root)
     )
     cors_origins = _split_csv(source.get("ALTERSCORE_CORS_ORIGINS"))
+    cors_origin_regex = source.get("ALTERSCORE_CORS_ORIGIN_REGEX") or None
+    environment = source.get("ALTERSCORE_ENV", "local")
+
+    # Rate limiting protects the expensive scoring pipeline. It defaults on only
+    # in production so tests and local development stay unthrottled; an explicit
+    # ALTERSCORE_RATE_LIMIT_ENABLED flag overrides the default either way.
+    rate_limit_enabled = _env_flag(
+        source.get("ALTERSCORE_RATE_LIMIT_ENABLED"),
+        default=environment == "production",
+    )
+    score_rate_limit = (
+        source.get("ALTERSCORE_SCORE_RATE_LIMIT", "").strip() or "30/minute"
+    )
 
     return Settings(
-        environment=source.get("ALTERSCORE_ENV", "local"),
+        environment=environment,
         api_version=source.get("ALTERSCORE_API_VERSION", "0.1.0"),
         repo_root=repo_root,
         model_manifest_path=model_manifest_path,
@@ -82,7 +98,10 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         request_log_path=request_log_path,
         log_level=source.get("ALTERSCORE_LOG_LEVEL", "INFO").upper(),
         cors_origins=cors_origins or DEFAULT_CORS_ORIGINS,
+        cors_origin_regex=cors_origin_regex,
         enable_debug_score=_env_flag(source.get("ALTERSCORE_ENABLE_DEBUG_SCORE")),
+        rate_limit_enabled=rate_limit_enabled,
+        score_rate_limit=score_rate_limit,
     )
 
 

@@ -10,6 +10,7 @@ from typing import Any
 from fastapi import APIRouter, Request, status
 from fastapi.responses import JSONResponse
 
+from backend.app.core.rate_limit import enforce_score_rate_limit
 from backend.app.schemas.common import ErrorResponse
 from backend.app.schemas.score import ScoreRequest, ScoreResponse
 
@@ -21,6 +22,7 @@ logger = logging.getLogger(__name__)
     "/score",
     response_model=ScoreResponse,
     responses={
+        429: {"model": ErrorResponse},
         503: {"model": ErrorResponse},
         500: {"model": ErrorResponse},
     },
@@ -28,6 +30,10 @@ logger = logging.getLogger(__name__)
 def score_request(
     request: Request, payload: ScoreRequest
 ) -> ScoreResponse | JSONResponse:
+    rate_limited = enforce_score_rate_limit(request)
+    if rate_limited is not None:
+        return rate_limited
+
     scoring_service = request.app.state.scoring_service
     request_logging_service = request.app.state.request_logging_service
     request_id = payload.session_id

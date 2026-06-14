@@ -19,6 +19,7 @@ class RequestLoggingService:
         self.log_path = log_path
         self.artifacts = artifacts
         self._lock = Lock()
+        self._dir_ready = False
 
     def log_score_success(
         self,
@@ -105,10 +106,16 @@ class RequestLoggingService:
         }
 
     def _append_entry(self, entry: dict[str, Any]) -> None:
-        self.log_path.parent.mkdir(parents=True, exist_ok=True)
         payload = json.dumps(entry, sort_keys=True)
 
         with self._lock:
+            # Create the log directory once rather than on every write. The
+            # callers in the score route already guard against logging failures,
+            # so a read-only destination degrades to "no logs" instead of
+            # breaking scoring.
+            if not self._dir_ready:
+                self.log_path.parent.mkdir(parents=True, exist_ok=True)
+                self._dir_ready = True
             with self.log_path.open("a", encoding="utf-8") as handle:
                 handle.write(payload)
                 handle.write("\n")

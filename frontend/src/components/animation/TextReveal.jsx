@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export default function TextReveal({ text, delay = 0, duration = 1000 }) {
   const ref = useRef(null);

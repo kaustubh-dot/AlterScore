@@ -77,7 +77,18 @@
 }
 
 @media (pointer: fine) {
-  body, button, a, input, select, textarea, .option-pill, .scenario-pill, .likert-option, .badge-tag, .btn, .option-pill-btn {
+  body.custom-cursor-active,
+  body.custom-cursor-active button,
+  body.custom-cursor-active a,
+  body.custom-cursor-active input,
+  body.custom-cursor-active select,
+  body.custom-cursor-active textarea,
+  body.custom-cursor-active .option-pill,
+  body.custom-cursor-active .scenario-pill,
+  body.custom-cursor-active .likert-option,
+  body.custom-cursor-active .badge-tag,
+  body.custom-cursor-active .btn,
+  body.custom-cursor-active .option-pill-btn {
     cursor: none !important;
   }
 }
