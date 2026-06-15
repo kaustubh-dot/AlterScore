@@ -93,47 +93,27 @@
   }
 }
 
-/* Assessment variant styles */
+/* Assessment variant: minimalistic dot only (no animated trailing ring).
+   The dot's position transform is set inline via JS, so hover/active feedback
+   is expressed through width/height/opacity rather than CSS transforms. */
 .cursor-dot.assessment {
-  width: 4px;
-  height: 4px;
+  width: 8px;
+  height: 8px;
   background-color: #ffffff !important;
   border-radius: 50%;
-  transform: translate3d(-50%, -50%, 0);
   box-shadow: none !important;
+  transition: width 0.15s var(--ease-smooth), height 0.15s var(--ease-smooth), opacity 0.2s var(--ease-smooth);
 }
 
+/* Stay visible over interactive elements — grow slightly to signal hover. */
 .cursor-dot.assessment.hover {
-  opacity: 0;
+  width: 14px;
+  height: 14px;
+  opacity: 0.85;
 }
 
 .cursor-dot.assessment.active {
-  transform: translate3d(-50%, -50%, 0) scale(0.8);
-}
-
-.cursor-ring.assessment .cursor-ring-inner {
-  width: 24px;
-  height: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.3) !important;
-  border-radius: 50% !important;
-  animation: none !important;
-  box-shadow: none !important;
-  transition: width 0.2s var(--ease-smooth), height 0.2s var(--ease-smooth), border-color 0.2s var(--ease-smooth);
-}
-
-.cursor-ring.assessment.hover .cursor-ring-inner {
-  width: 32px;
-  height: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.6) !important;
-  border-radius: 50% !important;
-  animation: none !important;
-  box-shadow: none !important;
-}
-
-.cursor-ring.assessment.active .cursor-ring-inner {
-  width: 18px;
-  height: 18px;
-  border-color: rgba(255, 255, 255, 0.8) !important;
-  border-radius: 50% !important;
-  box-shadow: none !important;
+  width: 6px;
+  height: 6px;
+  opacity: 1;
 }

@@ -12,6 +12,10 @@ export default function CustomCursor({ variant = 'default' }) {
     let mouseX = 0, mouseY = 0;
     let ringX = 0, ringY = 0;
 
+    // Hide the native cursor only while this component is mounted; the matching
+    // `cursor: none` rule is scoped to this class.
+    document.body.classList.add('custom-cursor-active');
+
     const onMouseMove = (e) => {
       mouseX = e.clientX;
       mouseY = e.clientY;
@@ -60,21 +64,28 @@ export default function CustomCursor({ variant = 'default' }) {
       document.removeEventListener('mouseleave', onMouseLeave);
       window.removeEventListener('mouseover', onMouseOver);
       cancelAnimationFrame(animationFrameId);
+      document.body.classList.remove('custom-cursor-active');
     };
   }, []);
 
+  // The assessment uses a minimalistic cursor: just the dot tracking the
+  // pointer directly, with no animated trailing ring, for a calmer focus state.
+  const minimal = variant === 'assessment';
+
   return (
     <>
-      <div 
-        ref={dotRef} 
-        className={`cursor-dot ${variant} ${hidden ? 'hidden' : ''} ${hovered ? 'hover' : ''} ${clicked ? 'active' : ''}`} 
+      <div
+        ref={dotRef}
+        className={`cursor-dot ${variant} ${hidden ? 'hidden' : ''} ${hovered ? 'hover' : ''} ${clicked ? 'active' : ''}`}
       />
-      <div 
-        ref={ringRef} 
-        className={`cursor-ring ${variant} ${hidden ? 'hidden' : ''} ${hovered ? 'hover' : ''} ${clicked ? 'active' : ''}`} 
-      >
-        <div className="cursor-ring-inner" />
-      </div>
+      {!minimal && (
+        <div
+          ref={ringRef}
+          className={`cursor-ring ${variant} ${hidden ? 'hidden' : ''} ${hovered ? 'hover' : ''} ${clicked ? 'active' : ''}`}
+        >
+          <div className="cursor-ring-inner" />
+        </div>
+      )}
     </>
   );
 }

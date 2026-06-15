@@ -125,7 +125,16 @@ export default function Landing() {
                 <TextReveal text="Credit intelligence" delay={250} /> <br />
                 <TextReveal text="beyond history." delay={450} />
               </h1>
-              
+
+              <ScrollReveal direction="up" delay={550}>
+                <p className="hero-sub">
+                  AlterScore reads how you reason, decide, and write — not what
+                  you've borrowed — to fairly score the 1.4&nbsp;billion adults the
+                  credit bureau never sees. A five-minute assessment returns an
+                  explainable 300–850 score and the reasons behind it.
+                </p>
+              </ScrollReveal>
+
               <ScrollReveal direction="up" delay={650}>
                 <div className="hero-cta">
                   <MagneticButton onClick={startAssessment} className="btn-large" variant="primary">
@@ -163,6 +172,10 @@ export default function Landing() {
                       <Brain size={20} />
                     </div>
                     <h3 className="feature-title">Cognitive Reflection</h3>
+                    <p className="feature-desc">
+                      Numeracy and reasoning tasks reveal how you weigh risk and
+                      resist fast, intuitive errors under uncertainty.
+                    </p>
                   </GlowCard>
                 </ScrollReveal>
 
@@ -172,6 +185,10 @@ export default function Landing() {
                       <Eye size={20} />
                     </div>
                     <h3 className="feature-title">Silent Telemetry</h3>
+                    <p className="feature-desc">
+                      Response timing, hesitation, and revisions are captured
+                      passively — signals of deliberation no form can ask for.
+                    </p>
                   </GlowCard>
                 </ScrollReveal>
 
@@ -181,6 +198,10 @@ export default function Landing() {
                       <HeartHandshake size={20} />
                     </div>
                     <h3 className="feature-title">Resilience & Agency</h3>
+                    <p className="feature-desc">
+                      Scenario choices and open text surface future orientation,
+                      conscientiousness, and how you plan when resources are tight.
+                    </p>
                   </GlowCard>
                 </ScrollReveal>
               </div>
@@ -210,6 +231,10 @@ export default function Landing() {
                         <span className="step-number">01</span>
                       </div>
                       <h3 className="step-title">Profile Agency</h3>
+                      <p className="step-desc">
+                        Answer 27 adaptive questions in about five minutes — no
+                        documents or credit history required.
+                      </p>
                     </GlowCard>
                   </ScrollReveal>
 
@@ -219,6 +244,10 @@ export default function Landing() {
                         <span className="step-number">02</span>
                       </div>
                       <h3 className="step-title">Parse Telemetry</h3>
+                      <p className="step-desc">
+                        Behavioral signals and language are scored by a calibrated,
+                        governance-gated machine learning model.
+                      </p>
                     </GlowCard>
                   </ScrollReveal>
 
@@ -228,6 +257,10 @@ export default function Landing() {
                         <span className="step-number">03</span>
                       </div>
                       <h3 className="step-title">Score Verdict</h3>
+                      <p className="step-desc">
+                        Get a 300–850 score with its risk band, SHAP explanations,
+                        and concrete actions to improve over time.
+                      </p>
                     </GlowCard>
                   </ScrollReveal>
                 </div>
