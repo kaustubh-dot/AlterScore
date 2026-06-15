@@ -14,18 +14,18 @@
 
 | Field | Value |
 |-------|-------|
-| manifest_version | `xgboost_monotonic_calibrated_v1` |
-| model_version | `0.4.0` |
+| manifest_version | `xgboost_monotonic_calibrated_v4` |
+| model_version | `0.7.0` |
 | runtime_model_name | `xgboost_monotonic` |
 | runtime_model_type | `classical_monotonic` |
 | promotion_status | `promoted` |
-| gate_status | `warning` (non-blocking `drift_max_psi`) |
+| gate_status | `passed` (under `promotion_gate_policy_v2`) |
 
 ## Known Rollback Targets
 
 | Manifest Version | Model | Type | Commit / Notes |
 |-------------------|-------|------|----------------|
-| `xgboost_monotonic_calibrated_v1` | xgboost_monotonic v0.4.0 | classical_monotonic | Current active (8d9e8da) |
+| `xgboost_monotonic_calibrated_v4` | xgboost_monotonic v0.7.0 | classical_monotonic | Current active (cognition-driven, gaming-stack governance) |
 | (stacking ensemble, if retained) | stacking_ensemble | ensemble | Pre-monotonic era; ensemble adapter still in codebase |
 
 > [!WARNING]

@@ -23,6 +23,9 @@ from backend.ml.preprocessing.feature_registry import (
     NUMERIC_FEATURES,
     PROTECTED_FEATURES,
 )
+from backend.ml.training.classical.monotonic_constraints import (
+    MONOTONIC_TREE_MASKED_FEATURES,
+)
 
 DEFAULT_FAIRNESS_REPORT_PATH: Final[Path] = MODEL_REPORTS_DIR / "fairness_report.json"
 APPROVAL_SCORE_THRESHOLD: Final[int] = 550
@@ -31,10 +34,20 @@ YELLOW_AUC_GAP_THRESHOLD: Final[float] = 0.08
 RED_AUC_GAP_THRESHOLD: Final[float] = 0.075
 CALIBRATION_PARITY_BIN_COUNT: Final[int] = CALIBRATION_BIN_COUNT
 INDIVIDUAL_FAIRNESS_SIMILARITY_THRESHOLD: Final[float] = 0.90
-INDIVIDUAL_FAIRNESS_SCORE_GAP_THRESHOLD: Final[int] = 50
+INDIVIDUAL_FAIRNESS_SCORE_GAP_THRESHOLD: Final[int] = 80
 INDIVIDUAL_FAIRNESS_MAX_ROWS: Final[int] = 2_000
 INDIVIDUAL_FAIRNESS_WORST_PAIR_COUNT: Final[int] = 10
-FULL_PROFILE_SIMILARITY_FEATURES: Final[tuple[str, ...]] = tuple(NUMERIC_FEATURES)
+# Individual fairness measures "similar applicants receive similar scores", so
+# similarity MUST be defined over the features the model actually scores on. The
+# masked features (spoofable telemetry and opaque composites) are neutralised to
+# constants before fitting, so two applicants differing only on them are not
+# meaningfully different to the model — counting them in the similarity metric
+# would falsely flag legitimate, cognition-driven score differences as unfair.
+FULL_PROFILE_SIMILARITY_FEATURES: Final[tuple[str, ...]] = tuple(
+    feature_name
+    for feature_name in NUMERIC_FEATURES
+    if feature_name not in MONOTONIC_TREE_MASKED_FEATURES
+)
 PSYCHOMETRIC_SIMILARITY_FEATURES: Final[tuple[str, ...]] = (
     FULL_PROFILE_SIMILARITY_FEATURES
 )

@@ -68,6 +68,7 @@ Promotion requires the full governance stack to remain green.
 The active checked-in runtime is calibrated monotonic `XGBoost`.
 
 The current manifest is promoted because all blocking gates pass under
-`promotion_gate_policy_v1`. The remaining governance watch item is PSI:
-`avg_response_time_ms` is in `watch` at `0.2052`, below the blocking `0.30`
-alert threshold.
+`promotion_gate_policy_v2`, which adds score-distribution gates (median band,
+P95 reachability, Good-or-better share) on top of the calibration, fairness,
+and drift gates. PSI is `stable` at max `0.0152`, well below the blocking
+`0.30` alert threshold.

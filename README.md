@@ -41,7 +41,9 @@ Manifest-backed, hash-verified runtime — `models/registry/production_manifest.
 
 | Model | Test AUC | Brier | ECE | Drift | Fairness |
 |:------|:--------:|:-----:|:---:|:-----:|:--------:|
-| `xgboost_monotonic` | 0.758 | 0.184 | 0.035 | stable | passed |
+| `xgboost_monotonic` | 0.779 | 0.177 | 0.035 | stable | passed |
+
+Creditworthiness is driven by hard-to-fake evidence — objective cognition (numeracy, CRT, financial literacy) and scenario psychometrics lead the model — while spoofable process-timing telemetry feeds only the anti-gaming governance layer, never the score.
 
 > Trained on a synthetic dataset for demonstration. Not for real lending decisions.
 

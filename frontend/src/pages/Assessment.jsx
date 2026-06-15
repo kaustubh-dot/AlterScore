@@ -321,10 +321,12 @@ export default function Assessment() {
           {currentQ.prefix && <span className="number-prefix">{currentQ.prefix}</span>}
           <input
             type="number"
+            inputMode="decimal"
             value={currentAnswer || ''}
             onChange={(e) => recordStandardAnswer(e.target.value)}
             className="input-number"
             placeholder="0"
+            aria-label={currentQ.question}
             autoFocus
           />
           {currentQ.suffix && <span className="number-suffix">{currentQ.suffix}</span>}
@@ -381,18 +383,18 @@ export default function Assessment() {
                 className={`scenario-pill ${isPrimary ? 'primary-selected' : ''} ${isLeast ? 'least-selected' : ''}`}
               >
                 <div style={{ flex: 1, paddingRight: '12px' }}>{opt.text}</div>
-                <div style={{ display: 'flex', gap: '6px' }}>
+                <div style={{ display: 'flex', gap: '8px' }}>
                   <button
                     onClick={() => { recordScenarioAnswer('primary', opt.id); playSelect(); }}
                     className={`badge-tag ${isPrimary ? 'primary' : 'option-pill-btn'}`}
-                    style={{ border: 'none', cursor: 'pointer', padding: '4px 8px', fontSize: '9px' }}
+                    style={{ border: 'none', cursor: 'pointer' }}
                   >
                     Most
                   </button>
                   <button
                     onClick={() => { recordScenarioAnswer('least', opt.id); playSelect(); }}
                     className={`badge-tag ${isLeast ? 'least' : 'option-pill-btn'}`}
-                    style={{ border: 'none', cursor: 'pointer', padding: '4px 8px', fontSize: '9px' }}
+                    style={{ border: 'none', cursor: 'pointer' }}
                   >
                     Least
                   </button>
@@ -415,6 +417,7 @@ export default function Assessment() {
             onChange={(e) => recordStandardAnswer(e.target.value)}
             className="input-textarea"
             placeholder="Type your response..."
+            aria-label={currentQ.question}
             rows={5}
           />
           <div className="textarea-metadata">

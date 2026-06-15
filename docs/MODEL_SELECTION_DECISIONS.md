@@ -64,10 +64,12 @@ Focused fairness hardening on the monotonic `XGBoost` candidate found that:
 ## Current Checked-In Runtime
 
 The promoted checked-in monotonic bundle is now the operational source of
-truth. Its refreshed held-out report shows AUC `0.7596` before post-model
-governance and `0.7590` after post-model governance. The older `0.8040` and
-`0.8090` figures remain useful historical comparison results, but they are not
-the active manifest metric.
+truth. Its refreshed held-out report shows test AUC `0.7787`. Creditworthiness
+is driven by hard-to-fake objective cognition and scenario psychometrics;
+spoofable process-timing telemetry is excluded from the causal label and feeds
+only the anti-gaming governance layer. The older `0.8040` and `0.8090` figures
+remain useful historical comparison results, but they are not the active
+manifest metric.
 
 ## Decision Rule Going Forward
 

@@ -400,20 +400,34 @@ def generate_synthetic_dataset(
 
     risk_balance = 1.0 - np.clip(np.abs(risk_attitude - 0.55) / 0.55, 0.0, 1.0)
 
+    # Creditworthiness is causally driven by HARD-TO-FAKE evidence: objective
+    # cognition (numeracy / CRT / financial literacy), scenario psychometrics
+    # (honesty, locus of control, social capital, conscientiousness, future
+    # orientation — captured by psychological_credit_index and
+    # repayment_intention_score), and NLP agency/problem-solving signals.
+    #
+    # Spoofable process-timing telemetry (scroll hesitation, session duration,
+    # engagement) is DELIBERATELY excluded from the causal label. Earlier
+    # versions routed ~3.3 of effective logit weight through scroll_hesitation
+    # (a direct -1.35 term plus the bulk of the masked engagement_score's 2.0
+    # term, since engagement = f(scroll_hesitation, ...)). That made the cheapest
+    # signal to fake the strongest predictor and forced the model to proxy it.
+    # Behaviour is now owned exclusively by the post-model governance layer
+    # (anti-gaming), not by creditworthiness. answer_change_rate / dropout_count
+    # keep small negative weights as mild diligence signals.
     repayment_logit = (
-        2.8 * (psychological_credit_index - 0.52)
-        + 2.3 * (repayment_intention_score - 0.20)
-        + 1.2 * (numeracy_score - 0.50)
-        + 0.5 * (financial_literacy_score - 0.50)
-        + 2.0 * (engagement_score - 0.225)
-        - 1.35 * (scroll_hesitation_score - 0.50)
+        3.8 * (psychological_credit_index - 0.52)
+        + 3.0 * (repayment_intention_score - 0.20)
+        + 1.9 * (numeracy_score - 0.50)
+        + 1.1 * (financial_literacy_score - 0.50)
+        + 0.9 * (crt_score - 0.50)
         + 0.9 * (text_agency_score - 0.55)
         + 0.6 * text_problem_solving_flag
         + 0.4 * (risk_balance - 0.5)
-        - 0.7 * answer_change_rate
+        - 0.5 * answer_change_rate
         - 0.12 * dropout_count
-        + rng.normal(0.0, 0.42, row_count)
-        - 1.35  # Offset tuned for un-floored scenario features to maintain ~35% default rate
+        + rng.normal(0.0, 0.36, row_count)
+        - 1.45  # Offset tuned to maintain ~35% default rate after telemetry removal
     )
     repayment_probability = _sigmoid(repayment_logit)
     repayment_label = (rng.random(row_count) < repayment_probability).astype(int)

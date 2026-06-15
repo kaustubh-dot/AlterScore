@@ -791,6 +791,30 @@ def _calculate_governance_multiplier(
             "financial-literacy, or problem-solving signal"
         )
 
+    # 12. Gaming-Stack Escalation
+    # The severe profile above requires zero cognitive signal, which lets a
+    # *prepared* gamer (memorised correct answers, then bot-clicks) keep full
+    # cognitive scores and stay protected by the 0.65 default floor. Demonstrated
+    # cognitive ability is NOT a license to game the behavioural section: when
+    # two or more INDEPENDENT strong gaming signals fire together, the behaviour
+    # is mechanical regardless of answer correctness, so we bypass the default
+    # floor and drop to the severe floor. Each signal alone can occur for a fast
+    # but legitimate user, so escalation requires a stack of >= 2.
+    strong_gaming_signals = [
+        ("straight-lining", straight_lining_ratio >= 0.85),
+        ("fast-pattern scenario gaming", scenario_fast_gaming >= 1.0),
+        ("near-zero engagement", engagement < 0.10),
+    ]
+    fired = [name for name, hit in strong_gaming_signals if hit]
+    if len(fired) >= 2 and minimum_multiplier > SEVERE_GOVERNANCE_MULTIPLIER_MIN:
+        minimum_multiplier = SEVERE_GOVERNANCE_MULTIPLIER_MIN
+        multiplier = min(multiplier, SEVERE_GOVERNANCE_MULTIPLIER_MIN)
+        reasons.append(
+            "Multiple independent gaming signals stacked "
+            f"({', '.join(fired)}) — mechanical completion regardless of "
+            "answer correctness"
+        )
+
     final_multiplier = max(minimum_multiplier, min(1.0, multiplier))
     return final_multiplier, reasons
 

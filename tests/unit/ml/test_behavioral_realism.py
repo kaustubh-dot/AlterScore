@@ -1,6 +1,9 @@
 from backend.ml.nlp.extractor import _validate_text_quality
 from backend.ml.inference.score_mapper import probability_to_score
-from backend.app.services.scoring import _calculate_governance_multiplier
+from backend.app.services.scoring import (
+    SEVERE_GOVERNANCE_MULTIPLIER_MIN,
+    _calculate_governance_multiplier,
+)
 
 
 def test_text_quality_validation() -> None:
@@ -110,15 +113,20 @@ def test_governance_does_not_penalize_single_honesty_trap_without_other_evidence
 
 
 def test_governance_multiplier_floor_matches_documented_bound() -> None:
+    # Heavily penalised but NOT a gaming stack: contradiction + dropouts +
+    # erratic changes + low (not near-zero) engagement + zero cognition. Fewer
+    # than two strong gaming signals, so the default 0.65 floor still holds.
     severe_row = {
         "impulsivity_index": 8.0,
         "honesty_score": 0.2,
         "scenario_consistency_score": 0.0,
         "dropout_count": 20,
-        "answer_change_rate": 1.0,
-        "engagement_score": 0.0,
-        "scenario_fast_gaming": 1.0,
-        "scenario_straight_lining_ratio": 1.0,
+        "answer_change_rate": 0.35,
+        "engagement_score": 0.15,
+        "avg_response_time_ms": 5000.0,
+        "numeracy_score": 0.0,
+        "CRT_score": 0.0,
+        "financial_literacy_score": 0.0,
         "text_agency_score": 0.0,
         "text_problem_solving_flag": 0.0,
     }
@@ -127,3 +135,52 @@ def test_governance_multiplier_floor_matches_documented_bound() -> None:
 
     assert multiplier == 0.65
     assert len(reasons) > 4
+
+
+def test_gaming_stack_escalation_bypasses_default_floor() -> None:
+    # A *prepared* gamer: perfect cognitive scores (memorised answers) but the
+    # behaviour is mechanical — straight-lining + fast-pattern scenario gaming +
+    # near-zero engagement. Two-plus independent gaming signals must bypass the
+    # 0.65 floor and drop to the severe floor despite correct answers.
+    gaming_row = {
+        "honesty_score": 1.0,
+        "scenario_consistency_score": 1.0,
+        "numeracy_score": 1.0,
+        "CRT_score": 1.0,
+        "financial_literacy_score": 1.0,
+        "avg_response_time_ms": 490.0,
+        "session_duration_sec": 55.0,
+        "answer_change_rate": 0.0,
+        "engagement_score": 0.05,
+        "scenario_fast_gaming": 1.0,
+        "scenario_straight_lining_ratio": 1.0,
+    }
+
+    multiplier, reasons = _calculate_governance_multiplier(gaming_row)
+
+    assert multiplier == SEVERE_GOVERNANCE_MULTIPLIER_MIN
+    assert any("gaming signals stacked" in reason.lower() for reason in reasons)
+
+
+def test_single_gaming_signal_does_not_escalate() -> None:
+    # A fast but legitimate user trips exactly one gaming signal (fast-pattern)
+    # with varied answers and healthy engagement. One signal alone must NOT
+    # escalate — the multiplier stays well above the severe floor.
+    fast_legit_row = {
+        "honesty_score": 1.0,
+        "scenario_consistency_score": 1.0,
+        "numeracy_score": 1.0,
+        "CRT_score": 1.0,
+        "financial_literacy_score": 1.0,
+        "avg_response_time_ms": 1800.0,
+        "session_duration_sec": 210.0,
+        "answer_change_rate": 0.10,
+        "engagement_score": 0.80,
+        "scenario_fast_gaming": 1.0,
+        "scenario_straight_lining_ratio": 0.43,
+    }
+
+    multiplier, reasons = _calculate_governance_multiplier(fast_legit_row)
+
+    assert multiplier > SEVERE_GOVERNANCE_MULTIPLIER_MIN
+    assert not any("gaming signals stacked" in reason.lower() for reason in reasons)

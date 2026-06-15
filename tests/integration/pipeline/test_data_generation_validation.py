@@ -70,21 +70,40 @@ def test_later_cohorts_are_faster_and_have_higher_typing_speed_on_average() -> N
     )
 
 
-def test_repaired_synthetic_supervision_matches_behavioral_directionality() -> None:
+def test_synthetic_supervision_is_driven_by_hard_to_fake_cognition() -> None:
+    # Creditworthiness must be causally driven by hard-to-fake evidence
+    # (objective cognition + scenario psychometrics), NOT by spoofable
+    # process-timing telemetry. This is the data-side guarantee that lets the
+    # model rest on signals an applicant cannot cheaply game.
     dataset = generate_synthetic_dataset()
 
-    assert dataset["scroll_hesitation_score"].corr(dataset[TARGET]) < -0.25
-    assert dataset["engagement_score"].corr(dataset[TARGET]) > 0.25
+    # Objective cognition strongly predicts repayment.
+    assert dataset["numeracy_score"].corr(dataset[TARGET]) > 0.25
+    assert dataset["CRT_score"].corr(dataset[TARGET]) > 0.20
+    assert dataset["financial_literacy_score"].corr(dataset[TARGET]) > 0.20
+    assert dataset["psychological_credit_index"].corr(dataset[TARGET]) > 0.30
 
-    low_hesitation = dataset[
-        dataset["scroll_hesitation_score"]
-        <= dataset["scroll_hesitation_score"].quantile(0.2)
+    # Spoofable telemetry must NOT be a dominant driver of the label. Note
+    # session_duration retains a confounded (non-causal) correlation because it
+    # is derived from answer_change_rate / dropout_count, which ARE mild causal
+    # signals — but it carries zero direct causal weight in the logit.
+    assert abs(dataset["scroll_hesitation_score"].corr(dataset[TARGET])) < 0.25
+    assert abs(dataset["session_duration_sec"].corr(dataset[TARGET])) < 0.35
+
+    # The core contract: the strongest cognitive driver must out-predict the
+    # strongest spoofable-telemetry signal.
+    cognition_corr = dataset["psychological_credit_index"].corr(dataset[TARGET])
+    telemetry_corr = abs(dataset["scroll_hesitation_score"].corr(dataset[TARGET]))
+    assert cognition_corr > telemetry_corr
+
+    # Higher demonstrated numeracy => higher repayment rate (directional sanity).
+    low_numeracy = dataset[
+        dataset["numeracy_score"] <= dataset["numeracy_score"].quantile(0.2)
     ][TARGET].mean()
-    high_hesitation = dataset[
-        dataset["scroll_hesitation_score"]
-        >= dataset["scroll_hesitation_score"].quantile(0.8)
+    high_numeracy = dataset[
+        dataset["numeracy_score"] >= dataset["numeracy_score"].quantile(0.8)
     ][TARGET].mean()
-    assert low_hesitation > high_hesitation
+    assert high_numeracy > low_numeracy
 
     device_repayment_rates = dataset.groupby("device_type")[TARGET].mean()
     assert device_repayment_rates.max() - device_repayment_rates.min() < 0.05

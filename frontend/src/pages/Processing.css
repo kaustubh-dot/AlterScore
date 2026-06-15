@@ -3,6 +3,7 @@
 .processing-layout {
   position: relative;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -116,7 +117,7 @@
 }
 
 .step-status {
-  font-size: 9px;
+  font-size: var(--text-xs);
   letter-spacing: 0.05em;
   font-weight: 500;
 }
@@ -137,7 +138,7 @@
 
 .processing-eta {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-xs);
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;

@@ -9,7 +9,13 @@ from typing import Any
 import numpy as np
 
 
-from backend.app.core.constants import RISK_BANDS, SCORE_MIN, SCORE_MAX
+from backend.app.core.constants import (
+    RISK_BANDS,
+    SCORE_BASE,
+    SCORE_LOG_ODDS_FACTOR,
+    SCORE_MAX,
+    SCORE_MIN,
+)
 
 SCORE_MAPPING_METHOD_LOG_ODDS = "log_odds"
 
@@ -17,8 +23,8 @@ SCORE_MAPPING_METHOD_LOG_ODDS = "log_odds"
 @dataclass(frozen=True)
 class ScoreMappingConfig:
     method: str = SCORE_MAPPING_METHOD_LOG_ODDS
-    score_base: float = 500.0
-    log_odds_factor: float = 80.0
+    score_base: float = SCORE_BASE
+    log_odds_factor: float = SCORE_LOG_ODDS_FACTOR
     probability_clip_min: float = 0.01
     probability_clip_max: float = 0.99
     score_min: int = SCORE_MIN

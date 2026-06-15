@@ -50,11 +50,11 @@ Manifest contract notes:
 ```json
 {
   "manifest_schema_version": "1.0.0",
-  "manifest_version": "xgboost_monotonic_calibrated_v1",
-  "model_version": "0.4.0",
-  "run_id": "20260611_051632_xgboost_monotonic_calibrated",
-  "created_at": "2026-06-11T05:16:34Z",
-  "code_ref": "codex-scoring-calibration-roadmap",
+  "manifest_version": "xgboost_monotonic_calibrated_v4",
+  "model_version": "0.7.0",
+  "run_id": "20260615_180711_xgboost_monotonic_calibrated",
+  "created_at": "2026-06-15T18:07:13Z",
+  "code_ref": "main",
   "data_version": "synthetic_v2.0.0_generated",
   "feature_registry_version": "0.1.0",
   "runtime_model_name": "xgboost_monotonic",
@@ -130,9 +130,9 @@ Manifest contract notes:
   },
   "score_mapping": {
     "method": "log_odds",
-    "score_base": 500.0,
-    "log_odds_factor": 29.0,
-    "probability_clip_min": 0.001,
+    "score_base": 595.0,
+    "log_odds_factor": 64.92,
+    "probability_clip_min": 0.000001,
     "probability_clip_max": 0.99,
     "score_min": 300,
     "score_max": 850,
@@ -247,17 +247,17 @@ Current local runtime-artifact status:
 - Default local backend startup now prefers the checked-in manifest-backed bundle, while `ALTERSCORE_RUNTIME_MODEL_PATH` remains an explicit override for tests or intentional direct-model runs.
 - `models/preprocessors/text_pca.pkl` exists and is loaded by the runtime bundle.
 - `models/reports/population_percentiles_monotonic.json` exists and drives the active score distribution response.
-- `models/reports/fairness_report_monotonic.json` exists and is generated offline from held-out months `11-12` using protected attributes only for subgroup evaluation. The model shows acceptable fairness across all tested demographic groups (no subgroup AUC deviation >4% from the overall model), includes post-governance impact, and reports individual-fairness proxy flagged-pair share `0.0442` with max similar-pair score gap `95`.
-- `models/reports/psi_report_monotonic.json` exists and reports a `watch` drift verdict (max PSI `0.2052` on `avg_response_time_ms`).
+- `models/reports/fairness_report_monotonic.json` exists and is generated offline from held-out months `11-12` using protected attributes only for subgroup evaluation. The model shows acceptable fairness across all tested demographic groups (no subgroup AUC deviation >4% from the overall model), includes post-governance impact, and reports individual-fairness proxy flagged-pair share `0.027` with max similar-pair score gap `130`. Similarity is computed over the model's active (non-masked) features only.
+- `models/reports/psi_report_monotonic.json` exists and reports a `stable` drift verdict (max PSI `0.0152`).
 - `models/reports/global_importance_monotonic.json` exists, is generated offline from the canonical 35 model inputs, and matches the active backend response contract.
 - `models/explainers/shap_explainer_monotonic.pkl` is present on disk, deserializes through `backend.ml.explainability.shap_explainer`, passes runtime validation for the checked-in bundle, and drives the checked-in bundle's per-user score explanations.
 - `models/explainers/dice_explainer_monotonic.pkl` is present on disk, validates through `backend.ml.explainability.dice_explainer`, and drives the checked-in bundle's persisted counterfactual score actions.
 - The curated local runtime bundle is now intentionally source-controlled for portability and smoke coverage, while heavier future training outputs remain ignored by default.
 - `/api/score` now emits persisted counterfactual actions from the checked-in artifact, and the code-level default builder remains only a non-default contingency for intentionally artifact-less test bundles.
 - Zero-filled semantic fallback remains supported only for intentionally PCA-less test/runtime bundles.
-- The current monotonic metrics artifact reports test AUC `0.7549`, Brier score `0.1903`, expected calibration error `0.0353`, and calibration `isotonic`.
-- The current monotonic fairness artifact reports `overall_auc = 0.7549`, post-governance AUC `0.7543`, and a fairness verdict of `passed`.
-- The current monotonic PSI artifact reports `max_psi = 0.2052` and overall verdict `watch`.
+- The current monotonic metrics artifact reports test AUC `0.7787`, Brier score `0.1768`, expected calibration error `0.0346`, and calibration `isotonic`.
+- The current monotonic fairness artifact reports `overall_auc = 0.7787` and a fairness verdict of `passed`.
+- The current monotonic PSI artifact reports `max_psi = 0.0152` and overall verdict `stable`.
 - The current monotonic global-importance artifact ranks features based on mean absolute SHAP values matching the active backend response.
 
 ### Baseline Run: `20260513_171150_baselines`
@@ -368,24 +368,24 @@ Current local runtime-artifact status:
 ### Calibrated Monotonic XGBoost Promotion Run: `20260611_051632_xgboost_monotonic_calibrated`
 
 - Status: active production runtime
-- Date: 2026-06-11
-- Code reference: `codex-scoring-calibration-roadmap`
+- Date: 2026-06-15
+- Code reference: `main`
 - Training command: `.\.venv312\Scripts\python.exe scripts\training\train_calibrated_monotonic_xgboost.py --device cuda`
 - Runtime model: `models/artifacts/xgboost_monotonic.pkl`
 - Runtime type: `classical_monotonic`
 - Manifest: `models/registry/production_manifest.json`
-- Manifest version: `xgboost_monotonic_calibrated_v1`
-- Model version: `0.4.0`
+- Manifest version: `xgboost_monotonic_calibrated_v4`
+- Model version: `0.7.0`
 - Calibration: isotonic, fit on validation months `9-10`
-- Score mapping: `log_odds`, `score_base=575`, `log_odds_factor=28`, `probability_clip_min=0.000001`, `probability_clip_max=0.99`, `calibration=isotonic`
-- Checked-in test AUC: `0.7549`
-- Checked-in test Brier score: `0.1903`
-- Checked-in test ECE: `0.0353`
-- Checked-in post-governance AUC: `0.7543`
-- Checked-in PSI verdict: `watch` (Max PSI `0.2052` on `avg_response_time_ms`)
-- Checked-in fairness status: `passed` (individual-fairness proxy flagged-pair share `0.0442`, max similar-pair score gap `95`)
-- Promotion gates: `warning`, with no blocking failures and one non-blocking `drift_max_psi` warning.
-- Notes: The old runtime-copy promotion flow was replaced with `scripts/training/train_calibrated_monotonic_xgboost.py`, which rebuilds the model, calibration layer, reports, explainers, and manifest from the deterministic synthetic v2 generator. XGBoost training uses CUDA and `n_jobs=-1`; serving saves the calibrated estimator in CPU mode for runtime portability.
+- Score mapping: FICO-style `log_odds`, `score_base=595`, `log_odds_factor=64.92`, `probability_clip_min=0.000001`, `probability_clip_max=0.99`, `calibration=isotonic` (base/factor derived from PDO=45, anchor 640 @ 2:1 odds)
+- Checked-in test AUC: `0.7787`
+- Checked-in test Brier score: `0.1768`
+- Checked-in test ECE: `0.0346`
+- Checked-in PSI verdict: `stable` (Max PSI `0.0152`)
+- Checked-in fairness status: `passed` (individual-fairness proxy flagged-pair share `0.027`, max similar-pair score gap `130`)
+- Promotion gates: `passed`, with no blocking failures, under `promotion_gate_policy_v2` (includes score-distribution gates).
+- Score drivers: creditworthiness is driven by hard-to-fake objective cognition (`numeracy_score` is the #1 SHAP feature) and scenario psychometrics. Spoofable process-timing telemetry (`scroll_hesitation_score`, `session_duration_sec`) is excluded from the causal repayment label in the synthetic generator and feeds only the post-model anti-gaming governance multiplier.
+- Notes: `scripts/training/train_calibrated_monotonic_xgboost.py` rebuilds the model, calibration layer, reports, explainers, and manifest from the deterministic synthetic v2 generator. XGBoost training uses CUDA and `n_jobs=-1`; serving saves the calibrated estimator in CPU mode for runtime portability.
 
 ### Historical Monotonic XGBoost Promotion Run: `20260527_051352_xgboost_monotonic_promotion`
 

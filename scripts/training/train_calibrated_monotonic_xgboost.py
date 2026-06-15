@@ -27,6 +27,13 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from backend.app.core.constants import (
+    SCORE_BASE,
+    SCORE_LOG_ODDS_FACTOR,
+    SCORE_PDO,
+    SCORE_ANCHOR_SCORE,
+    SCORE_ANCHOR_ODDS,
+)
 from backend.app.core.paths import (
     MODEL_ARTIFACTS_DIR,
     MODEL_EXPLAINERS_DIR,
@@ -78,8 +85,10 @@ from backend.ml.registry.promotion_gates import (
     load_promotion_gate_policy,
 )
 from backend.ml.training.classical.monotonic_constraints import (
+    MONOTONIC_TREE_FEATURE_WEIGHT_MAP,
     MONOTONIC_TREE_MASKED_FEATURES,
     apply_monotonic_tree_feature_masking,
+    build_feature_weight_vector,
     build_monotonic_constraint_vector,
     neutralize_operational_metadata_for_training,
 )
@@ -88,10 +97,10 @@ MODEL_NAME: Final[str] = "xgboost_monotonic"
 MODEL_TYPE: Final[str] = "classical_monotonic"
 VALIDATION_SPLIT: Final[str] = "validation_months_9_10"
 TEST_SPLIT: Final[str] = "test_months_11_12"
-DEFAULT_SCORE_BASE: Final[float] = 500.0
-DEFAULT_SCORE_LOG_ODDS_FACTOR: Final[float] = 40.0
-DEFAULT_MODEL_VERSION: Final[str] = "0.5.0"
-DEFAULT_MANIFEST_VERSION: Final[str] = "xgboost_monotonic_calibrated_v2"
+DEFAULT_SCORE_BASE: Final[float] = SCORE_BASE
+DEFAULT_SCORE_LOG_ODDS_FACTOR: Final[float] = SCORE_LOG_ODDS_FACTOR
+DEFAULT_MODEL_VERSION: Final[str] = "0.7.0"
+DEFAULT_MANIFEST_VERSION: Final[str] = "xgboost_monotonic_calibrated_v4"
 DEFAULT_CODE_REF: Final[str] = "main"
 
 
@@ -156,6 +165,7 @@ def train_calibrated_monotonic_xgboost(
     transformed_feature_names = preprocessor.get_feature_names_out().tolist()
     monotonic_constraints = build_monotonic_constraint_vector(transformed_feature_names)
     constraint_counts = _count_constraints(monotonic_constraints)
+    feature_weights = build_feature_weight_vector(transformed_feature_names)
 
     train_mask = prepared.feature_frame.index.isin(prepared.train.indices)
     validation_mask = prepared.feature_frame.index.isin(prepared.validation.indices)
@@ -178,6 +188,7 @@ def train_calibrated_monotonic_xgboost(
         y_train,
         eval_set=[(X_validation, y_validation)],
         verbose=False,
+        feature_weights=np.asarray(feature_weights, dtype=float),
     )
     calibrated_model = CalibratedClassifierCV(
         estimator=raw_model,
@@ -259,6 +270,7 @@ def train_calibrated_monotonic_xgboost(
             "parallel_workers": -1,
             "monotonic_constraint_counts": constraint_counts,
             "masked_features": sorted(mask_replacements),
+            "feature_weights": dict(sorted(MONOTONIC_TREE_FEATURE_WEIGHT_MAP.items())),
         },
     }
     metrics_path = MODEL_REPORTS_DIR / "metrics_monotonic.json"
@@ -414,6 +426,7 @@ def train_calibrated_monotonic_xgboost(
             "xgboost_params": _jsonable_xgboost_params(xgboost_params),
             "monotonic_constraint_counts": constraint_counts,
             "masked_features": sorted(mask_replacements),
+            "feature_weights": dict(sorted(MONOTONIC_TREE_FEATURE_WEIGHT_MAP.items())),
         },
         "promotion_status": "candidate",
         "promotion_notes": (
@@ -428,6 +441,7 @@ def train_calibrated_monotonic_xgboost(
         metrics_payload=metrics_payload,
         fairness_report=fairness_report,
         psi_report=psi_report,
+        population_percentiles=population_payload,
         policy=load_promotion_gate_policy(),
     )
     promotion_status = (
@@ -442,6 +456,7 @@ def train_calibrated_monotonic_xgboost(
         metrics_payload=metrics_payload,
         fairness_report=fairness_report,
         psi_report=psi_report,
+        population_percentiles=population_payload,
         policy=load_promotion_gate_policy(),
     )
     manifest["promotion_gate_summary"] = final_gate_summary
@@ -593,6 +608,12 @@ def _build_score_mapping(
         "score_min": 300,
         "score_max": 850,
         "calibration": "isotonic",
+        "policy": {
+            "pdo": float(SCORE_PDO),
+            "anchor_score": float(SCORE_ANCHOR_SCORE),
+            "anchor_odds": float(SCORE_ANCHOR_ODDS),
+            "note": "base and log_odds_factor are derived from pdo/anchor — do not hand-edit",
+        },
     }
 
 

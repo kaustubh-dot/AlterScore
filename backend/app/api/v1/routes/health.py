@@ -28,6 +28,7 @@ def get_health(request: Request) -> HealthResponse:
             metrics_payload=artifact_bundle.metrics_payload,
             fairness_report=artifact_bundle.fairness_report,
             psi_report=artifact_bundle.psi_report,
+            population_percentiles=artifact_bundle.population_percentiles,
             policy=promotion_policy,
         )
     promotion_gate_failed = (

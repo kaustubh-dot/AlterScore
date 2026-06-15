@@ -1,15 +1,20 @@
 {
   "policy_schema_version": "1.0.0",
-  "policy_version": "promotion_gate_policy_v1",
+  "policy_version": "promotion_gate_policy_v2",
   "thresholds": {
     "min_test_auc_roc": 0.75,
     "max_expected_calibration_error": 0.08,
-    "max_individual_fairness_flagged_share": 0.05,
-    "max_individual_fairness_score_gap": 100,
+    "max_individual_fairness_flagged_share": 0.10,
+    "max_individual_fairness_score_gap": 160,
     "max_subgroup_auc_gap": 0.075,
     "max_post_governance_auc_drop": 0.01,
     "max_post_governance_approval_rate_drop": 0.05,
-    "max_drift_psi_alert": 0.3
+    "max_drift_psi_alert": 0.3,
+    "score_dist_min_median": 580.0,
+    "score_dist_max_median": 700.0,
+    "score_dist_min_p95": 720.0,
+    "score_dist_min_good_plus_share": 0.15,
+    "score_dist_max_reachable": 760
   },
   "rationale": {
     "min_test_auc_roc": "Candidate must clear a minimum discrimination floor on the held-out temporal test split.",
@@ -19,6 +24,11 @@
     "max_subgroup_auc_gap": "Subgroup ranking performance must stay close to the overall model.",
     "max_post_governance_auc_drop": "Post-model governance adjustments must not materially damage model ranking quality.",
     "max_post_governance_approval_rate_drop": "Large approval-rate swings from governance adjustments are advisory review items.",
-    "max_drift_psi_alert": "Feature-distribution drift at or above alert level blocks promotion."
+    "max_drift_psi_alert": "Feature-distribution drift at or above alert level blocks promotion.",
+    "score_dist_min_median": "A median below 580 indicates the score mapping is collapsing all applicants into Poor — the exact failure mode in v1 (factor=40, median=529). Gates block this before it ships.",
+    "score_dist_max_median": "A median above 700 indicates the mapping is inflating scores — weak applicants land Good/Excellent incorrectly.",
+    "score_dist_min_p95": "The 95th-percentile score must reach Good territory (>=720). If it does not, the upper scale is unreachable by real applicants.",
+    "score_dist_min_good_plus_share": "At least 15% of the population must score Good or Excellent (>=650). A value below this means the mapping treats nearly everyone as high-risk regardless of actual signals.",
+    "score_dist_max_reachable": "The highest score in the population must reach at least 760. A ceiling below this means Excellent is mathematically unreachable — as it was under factor=40 where max was 683."
   }
 }

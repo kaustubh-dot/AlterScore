@@ -84,7 +84,7 @@ Current runtime note:
   "promotion_gate": {
     "status": "passed",
     "promotion_status": "promoted",
-    "policy_version": "promotion_gate_policy_v1",
+    "policy_version": "promotion_gate_policy_v2",
     "blocking_failures": [],
     "warnings": [],
     "checks": []

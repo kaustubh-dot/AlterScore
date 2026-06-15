@@ -51,7 +51,7 @@
 }
 
 .logo-tag {
-  font-size: 9px;
+  font-size: var(--text-xs);
   color: var(--text-muted);
   background: var(--bg-border);
   padding: 1px 6px;

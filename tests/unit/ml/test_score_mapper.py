@@ -1,3 +1,10 @@
+from backend.app.core.constants import (
+    SCORE_BASE,
+    SCORE_LOG_ODDS_FACTOR,
+    SCORE_PDO,
+    SCORE_ANCHOR_SCORE,
+    SCORE_ANCHOR_ODDS,
+)
 from backend.ml.inference.score_mapper import (
     compute_percentile,
     get_loan_eligibility,
@@ -5,15 +12,31 @@ from backend.ml.inference.score_mapper import (
     probability_to_score,
     resolve_score_mapping_config,
     score_mapping_debug,
+    DEFAULT_SCORE_MAPPING_CONFIG,
 )
 
 
+def test_score_policy_constants_are_derived_not_hardcoded() -> None:
+    import math
+
+    expected_factor = SCORE_PDO / math.log(2.0)
+    expected_base = SCORE_ANCHOR_SCORE - expected_factor * math.log(SCORE_ANCHOR_ODDS)
+    assert abs(SCORE_LOG_ODDS_FACTOR - expected_factor) < 1e-6
+    assert abs(SCORE_BASE - expected_base) < 1e-6
+
+
+def test_default_config_uses_derived_constants() -> None:
+    assert DEFAULT_SCORE_MAPPING_CONFIG.score_base == SCORE_BASE
+    assert DEFAULT_SCORE_MAPPING_CONFIG.log_odds_factor == SCORE_LOG_ODDS_FACTOR
+
+
 def test_probability_to_score_tracks_boundary_midpoint_and_upper_tail() -> None:
+    # Even-odds (p=0.50) maps to SCORE_BASE (derived from anchor, not 500)
     midpoint_score = probability_to_score(0.50)
     strong_score = probability_to_score(0.72)
     upper_tail_score = probability_to_score(0.90)
 
-    assert midpoint_score == 500
+    assert midpoint_score == int(round(SCORE_BASE))
     assert 300 <= strong_score <= 850
     assert 300 <= upper_tail_score <= 850
     assert midpoint_score < strong_score < upper_tail_score
@@ -28,6 +51,16 @@ def test_probability_to_score_is_monotonic_and_bounded() -> None:
     assert 300 <= mid_score <= 850
     assert 300 <= high_score <= 850
     assert low_score <= mid_score <= high_score
+
+
+def test_score_mapping_full_range_reachable() -> None:
+    # Good applicants (p=0.96+) must reach Excellent (>=750)
+    top_score = probability_to_score(0.96)
+    assert top_score >= 750, f"p=0.96 -> {top_score}, Excellent (750+) unreachable"
+
+    # Weak applicants (p=0.30) must land in Poor (<550)
+    weak_score = probability_to_score(0.30)
+    assert weak_score < 550, f"p=0.30 -> {weak_score}, expected Poor (<550)"
 
 
 def test_probability_to_score_supports_manifest_mapping_config() -> None:

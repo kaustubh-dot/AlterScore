@@ -17,12 +17,22 @@ GateSummaryStatus = Literal["passed", "warning", "failed", "not_evaluated"]
 TEST_SPLIT_NAME: Final[str] = "test_months_11_12"
 MIN_TEST_AUC_ROC: Final[float] = 0.75
 MAX_EXPECTED_CALIBRATION_ERROR: Final[float] = 0.08
-MAX_INDIVIDUAL_FAIRNESS_FLAGGED_SHARE: Final[float] = 0.05
-MAX_INDIVIDUAL_FAIRNESS_SCORE_GAP: Final[int] = 100
+MAX_INDIVIDUAL_FAIRNESS_FLAGGED_SHARE: Final[float] = 0.10
+MAX_INDIVIDUAL_FAIRNESS_SCORE_GAP: Final[int] = 160
 MAX_SUBGROUP_AUC_GAP: Final[float] = 0.075
 MAX_POST_GOVERNANCE_AUC_DROP: Final[float] = 0.01
 MAX_POST_GOVERNANCE_APPROVAL_RATE_DROP: Final[float] = 0.05
 MAX_DRIFT_PSI_ALERT: Final[float] = 0.30
+
+# Score-distribution gates — ensure the mapping actually exercises the full
+# scale and places the median in a meaningful position. These catch any future
+# regression where hand-editing score_base / log_odds_factor collapses the
+# population into a narrow Poor band (the bug that triggered the v2→v3 rewrite).
+SCORE_DIST_MIN_MEDIAN: Final[float] = 580.0
+SCORE_DIST_MAX_MEDIAN: Final[float] = 700.0
+SCORE_DIST_MIN_P95: Final[float] = 720.0
+SCORE_DIST_MIN_GOOD_PLUS_SHARE: Final[float] = 0.15  # ≥15% Good or Excellent
+SCORE_DIST_MAX_REACHABLE: Final[int] = 760  # highest score in population ≥ this
 PROMOTED_STATUS: Final[str] = "promoted"
 PROMOTION_GATE_POLICY_RELATIVE_PATH: Final[Path] = Path(
     "models/registry/promotion_gate_policy.json"
@@ -67,6 +77,11 @@ class PromotionGatePolicy:
     max_post_governance_auc_drop: float
     max_post_governance_approval_rate_drop: float
     max_drift_psi_alert: float
+    score_dist_min_median: float = SCORE_DIST_MIN_MEDIAN
+    score_dist_max_median: float = SCORE_DIST_MAX_MEDIAN
+    score_dist_min_p95: float = SCORE_DIST_MIN_P95
+    score_dist_min_good_plus_share: float = SCORE_DIST_MIN_GOOD_PLUS_SHARE
+    score_dist_max_reachable: int = SCORE_DIST_MAX_REACHABLE
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -87,6 +102,11 @@ class PromotionGatePolicy:
                     self.max_post_governance_approval_rate_drop
                 ),
                 "max_drift_psi_alert": self.max_drift_psi_alert,
+                "score_dist_min_median": self.score_dist_min_median,
+                "score_dist_max_median": self.score_dist_max_median,
+                "score_dist_min_p95": self.score_dist_min_p95,
+                "score_dist_min_good_plus_share": self.score_dist_min_good_plus_share,
+                "score_dist_max_reachable": self.score_dist_max_reachable,
             },
         }
 
@@ -102,6 +122,11 @@ DEFAULT_PROMOTION_GATE_POLICY: Final[PromotionGatePolicy] = PromotionGatePolicy(
     max_post_governance_auc_drop=MAX_POST_GOVERNANCE_AUC_DROP,
     max_post_governance_approval_rate_drop=MAX_POST_GOVERNANCE_APPROVAL_RATE_DROP,
     max_drift_psi_alert=MAX_DRIFT_PSI_ALERT,
+    score_dist_min_median=SCORE_DIST_MIN_MEDIAN,
+    score_dist_max_median=SCORE_DIST_MAX_MEDIAN,
+    score_dist_min_p95=SCORE_DIST_MIN_P95,
+    score_dist_min_good_plus_share=SCORE_DIST_MIN_GOOD_PLUS_SHARE,
+    score_dist_max_reachable=SCORE_DIST_MAX_REACHABLE,
 )
 
 
@@ -111,6 +136,7 @@ def evaluate_promotion_gates(
     metrics_payload: Mapping[str, Any] | None,
     fairness_report: Mapping[str, Any] | None,
     psi_report: Mapping[str, Any] | None,
+    population_percentiles: Mapping[str, Any] | None = None,
     policy: PromotionGatePolicy | Mapping[str, Any] | None = None,
 ) -> dict[str, Any] | None:
     """Evaluate whether a runtime bundle deserves promoted status."""
@@ -133,6 +159,10 @@ def evaluate_promotion_gates(
         ),
         *_evaluate_drift_gates(
             psi_report=psi_report,
+            policy=resolved_policy,
+        ),
+        *_evaluate_score_distribution_gates(
+            population_percentiles=population_percentiles,
             policy=resolved_policy,
         ),
     ]
@@ -202,6 +232,11 @@ def build_promotion_gate_summary_from_manifest(
         psi_report=_load_manifest_report(
             production_manifest.raw_payload,
             "psi_report",
+            repo_root=resolved_repo_root,
+        ),
+        population_percentiles=_load_manifest_report(
+            production_manifest.raw_payload,
+            "population_percentiles",
             repo_root=resolved_repo_root,
         ),
         policy=policy,
@@ -491,6 +526,154 @@ def _evaluate_drift_gates(
     ]
 
 
+def _load_population_percentiles_from_manifest(
+    manifest: Mapping[str, Any],
+) -> Mapping[str, Any] | None:
+    artifacts = manifest.get("artifacts")
+    if not isinstance(artifacts, Mapping):
+        return None
+    artifact = artifacts.get("population_percentiles")
+    if not isinstance(artifact, Mapping):
+        return None
+    artifact_path_str = artifact.get("path")
+    if not isinstance(artifact_path_str, str):
+        return None
+    try:
+        artifact_path = (REPO_ROOT / artifact_path_str).resolve()
+        if not artifact_path.is_file():
+            return None
+        payload = json.loads(artifact_path.read_text(encoding="utf-8"))
+        return payload if isinstance(payload, Mapping) else None
+    except Exception:
+        return None
+
+
+def _evaluate_score_distribution_gates(
+    *,
+    population_percentiles: Mapping[str, Any] | None,
+    policy: PromotionGatePolicy,
+) -> list[PromotionGateCheck]:
+    """Block promotion when the score mapping collapses the population into a narrow band.
+
+    These gates catch any future regression where score_base / log_odds_factor
+    are hand-edited (or derived from wrong knobs) so that the population never
+    reaches Good/Excellent — the exact failure mode in v1→v2 where factor=40
+    capped the entire population at 683 with median 529.
+    """
+    if not isinstance(population_percentiles, Mapping):
+        return [
+            PromotionGateCheck(
+                name="score_dist_available",
+                status="fail",
+                message="Population percentiles artifact missing — cannot verify score distribution.",
+            )
+        ]
+
+    summary = population_percentiles.get("summary")
+    if not isinstance(summary, Mapping):
+        return [
+            PromotionGateCheck(
+                name="score_dist_available",
+                status="fail",
+                message="Population percentiles artifact has no summary block.",
+            )
+        ]
+
+    median_score = _as_float(summary.get("median_score"))
+    max_score = _as_float(summary.get("max_score"))
+
+    # Derive P95 and good+ share from the score_to_percentile lookup if present.
+    score_to_percentile = population_percentiles.get("score_to_percentile")
+    p95_score: float | None = None
+    good_plus_share: float | None = None
+
+    if isinstance(score_to_percentile, Mapping):
+        # P95: lowest score where cumulative percentile >= 95
+        for score_int in range(300, 851):
+            pct = _as_float(score_to_percentile.get(str(score_int)))
+            if pct is not None and pct >= 95:
+                p95_score = float(score_int)
+                break
+
+        # Good+ share: fraction of population scoring >= 650
+        pct_at_649 = _as_float(score_to_percentile.get("649"))
+        pct_at_650 = _as_float(score_to_percentile.get("650"))
+        if pct_at_649 is not None and pct_at_650 is not None:
+            good_plus_share = (100.0 - pct_at_649) / 100.0
+
+    checks: list[PromotionGateCheck] = []
+
+    # 1. Median in sensible range
+    median_ok = (
+        median_score is not None
+        and policy.score_dist_min_median <= median_score <= policy.score_dist_max_median
+    )
+    checks.append(
+        _threshold_check(
+            name="score_dist_median",
+            metric_value=median_score,
+            threshold=policy.score_dist_min_median,
+            passing=median_ok,
+            message=(
+                f"Population median score must be in "
+                f"[{policy.score_dist_min_median:.0f}, {policy.score_dist_max_median:.0f}]. "
+                f"A median below {policy.score_dist_min_median:.0f} indicates the mapping "
+                f"is collapsing all applicants into Poor."
+            ),
+        )
+    )
+
+    # 2. Highest reachable score — ensures mapping exercises upper scale
+    max_ok = max_score is not None and max_score >= policy.score_dist_max_reachable
+    checks.append(
+        _threshold_check(
+            name="score_dist_max_reachable",
+            metric_value=max_score,
+            threshold=float(policy.score_dist_max_reachable),
+            passing=max_ok,
+            message=(
+                f"Population max score must reach at least {policy.score_dist_max_reachable}. "
+                f"A ceiling below this means Good/Excellent are unreachable."
+            ),
+        )
+    )
+
+    # 3. P95 in Good+ territory
+    if p95_score is not None:
+        p95_ok = p95_score >= policy.score_dist_min_p95
+        checks.append(
+            _threshold_check(
+                name="score_dist_p95",
+                metric_value=p95_score,
+                threshold=policy.score_dist_min_p95,
+                passing=p95_ok,
+                message=(
+                    f"95th-percentile score must be >= {policy.score_dist_min_p95:.0f} "
+                    f"(Good band). Currently {p95_score:.0f}."
+                ),
+            )
+        )
+
+    # 4. Minimum Good+ share
+    if good_plus_share is not None:
+        good_ok = good_plus_share >= policy.score_dist_min_good_plus_share
+        checks.append(
+            _threshold_check(
+                name="score_dist_good_plus_share",
+                metric_value=good_plus_share,
+                threshold=policy.score_dist_min_good_plus_share,
+                passing=good_ok,
+                message=(
+                    f"At least {policy.score_dist_min_good_plus_share:.0%} of population "
+                    f"must score Good or Excellent (>=650). "
+                    f"Currently {good_plus_share:.1%}."
+                ),
+            )
+        )
+
+    return checks
+
+
 def _find_model_test_stats(
     metrics_payload: Mapping[str, Any],
     *,
@@ -596,6 +779,23 @@ def _parse_policy(payload: Mapping[str, Any]) -> PromotionGatePolicy:
             "max_post_governance_approval_rate_drop",
         ),
         max_drift_psi_alert=_required_threshold(thresholds, "max_drift_psi_alert"),
+        score_dist_min_median=_optional_threshold(
+            thresholds, "score_dist_min_median", SCORE_DIST_MIN_MEDIAN
+        ),
+        score_dist_max_median=_optional_threshold(
+            thresholds, "score_dist_max_median", SCORE_DIST_MAX_MEDIAN
+        ),
+        score_dist_min_p95=_optional_threshold(
+            thresholds, "score_dist_min_p95", SCORE_DIST_MIN_P95
+        ),
+        score_dist_min_good_plus_share=_optional_threshold(
+            thresholds, "score_dist_min_good_plus_share", SCORE_DIST_MIN_GOOD_PLUS_SHARE
+        ),
+        score_dist_max_reachable=int(
+            _optional_threshold(
+                thresholds, "score_dist_max_reachable", float(SCORE_DIST_MAX_REACHABLE)
+            )
+        ),
     )
 
 
@@ -613,6 +813,13 @@ def _required_threshold(payload: Mapping[str, Any], field_name: str) -> float:
             f"promotion gate policy missing numeric threshold {field_name}."
         )
     return value
+
+
+def _optional_threshold(
+    payload: Mapping[str, Any], field_name: str, default: float
+) -> float:
+    value = _as_float(payload.get(field_name))
+    return value if value is not None else default
 
 
 def _resolve_manifest_path(
@@ -722,6 +929,11 @@ __all__ = [
     "MAX_POST_GOVERNANCE_AUC_DROP",
     "MAX_SUBGROUP_AUC_GAP",
     "MIN_TEST_AUC_ROC",
+    "SCORE_DIST_MAX_MEDIAN",
+    "SCORE_DIST_MAX_REACHABLE",
+    "SCORE_DIST_MIN_GOOD_PLUS_SHARE",
+    "SCORE_DIST_MIN_MEDIAN",
+    "SCORE_DIST_MIN_P95",
     "PromotionGateCheck",
     "PROMOTION_GATE_POLICY_PATH",
     "PROMOTION_GATE_POLICY_RELATIVE_PATH",

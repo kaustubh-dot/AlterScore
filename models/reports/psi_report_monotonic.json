@@ -38,6 +38,16 @@
       "status": "stable"
     },
     {
+      "feature": "text_sentiment_compound",
+      "psi": 0.007,
+      "status": "stable"
+    },
+    {
+      "feature": "text_semantic_dim2",
+      "psi": 0.0062,
+      "status": "stable"
+    },
+    {
       "feature": "delay_discounting_rate",
       "psi": 0.0061,
       "status": "stable"
@@ -45,16 +55,6 @@
     {
       "feature": "conscientiousness_score",
       "psi": 0.0053,
-      "status": "stable"
-    },
-    {
-      "feature": "locus_of_control",
-      "psi": 0.0051,
-      "status": "stable"
-    },
-    {
-      "feature": "risk_response_speed_ratio",
-      "psi": 0.0047,
       "status": "stable"
     }
   ],
@@ -87,6 +87,16 @@
     {
       "feature": "social_capital_score",
       "psi": 0.007,
+      "status": "stable"
+    },
+    {
+      "feature": "text_sentiment_compound",
+      "psi": 0.007,
+      "status": "stable"
+    },
+    {
+      "feature": "text_semantic_dim2",
+      "psi": 0.0062,
       "status": "stable"
     },
     {
@@ -125,11 +135,6 @@
       "status": "stable"
     },
     {
-      "feature": "text_semantic_dim1",
-      "psi": 0.0047,
-      "status": "stable"
-    },
-    {
       "feature": "behavioral_trust_score",
       "psi": 0.0046,
       "status": "stable"
@@ -145,8 +150,8 @@
       "status": "stable"
     },
     {
-      "feature": "text_sentiment_compound",
-      "psi": 0.004,
+      "feature": "text_semantic_dim1",
+      "psi": 0.0038,
       "status": "stable"
     },
     {
@@ -162,11 +167,6 @@
     {
       "feature": "financial_literacy_score",
       "psi": 0.0034,
-      "status": "stable"
-    },
-    {
-      "feature": "text_semantic_dim2",
-      "psi": 0.0029,
       "status": "stable"
     },
     {
