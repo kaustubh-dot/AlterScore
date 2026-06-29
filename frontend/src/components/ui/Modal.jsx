@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import './Modal.css';
 
 export default function Modal({
@@ -10,31 +10,82 @@ export default function Modal({
   onConfirm,
   onCancel
 }) {
+  const titleId = useId();
+  const messageId = useId();
+  const modalRef = useRef(null);
+  const previouslyFocusedRef = useRef(null);
+
   useEffect(() => {
     if (isOpen) {
+      previouslyFocusedRef.current = document.activeElement;
       document.body.style.overflow = 'hidden';
+      requestAnimationFrame(() => {
+        const firstButton = modalRef.current?.querySelector('button');
+        firstButton?.focus();
+      });
     } else {
       document.body.style.overflow = '';
     }
     return () => {
       document.body.style.overflow = '';
+      previouslyFocusedRef.current?.focus?.();
     };
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onCancel();
+        return;
+      }
+
+      if (event.key !== 'Tab') return;
+
+      const focusable = modalRef.current?.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (!focusable || focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onCancel]);
 
   if (!isOpen) return null;
 
   return (
     <div className="modal-overlay" onClick={onCancel}>
-      <div className="modal-card glass" onClick={(e) => e.stopPropagation()}>
+      <div
+        ref={modalRef}
+        className="modal-card glass"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={messageId}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="modal-content">
-          <h3 className="modal-title gradient-text-accent">{title}</h3>
-          <p className="modal-message">{message}</p>
+          <h3 id={titleId} className="modal-title gradient-text-accent">{title}</h3>
+          <p id={messageId} className="modal-message">{message}</p>
         </div>
         <div className="modal-actions">
-          <button className="btn btn-ghost" onClick={onCancel}>
+          <button type="button" className="btn btn-ghost" onClick={onCancel}>
             {cancelText}
           </button>
-          <button className="btn btn-primary" onClick={onConfirm}>
+          <button type="button" className="btn btn-primary" onClick={onConfirm}>
             {confirmText}
           </button>
         </div>

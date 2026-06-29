@@ -8,12 +8,87 @@ import useSound from '../hooks/useSound';
 import usePageTransition from '../hooks/usePageTransition';
 import './Results.css';
 
+const SCORE_MIN = 300;
+const SCORE_RANGE = 550;
+
+function getBandInfoForScore(score) {
+  if (score >= 750) {
+    return {
+      band: 'excellent',
+      color: 'var(--score-excellent)',
+      shadow: 'var(--shadow-score-excellent)',
+      loanMin: 30000,
+      loanMax: 75000,
+      description: 'Microloans up to Rs. 75,000 approved. Extremely low default probability.',
+    };
+  }
+  if (score >= 650) {
+    return {
+      band: 'good',
+      color: 'var(--score-good)',
+      shadow: 'var(--shadow-score-good)',
+      loanMin: 12000,
+      loanMax: 30000,
+      description: 'Microloans up to Rs. 30,000 approved. Solid repayment probability.',
+    };
+  }
+  if (score >= 550) {
+    return {
+      band: 'fair',
+      color: 'var(--score-fair)',
+      shadow: 'var(--shadow-score-fair)',
+      loanMin: 5000,
+      loanMax: 12000,
+      description: 'Microloans up to Rs. 12,000 approved. Moderate risk conditions apply.',
+    };
+  }
+  if (score >= 450) {
+    return {
+      band: 'poor',
+      color: 'var(--score-poor)',
+      shadow: 'var(--shadow-score-poor)',
+      loanMin: 2000,
+      loanMax: 5000,
+      description: 'Microloans up to Rs. 5,000 approved. Sub-prime risk controls active.',
+    };
+  }
+  return {
+    band: 'very_poor',
+    color: 'var(--score-very-poor)',
+    shadow: 'var(--shadow-score-very-poor)',
+    loanMin: 0,
+    loanMax: 0,
+    description: 'Funding deferred. Score below threshold. Credit counselling recommended.',
+  };
+}
+
+function getBandColor(band, fallbackScore) {
+  const normalizedBand = String(band || '').toLowerCase();
+  if (normalizedBand.includes('excellent')) return 'var(--score-excellent)';
+  if (normalizedBand.includes('good')) return 'var(--score-good)';
+  if (normalizedBand.includes('fair')) return 'var(--score-fair)';
+  if (normalizedBand.includes('poor') && !normalizedBand.includes('very')) return 'var(--score-poor)';
+  if (normalizedBand.includes('very')) return 'var(--score-very-poor)';
+  return getBandInfoForScore(fallbackScore).color;
+}
+
 export default function Results() {
   const location = useLocation();
   const { transitionTo } = usePageTransition();
   const { playSuccess, playClick } = useSound();
   
-  const scoreData = location.state;
+  const [scoreData] = useState(() => {
+    if (location.state) return location.state;
+
+    const saved = localStorage.getItem('alterscore_results');
+    if (!saved) return null;
+
+    try {
+      return JSON.parse(saved);
+    } catch {
+      return null;
+    }
+  });
   
   // Persist score to localStorage for borrower dashboard restoration
   useEffect(() => {
@@ -118,53 +193,25 @@ export default function Results() {
   
   const currentScore = Math.max(300, Math.min(850, scoreData.credit_score + paceShift + crtShift + consistencyShift));
 
-  // Recalculate bands and numbers based on currentScore
-  let band;
-  let bandColor;
-  let bandShadow;
-  let minAmount;
-  let maxAmount;
-  let bandDesc;
-
-  if (currentScore >= 750) {
-    band = 'excellent';
-    bandColor = 'var(--score-excellent)';
-    bandShadow = 'var(--shadow-score-excellent)';
-    minAmount = 30000;
-    maxAmount = 75000;
-    bandDesc = 'Microloans up to ₹75,000 approved. Extremely low default probability.';
-  } else if (currentScore >= 650) {
-    band = 'good';
-    bandColor = 'var(--score-good)';
-    bandShadow = 'var(--shadow-score-good)';
-    minAmount = 12000;
-    maxAmount = 30000;
-    bandDesc = 'Microloans up to ₹30,000 approved. Solid repayment probability.';
-  } else if (currentScore >= 550) {
-    band = 'fair';
-    bandColor = 'var(--score-fair)';
-    bandShadow = 'var(--shadow-score-fair)';
-    minAmount = 5000;
-    maxAmount = 12000;
-    bandDesc = 'Microloans up to ₹12,000 approved. Moderate risk conditions apply.';
-  } else if (currentScore >= 450) {
-    band = 'poor';
-    bandColor = 'var(--score-poor)';
-    bandShadow = 'var(--shadow-score-poor)';
-    minAmount = 2000;
-    maxAmount = 5000;
-    bandDesc = 'Microloans up to ₹5,000 approved. Sub-prime risk controls active.';
-  } else {
-    band = 'very_poor';
-    bandColor = 'var(--score-very-poor)';
-    bandShadow = 'var(--shadow-score-very-poor)';
-    minAmount = 0;
-    maxAmount = 0;
-    bandDesc = 'Funding deferred. Score below threshold. Credit counselling recommended.';
-  }
-
   const repaymentProb = 0.35 + ((currentScore - 300) / 550) * 0.63;
   const percentile = Math.round(((currentScore - 300) / 550) * 98);
+  const simulationChanged = currentScore !== scoreData.credit_score;
+  const simulatedBandInfo = getBandInfoForScore(currentScore);
+  const backendBandInfo = getBandInfoForScore(scoreData.credit_score);
+  const backendEligibility = scoreData.loan_eligibility;
+  const displayBand = simulationChanged ? simulatedBandInfo.band : (scoreData.risk_band || backendBandInfo.band);
+  const displayBandColor = simulationChanged ? simulatedBandInfo.color : getBandColor(scoreData.risk_band, scoreData.credit_score);
+  const displayBandShadow = simulationChanged ? simulatedBandInfo.shadow : backendBandInfo.shadow;
+  const displayMinAmount = simulationChanged ? simulatedBandInfo.loanMin : (backendEligibility?.amount_min ?? backendBandInfo.loanMin);
+  const displayMaxAmount = simulationChanged ? simulatedBandInfo.loanMax : (backendEligibility?.amount_max ?? backendBandInfo.loanMax);
+  const displayBandDesc = simulationChanged ? simulatedBandInfo.description : (backendEligibility?.description || backendBandInfo.description);
+  const displayRepaymentProb = simulationChanged
+    ? repaymentProb
+    : (scoreData.repayment_probability ?? 0.35 + ((scoreData.credit_score - SCORE_MIN) / SCORE_RANGE) * 0.63);
+  const displayPercentile = simulationChanged
+    ? percentile
+    : (scoreData.percentile ?? Math.round(((scoreData.credit_score - SCORE_MIN) / SCORE_RANGE) * 98));
+  const maxAbsShap = Math.max(...scoreData.explanation.map((item) => Math.abs(item.shap_value)), 1);
 
   const scoreToDisplay = (animationStep >= 3) ? currentScore : displayScore;
   const ringOffsetToDisplay = (animationStep >= 3) 
@@ -180,7 +227,7 @@ export default function Results() {
           <div 
             className="score-circle-wrapper"
             style={{ 
-              boxShadow: animationStep >= 3 ? bandShadow : 'none'
+              boxShadow: animationStep >= 3 ? displayBandShadow : 'none'
             }}
           >
             {/* SVG Circle Gauge */}
@@ -199,7 +246,7 @@ export default function Results() {
                 fill="transparent"
                 className="score-progress"
                 style={{
-                  stroke: bandColor,
+                  stroke: displayBandColor,
                   strokeDashoffset: ringOffsetToDisplay,
                   transition: 'stroke 0.4s ease, stroke-dashoffset 0.4s var(--ease-smooth)'
                 }}
@@ -213,11 +260,11 @@ export default function Results() {
               <span 
                 className="score-band"
                 style={{
-                  color: bandColor,
-                  textShadow: animationStep >= 3 ? `0 0 10px ${bandColor}40` : 'none'
+                  color: displayBandColor,
+                  textShadow: animationStep >= 3 ? `0 0 10px ${displayBandColor}40` : 'none'
                 }}
               >
-                <TextReveal text={band} />
+                <TextReveal text={displayBand} />
               </span>
             </div>
           </div>
@@ -229,8 +276,8 @@ export default function Results() {
               transition: 'all 500ms ease'
             }}
           >
-            <p className="probability-label">{(repaymentProb * 100).toFixed(1)}% Repayment Probability</p>
-            <p className="percentile-label">Higher than {percentile}% of cohort</p>
+            <p className="probability-label">{(displayRepaymentProb * 100).toFixed(1)}% Repayment Probability</p>
+            <p className="percentile-label">Higher than {displayPercentile}% of cohort</p>
           </div>
         </section>
 
@@ -238,9 +285,9 @@ export default function Results() {
         <div className={`info-cards-row fade-in-content ${animationStep >= 4 ? 'visible' : ''}`}>
           <ScrollReveal direction="up" delay={100}>
             <GlowCard className="result-card">
-              <span className="card-kicker">Risk Assessment</span>
+              <span className="card-kicker">{simulationChanged ? 'Estimated Risk Assessment' : 'Risk Assessment'}</span>
               <h3 className="card-title">Band Verdict</h3>
-              <p className="card-body">{bandDesc}</p>
+              <p className="card-body">{displayBandDesc}</p>
             </GlowCard>
           </ScrollReveal>
 
@@ -248,14 +295,16 @@ export default function Results() {
             <GlowCard className="result-card">
               <span className="card-kicker">Lending Access</span>
               <h3 className="card-title">Approved Loan Limit</h3>
-              {minAmount > 0 ? (
+              {displayMinAmount > 0 ? (
                 <p className="loan-amount-range">
-                  ₹{minAmount.toLocaleString('en-IN')} – ₹{maxAmount.toLocaleString('en-IN')}
+                  Rs. {displayMinAmount.toLocaleString('en-IN')} - Rs. {displayMaxAmount.toLocaleString('en-IN')}
                 </p>
               ) : (
                 <p className="loan-amount-range" style={{ color: 'var(--accent-rose)' }}>Deferred</p>
               )}
-              <p className="card-body">Subject to telemetry consistency.</p>
+              <p className="card-body">
+                {simulationChanged ? 'Estimated from simulator adjustments.' : 'Subject to lender policy and telemetry consistency.'}
+              </p>
             </GlowCard>
           </ScrollReveal>
         </div>
@@ -263,9 +312,9 @@ export default function Results() {
         {/* SHAP Feature Contribution Bars */}
         <ScrollReveal direction="up" delay={300}>
           <section className={`shap-panel fade-in-content ${animationStep >= 4 ? 'visible' : ''}`}>
-            <div className="section-header" style={{ textAlign: 'left', marginBottom: '24px' }}>
+            <div className="results-section-header">
               <span className="section-eyebrow">Explainable AI</span>
-              <h2 className="section-title" style={{ fontSize: 'var(--text-xl)' }}>
+              <h2 className="results-section-title">
                 <TextReveal text="What Drove Your Score" />
               </h2>
             </div>
@@ -273,8 +322,7 @@ export default function Results() {
             <GlowCard className="shap-table result-card">
               {scoreData.explanation.map((item, idx) => {
                 const isPos = item.direction === 'positive';
-                const maxShap = 0.15; // normalize max bar width
-                const percentage = Math.min((Math.abs(item.shap_value) / maxShap) * 100, 100);
+                const percentage = Math.min((Math.abs(item.shap_value) / maxAbsShap) * 100, 100);
                 
                 return (
                   <div key={idx} className="shap-row">
@@ -289,7 +337,7 @@ export default function Results() {
                       />
                     </div>
                     <span className={`shap-value-badge ${isPos ? 'positive' : 'negative'}`}>
-                      {isPos ? '+' : ''}{Math.round(item.shap_value * 1000)} pts
+                      {isPos ? '+' : ''}{item.shap_value.toFixed(2)}
                     </span>
                   </div>
                 );
@@ -324,7 +372,9 @@ export default function Results() {
                   step="0.5"
                   value={optPace}
                   onChange={(e) => setOptPace(parseFloat(e.target.value))}
-                  className="optimizer-input-range"
+                  className="input-range-control"
+                  aria-label="Deliberation pace"
+                  aria-valuetext={`${optPace.toFixed(1)} seconds`}
                 />
               </div>
 
@@ -340,7 +390,9 @@ export default function Results() {
                   step="1"
                   value={optCRT}
                   onChange={(e) => setOptCRT(parseInt(e.target.value))}
-                  className="optimizer-input-range"
+                  className="input-range-control"
+                  aria-label="Cognitive reflection correctness"
+                  aria-valuetext={`${optCRT} of 2 correct`}
                 />
               </div>
 
@@ -358,7 +410,9 @@ export default function Results() {
                   step="1"
                   value={optConsistency}
                   onChange={(e) => setOptConsistency(parseInt(e.target.value))}
-                  className="optimizer-input-range"
+                  className="input-range-control"
+                  aria-label="Decision frame consistency"
+                  aria-valuetext={optConsistency === 1 ? 'Consistent match' : 'Mismatch flag'}
                 />
               </div>
             </div>
@@ -373,9 +427,9 @@ export default function Results() {
 
         {/* DiCE-ML Counterfactual Suggestions */}
         <section className={`dice-panel fade-in-content ${animationStep >= 4 ? 'visible' : ''}`}>
-          <div className="section-header" style={{ textAlign: 'left', marginBottom: '24px' }}>
+          <div className="results-section-header">
             <span className="section-eyebrow">Counterfactual Recommendations</span>
-            <h2 className="section-title" style={{ fontSize: 'var(--text-xl)' }}>
+            <h2 className="results-section-title">
               <TextReveal text="What Could Move You Up" />
             </h2>
           </div>
@@ -396,9 +450,9 @@ export default function Results() {
 
         {/* Improvement tips */}
         <section className={`tips-panel fade-in-content ${animationStep >= 4 ? 'visible' : ''}`}>
-          <div className="section-header" style={{ textAlign: 'left', marginBottom: '24px' }}>
+          <div className="results-section-header">
             <span className="section-eyebrow">Pacing Guides</span>
-            <h2 className="section-title" style={{ fontSize: 'var(--text-xl)' }}>
+            <h2 className="results-section-title">
               <TextReveal text="System Guidance Tips" />
             </h2>
           </div>

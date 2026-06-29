@@ -18,7 +18,9 @@ import './styles/global.css';
 import Admin from './pages/Admin';
 
 function AppContent() {
-  const [showPreloader, setShowPreloader] = useState(true);
+  const [showPreloader, setShowPreloader] = useState(() => {
+    return sessionStorage.getItem('alterscore_preloader_seen') !== 'true';
+  });
   const location = useLocation();
   const { initAudio } = useSound();
 
@@ -30,6 +32,9 @@ function AppContent() {
     if (showPreloader) {
       document.body.style.overflow = 'hidden';
       document.body.classList.remove('preloader-done');
+    } else {
+      document.body.style.overflow = '';
+      document.body.classList.add('preloader-done');
     }
     return () => {
       document.body.style.overflow = '';
@@ -57,6 +62,7 @@ function AppContent() {
   }, [initAudio]);
 
   const handlePreloadComplete = () => {
+    sessionStorage.setItem('alterscore_preloader_seen', 'true');
     setShowPreloader(false);
     document.body.style.overflow = '';
     document.body.classList.add('preloader-done');

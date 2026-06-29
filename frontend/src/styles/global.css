@@ -138,6 +138,47 @@ body::after {
   transform: translateY(0);
 }
 
+.input-range-control {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 2px;
+  background: var(--bg-border);
+  outline: none;
+  border-radius: var(--radius-full);
+}
+
+.input-range-control::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  border: 1px solid var(--bg-border);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.input-range-control::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  border: 1px solid var(--bg-border);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.input-range-control:hover::-webkit-slider-thumb,
+.input-range-control:focus-visible::-webkit-slider-thumb {
+  transform: scale(1.2);
+}
+
+.input-range-control:hover::-moz-range-thumb,
+.input-range-control:focus-visible::-moz-range-thumb {
+  transform: scale(1.2);
+}
+
 /* Badges / Chips */
 .chip {
   font-family: var(--font-mono);
@@ -322,5 +363,22 @@ body::after {
 
   .shimmer-bg::after {
     animation: none !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .input-range-control {
+    height: 4px;
+    margin: var(--space-2) 0;
+  }
+
+  .input-range-control::-webkit-slider-thumb {
+    width: 22px;
+    height: 22px;
+  }
+
+  .input-range-control::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
   }
 }

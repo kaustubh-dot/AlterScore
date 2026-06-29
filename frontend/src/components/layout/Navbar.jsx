@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Activity, ShieldCheck, Home } from 'lucide-react';
+import { Activity, ShieldCheck, Home, Volume2, VolumeX } from 'lucide-react';
 import useSound from '../../hooks/useSound';
 import usePageTransition from '../../hooks/usePageTransition';
 import './Navbar.css';
@@ -9,7 +9,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const { transitionTo } = usePageTransition();
-  const { playClick } = useSound();
+  const { muted, playClick, toggleMuted } = useSound();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -46,6 +46,18 @@ export default function Navbar() {
           </span>
         </button>
         <div className="navbar-links">
+          <button
+            type="button"
+            onClick={() => {
+              toggleMuted();
+              playClick();
+            }}
+            className="navbar-icon-button"
+            aria-label={muted ? 'Turn sound on' : 'Turn sound off'}
+            aria-pressed={!muted}
+          >
+            {muted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+          </button>
           {isDashboard ? (
             <button 
               onClick={() => { playClick(); transitionTo('/'); }}

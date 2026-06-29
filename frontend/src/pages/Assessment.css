@@ -197,6 +197,16 @@
   outline: none;
 }
 
+.scenario-pill > div:first-child {
+  flex: 1;
+  padding-right: 12px;
+}
+
+.scenario-pill > div:last-child {
+  display: flex;
+  gap: 8px;
+}
+
 .scenario-pill:hover {
   border-color: var(--text-muted);
   background: var(--bg-muted);
@@ -472,22 +482,73 @@
 /* Mobile responsive */
 @media (max-width: 640px) {
   .assessment-layout {
-    padding-top: 64px;
+    padding-top: 56px;
   }
 
   .assessment-exit-btn {
-    top: 16px;
+    top: 12px;
     left: 16px;
     padding: 8px 12px;
   }
 
+  .assessment-container {
+    align-items: flex-start;
+    padding: var(--space-4) 0 var(--space-6);
+  }
+
+  .assessment-wrapper {
+    max-width: none;
+  }
+
+  .assessment-header {
+    align-items: flex-start;
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+    font-size: 0.75rem;
+    line-height: 1.35;
+  }
+
+  .section-indicator {
+    max-width: 64%;
+  }
+
   .question-card {
-    padding: var(--space-6) var(--space-5);
-    min-height: 260px;
+    padding: var(--space-5);
+    min-height: auto;
   }
 
   .question-text {
-    font-size: var(--text-lg);
+    font-size: 1.375rem;
+    line-height: 1.4;
+    margin-bottom: var(--space-4);
+  }
+
+  .question-hint {
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    margin-bottom: var(--space-5);
+  }
+
+  .answer-control {
+    margin-top: var(--space-4);
+  }
+
+  .number-prefix,
+  .number-suffix,
+  .input-number {
+    font-size: 1.375rem;
+  }
+
+  .option-pill,
+  .scenario-pill,
+  .input-textarea {
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+  .option-pill {
+    min-height: 52px;
+    padding: 14px var(--space-4);
   }
 
   .consent-card {
@@ -495,29 +556,79 @@
   }
 
   .likert-scale {
-    gap: var(--space-1);
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: var(--space-2);
   }
 
   .likert-option {
+    min-height: 76px;
     padding: var(--space-3) var(--space-1);
+  }
+
+  .likert-number {
+    font-size: 1.125rem;
+  }
+
+  .likert-label {
+    font-size: 0.6875rem;
+    line-height: 1.25;
+    letter-spacing: 0.02em;
   }
 
   .scenario-pill {
     flex-direction: column;
     align-items: flex-start;
     gap: var(--space-3);
+    padding: var(--space-4);
+  }
+
+  .scenario-pill > div:first-child {
+    width: 100%;
+    padding-right: 0;
   }
 
   .scenario-pill > div:last-child {
-    align-self: flex-end;
+    align-self: stretch;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-2);
+    width: 100%;
+  }
+
+  .badge-tag,
+  .option-pill-btn {
+    width: 100%;
+    min-height: 46px;
+    font-size: 0.75rem;
+    padding: 11px 12px;
+  }
+
+  .textarea-metadata {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: var(--space-1);
+    font-size: 0.75rem;
+    line-height: 1.35;
   }
 
   .controls-row {
-    flex-wrap: wrap;
+    flex-direction: column-reverse;
+    align-items: stretch;
     gap: var(--space-3);
+    margin-top: var(--space-5);
   }
 
   .controls-group {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--space-2);
+  }
+
+  .controls-row .btn {
+    min-height: 48px;
+    width: 100%;
+    padding: 12px 14px !important;
+    font-size: 0.9375rem;
   }
 }

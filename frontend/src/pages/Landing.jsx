@@ -6,6 +6,7 @@ import ScrollReveal from '../components/animation/ScrollReveal';
 import GlowCard from '../components/ui/GlowCard';
 import MagneticButton from '../components/ui/MagneticButton';
 import TextReveal from '../components/animation/TextReveal';
+import { QUESTIONS } from '../data/questions';
 import './Landing.css';
 
 // Count-up helper hook
@@ -108,6 +109,7 @@ export default function Landing() {
   const startAssessment = () => {
     transitionTo('/assessment');
   };
+  const questionCount = QUESTIONS.length;
 
   return (
     <div className={`landing-page ${isLoaded ? 'loaded' : ''}`} style={!isLoaded ? { opacity: 0, pointerEvents: 'none' } : undefined}>
@@ -146,7 +148,7 @@ export default function Landing() {
 
               <ScrollReveal direction="up" delay={800}>
                 <div className="hero-meta">
-                  <span>27 Questions • ~5 Minutes • Instant Decision</span>
+                  <span>{questionCount} Questions • ~5 Minutes • Instant Decision</span>
                 </div>
               </ScrollReveal>
             </div>
@@ -232,7 +234,7 @@ export default function Landing() {
                       </div>
                       <h3 className="step-title">Profile Agency</h3>
                       <p className="step-desc">
-                        Answer 27 adaptive questions in about five minutes — no
+                        Answer {questionCount} adaptive questions in about five minutes — no
                         documents or credit history required.
                       </p>
                     </GlowCard>

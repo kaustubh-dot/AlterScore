@@ -249,7 +249,9 @@ export default function Dashboard() {
                         setSimPace(parseFloat(e.target.value));
                         playSelect();
                       }}
-                      className="optimizer-input-range"
+                      className="input-range-control"
+                      aria-label="Simulator deliberation pace"
+                      aria-valuetext={`${simPace.toFixed(1)} seconds`}
                     />
                   </div>
 
@@ -270,7 +272,9 @@ export default function Dashboard() {
                         setSimConsistency(parseFloat(e.target.value));
                         playSelect();
                       }}
-                      className="optimizer-input-range"
+                      className="input-range-control"
+                      aria-label="Simulator choice consistency"
+                      aria-valuetext={simConsistency === 1.0 ? 'Consistent, 100 percent' : 'Variance drift, 50 percent'}
                     />
                   </div>
 
@@ -289,7 +293,9 @@ export default function Dashboard() {
                         setSimFocus(parseFloat(e.target.value));
                         playSelect();
                       }}
-                      className="optimizer-input-range"
+                      className="input-range-control"
+                      aria-label="Simulator reflection focus"
+                      aria-valuetext={`${Math.round(simFocus * 100)} percent`}
                     />
                   </div>
                 </div>
@@ -327,46 +333,46 @@ export default function Dashboard() {
                   <h3 className="panel-title">My Behavioral Indices</h3>
                   <span className="panel-badge">Telemetry profile</span>
                 </div>
-                <div className="shap-table" style={{ border: 'none', background: 'transparent', padding: 0 }}>
-                  <div className="shap-row" style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', paddingBottom: '12px' }}>
+                <div className="dashboard-trait-table">
+                  <div className="dashboard-trait-row">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <span className="shap-feature-name" style={{ fontSize: '13px' }}>Deliberation index</span>
+                      <span className="dashboard-trait-name">Deliberation index</span>
                       <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Pace of decision-making reflection vs. impulsivity</span>
                     </div>
-                    <div className="trait-progress-wrapper" style={{ width: '100px', display: 'flex', alignItems: 'center' }}>
-                      <div className="textarea-progress-bar" style={{ height: '4px' }}>
+                    <div className="trait-progress-wrapper">
+                      <div className="dashboard-trait-progress">
                         <div 
-                          className="textarea-progress-fill" 
+                          className="dashboard-trait-progress-fill"
                           style={{ width: `${Math.round(simPace / 8 * 100)}%`, backgroundColor: 'var(--accent-cyan)' }} 
                         />
                       </div>
                     </div>
                   </div>
 
-                  <div className="shap-row" style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', paddingBottom: '12px', paddingTop: '12px' }}>
+                  <div className="dashboard-trait-row">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <span className="shap-feature-name" style={{ fontSize: '13px' }}>Choice Integrity</span>
+                      <span className="dashboard-trait-name">Choice Integrity</span>
                       <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Consistency when matching questions are re-framed</span>
                     </div>
-                    <div className="trait-progress-wrapper" style={{ width: '100px', display: 'flex', alignItems: 'center' }}>
-                      <div className="textarea-progress-bar" style={{ height: '4px' }}>
+                    <div className="trait-progress-wrapper">
+                      <div className="dashboard-trait-progress">
                         <div 
-                          className="textarea-progress-fill" 
+                          className="dashboard-trait-progress-fill"
                           style={{ width: `${simConsistency * 100}%`, backgroundColor: 'var(--accent-emerald)' }} 
                         />
                       </div>
                     </div>
                   </div>
 
-                  <div className="shap-row" style={{ paddingTop: '12px' }}>
+                  <div className="dashboard-trait-row">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <span className="shap-feature-name" style={{ fontSize: '13px' }}>Stress Resilience</span>
+                      <span className="dashboard-trait-name">Stress Resilience</span>
                       <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Contingency planning and recovery preferences</span>
                     </div>
-                    <div className="trait-progress-wrapper" style={{ width: '100px', display: 'flex', alignItems: 'center' }}>
-                      <div className="textarea-progress-bar" style={{ height: '4px' }}>
+                    <div className="trait-progress-wrapper">
+                      <div className="dashboard-trait-progress">
                         <div 
-                          className="textarea-progress-fill" 
+                          className="dashboard-trait-progress-fill"
                           style={{ width: `${Math.round(simFocus * 100)}%`, backgroundColor: 'var(--accent-amber)' }} 
                         />
                       </div>
@@ -420,13 +426,13 @@ export default function Dashboard() {
                 <h3 className="panel-title">Personalized Improvement Actions</h3>
                 <span className="panel-badge">Score Gain Tips</span>
               </div>
-              <div className="dice-list">
+              <div className="dashboard-action-list">
                 {activeData.counterfactual_actions.map((act, idx) => (
-                  <div className="dice-card glass" key={idx} style={{ padding: '14px', border: '1px solid var(--bg-border)', borderRadius: '4px' }}>
-                    <span className="dice-feature-change" style={{ color: 'var(--accent-cyan)' }}>
+                  <div className="dashboard-action-card glass" key={idx}>
+                    <span className="dashboard-action-gain">
                       Est Gain: +{act.estimated_score_gain} Pts
                     </span>
-                    <span className="dice-description" style={{ fontSize: '12px' }}>
+                    <span className="dashboard-action-description">
                       {act.plain_language}
                     </span>
                   </div>

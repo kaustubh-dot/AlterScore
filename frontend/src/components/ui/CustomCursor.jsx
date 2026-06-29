@@ -7,8 +7,30 @@ export default function CustomCursor({ variant = 'default' }) {
   const [hovered, setHovered] = useState(false);
   const [clicked, setClicked] = useState(false);
   const [hidden, setHidden] = useState(true);
+  const [isFinePointer, setIsFinePointer] = useState(false);
 
   useEffect(() => {
+    const pointerQuery = window.matchMedia('(pointer: fine)');
+    const updatePointerMode = () => {
+      setIsFinePointer(pointerQuery.matches && window.innerWidth > 768);
+    };
+
+    updatePointerMode();
+    pointerQuery.addEventListener('change', updatePointerMode);
+    window.addEventListener('resize', updatePointerMode);
+
+    return () => {
+      pointerQuery.removeEventListener('change', updatePointerMode);
+      window.removeEventListener('resize', updatePointerMode);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isFinePointer) {
+      document.body.classList.remove('custom-cursor-active');
+      return undefined;
+    }
+
     let mouseX = 0, mouseY = 0;
     let ringX = 0, ringY = 0;
 
@@ -30,6 +52,10 @@ export default function CustomCursor({ variant = 'default' }) {
     const onMouseUp = () => setClicked(false);
     const onMouseEnter = () => setHidden(false);
     const onMouseLeave = () => setHidden(true);
+    const onTouchStart = () => {
+      setHidden(true);
+      setClicked(false);
+    };
 
     const onMouseOver = (e) => {
       const target = e.target.closest('a, button, [role="button"], input, select, textarea, .option-pill, .scenario-pill, .likert-option, .badge-tag, .btn, .option-pill-btn');
@@ -42,6 +68,7 @@ export default function CustomCursor({ variant = 'default' }) {
     document.addEventListener('mouseenter', onMouseEnter);
     document.addEventListener('mouseleave', onMouseLeave);
     window.addEventListener('mouseover', onMouseOver);
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
 
     let animationFrameId;
     const render = () => {
@@ -63,14 +90,19 @@ export default function CustomCursor({ variant = 'default' }) {
       document.removeEventListener('mouseenter', onMouseEnter);
       document.removeEventListener('mouseleave', onMouseLeave);
       window.removeEventListener('mouseover', onMouseOver);
+      window.removeEventListener('touchstart', onTouchStart);
       cancelAnimationFrame(animationFrameId);
       document.body.classList.remove('custom-cursor-active');
     };
-  }, []);
+  }, [isFinePointer]);
 
   // The assessment uses a minimalistic cursor: just the dot tracking the
   // pointer directly, with no animated trailing ring, for a calmer focus state.
   const minimal = variant === 'assessment';
+
+  if (!isFinePointer) {
+    return null;
+  }
 
   return (
     <>

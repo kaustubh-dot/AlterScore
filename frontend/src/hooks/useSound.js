@@ -1,9 +1,21 @@
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 // Singleton state to persist background classical pad loop across components/renders
 let ambientInterval = null;
 let currentPieceIndex = Math.floor(Math.random() * 6);
 let currentMeasureIndex = 0;
+let soundMuted = localStorage.getItem('alterscore_sound_muted') === 'true';
+
+const notifySoundPreference = () => {
+  window.dispatchEvent(new CustomEvent('alterscore_sound_muted_change', { detail: soundMuted }));
+};
+
+const stopAmbient = () => {
+  if (ambientInterval) {
+    clearInterval(ambientInterval);
+    ambientInterval = null;
+  }
+};
 
 const startAmbient = (ctx) => {
   if (ambientInterval) return; // Already running
@@ -310,10 +322,24 @@ const startAmbient = (ctx) => {
 
 export default function useSound() {
   const audioCtxRef = useRef(null);
+  const [muted, setMuted] = useState(soundMuted);
+
+  useEffect(() => {
+    const handleMutedChange = (event) => {
+      setMuted(Boolean(event.detail));
+    };
+
+    window.addEventListener('alterscore_sound_muted_change', handleMutedChange);
+    return () => window.removeEventListener('alterscore_sound_muted_change', handleMutedChange);
+  }, []);
 
   const getAudioContext = () => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReducedMotion) return null;
+    if (soundMuted) {
+      stopAmbient();
+      return null;
+    }
 
     if (!audioCtxRef.current) {
       audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
@@ -334,6 +360,17 @@ export default function useSound() {
 
   const initAudio = () => {
     getAudioContext();
+  };
+
+  const toggleMuted = () => {
+    soundMuted = !soundMuted;
+    localStorage.setItem('alterscore_sound_muted', String(soundMuted));
+    if (soundMuted) {
+      stopAmbient();
+      audioCtxRef.current?.suspend?.();
+    }
+    setMuted(soundMuted);
+    notifySoundPreference();
   };
 
   const playClick = () => {
@@ -502,6 +539,8 @@ export default function useSound() {
 
   return {
     initAudio,
+    muted,
+    toggleMuted,
     playClick,
     playSelect,
     playHover,

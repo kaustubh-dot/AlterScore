@@ -10,7 +10,7 @@ import './Admin.css';
 
 export default function Admin() {
   const { transitionTo } = usePageTransition();
-  const { playClick, playSuccess } = useSound();
+  const { muted, playClick, playSuccess } = useSound();
   
   // Authorization State
   const [isAuthorized, setIsAuthorized] = useState(() => {
@@ -75,6 +75,7 @@ export default function Admin() {
   // Buzzer sound for passcode denial
   const playErrorBuzz = () => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (muted) return;
     if (prefersReducedMotion) return;
 
     try {
@@ -434,7 +435,9 @@ export default function Admin() {
                   step="0.05"
                   value={threshold}
                   onChange={(e) => setThreshold(parseFloat(e.target.value))}
-                  className="optimizer-input-range"
+                  className="input-range-control"
+                  aria-label="Underwrite threshold probability"
+                  aria-valuetext={`Approve when probability is at least ${threshold.toFixed(2)}`}
                   style={{ width: '100%', marginBottom: '24px' }}
                 />
 

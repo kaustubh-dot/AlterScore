@@ -106,9 +106,10 @@ export default function Assessment() {
       setFirstClicks((f) => ({ ...f, [qId]: rt }));
     }
 
-    // Track change count
+    // Freeform inputs emit on every keystroke, so only discrete choices count as revisions.
+    const tracksDiscreteChanges = currentQ.type === 'mcq' || currentQ.type === 'likert';
     const hasExisting = answers[qId] !== undefined;
-    if (hasExisting && answers[qId] !== value) {
+    if (tracksDiscreteChanges && hasExisting && answers[qId] !== value) {
       setChangeCounts((c) => ({ ...c, [qId]: (c[qId] || 0) + 1 }));
     }
 
@@ -130,20 +131,23 @@ export default function Assessment() {
     setAnswers((prevAnswers) => {
       const prev = prevAnswers[qId] || { primary: '', least: null, first_click_ms: null, change_count: 0 };
       let updated = { ...prev };
+      let changeDelta = 0;
 
       if (type === 'primary') {
-        if (updated.least === optionId) updated.least = null;
         if (updated.primary !== optionId) {
-          updated.change_count += 1;
+          if (updated.primary) changeDelta += 1;
+          if (updated.least === optionId) updated.least = null;
           updated.primary = optionId;
         }
       } else if (type === 'least') {
-        if (updated.primary === optionId) updated.primary = '';
         if (updated.least !== optionId) {
-          updated.change_count += 1;
+          if (updated.least) changeDelta += 1;
+          if (updated.primary === optionId) updated.primary = '';
           updated.least = optionId;
         }
       }
+
+      updated.change_count = (prev.change_count || 0) + changeDelta;
 
       if (updated.first_click_ms === null) {
         updated.first_click_ms = rt;
@@ -229,8 +233,8 @@ export default function Assessment() {
 
     // Calculate answer change rate
     const changeList = Object.values(changeCounts);
-    const totalChanges = changeList.filter((v) => v > 0).length;
-    const changeRate = totalChanges / QUESTIONS.length;
+    const totalChanges = changeList.reduce((sum, value) => sum + Math.max(Number(value) || 0, 0), 0);
+    const changeRate = Math.min(totalChanges / QUESTIONS.length, 1);
 
     // Calculate typing speed on open response text
     const openText = answers['open_response_text'] || '';
@@ -382,8 +386,8 @@ export default function Assessment() {
                 key={idx}
                 className={`scenario-pill ${isPrimary ? 'primary-selected' : ''} ${isLeast ? 'least-selected' : ''}`}
               >
-                <div style={{ flex: 1, paddingRight: '12px' }}>{opt.text}</div>
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div>{opt.text}</div>
+                <div>
                   <button
                     onClick={() => { recordScenarioAnswer('primary', opt.id); playSelect(); }}
                     className={`badge-tag ${isPrimary ? 'primary' : 'option-pill-btn'}`}
