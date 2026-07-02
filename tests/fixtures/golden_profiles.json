@@ -6,50 +6,49 @@
         "numeracy_q1": 6600,
         "numeracy_q2": 1120.0,
         "financial_literacy_q1": 1,
-        "financial_literacy_q2": 1,
         "CRT_q1": 5.0,
-        "CRT_q2": 5.0,
+        "CRT_q2": 47,
         "honesty_trap_q1": 1,
         "open_response_text": "I responded immediately to the setback, reduced my daily expenses, created a strict budget, and successfully paid off my obligations.",
         "scenario_s1": {
           "primary": "s1_a",
-          "least": null,
+          "least": "s1_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s2": {
           "primary": "s2_a",
-          "least": null,
+          "least": "s2_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s3": {
           "primary": "s3_a",
-          "least": null,
+          "least": "s3_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s4": {
           "primary": "s4_a",
-          "least": null,
+          "least": "s4_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s5": {
           "primary": "s5_a",
-          "least": null,
+          "least": "s5_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s6": {
           "primary": "s6_a",
-          "least": null,
+          "least": "s6_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s8": {
           "primary": "s8_a",
-          "least": null,
+          "least": "s8_b",
           "first_click_ms": 4000,
           "change_count": 0
         }
@@ -84,50 +83,49 @@
         "numeracy_q1": 6600,
         "numeracy_q2": 1120.0,
         "financial_literacy_q1": 1,
-        "financial_literacy_q2": 1,
         "CRT_q1": 5.0,
-        "CRT_q2": 5.0,
+        "CRT_q2": 47,
         "honesty_trap_q1": 2,
         "open_response_text": "When my income fell, I reduced expenses, found extra work, and made a repayment plan.",
         "scenario_s1": {
           "primary": "s1_a",
-          "least": null,
+          "least": "s1_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s2": {
           "primary": "s2_a",
-          "least": null,
+          "least": "s2_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s3": {
           "primary": "s3_a",
-          "least": null,
+          "least": "s3_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s4": {
           "primary": "s4_a",
-          "least": null,
+          "least": "s4_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s5": {
           "primary": "s5_a",
-          "least": null,
+          "least": "s5_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s6": {
           "primary": "s6_a",
-          "least": null,
+          "least": "s6_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s8": {
           "primary": "s8_a",
-          "least": null,
+          "least": "s8_b",
           "first_click_ms": 4000,
           "change_count": 0
         }
@@ -162,50 +160,49 @@
         "numeracy_q1": 6600,
         "numeracy_q2": 0.0,
         "financial_literacy_q1": 1,
-        "financial_literacy_q2": 0,
         "CRT_q1": 5.0,
-        "CRT_q2": 0.0,
+        "CRT_q2": 1,
         "honesty_trap_q1": 3,
-        "open_response_text": "I tried to save money and find extra work during the income reduction, but it was difficult.",
+        "open_response_text": "I reduced spending, asked for extra work during the income reduction, and planned repayments, but it was difficult.",
         "scenario_s1": {
           "primary": "s1_a",
-          "least": null,
+          "least": "s1_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s2": {
           "primary": "s2_a",
-          "least": null,
+          "least": "s2_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s3": {
           "primary": "s3_a",
-          "least": null,
+          "least": "s3_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s4": {
           "primary": "s4_a",
-          "least": null,
+          "least": "s4_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s5": {
           "primary": "s5_a",
-          "least": null,
+          "least": "s5_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s6": {
           "primary": "s6_a",
-          "least": null,
+          "least": "s6_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s8": {
           "primary": "s8_a",
-          "least": null,
+          "least": "s8_b",
           "first_click_ms": 4000,
           "change_count": 0
         }
@@ -240,50 +237,49 @@
         "numeracy_q1": 0,
         "numeracy_q2": 0.0,
         "financial_literacy_q1": 0,
-        "financial_literacy_q2": 0,
         "CRT_q1": 0.0,
-        "CRT_q2": 0.0,
+        "CRT_q2": 1,
         "honesty_trap_q1": 5,
-        "open_response_text": "I felt completely helpless, ignored my bills, and did not know what to do.",
+        "open_response_text": "I felt completely helpless, ignored my bills, then asked for help and planned a small repayment.",
         "scenario_s1": {
           "primary": "s1_a",
-          "least": null,
+          "least": "s1_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s2": {
           "primary": "s2_a",
-          "least": null,
+          "least": "s2_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s3": {
           "primary": "s3_a",
-          "least": null,
+          "least": "s3_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s4": {
           "primary": "s4_a",
-          "least": null,
+          "least": "s4_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s5": {
           "primary": "s5_a",
-          "least": null,
+          "least": "s5_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s6": {
           "primary": "s6_a",
-          "least": null,
+          "least": "s6_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s8": {
           "primary": "s8_a",
-          "least": null,
+          "least": "s8_b",
           "first_click_ms": 4000,
           "change_count": 0
         }
@@ -318,50 +314,49 @@
         "numeracy_q1": 6600,
         "numeracy_q2": 1120.0,
         "financial_literacy_q1": 1,
-        "financial_literacy_q2": 1,
         "CRT_q1": 5.0,
-        "CRT_q2": 5.0,
+        "CRT_q2": 47,
         "honesty_trap_q1": 5,
         "open_response_text": "I responded immediately to the setback, reduced my daily expenses, created a strict budget, and successfully paid off my obligations.",
         "scenario_s1": {
           "primary": "s1_a",
-          "least": null,
+          "least": "s1_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s2": {
           "primary": "s2_a",
-          "least": null,
+          "least": "s2_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s3": {
           "primary": "s3_a",
-          "least": null,
+          "least": "s3_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s4": {
           "primary": "s4_a",
-          "least": null,
+          "least": "s4_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s5": {
           "primary": "s5_a",
-          "least": null,
+          "least": "s5_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s6": {
           "primary": "s6_a",
-          "least": null,
+          "least": "s6_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s8": {
           "primary": "s8_a",
-          "least": null,
+          "least": "s8_b",
           "first_click_ms": 4000,
           "change_count": 0
         }
@@ -396,50 +391,49 @@
         "numeracy_q1": 6600,
         "numeracy_q2": 1120.0,
         "financial_literacy_q1": 1,
-        "financial_literacy_q2": 1,
         "CRT_q1": 5.0,
-        "CRT_q2": 5.0,
+        "CRT_q2": 47,
         "honesty_trap_q1": 1,
-        "open_response_text": "I responded to the setback and paid back the loan.",
+        "open_response_text": "I responded to the setback, paid back the loan, and planned my next expenses.",
         "scenario_s1": {
           "primary": "s1_a",
-          "least": null,
+          "least": "s1_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s2": {
           "primary": "s2_a",
-          "least": null,
+          "least": "s2_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s3": {
           "primary": "s3_a",
-          "least": null,
+          "least": "s3_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s4": {
           "primary": "s4_a",
-          "least": null,
+          "least": "s4_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s5": {
           "primary": "s5_a",
-          "least": null,
+          "least": "s5_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s6": {
           "primary": "s6_a",
-          "least": null,
+          "least": "s6_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s8": {
           "primary": "s8_a",
-          "least": null,
+          "least": "s8_b",
           "first_click_ms": 4000,
           "change_count": 0
         }
@@ -474,50 +468,49 @@
         "numeracy_q1": 1200,
         "numeracy_q2": 0.0,
         "financial_literacy_q1": 0,
-        "financial_literacy_q2": 0,
         "CRT_q1": 0.0,
-        "CRT_q2": 0.0,
+        "CRT_q2": 1,
         "honesty_trap_q1": 3,
-        "open_response_text": "I spent everything.",
+        "open_response_text": "I spent everything at first, then asked for help and planned smaller repayments.",
         "scenario_s1": {
           "primary": "s1_a",
-          "least": null,
+          "least": "s1_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s2": {
           "primary": "s2_a",
-          "least": null,
+          "least": "s2_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s3": {
           "primary": "s3_a",
-          "least": null,
+          "least": "s3_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s4": {
           "primary": "s4_a",
-          "least": null,
+          "least": "s4_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s5": {
           "primary": "s5_a",
-          "least": null,
+          "least": "s5_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s6": {
           "primary": "s6_a",
-          "least": null,
+          "least": "s6_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s8": {
           "primary": "s8_a",
-          "least": null,
+          "least": "s8_b",
           "first_click_ms": 4000,
           "change_count": 0
         }
@@ -552,50 +545,49 @@
         "numeracy_q1": 6600,
         "numeracy_q2": 1120.0,
         "financial_literacy_q1": 1,
-        "financial_literacy_q2": 1,
         "CRT_q1": 5.0,
-        "CRT_q2": 5.0,
+        "CRT_q2": 47,
         "honesty_trap_q1": 1,
         "open_response_text": "I responded immediately to the setback, reduced my daily expenses, created a strict budget, and successfully paid off my obligations.",
         "scenario_s1": {
           "primary": "s1_a",
-          "least": null,
+          "least": "s1_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s2": {
           "primary": "s2_a",
-          "least": null,
+          "least": "s2_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s3": {
           "primary": "s3_a",
-          "least": null,
+          "least": "s3_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s4": {
           "primary": "s4_a",
-          "least": null,
+          "least": "s4_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s5": {
           "primary": "s5_a",
-          "least": null,
+          "least": "s5_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s6": {
           "primary": "s6_a",
-          "least": null,
+          "least": "s6_b",
           "first_click_ms": 4000,
           "change_count": 0
         },
         "scenario_s8": {
           "primary": "s8_a",
-          "least": null,
+          "least": "s8_b",
           "first_click_ms": 4000,
           "change_count": 0
         }
