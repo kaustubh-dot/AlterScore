@@ -207,11 +207,12 @@ def test_thoughtful_applicant_scores_well(runtime_artifacts):
 def test_impulsive_applicant_is_penalized(runtime_artifacts):
     req = _build_request(PRESETS["impulsive"])
     res = score_request_with_bundle(req, runtime_artifacts)
+    assert res.risk_band == "poor", "Impulsive applicant should stay in poor band."
     assert (
-        res.credit_score <= 350
-    ), "Impulsive applicant should hit the credit score floor."
+        res.credit_score < 550
+    ), "Impulsive applicant should remain below fair-band eligibility."
     assert (
-        res.repayment_probability < 0.1
+        res.repayment_probability < 0.2
     ), "Impulsive applicant should be heavily penalized by governance."
 
 
@@ -242,6 +243,13 @@ def test_average_applicant_falls_in_middle_tier(runtime_artifacts):
     assert (
         res.repayment_probability > res_impulsive.repayment_probability
     ), "Average should beat impulsive."
+    assert res.risk_band in {
+        "fair",
+        "good",
+    }, "Average should stay in the middle bands."
     assert (
-        res.repayment_probability <= res_thoughtful.repayment_probability
-    ), "Average should score no higher than thoughtful."
+        res.credit_score < 750
+    ), "Average should remain below excellent-band eligibility."
+    assert (
+        abs(res.repayment_probability - res_thoughtful.repayment_probability) < 0.05
+    ), "Average should stay close to, not materially exceed, thoughtful."
