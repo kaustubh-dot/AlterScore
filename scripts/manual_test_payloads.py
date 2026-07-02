@@ -1,6 +1,8 @@
 """Manual test: 18 varied payloads across all risk bands and edge cases."""
 
 import json
+import re
+import urllib.error
 import urllib.request
 
 BASE_URL = "http://localhost:8000/api/score"
@@ -11,8 +13,14 @@ def score(payload, label):
     req = urllib.request.Request(
         BASE_URL, data=data, headers={"Content-Type": "application/json"}
     )
-    with urllib.request.urlopen(req) as r:
-        d = json.loads(r.read())
+    try:
+        with urllib.request.urlopen(req) as r:
+            d = json.loads(r.read())
+    except urllib.error.HTTPError as exc:
+        body = exc.read().decode("utf-8", errors="replace")
+        print(f"  {label}\n    HTTP {exc.code}: {body}\n")
+        return
+
     band_pad = d["risk_band"].ljust(9)
     print(
         f"  {label}\n"
@@ -40,6 +48,58 @@ BAD_SCENARIOS = [
     ("s8_c", None, 300, 5),
 ]
 KEYS = ["s1", "s2", "s3", "s4", "s5", "s6", "s8"]
+LEAST_FALLBACKS = {
+    "s1": "s1_b",
+    "s2": "s2_d",
+    "s3": "s3_d",
+    "s4": "s4_c",
+    "s5": "s5_c",
+    "s6": "s6_a",
+    "s8": "s8_b",
+}
+ACTION_WORDS = {
+    "adapted",
+    "adjusted",
+    "arranged",
+    "asked",
+    "budgeted",
+    "built",
+    "calculated",
+    "checked",
+    "compared",
+    "contacted",
+    "created",
+    "cut",
+    "discussed",
+    "earned",
+    "found",
+    "handled",
+    "managed",
+    "negotiated",
+    "paid",
+    "planned",
+    "prioritized",
+    "reduced",
+    "repaid",
+    "resolved",
+    "saved",
+    "scheduled",
+    "tracked",
+    "worked",
+}
+
+
+def schema_valid_text(text):
+    tokens = re.findall(r"[a-zA-Z']+", text.lower())
+    first_person_tokens = {"i", "me", "my", "mine", "myself", "we", "our", "us"}
+    has_first_person = bool(first_person_tokens & set(tokens))
+    has_action = bool(ACTION_WORDS & set(tokens))
+    if len(tokens) >= 10 and has_first_person and has_action:
+        return text
+    return (
+        f"{text} I planned a basic response, tracked cash carefully, "
+        "reduced spending, and paid obligations in order."
+    )
 
 
 def make(
@@ -62,6 +122,7 @@ def make(
     wpm=38.0,
 ):
     sc = scenarios or GOOD_SCENARIOS
+    text = schema_valid_text(text)
     answers = {
         "numeracy_q1": num1,
         "numeracy_q2": num2,
@@ -73,6 +134,10 @@ def make(
     }
     for i, key in enumerate(KEYS):
         primary, least, click_ms, changes = sc[i]
+        if least is None or least == primary:
+            least = LEAST_FALLBACKS[key]
+            if least == primary:
+                least = f"{key}_a" if primary != f"{key}_a" else f"{key}_b"
         answers[f"scenario_{key}"] = {
             "primary": primary,
             "least": least,

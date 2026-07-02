@@ -419,8 +419,7 @@ def _evaluate_fairness_gates(
             passing=worst_auc_gap is not None
             and worst_auc_gap <= policy.max_subgroup_auc_gap,
             message=(
-                f"Worst subgroup AUC gap must be <= "
-                f"{policy.max_subgroup_auc_gap:.3f}."
+                f"Worst subgroup AUC gap must be <= {policy.max_subgroup_auc_gap:.3f}."
             ),
         ),
         _threshold_check(

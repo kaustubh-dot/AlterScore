@@ -4,6 +4,7 @@ export default function SignalCanvas({ scrollY = 0 }) {
   const canvasRef = useRef(null);
   const mouseRef = useRef({ x: 0, y: 0, targetX: 0, targetY: 0, active: false });
   const scrollYRef = useRef(0);
+  const shouldDisableCanvas = window.matchMedia('(prefers-reduced-motion: reduce), (pointer: coarse)').matches;
 
   // Keep scrollY in a ref to avoid recreating the draw loop context on scroll events
   useEffect(() => {
@@ -11,6 +12,8 @@ export default function SignalCanvas({ scrollY = 0 }) {
   }, [scrollY]);
 
   useEffect(() => {
+    if (shouldDisableCanvas) return undefined;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -186,12 +189,12 @@ export default function SignalCanvas({ scrollY = 0 }) {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseleave', handleMouseLeave);
     };
-  }, []);
+  }, [shouldDisableCanvas]);
 
   // Fade canvas to 0 opacity over 500px scroll
   const opacity = Math.max(0, 1 - scrollY / 500);
 
-  return (
+  return shouldDisableCanvas ? null : (
     <canvas
       ref={canvasRef}
       style={{

@@ -474,11 +474,6 @@
     height: 188px;
   }
 
-  .results-layout .score-svg circle {
-    cx: 88px;
-    cy: 88px;
-  }
-
   .score-sub {
     font-size: 0.75rem;
     letter-spacing: 0.06em;

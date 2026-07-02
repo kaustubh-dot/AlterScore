@@ -146,7 +146,7 @@ def _coerce_categorical(
     normalized_value = str(value).strip().lower()
     if normalized_value not in valid_values:
         raise ValueError(
-            f"{field_name} must be one of {sorted(valid_values)}; " f"found {value!r}."
+            f"{field_name} must be one of {sorted(valid_values)}; found {value!r}."
         )
     return normalized_value
 

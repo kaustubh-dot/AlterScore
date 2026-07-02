@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 let ambientInterval = null;
 let currentPieceIndex = Math.floor(Math.random() * 6);
 let currentMeasureIndex = 0;
-let soundMuted = localStorage.getItem('alterscore_sound_muted') === 'true';
+const savedSoundPreference = localStorage.getItem('alterscore_sound_muted');
+let soundMuted = savedSoundPreference === null ? true : savedSoundPreference !== 'false';
 
 const notifySoundPreference = () => {
   window.dispatchEvent(new CustomEvent('alterscore_sound_muted_change', { detail: soundMuted }));

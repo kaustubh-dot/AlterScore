@@ -540,7 +540,35 @@ def _build_counterfactual_actions(
         candidate_probability_adjuster=candidate_probability_adjuster,
         candidate_score_mapper=candidate_score_mapper,
     )
-    return [CounterfactualAction.model_validate(action) for action in raw_actions]
+    actions = [CounterfactualAction.model_validate(action) for action in raw_actions]
+    if actions:
+        return actions
+
+    return _build_fallback_counterfactual_actions(feature_row)
+
+
+def _build_fallback_counterfactual_actions(
+    feature_row: dict[str, Any],
+) -> list[CounterfactualAction]:
+    actions: list[CounterfactualAction] = []
+    for feature_name, (_, body) in TIP_LIBRARY.items():
+        current_value = _coerce_numeric_feature_value(feature_row.get(feature_name))
+        if current_value is None or current_value >= 0.6:
+            continue
+
+        actions.append(
+            CounterfactualAction(
+                feature=feature_name,
+                current_value=float(np.clip(current_value, 0.0, 1.0)),
+                suggested_value=0.75,
+                estimated_score_gain=4,
+                plain_language=body,
+            )
+        )
+        if len(actions) == 2:
+            return actions
+
+    return actions
 
 
 def _row_mapping(feature_names: list[str], values: Any) -> dict[str, Any]:

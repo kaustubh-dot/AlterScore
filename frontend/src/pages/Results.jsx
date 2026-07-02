@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Sliders, RotateCcw, LayoutDashboard, AlertCircle } from 'lucide-react';
 import ScrollReveal from '../components/animation/ScrollReveal';
@@ -86,6 +86,7 @@ export default function Results() {
   const location = useLocation();
   const { transitionTo } = usePageTransition();
   const { playSuccess, playClick } = useSound();
+  const playSuccessRef = useRef(playSuccess);
   
   const [scoreData] = useState(() => {
     if (location.state) return location.state;
@@ -111,6 +112,10 @@ export default function Results() {
   const [animationStep, setAnimationStep] = useState(0); // 0: void, 1: ring, 2: countup, 3: glow, 4: content
   const [displayScore, setDisplayScore] = useState(300);
   const [ringOffset, setRingOffset] = useState(440); // Circle perimeter for stroke-dashoffset
+
+  useEffect(() => {
+    playSuccessRef.current = playSuccess;
+  }, [playSuccess]);
 
   // Derived slider metrics based on user's actual choices
   const [originalVals] = useState(() => {
@@ -141,15 +146,26 @@ export default function Results() {
   // Trigger Cinematic Reveal Animation
   useEffect(() => {
     if (!scoreData) return;
+
+    const target = scoreData.credit_score;
+    const targetPercentage = (target - 300) / 550;
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      const timeout = setTimeout(() => {
+        setAnimationStep(4);
+        setDisplayScore(target);
+        setRingOffset(440 - 440 * targetPercentage);
+      }, 0);
+      return () => clearTimeout(timeout);
+    }
+
     const t1 = setTimeout(() => {
       setAnimationStep(1);
-      const percentage = (scoreData.credit_score - 300) / 550;
-      setRingOffset(440 - 440 * percentage);
+      setRingOffset(440 - 440 * targetPercentage);
     }, 200);
 
     const t2 = setTimeout(() => {
       setAnimationStep(2);
-      const target = scoreData.credit_score;
       const duration = 1200;
       const startTime = performance.now();
 
@@ -172,7 +188,7 @@ export default function Results() {
 
     const t3 = setTimeout(() => {
       setAnimationStep(3);
-      playSuccess(); // Play cinematic sound chord when glow pops!
+      playSuccessRef.current(); // Play cinematic sound chord when glow pops.
     }, 2000);
 
     const t4 = setTimeout(() => {
@@ -185,7 +201,7 @@ export default function Results() {
       clearTimeout(t3);
       clearTimeout(t4);
     };
-  }, [scoreData, playSuccess]);
+  }, [scoreData]);
 
   if (!scoreData) {
     return (
@@ -211,6 +227,8 @@ export default function Results() {
   
   const adjustedScore = Math.max(300, Math.min(850, scoreData.credit_score + paceShift + crtShift + consistencyShift));
   const currentScore = simulatorTouched ? adjustedScore : scoreData.credit_score;
+  const scoreToDisplay = (animationStep >= 3) ? currentScore : displayScore;
+  const bandScore = animationStep >= 3 ? currentScore : scoreToDisplay;
 
   const repaymentProb = 0.35 + ((currentScore - 300) / 550) * 0.63;
   const percentile = Math.round(((currentScore - 300) / 550) * 98);
@@ -218,9 +236,15 @@ export default function Results() {
   const simulatedBandInfo = getBandInfoForScore(currentScore);
   const backendBandInfo = getBandInfoForScore(scoreData.credit_score);
   const backendEligibility = scoreData.loan_eligibility;
-  const displayBand = simulationChanged ? simulatedBandInfo.band : (scoreData.risk_band || backendBandInfo.band);
-  const displayBandColor = simulationChanged ? simulatedBandInfo.color : getBandColor(scoreData.risk_band, scoreData.credit_score);
-  const displayBandShadow = simulationChanged ? simulatedBandInfo.shadow : backendBandInfo.shadow;
+  const displayBand = animationStep >= 3
+    ? (simulationChanged ? simulatedBandInfo.band : (scoreData.risk_band || backendBandInfo.band))
+    : getBandInfoForScore(bandScore).band;
+  const displayBandColor = animationStep >= 3
+    ? (simulationChanged ? simulatedBandInfo.color : getBandColor(scoreData.risk_band, scoreData.credit_score))
+    : getBandInfoForScore(bandScore).color;
+  const displayBandShadow = animationStep >= 3
+    ? (simulationChanged ? simulatedBandInfo.shadow : backendBandInfo.shadow)
+    : getBandInfoForScore(bandScore).shadow;
   const displayMinAmount = simulationChanged ? simulatedBandInfo.loanMin : (backendEligibility?.amount_min ?? backendBandInfo.loanMin);
   const displayMaxAmount = simulationChanged ? simulatedBandInfo.loanMax : (backendEligibility?.amount_max ?? backendBandInfo.loanMax);
   const displayBandDesc = simulationChanged ? simulatedBandInfo.description : (backendEligibility?.description || backendBandInfo.description);
@@ -235,7 +259,6 @@ export default function Results() {
   const improvementTips = asArray(scoreData.improvement_tips);
   const maxAbsShap = Math.max(...explanationItems.map((item) => Math.abs(item.shap_value)), 1);
 
-  const scoreToDisplay = (animationStep >= 3) ? currentScore : displayScore;
   const ringOffsetToDisplay = (animationStep >= 3) 
     ? (440 - 440 * ((currentScore - 300) / 550)) 
     : ringOffset;
@@ -253,7 +276,7 @@ export default function Results() {
             }}
           >
             {/* SVG Circle Gauge */}
-            <svg width="200" height="200" className="score-svg">
+            <svg width="200" height="200" viewBox="0 0 200 200" className="score-svg">
               <circle
                 cx="100"
                 cy="100"

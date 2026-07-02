@@ -8,6 +8,7 @@ import './Processing.css';
 export default function Processing({ payload, onComplete }) {
   const [activeStep, setActiveStep] = useState(0);
   const [error, setError] = useState(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const requestFiredRef = useRef(false);
   const { playStep } = useSound();
 
@@ -32,6 +33,14 @@ export default function Processing({ payload, onComplete }) {
     }, 600);
     return () => clearTimeout(interval);
   }, [activeStep, playStep, steps.length]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setElapsedSeconds((seconds) => seconds + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Firing API request to score
   useEffect(() => {
@@ -63,6 +72,7 @@ export default function Processing({ payload, onComplete }) {
   }, [payload, onComplete]);
 
   const progressPercent = Math.min((activeStep / steps.length) * 100, 100);
+  const isWaitingForScore = activeStep >= steps.length;
 
   if (error) {
     return (
@@ -146,9 +156,17 @@ export default function Processing({ payload, onComplete }) {
             </div>
             
             <div className="processing-footer">
-              <span className="processing-eta">
+              <span
+                className="processing-eta"
+                style={{ display: isWaitingForScore ? 'none' : undefined }}
+              >
                 Calibrating behavioral telemetry • Please wait
               </span>
+              {isWaitingForScore && (
+                <span className="processing-eta">
+                  {`Finalizing score response - ${elapsedSeconds}s elapsed`}
+                </span>
+              )}
             </div>
           </div>
         </div>

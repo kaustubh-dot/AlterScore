@@ -1,11 +1,9 @@
-import { useState, useEffect } from 'react';
+import { lazy, Suspense, useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import Landing from './pages/Landing';
 import Assessment from './pages/Assessment';
-import Results from './pages/Results';
-import Dashboard from './pages/Dashboard';
 import CustomCursor from './components/ui/CustomCursor';
 import Preloader from './components/ui/Preloader';
 import useLenis from './hooks/useLenis';
@@ -13,9 +11,9 @@ import useSound from './hooks/useSound';
 import { PageTransitionProvider } from './hooks/PageTransitionContext';
 import './styles/global.css';
 
-// Admin component will be created, we'll placeholder import it or import it directly.
-// Let's import it directly as it will be created shortly.
-import Admin from './pages/Admin';
+const Results = lazy(() => import('./pages/Results'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Admin = lazy(() => import('./pages/Admin'));
 
 function AppContent() {
   const [showPreloader, setShowPreloader] = useState(() => {
@@ -41,7 +39,7 @@ function AppContent() {
     };
   }, [showPreloader]);
 
-  // Auto-start ambient sound and resume AudioContext on first user interaction
+  // Resume audio only for users who explicitly enabled sound earlier.
   useEffect(() => {
     const handleFirstInteraction = () => {
       initAudio();
@@ -85,13 +83,15 @@ function AppContent() {
         {!hideGlobalChrome && <Navbar />}
 
         <div className="content-wrap">
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/assessment" element={<Assessment />} />
-            <Route path="/results" element={<Results />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/admin" element={<Admin />} />
-          </Routes>
+          <Suspense fallback={null}>
+            <Routes>
+              <Route path="/" element={<Landing />} />
+              <Route path="/assessment" element={<Assessment />} />
+              <Route path="/results" element={<Results />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/admin" element={<Admin />} />
+            </Routes>
+          </Suspense>
         </div>
 
         {showFooter && <Footer />}

@@ -3,15 +3,21 @@ import { Activity } from 'lucide-react';
 import './Preloader.css';
 
 export default function Preloader({ onComplete }) {
-  const [percent, setPercent] = useState(0);
-  const [blur, setBlur] = useState(30);
-  const [opacity, setOpacity] = useState(1);
-  const [completed, setCompleted] = useState(false);
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const [percent, setPercent] = useState(prefersReducedMotion ? 100 : 0);
+  const [blur, setBlur] = useState(prefersReducedMotion ? 0 : 30);
+  const [opacity, setOpacity] = useState(prefersReducedMotion ? 0 : 1);
+  const [completed, setCompleted] = useState(prefersReducedMotion);
   
   const startTimeRef = useRef(null);
   const requestRef = useRef(null);
 
   useEffect(() => {
+    if (prefersReducedMotion) {
+      const timeout = setTimeout(onComplete, 0);
+      return () => clearTimeout(timeout);
+    }
+
     const duration = 2500; // total duration: 2.5s
     const activeDuration = 1900; // counter/ruler active time: 1.9s
 
@@ -52,7 +58,7 @@ export default function Preloader({ onComplete }) {
         cancelAnimationFrame(requestRef.current);
       }
     };
-  }, [onComplete]);
+  }, [onComplete, prefersReducedMotion]);
 
   // Translate scale from 0% to -75% based on percent progress (max 100)
   const translationPercent = -75 * (percent / 100);

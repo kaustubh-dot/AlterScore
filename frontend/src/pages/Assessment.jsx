@@ -95,6 +95,9 @@ function hasUsableAnswer(question, answer) {
 export default function Assessment() {
   const { transitionTo } = usePageTransition();
   const { playClick, playSelect, playSuccess } = useSound();
+  const [allowInputAutoFocus] = useState(() => {
+    return !window.matchMedia('(pointer: coarse)').matches;
+  });
 
   // Telemetry Consent
   const [consented, setConsented] = useState(() => {
@@ -435,7 +438,7 @@ export default function Assessment() {
             className="input-number"
             placeholder="0"
             aria-label={currentQ.question}
-            autoFocus
+            autoFocus={allowInputAutoFocus}
           />
           {currentQ.suffix && <span className="number-suffix">{currentQ.suffix}</span>}
         </div>
@@ -450,6 +453,7 @@ export default function Assessment() {
               key={idx}
               onClick={() => { recordStandardAnswer(idx); playSelect(); }}
               className={`option-pill ${currentAnswer === idx ? 'selected' : ''}`}
+              aria-pressed={currentAnswer === idx}
             >
               {opt}
             </button>
@@ -468,6 +472,8 @@ export default function Assessment() {
                 key={idx}
                 onClick={() => { recordStandardAnswer(val); playSelect(); }}
                 className={`likert-option ${currentAnswer === val ? 'selected' : ''}`}
+                aria-label={`${val} - ${label}`}
+                aria-pressed={currentAnswer === val}
               >
                 <span className="likert-number">{val}</span>
                 <span className="likert-label">{label}</span>
@@ -489,6 +495,8 @@ export default function Assessment() {
               <div
                 key={idx}
                 className={`scenario-pill ${isPrimary ? 'primary-selected' : ''} ${isLeast ? 'least-selected' : ''}`}
+                role="group"
+                aria-label={opt.text}
               >
                 <div>{opt.text}</div>
                 <div>
@@ -496,6 +504,8 @@ export default function Assessment() {
                     onClick={() => { recordScenarioAnswer('primary', opt.id); playSelect(); }}
                     className={`badge-tag ${isPrimary ? 'primary' : 'option-pill-btn'}`}
                     style={{ border: 'none', cursor: 'pointer' }}
+                    aria-label={`Most like me: ${opt.text}`}
+                    aria-pressed={isPrimary}
                   >
                     Most
                   </button>
@@ -503,6 +513,8 @@ export default function Assessment() {
                     onClick={() => { recordScenarioAnswer('least', opt.id); playSelect(); }}
                     className={`badge-tag ${isLeast ? 'least' : 'option-pill-btn'}`}
                     style={{ border: 'none', cursor: 'pointer' }}
+                    aria-label={`Least like me: ${opt.text}`}
+                    aria-pressed={isLeast}
                   >
                     Least
                   </button>

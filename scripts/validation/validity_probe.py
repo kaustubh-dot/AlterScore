@@ -155,7 +155,7 @@ def probe_score_mapping() -> None:
         0.99,
     ]
     print(f"  {'Probability':>12s}  {'Score':>6s}  {'Band':>10s}")
-    print(f"  {'-'*12}  {'-'*6}  {'-'*10}")
+    print(f"  {'-' * 12}  {'-' * 6}  {'-' * 10}")
     for prob in probabilities:
         score = probability_to_score(prob)
         band = get_risk_band(score)
