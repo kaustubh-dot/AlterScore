@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
-import { Activity, Sliders, ArrowLeft, RotateCcw, ShieldCheck, Sparkles, AlertCircle } from 'lucide-react';
+import { Activity, Sliders, ArrowLeft, RotateCcw, ShieldCheck, Sparkles, AlertCircle, Minus, Plus } from 'lucide-react';
 import ScrollReveal from '../components/animation/ScrollReveal';
 import GlowCard from '../components/ui/GlowCard';
 import TextReveal from '../components/animation/TextReveal';
@@ -82,6 +82,10 @@ function getSimulatorDefaults(data) {
         : (hasConsistencyDrag ? 0.5 : 1.0),
     focus: hasFocusLift ? 0.75 : 0.5,
   };
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
 }
 
 export default function Dashboard() {
@@ -190,6 +194,21 @@ export default function Dashboard() {
     setSimPace(savedDefaults.pace);
     setSimConsistency(savedDefaults.consistency);
     setSimFocus(savedDefaults.focus);
+  };
+  const adjustPace = (delta) => {
+    setSimulatorTouched(true);
+    setSimPace((value) => clamp(Number((value + delta).toFixed(1)), 1, 8));
+    playSelect();
+  };
+  const adjustConsistency = (delta) => {
+    setSimulatorTouched(true);
+    setSimConsistency((value) => clamp(Number((value + delta).toFixed(1)), 0.5, 1));
+    playSelect();
+  };
+  const adjustFocus = (delta) => {
+    setSimulatorTouched(true);
+    setSimFocus((value) => clamp(Number((value + delta).toFixed(2)), 0.4, 1));
+    playSelect();
   };
 
   if (!activeData) {
@@ -352,21 +371,29 @@ export default function Dashboard() {
                       <span className="slider-name">Deliberation Pace (Avg RT)</span>
                       <span className="slider-val font-mono">{simPace.toFixed(1)}s</span>
                     </div>
-                    <input
-                      type="range"
-                      min="1.0"
-                      max="8.0"
-                      step="0.5"
-                      value={simPace}
-                      onChange={(e) => {
-                        setSimulatorTouched(true);
-                        setSimPace(parseFloat(e.target.value));
-                        playSelect();
-                      }}
-                      className="input-range-control"
-                      aria-label="Simulator deliberation pace"
-                      aria-valuetext={`${simPace.toFixed(1)} seconds`}
-                    />
+                    <div className="range-control-row">
+                      <button type="button" className="range-stepper" onClick={() => adjustPace(-0.5)} aria-label="Decrease simulator deliberation pace">
+                        <Minus size={14} />
+                      </button>
+                      <input
+                        type="range"
+                        min="1.0"
+                        max="8.0"
+                        step="0.5"
+                        value={simPace}
+                        onChange={(e) => {
+                          setSimulatorTouched(true);
+                          setSimPace(parseFloat(e.target.value));
+                          playSelect();
+                        }}
+                        className="input-range-control"
+                        aria-label="Simulator deliberation pace"
+                        aria-valuetext={`${simPace.toFixed(1)} seconds`}
+                      />
+                      <button type="button" className="range-stepper" onClick={() => adjustPace(0.5)} aria-label="Increase simulator deliberation pace">
+                        <Plus size={14} />
+                      </button>
+                    </div>
                   </div>
 
                   <div className="slider-group">
@@ -376,21 +403,29 @@ export default function Dashboard() {
                         {simConsistency === 1.0 ? 'Consistent (100%)' : 'Variance / Drift (50%)'}
                       </span>
                     </div>
-                    <input
-                      type="range"
-                      min="0.5"
-                      max="1.0"
-                      step="0.5"
-                      value={simConsistency}
-                      onChange={(e) => {
-                        setSimulatorTouched(true);
-                        setSimConsistency(parseFloat(e.target.value));
-                        playSelect();
-                      }}
-                      className="input-range-control"
-                      aria-label="Simulator choice consistency"
-                      aria-valuetext={simConsistency === 1.0 ? 'Consistent, 100 percent' : 'Variance drift, 50 percent'}
-                    />
+                    <div className="range-control-row">
+                      <button type="button" className="range-stepper" onClick={() => adjustConsistency(-0.5)} aria-label="Decrease simulator choice consistency">
+                        <Minus size={14} />
+                      </button>
+                      <input
+                        type="range"
+                        min="0.5"
+                        max="1.0"
+                        step="0.5"
+                        value={simConsistency}
+                        onChange={(e) => {
+                          setSimulatorTouched(true);
+                          setSimConsistency(parseFloat(e.target.value));
+                          playSelect();
+                        }}
+                        className="input-range-control"
+                        aria-label="Simulator choice consistency"
+                        aria-valuetext={simConsistency === 1.0 ? 'Consistent, 100 percent' : 'Variance drift, 50 percent'}
+                      />
+                      <button type="button" className="range-stepper" onClick={() => adjustConsistency(0.5)} aria-label="Increase simulator choice consistency">
+                        <Plus size={14} />
+                      </button>
+                    </div>
                   </div>
 
                   <div className="slider-group">
@@ -398,21 +433,29 @@ export default function Dashboard() {
                       <span className="slider-name">Reflection Focus</span>
                       <span className="slider-val font-mono">{Math.round(simFocus * 100)}%</span>
                     </div>
-                    <input
-                      type="range"
-                      min="0.4"
-                      max="1.0"
-                      step="0.05"
-                      value={simFocus}
-                      onChange={(e) => {
-                        setSimulatorTouched(true);
-                        setSimFocus(parseFloat(e.target.value));
-                        playSelect();
-                      }}
-                      className="input-range-control"
-                      aria-label="Simulator reflection focus"
-                      aria-valuetext={`${Math.round(simFocus * 100)} percent`}
-                    />
+                    <div className="range-control-row">
+                      <button type="button" className="range-stepper" onClick={() => adjustFocus(-0.05)} aria-label="Decrease simulator reflection focus">
+                        <Minus size={14} />
+                      </button>
+                      <input
+                        type="range"
+                        min="0.4"
+                        max="1.0"
+                        step="0.05"
+                        value={simFocus}
+                        onChange={(e) => {
+                          setSimulatorTouched(true);
+                          setSimFocus(parseFloat(e.target.value));
+                          playSelect();
+                        }}
+                        className="input-range-control"
+                        aria-label="Simulator reflection focus"
+                        aria-valuetext={`${Math.round(simFocus * 100)} percent`}
+                      />
+                      <button type="button" className="range-stepper" onClick={() => adjustFocus(0.05)} aria-label="Increase simulator reflection focus">
+                        <Plus size={14} />
+                      </button>
+                    </div>
                   </div>
                 </div>
 

@@ -194,6 +194,7 @@
   font-weight: 700;
   color: #FFFFFF;
   margin: var(--space-2) 0;
+  white-space: nowrap;
 }
 
 .results-section-header {
@@ -545,9 +546,8 @@
   }
 
   .loan-amount-range {
-    font-size: 1.375rem;
+    font-size: clamp(1.0625rem, 5.4vw, 1.375rem);
     line-height: 1.25;
-    overflow-wrap: anywhere;
   }
 
   .results-section-header {

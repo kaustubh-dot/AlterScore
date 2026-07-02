@@ -419,10 +419,10 @@ export default function Assessment() {
   const wordCount = currentQ.type === 'text'
     ? (currentAnswer || '').trim().split(/\s+/).filter(Boolean).length
     : 0;
-  const isTextResponseValid = currentQ.type === 'text'
+  const hasTextQualitySignal = currentQ.type === 'text'
     ? isOpenResponseMeaningful(currentAnswer, currentQ.minWords || 10)
     : true;
-  const canContinue = hasAnswer && isTextResponseValid;
+  const canContinue = hasAnswer;
 
   const renderControls = () => {
     if (currentQ.type === 'number') {
@@ -529,6 +529,12 @@ export default function Assessment() {
     if (currentQ.type === 'text') {
       const minWords = currentQ.minWords || 10;
       const progressPercent = Math.min((wordCount / minWords) * 100, 100);
+      const signalStatus = !hasAnswer ? 'neutral' : hasTextQualitySignal ? 'valid' : 'weak';
+      const signalMessage = !hasAnswer
+        ? 'Start typing to submit'
+        : hasTextQualitySignal
+          ? 'Strong signal'
+          : 'Low signal: add first-person action for a stronger score';
 
       return (
         <div className="textarea-wrapper">
@@ -542,8 +548,8 @@ export default function Assessment() {
             rows={5}
           />
           <div className="textarea-metadata">
-            <span className={`word-count-status ${isTextResponseValid ? 'valid' : 'invalid'}`}>
-              {wordCount} words {isTextResponseValid ? 'OK: includes your action' : `(Use at least ${minWords} words, first-person language, and a concrete action)`}
+            <span className={`word-count-status ${signalStatus}`}>
+              {wordCount} words - {signalMessage}
             </span>
             <span>Max {currentQ.maxLength || 1000} chars</span>
           </div>
@@ -552,7 +558,7 @@ export default function Assessment() {
               className="textarea-progress-fill"
               style={{
                 width: `${progressPercent}%`,
-                backgroundColor: isTextResponseValid ? 'var(--accent-emerald)' : 'var(--accent-rose)',
+                backgroundColor: hasTextQualitySignal ? 'var(--accent-emerald)' : 'var(--accent-amber)',
               }}
             />
           </div>

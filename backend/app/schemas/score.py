@@ -25,41 +25,6 @@ _SCENARIO_OPTION_PREFIXES = {
     "scenario_s8": "s8_",
 }
 
-_MIN_OPEN_RESPONSE_WORDS = 10
-_FIRST_PERSON_TOKENS = {"i", "me", "my", "mine", "myself", "we", "our", "us"}
-_OPEN_RESPONSE_ACTION_TOKENS = {
-    "adapted",
-    "adjusted",
-    "arranged",
-    "asked",
-    "budgeted",
-    "built",
-    "calculated",
-    "checked",
-    "compared",
-    "contacted",
-    "created",
-    "cut",
-    "discussed",
-    "earned",
-    "found",
-    "handled",
-    "managed",
-    "negotiated",
-    "paid",
-    "planned",
-    "prioritized",
-    "reduced",
-    "repaid",
-    "resolved",
-    "saved",
-    "scheduled",
-    "tracked",
-    "worked",
-}
-_WORD_PATTERN = re.compile(r"[a-zA-Z']+")
-
-
 class ScenarioAnswer(SchemaModel):
     """A single scenario question response with primary, least-like-me, and telemetry."""
 
@@ -128,42 +93,8 @@ class AnswerPayload(SchemaModel):
 
     @field_validator("open_response_text")
     @classmethod
-    def validate_open_response_quality(cls, value: str) -> str:
-        normalized = " ".join(value.strip().split())
-        tokens = [token.lower() for token in _WORD_PATTERN.findall(normalized)]
-        if len(tokens) < _MIN_OPEN_RESPONSE_WORDS:
-            raise ValueError(
-                "open_response_text must contain at least 10 meaningful words."
-            )
-
-        unique_ratio = len(set(tokens)) / len(tokens)
-        if unique_ratio < 0.40:
-            raise ValueError("open_response_text is too repetitive to score.")
-
-        word_counts: dict[str, int] = {}
-        for token in tokens:
-            word_counts[token] = word_counts.get(token, 0) + 1
-        if any(count > 5 for count in word_counts.values()):
-            raise ValueError("open_response_text contains repeated-word spam.")
-
-        if not any(token in _FIRST_PERSON_TOKENS for token in tokens):
-            raise ValueError(
-                "open_response_text must describe the applicant's own actions."
-            )
-        if not any(token in _OPEN_RESPONSE_ACTION_TOKENS for token in tokens):
-            raise ValueError(
-                "open_response_text must include concrete response actions."
-            )
-
-        compact = "".join(tokens)
-        if compact:
-            char_counts: dict[str, int] = {}
-            for char in compact:
-                char_counts[char] = char_counts.get(char, 0) + 1
-            if max(char_counts.values()) / len(compact) > 0.35:
-                raise ValueError("open_response_text appears to be character spam.")
-
-        return normalized
+    def normalize_open_response_text(cls, value: str) -> str:
+        return " ".join(value.strip().split())
 
     @model_validator(mode="after")
     def validate_scenario_option_prefixes(self) -> "AnswerPayload":

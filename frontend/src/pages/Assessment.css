@@ -361,8 +361,12 @@
   color: var(--accent-emerald);
 }
 
-.word-count-status.invalid {
-  color: var(--accent-rose);
+.word-count-status.weak {
+  color: var(--accent-amber);
+}
+
+.word-count-status.neutral {
+  color: var(--text-muted);
 }
 
 .textarea-progress-bar {

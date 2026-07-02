@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Sliders, RotateCcw, LayoutDashboard, AlertCircle } from 'lucide-react';
+import { Sliders, RotateCcw, LayoutDashboard, AlertCircle, Minus, Plus } from 'lucide-react';
 import ScrollReveal from '../components/animation/ScrollReveal';
 import GlowCard from '../components/ui/GlowCard';
 import TextReveal from '../components/animation/TextReveal';
@@ -80,6 +80,10 @@ function getBandColor(band, fallbackScore) {
   if (normalizedBand.includes('poor') && !normalizedBand.includes('very')) return 'var(--score-poor)';
   if (normalizedBand.includes('very')) return 'var(--score-very-poor)';
   return getBandInfoForScore(fallbackScore).color;
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
 }
 
 export default function Results() {
@@ -258,6 +262,18 @@ export default function Results() {
   const counterfactualActions = asArray(scoreData.counterfactual_actions);
   const improvementTips = asArray(scoreData.improvement_tips);
   const maxAbsShap = Math.max(...explanationItems.map((item) => Math.abs(item.shap_value)), 1);
+  const adjustPace = (delta) => {
+    setSimulatorTouched(true);
+    setOptPace((value) => clamp(Number((value + delta).toFixed(1)), 1, 8));
+  };
+  const adjustCRT = (delta) => {
+    setSimulatorTouched(true);
+    setOptCRT((value) => clamp(value + delta, 0, 2));
+  };
+  const adjustConsistency = (delta) => {
+    setSimulatorTouched(true);
+    setOptConsistency((value) => clamp(value + delta, 0, 1));
+  };
 
   const ringOffsetToDisplay = (animationStep >= 3) 
     ? (440 - 440 * ((currentScore - 300) / 550)) 
@@ -410,20 +426,28 @@ export default function Results() {
                     {optPace.toFixed(1)}s {optPace < 2.5 ? '(Rapid/Gaming Flag)' : '(Deliberate)'}
                   </span>
                 </div>
-                <input
-                  type="range"
-                  min="1.0"
-                  max="8.0"
-                  step="0.5"
-                  value={optPace}
-                  onChange={(e) => {
-                    setSimulatorTouched(true);
-                    setOptPace(parseFloat(e.target.value));
-                  }}
-                  className="input-range-control"
-                  aria-label="Deliberation pace"
-                  aria-valuetext={`${optPace.toFixed(1)} seconds`}
-                />
+                <div className="range-control-row">
+                  <button type="button" className="range-stepper" onClick={() => adjustPace(-0.5)} aria-label="Decrease deliberation pace">
+                    <Minus size={14} />
+                  </button>
+                  <input
+                    type="range"
+                    min="1.0"
+                    max="8.0"
+                    step="0.5"
+                    value={optPace}
+                    onChange={(e) => {
+                      setSimulatorTouched(true);
+                      setOptPace(parseFloat(e.target.value));
+                    }}
+                    className="input-range-control"
+                    aria-label="Deliberation pace"
+                    aria-valuetext={`${optPace.toFixed(1)} seconds`}
+                  />
+                  <button type="button" className="range-stepper" onClick={() => adjustPace(0.5)} aria-label="Increase deliberation pace">
+                    <Plus size={14} />
+                  </button>
+                </div>
               </div>
 
               <div className="slider-group">
@@ -431,20 +455,28 @@ export default function Results() {
                   <span className="slider-name">Cognitive Reflection (CRT correctness)</span>
                   <span className="slider-val">{optCRT} / 2 Correct</span>
                 </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="2"
-                  step="1"
-                  value={optCRT}
-                  onChange={(e) => {
-                    setSimulatorTouched(true);
-                    setOptCRT(parseInt(e.target.value));
-                  }}
-                  className="input-range-control"
-                  aria-label="Cognitive reflection correctness"
-                  aria-valuetext={`${optCRT} of 2 correct`}
-                />
+                <div className="range-control-row">
+                  <button type="button" className="range-stepper" onClick={() => adjustCRT(-1)} aria-label="Decrease cognitive reflection correctness">
+                    <Minus size={14} />
+                  </button>
+                  <input
+                    type="range"
+                    min="0"
+                    max="2"
+                    step="1"
+                    value={optCRT}
+                    onChange={(e) => {
+                      setSimulatorTouched(true);
+                      setOptCRT(parseInt(e.target.value));
+                    }}
+                    className="input-range-control"
+                    aria-label="Cognitive reflection correctness"
+                    aria-valuetext={`${optCRT} of 2 correct`}
+                  />
+                  <button type="button" className="range-stepper" onClick={() => adjustCRT(1)} aria-label="Increase cognitive reflection correctness">
+                    <Plus size={14} />
+                  </button>
+                </div>
               </div>
 
               <div className="slider-group">
@@ -454,20 +486,28 @@ export default function Results() {
                     {optConsistency === 1 ? '100% Consistent (Match)' : '0% Consistent (Gaming Flag)'}
                   </span>
                 </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="1"
-                  value={optConsistency}
-                  onChange={(e) => {
-                    setSimulatorTouched(true);
-                    setOptConsistency(parseInt(e.target.value));
-                  }}
-                  className="input-range-control"
-                  aria-label="Decision frame consistency"
-                  aria-valuetext={optConsistency === 1 ? 'Consistent match' : 'Mismatch flag'}
-                />
+                <div className="range-control-row">
+                  <button type="button" className="range-stepper" onClick={() => adjustConsistency(-1)} aria-label="Decrease decision frame consistency">
+                    <Minus size={14} />
+                  </button>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="1"
+                    value={optConsistency}
+                    onChange={(e) => {
+                      setSimulatorTouched(true);
+                      setOptConsistency(parseInt(e.target.value));
+                    }}
+                    className="input-range-control"
+                    aria-label="Decision frame consistency"
+                    aria-valuetext={optConsistency === 1 ? 'Consistent match' : 'Mismatch flag'}
+                  />
+                  <button type="button" className="range-stepper" onClick={() => adjustConsistency(1)} aria-label="Increase decision frame consistency">
+                    <Plus size={14} />
+                  </button>
+                </div>
               </div>
             </div>
 

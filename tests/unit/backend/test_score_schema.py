@@ -136,7 +136,7 @@ def test_scenario_least_missing_is_rejected() -> None:
 
 
 @pytest.mark.parametrize(
-    "bad_text",
+    "weak_text",
     [
         "",
         "loan loan loan loan loan loan loan loan loan loan",
@@ -144,11 +144,20 @@ def test_scenario_least_missing_is_rejected() -> None:
         "This was difficult but things happened and then the situation changed.",
     ],
 )
-def test_open_response_requires_meaningful_first_person_action_text(
-    bad_text: str,
+def test_open_response_accepts_weak_text_for_downstream_scoring(
+    weak_text: str,
 ) -> None:
     payload = build_valid_score_request_payload()
-    payload["answers"]["open_response_text"] = bad_text
+    payload["answers"]["open_response_text"] = weak_text
+
+    request = ScoreRequest.model_validate(payload)
+
+    assert request.answers.open_response_text == " ".join(weak_text.strip().split())
+
+
+def test_open_response_still_rejects_text_over_max_length() -> None:
+    payload = build_valid_score_request_payload()
+    payload["answers"]["open_response_text"] = "x" * 1001
 
     with pytest.raises(ValidationError):
         ScoreRequest.model_validate(payload)
