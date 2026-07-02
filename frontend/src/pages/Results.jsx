@@ -224,10 +224,19 @@ export default function Results() {
     );
   }
 
-  // Recalculating score based on sliders in real-time
-  const paceShift = (originalVals && optPace >= 3.5 && originalVals.pace < 2.5) ? 70 : (originalVals && optPace < 2.5 && originalVals.pace >= 3.5) ? -70 : 0;
-  const crtShift = originalVals ? (optCRT - originalVals.crt) * 35 : 0;
-  const consistencyShift = originalVals ? (optConsistency - originalVals.consistency) * 75 : 0;
+  // Recalculating score based on actual backend SHAP weights and governance logic
+  const explanationItems = asArray(scoreData.explanation);
+  
+  const crtShapItem = explanationItems.find(e => e.feature === 'CRT_score');
+  const crtWeight = crtShapItem ? Math.abs(crtShapItem.shap_value) : 5.96;
+  const crtShift = originalVals ? (optCRT - originalVals.crt) * (crtWeight / 2) : 0;
+
+  const paceShapItem = explanationItems.find(e => e.feature === 'avg_response_time_ms');
+  const paceWeight = paceShapItem ? Math.abs(paceShapItem.shap_value) : 1.03;
+  const paceShift = (originalVals && optPace >= 3.5 && originalVals.pace < 2.5) ? paceWeight : (originalVals && optPace < 2.5 && originalVals.pace >= 3.5) ? -paceWeight : 0;
+
+  // Consistency affects the governance multiplier (approx. 10% penalty if mismatched/0)
+  const consistencyShift = originalVals ? (optConsistency - originalVals.consistency) * (scoreData.credit_score * 0.10) : 0;
   
   const adjustedScore = Math.max(300, Math.min(850, scoreData.credit_score + paceShift + crtShift + consistencyShift));
   const currentScore = simulatorTouched ? adjustedScore : scoreData.credit_score;
@@ -245,7 +254,7 @@ export default function Results() {
     : getBandInfoForScore(bandScore).band;
   const displayBandColor = animationStep >= 3
     ? (simulationChanged ? simulatedBandInfo.color : getBandColor(scoreData.risk_band, scoreData.credit_score))
-    : getBandInfoForScore(bandScore).color;
+    : getBandColor(displayBand, bandScore);
   const displayBandShadow = animationStep >= 3
     ? (simulationChanged ? simulatedBandInfo.shadow : backendBandInfo.shadow)
     : getBandInfoForScore(bandScore).shadow;
@@ -258,7 +267,6 @@ export default function Results() {
   const displayPercentile = simulationChanged
     ? percentile
     : (scoreData.percentile ?? Math.round(((scoreData.credit_score - SCORE_MIN) / SCORE_RANGE) * 98));
-  const explanationItems = asArray(scoreData.explanation);
   const counterfactualActions = asArray(scoreData.counterfactual_actions);
   const improvementTips = asArray(scoreData.improvement_tips);
   const maxAbsShap = Math.max(...explanationItems.map((item) => Math.abs(item.shap_value)), 1);

@@ -777,10 +777,6 @@ def _calculate_governance_multiplier(
         reasons.append(f"Frequent application defocus events (dropouts: {dropouts})")
 
     # 4. Low Engagement / Extreme Changes
-    change_rate = max(
-        float(feature_row.get("answer_change_rate", 0.0)),
-        float(feature_row.get("scenario_change_rate", 0.0)),
-    )
     if change_rate > 0.30:
         penalty = min(0.08, (change_rate - 0.30) * 0.2)
         multiplier -= penalty
