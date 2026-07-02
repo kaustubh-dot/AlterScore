@@ -62,6 +62,7 @@ export default function Navbar() {
             <button 
               onClick={() => { playClick(); transitionTo('/'); }}
               className="navbar-link"
+              aria-label="Go to home"
               style={{ cursor: 'pointer' }}
             >
               <Home size={14} style={{ color: '#ffffff' }} />
@@ -71,6 +72,7 @@ export default function Navbar() {
             <button 
               onClick={() => { playClick(); transitionTo('/dashboard'); }}
               className="navbar-link"
+              aria-label="Open my dashboard"
               style={{ cursor: 'pointer' }}
             >
               <ShieldCheck size={14} style={{ color: '#ffffff' }} />

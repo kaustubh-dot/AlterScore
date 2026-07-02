@@ -70,6 +70,7 @@ function AppContent() {
   };
 
   const isAssessment = location.pathname === '/assessment';
+  const hideGlobalChrome = isAssessment || location.pathname === '/dashboard';
   const showFooter = location.pathname === '/' || location.pathname === '/results';
 
   return (
@@ -80,8 +81,8 @@ function AppContent() {
         )}
         <CustomCursor variant={isAssessment ? 'assessment' : 'default'} />
         
-        {/* Render nav only on non-assessment screens */}
-        {!isAssessment && <Navbar />}
+        {/* Dashboard and assessment render their own focused navigation. */}
+        {!hideGlobalChrome && <Navbar />}
 
         <div className="content-wrap">
           <Routes>

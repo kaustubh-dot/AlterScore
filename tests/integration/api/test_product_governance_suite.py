@@ -30,6 +30,19 @@ def _load_base_payload() -> dict:
     )
 
 
+def _scenario(
+    primary: str, least: str | None = None, first_click_ms: float = 8000.0
+) -> dict:
+    prefix = primary.split("_", maxsplit=1)[0]
+    fallback_least = f"{prefix}_b" if not primary.endswith("_b") else f"{prefix}_a"
+    return {
+        "primary": primary,
+        "least": least or fallback_least,
+        "first_click_ms": first_click_ms,
+        "change_count": 0,
+    }
+
+
 # ---------------------------------------------------------------------------
 # 1. Monotonic Score Constraint Verification
 # ---------------------------------------------------------------------------
@@ -142,7 +155,7 @@ def test_score_endpoint_rejects_missing_behavioral_telemetry(trained_model_dir) 
 def test_score_endpoint_detects_straight_lining(
     trained_model_dir,
 ) -> None:
-    """Verifies that straight-lining triggers a penalty unconditionally."""
+    """Verifies that straight-lining is penalized when scenario clicks are also fast."""
     settings = build_runtime_settings(trained_model_dir)
     app = create_app(settings)
 
@@ -159,7 +172,7 @@ def test_score_endpoint_detects_straight_lining(
         "scenario_s8",
     ]:
         payload_gaming["answers"][q_key] = {
-            "primary": f"{q_key.replace('scenario_', '')}_a"
+            **_scenario(f"{q_key.replace('scenario_', '')}_a", first_click_ms=500.0),
         }
     payload_gaming["behavioral"]["avg_response_time_ms"] = 1500.0  # Fast pacing
 
@@ -184,20 +197,20 @@ def test_score_endpoint_applies_contradiction_severity_tiers(trained_model_dir) 
 
     # Base payload: Level 0 (No penalty)
     payload_l0 = _load_base_payload()
-    payload_l0["answers"]["scenario_s1"] = {"primary": "s1_b"}
-    payload_l0["answers"]["scenario_s8"] = {"primary": "s8_b"}
+    payload_l0["answers"]["scenario_s1"] = _scenario("s1_b")
+    payload_l0["answers"]["scenario_s8"] = _scenario("s8_b")
     payload_l0["answers"]["honesty_trap_q1"] = 2
 
     # Level 1: Mild inconsistency (Soft consistency mismatch alone)
     payload_l1 = _load_base_payload()
-    payload_l1["answers"]["scenario_s1"] = {"primary": "s1_b"}
-    payload_l1["answers"]["scenario_s8"] = {"primary": "s8_c"}  # Soft consistency 0.65
+    payload_l1["answers"]["scenario_s1"] = _scenario("s1_b")
+    payload_l1["answers"]["scenario_s8"] = _scenario("s8_c")  # Soft consistency 0.65
     payload_l1["answers"]["honesty_trap_q1"] = 2
 
     # Level 3: Strong contradiction (Trap triggered AND hard S1/S8 consistency mismatch)
     payload_l3 = _load_base_payload()
-    payload_l3["answers"]["scenario_s1"] = {"primary": "s1_a"}
-    payload_l3["answers"]["scenario_s8"] = {"primary": "s8_b"}  # Hard consistency 0.0
+    payload_l3["answers"]["scenario_s1"] = _scenario("s1_a")
+    payload_l3["answers"]["scenario_s8"] = _scenario("s8_b")  # Hard consistency 0.0
     payload_l3["answers"]["honesty_trap_q1"] = 5  # Honesty trap triggered
     # Keep response time slow to avoid triggering malicious telemetry Tier 4
     payload_l3["behavioral"]["avg_response_time_ms"] = 8000.0

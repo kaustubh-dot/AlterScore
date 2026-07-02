@@ -92,8 +92,12 @@ def resolve_score_mapping_config(
 
     resolved = ScoreMappingConfig(
         method=_mapping_string(mapping_config, "method", SCORE_MAPPING_METHOD_LOG_ODDS),
-        score_base=_mapping_float(mapping_config, "score_base", 500.0),
-        log_odds_factor=_mapping_float(mapping_config, "log_odds_factor", 80.0),
+        score_base=_mapping_float(mapping_config, "score_base", SCORE_BASE),
+        log_odds_factor=_mapping_float(
+            mapping_config,
+            "log_odds_factor",
+            SCORE_LOG_ODDS_FACTOR,
+        ),
         probability_clip_min=_mapping_float(
             mapping_config,
             "probability_clip_min",

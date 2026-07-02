@@ -10,10 +10,10 @@ from backend.app.schemas.score import AnswerPayload, ScoreRequest, ScoreResponse
 def build_valid_score_request_payload() -> dict:
     """Build a minimal valid v2 ScoreRequest payload for schema testing."""
 
-    def _scenario(option_id):
+    def _scenario(option_id, least_id):
         return {
             "primary": option_id,
-            "least": None,
+            "least": least_id,
             "first_click_ms": 8000,
             "change_count": 0,
         }
@@ -27,14 +27,14 @@ def build_valid_score_request_payload() -> dict:
             "CRT_q1": 5,
             "CRT_q2": 47,
             # Section B — Decision Scenarios
-            "scenario_s1": _scenario("s1_b"),
-            "scenario_s2": _scenario("s2_b"),
-            "scenario_s3": _scenario("s3_b"),
-            "scenario_s4": _scenario("s4_b"),
-            "scenario_s5": _scenario("s5_b"),
-            "scenario_s6": _scenario("s6_c"),
+            "scenario_s1": _scenario("s1_b", "s1_a"),
+            "scenario_s2": _scenario("s2_b", "s2_d"),
+            "scenario_s3": _scenario("s3_b", "s3_d"),
+            "scenario_s4": _scenario("s4_b", "s4_c"),
+            "scenario_s5": _scenario("s5_b", "s5_a"),
+            "scenario_s6": _scenario("s6_c", "s6_a"),
             "honesty_trap_q1": 2,
-            "scenario_s8": _scenario("s8_b"),
+            "scenario_s8": _scenario("s8_b", "s8_a"),
             # Section C — Open Text
             "open_response_text": (
                 "When my income fell, I reduced expenses, found extra work, "
@@ -110,9 +110,45 @@ def test_scenario_options_must_match_their_question_prefix(
     payload["answers"][field_name] = {
         "first_click_ms": 8000,
         "change_count": 0,
-        "least": None,
+        "least": "s1_a",
         **bad_option,
     }
+
+    with pytest.raises(ValidationError):
+        ScoreRequest.model_validate(payload)
+
+
+@pytest.mark.parametrize("bad_least", [None, ""])
+def test_scenario_least_is_required(bad_least: str | None) -> None:
+    payload = build_valid_score_request_payload()
+    payload["answers"]["scenario_s1"]["least"] = bad_least
+
+    with pytest.raises(ValidationError):
+        ScoreRequest.model_validate(payload)
+
+
+def test_scenario_least_missing_is_rejected() -> None:
+    payload = build_valid_score_request_payload()
+    del payload["answers"]["scenario_s1"]["least"]
+
+    with pytest.raises(ValidationError):
+        ScoreRequest.model_validate(payload)
+
+
+@pytest.mark.parametrize(
+    "bad_text",
+    [
+        "",
+        "loan loan loan loan loan loan loan loan loan loan",
+        "asdf qwer zxcv blorf snargle flibbert jabberwock nonsense token salad",
+        "This was difficult but things happened and then the situation changed.",
+    ],
+)
+def test_open_response_requires_meaningful_first_person_action_text(
+    bad_text: str,
+) -> None:
+    payload = build_valid_score_request_payload()
+    payload["answers"]["open_response_text"] = bad_text
 
     with pytest.raises(ValidationError):
         ScoreRequest.model_validate(payload)
@@ -165,6 +201,12 @@ def test_score_response_serializes_expected_top_level_fields() -> None:
                     ),
                 }
             ],
+            "governance_signals": {
+                "scenario_consistency_score": 1.0,
+                "scenario_fast_gaming": False,
+                "scenario_straight_lining_ratio": 0.25,
+                "scenario_change_rate": 0.0,
+            },
             "timestamp": datetime(2026, 5, 13, tzinfo=timezone.utc),
         }
     )
@@ -181,6 +223,7 @@ def test_score_response_serializes_expected_top_level_fields() -> None:
         "counterfactual_actions",
         "loan_eligibility",
         "improvement_tips",
+        "governance_signals",
         "timestamp",
     }
 

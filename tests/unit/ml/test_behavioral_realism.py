@@ -93,6 +93,26 @@ def test_governance_does_not_apply_standalone_average_speed_penalty() -> None:
     assert not any("fast response" in reason.lower() for reason in reasons)
 
 
+def test_governance_penalizes_semantic_straight_lining_without_severe_escalation() -> (
+    None
+):
+    straight_line_only_row = {
+        "impulsivity_index": 0.20,
+        "honesty_score": 0.95,
+        "dropout_count": 0,
+        "answer_change_rate": 0.0,
+        "engagement_score": 0.95,
+        "avg_response_time_ms": 5200.0,
+        "scenario_fast_gaming": 0.0,
+        "scenario_straight_lining_ratio": 1.0,
+    }
+
+    multiplier, reasons = _calculate_governance_multiplier(straight_line_only_row)
+
+    assert 0.65 <= multiplier < 1.0
+    assert any("straight-lining" in reason.lower() for reason in reasons)
+
+
 def test_governance_does_not_penalize_single_honesty_trap_without_other_evidence() -> (
     None
 ):
@@ -183,4 +203,26 @@ def test_single_gaming_signal_does_not_escalate() -> None:
     multiplier, reasons = _calculate_governance_multiplier(fast_legit_row)
 
     assert multiplier > SEVERE_GOVERNANCE_MULTIPLIER_MIN
+    assert not any("gaming signals stacked" in reason.lower() for reason in reasons)
+
+
+def test_fast_straight_lining_boundary_does_not_floor_prepared_profile() -> None:
+    boundary_row = {
+        "honesty_score": 1.0,
+        "scenario_consistency_score": 1.0,
+        "numeracy_score": 1.0,
+        "CRT_score": 1.0,
+        "financial_literacy_score": 1.0,
+        "avg_response_time_ms": 1999.0,
+        "session_duration_sec": 410.0,
+        "answer_change_rate": 0.0,
+        "engagement_score": 0.80,
+        "scenario_fast_gaming": 1.0,
+        "scenario_straight_lining_ratio": 1.0,
+    }
+
+    multiplier, reasons = _calculate_governance_multiplier(boundary_row)
+
+    assert multiplier > 0.65
+    assert any("straight-lining" in reason.lower() for reason in reasons)
     assert not any("gaming signals stacked" in reason.lower() for reason in reasons)

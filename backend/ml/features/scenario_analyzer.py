@@ -85,9 +85,15 @@ _SCENARIO_IDS: Final[list[str]] = [
     "scenario_s8",
 ]
 
+_SCENARIO_EVIDENCE_IDS: Final[frozenset[str]] = frozenset(
+    scenario_id for scenario_id in _SCENARIO_IDS if scenario_id != "scenario_s8"
+)
+
 # Primary feature weight vs. secondary feature weight when aggregating
 _PRIMARY_WEIGHT: Final[float] = 0.65
 _SECONDARY_WEIGHT: Final[float] = 0.35
+_LEAST_SELECTION_WEIGHT: Final[float] = 0.35
+_SCENARIO_HONESTY_BLEND_WEIGHT: Final[float] = 0.15
 
 # Scenario minimum first-click time for gaming detection (milliseconds)
 # Responses faster than this across ALL scenarios trigger the fast-pattern flag.
@@ -112,6 +118,8 @@ def analyze_scenario_responses(
     feature_accumulator: dict[str, float] = {}
     weight_accumulator: dict[str, float] = {}
     first_click_times: list[float] = []
+    changed_scenario_count = 0
+    answered_scenario_count = 0
 
     for scenario_id in _SCENARIO_IDS:
         raw = answer_values.get(scenario_id)
@@ -119,6 +127,10 @@ def analyze_scenario_responses(
             continue
 
         option_id, first_click_ms = _extract_option_id(raw, scenario_id)
+        least_option_id = _extract_least_option_id(raw)
+        if _extract_change_count(raw) > 0:
+            changed_scenario_count += 1
+        answered_scenario_count += 1
         if first_click_ms is not None:
             first_click_times.append(first_click_ms)
 
@@ -130,18 +142,38 @@ def analyze_scenario_responses(
             )
             continue
 
+        if scenario_id not in _SCENARIO_EVIDENCE_IDS:
+            continue
+
         primary_feature, primary_value, secondary_feature, secondary_value = (
             _OPTION_CODEBOOK[option_id]
         )
 
-        for feature, value, weight in (
-            (primary_feature, primary_value, _PRIMARY_WEIGHT),
-            (secondary_feature, secondary_value, _SECONDARY_WEIGHT),
-        ):
-            feature_accumulator[feature] = (
-                feature_accumulator.get(feature, 0.0) + value * weight
+        _accumulate_option_signals(
+            feature_accumulator,
+            weight_accumulator,
+            primary_feature=primary_feature,
+            primary_value=primary_value,
+            secondary_feature=secondary_feature,
+            secondary_value=secondary_value,
+        )
+
+        if least_option_id is not None and least_option_id in _OPTION_CODEBOOK:
+            (
+                least_primary,
+                least_primary_value,
+                least_secondary,
+                least_secondary_value,
+            ) = _OPTION_CODEBOOK[least_option_id]
+            _accumulate_option_signals(
+                feature_accumulator,
+                weight_accumulator,
+                primary_feature=least_primary,
+                primary_value=1.0 - least_primary_value,
+                secondary_feature=least_secondary,
+                secondary_value=1.0 - least_secondary_value,
+                weight_multiplier=_LEAST_SELECTION_WEIGHT,
             )
-            weight_accumulator[feature] = weight_accumulator.get(feature, 0.0) + weight
 
     # True weighted average from codebook — no artificial floor.
     # The raw codebook averages directly reflect option quality: worst options
@@ -163,12 +195,18 @@ def analyze_scenario_responses(
 
     # Straight-lining check
     scenario_straight_lining_ratio = _compute_straight_lining_ratio(answer_values)
+    scenario_change_rate = (
+        changed_scenario_count / answered_scenario_count
+        if answered_scenario_count
+        else 0.0
+    )
 
     return {
         "feature_contributions": feature_contributions,
         "scenario_consistency_score": scenario_consistency_score,
         "fast_pattern_gaming": fast_pattern_gaming,
         "scenario_straight_lining_ratio": scenario_straight_lining_ratio,
+        "scenario_change_rate": scenario_change_rate,
         "scenario_resolution_times": first_click_times,
     }
 
@@ -212,6 +250,12 @@ def compute_scenario_enriched_features(
     enriched = dict(psychometric_features)
     for feature_name, scenario_value in contributions.items():
         if feature_name in OBJECTIVE_FEATURES:
+            if feature_name == "honesty_score":
+                existing_value = float(enriched.get(feature_name, NEUTRAL_PRIOR))
+                blended = (
+                    1.0 - _SCENARIO_HONESTY_BLEND_WEIGHT
+                ) * existing_value + _SCENARIO_HONESTY_BLEND_WEIGHT * scenario_value
+                enriched[feature_name] = float(min(max(blended, 0.0), 1.0))
             # Never override objective measurements with scenario signals
             continue
 
@@ -231,8 +275,29 @@ def compute_scenario_enriched_features(
     enriched["scenario_straight_lining_ratio"] = float(
         analysis["scenario_straight_lining_ratio"]
     )
+    enriched["scenario_change_rate"] = float(analysis["scenario_change_rate"])
 
     return enriched
+
+
+def _accumulate_option_signals(
+    feature_accumulator: dict[str, float],
+    weight_accumulator: dict[str, float],
+    *,
+    primary_feature: str,
+    primary_value: float,
+    secondary_feature: str,
+    secondary_value: float,
+    weight_multiplier: float = 1.0,
+) -> None:
+    for feature, value, weight in (
+        (primary_feature, primary_value, _PRIMARY_WEIGHT * weight_multiplier),
+        (secondary_feature, secondary_value, _SECONDARY_WEIGHT * weight_multiplier),
+    ):
+        feature_accumulator[feature] = (
+            feature_accumulator.get(feature, 0.0) + value * weight
+        )
+        weight_accumulator[feature] = weight_accumulator.get(feature, 0.0) + weight
 
 
 def _compute_consistency_score(answer_values: dict[str, Any]) -> float:
@@ -278,6 +343,8 @@ def _compute_straight_lining_ratio(answer_values: dict[str, Any]) -> float:
     """
     suffixes = []
     for scenario_id in _SCENARIO_IDS:
+        if scenario_id not in _SCENARIO_EVIDENCE_IDS:
+            continue
         raw = answer_values.get(scenario_id)
         if raw is None:
             continue
@@ -335,6 +402,22 @@ def _extract_option_id(
         scenario_id,
     )
     return None, None
+
+
+def _extract_least_option_id(raw: Any) -> str | None:
+    if not isinstance(raw, dict):
+        return None
+    least = raw.get("least")
+    return str(least) if least else None
+
+
+def _extract_change_count(raw: Any) -> int:
+    if not isinstance(raw, dict):
+        return 0
+    try:
+        return max(int(raw.get("change_count") or 0), 0)
+    except (TypeError, ValueError):
+        return 0
 
 
 def _coerce_mapping(value: Any) -> dict[str, Any]:

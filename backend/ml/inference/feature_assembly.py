@@ -70,6 +70,7 @@ def assemble_request_features(
     scenario_straight_lining_ratio = psychometric_features.pop(
         "scenario_straight_lining_ratio", 0.0
     )
+    scenario_change_rate = psychometric_features.pop("scenario_change_rate", 0.0)
 
     # Step 3: Behavioral telemetry
     raw_behavioral_features = parse_behavioral(behavioral_payload)
@@ -83,6 +84,7 @@ def assemble_request_features(
     behavioral_features["scenario_straight_lining_ratio"] = (
         scenario_straight_lining_ratio
     )
+    behavioral_features["scenario_change_rate"] = scenario_change_rate
 
     # Step 4: NLP features from open-text response
     nlp_output = extract_nlp_features(str(answers_dict.get("open_response_text", "")))

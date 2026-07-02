@@ -48,7 +48,7 @@
   font-size: clamp(2.5rem, 6vw, 6.5rem);
   font-weight: 300;
   line-height: 1.05;
-  letter-spacing: -0.04em;
+  letter-spacing: 0;
   color: var(--text-primary);
   margin-bottom: var(--space-10);
   text-transform: none;
@@ -182,7 +182,7 @@
   font-size: clamp(2rem, 4vw, 3.5rem);
   font-weight: 300;
   color: var(--text-primary);
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
 }
 
 /* Features Grid - Editorial Columns */
@@ -261,7 +261,7 @@
   font-weight: 300;
   color: var(--text-primary);
   margin: 0;
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
 }
 
 .feature-desc {
@@ -440,7 +440,7 @@
   font-weight: 300;
   color: var(--text-primary);
   margin-bottom: var(--space-2);
-  letter-spacing: -0.04em;
+  letter-spacing: 0;
   line-height: 1.0;
 }
 
@@ -475,7 +475,7 @@
   font-weight: 300;
   line-height: 1.1;
   margin-bottom: var(--space-12);
-  letter-spacing: -0.03em;
+  letter-spacing: 0;
 }
 
 .cta-btn-wrapper {
@@ -509,4 +509,156 @@
   color: var(--text-secondary);
   margin-bottom: var(--space-8);
   font-weight: 300;
+}
+
+@media (max-width: 640px) {
+  .landing-hero {
+    min-height: 92vh;
+    min-height: 92dvh;
+    align-items: flex-end;
+    padding-top: 96px;
+    padding-bottom: var(--space-10);
+  }
+
+  .hero-content {
+    padding: 0;
+    text-align: left;
+  }
+
+  .hero-headline {
+    font-size: clamp(3rem, 15vw, 4.15rem);
+    line-height: 1;
+    margin-bottom: var(--space-6);
+  }
+
+  .hero-sub,
+  .hero-subheadline {
+    max-width: none;
+    margin-left: 0;
+    margin-right: 0;
+    margin-bottom: var(--space-7, 40px);
+    text-align: left;
+    font-size: 1.0625rem;
+    line-height: 1.65;
+    color: var(--text-secondary);
+  }
+
+  .hero-cta {
+    justify-content: stretch;
+    margin-bottom: var(--space-5);
+  }
+
+  .hero-cta .btn,
+  .hero-cta button {
+    width: 100%;
+  }
+
+  .btn-large {
+    min-height: 54px;
+    padding: 16px 22px !important;
+    font-size: 0.9375rem !important;
+    letter-spacing: 0.03em;
+  }
+
+  .hero-meta {
+    justify-content: flex-start;
+    max-width: 280px;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    letter-spacing: 0.04em;
+  }
+
+  .scroll-indicator {
+    display: none;
+  }
+
+  .section {
+    padding: var(--space-12) 0;
+  }
+
+  .section::before,
+  .section::after {
+    display: none;
+  }
+
+  .section-header {
+    margin-bottom: var(--space-6);
+    padding-bottom: var(--space-4);
+  }
+
+  .section-eyebrow {
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+  }
+
+  .section-title {
+    font-size: clamp(2.25rem, 11vw, 3rem);
+    line-height: 1.05;
+  }
+
+  .feature-card,
+  .step-node {
+    align-items: flex-start;
+    justify-content: flex-start;
+    min-height: 0;
+    padding: var(--space-7, 40px) var(--space-5);
+    text-align: left;
+  }
+
+  .feature-title {
+    font-size: 1.625rem;
+    line-height: 1.15;
+  }
+
+  .feature-desc,
+  .step-desc {
+    max-width: none;
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+  }
+
+  .step-title {
+    font-size: 0.9375rem;
+    line-height: 1.35;
+    letter-spacing: 0.035em;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-item {
+    padding: var(--space-7, 40px) var(--space-5);
+  }
+
+  .stat-number {
+    font-size: 4rem;
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+    line-height: 1.4;
+  }
+
+  .final-cta {
+    padding: var(--space-16) 0;
+    text-align: left;
+  }
+
+  .cta-container {
+    padding: 0 20px;
+  }
+
+  .cta-title {
+    font-size: clamp(2.5rem, 12vw, 3.5rem);
+    line-height: 1.05;
+    margin-bottom: var(--space-8);
+  }
+
+  .cta-btn-wrapper,
+  .cta-btn-wrapper button {
+    width: 100%;
+  }
 }

@@ -165,6 +165,33 @@ class TestFeatureContributions:
         result = analyze_scenario_responses(answers)
         assert isinstance(result["feature_contributions"], dict)
 
+    def test_least_like_me_choice_influences_feature_contributions(self):
+        """Rejecting a strong trait option should change the scenario feature mix."""
+        no_least = _full_scenario_answers(s1="s1_c")
+        with_least = _full_scenario_answers(s1="s1_c")
+        with_least["scenario_s1"]["least"] = "s1_b"
+
+        without_result = analyze_scenario_responses(no_least)
+        with_result = analyze_scenario_responses(with_least)
+
+        assert (
+            with_result["feature_contributions"]["conscientiousness_score"]
+            < without_result["feature_contributions"]["conscientiousness_score"]
+        )
+
+    def test_s8_trap_does_not_change_feature_contributions(self):
+        """S8 is reserved for consistency/governance and should not double-count S1."""
+        baseline = _full_scenario_answers(s8="s8_b")
+        altered_trap = _full_scenario_answers(s8="s8_d")
+
+        baseline_result = analyze_scenario_responses(baseline)
+        altered_result = analyze_scenario_responses(altered_trap)
+
+        assert (
+            altered_result["feature_contributions"]
+            == baseline_result["feature_contributions"]
+        )
+
 
 # ---------------------------------------------------------------------------
 # 2. Consistency score computation
@@ -335,6 +362,18 @@ class TestFeatureBlending:
         assert "scenario_fast_gaming" in enriched
         assert enriched["scenario_fast_gaming"] == 1.0
 
+    def test_scenario_change_rate_present_in_output(self):
+        """Per-scenario change counts should feed governance telemetry."""
+        base = _neutral_psychometric()
+        answers = _full_scenario_answers()
+        for answer in answers.values():
+            answer["change_count"] = 2
+
+        enriched = compute_scenario_enriched_features(base, answers)
+
+        assert "scenario_change_rate" in enriched
+        assert enriched["scenario_change_rate"] == 1.0
+
 
 # ---------------------------------------------------------------------------
 # 5. Empty / degenerate input
@@ -373,13 +412,13 @@ class TestStraightLining:
         enriched = compute_scenario_enriched_features(_neutral_psychometric(), answers)
         assert enriched["scenario_straight_lining_ratio"] == 1.0
 
-    def test_six_out_of_seven_same_suffix_returns_0_857(self):
-        """Selecting the same suffix in 6 out of 7 scenarios returns ratio approx 0.857."""
+    def test_five_out_of_six_same_suffix_returns_0_833(self):
+        """S8 is excluded from straight-lining because it is a consistency trap."""
         answers = _full_scenario_answers(
-            s1="s1_a", s2="s2_a", s3="s3_a", s4="s4_a", s5="s5_a", s6="s6_a", s8="s8_b"
+            s1="s1_a", s2="s2_a", s3="s3_a", s4="s4_a", s5="s5_a", s6="s6_b", s8="s8_a"
         )
         result = analyze_scenario_responses(answers)
-        assert result["scenario_straight_lining_ratio"] == pytest.approx(6 / 7)
+        assert result["scenario_straight_lining_ratio"] == pytest.approx(5 / 6)
 
     def test_no_answers_returns_0_0(self):
         """Empty or degenerate answers return straight-lining ratio of 0.0."""

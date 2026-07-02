@@ -152,3 +152,44 @@
     opacity: 0.9;
   }
 }
+
+@media (max-width: 640px) {
+  .processing-layout {
+    justify-content: flex-start;
+    padding: 88px 0 var(--space-8);
+    overflow-y: auto;
+  }
+
+  .processing-card {
+    padding: var(--space-6) var(--space-5);
+  }
+
+  .processing-header {
+    margin-bottom: var(--space-6);
+    padding-bottom: var(--space-5);
+  }
+
+  .processing-title {
+    font-size: 0.9375rem;
+    line-height: 1.45;
+    letter-spacing: 0.06em;
+  }
+
+  .step-row {
+    align-items: flex-start;
+    gap: var(--space-2);
+    font-size: 0.9375rem;
+    line-height: 1.45;
+  }
+
+  .step-icon {
+    width: 18px;
+    min-height: 22px;
+    align-items: center;
+  }
+
+  .step-status,
+  .processing-eta {
+    font-size: 0.8125rem;
+  }
+}

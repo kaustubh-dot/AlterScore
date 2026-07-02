@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+import re
 from typing import Any, Literal
 from uuid import uuid4
 
@@ -24,15 +25,49 @@ _SCENARIO_OPTION_PREFIXES = {
     "scenario_s8": "s8_",
 }
 
+_MIN_OPEN_RESPONSE_WORDS = 10
+_FIRST_PERSON_TOKENS = {"i", "me", "my", "mine", "myself", "we", "our", "us"}
+_OPEN_RESPONSE_ACTION_TOKENS = {
+    "adapted",
+    "adjusted",
+    "arranged",
+    "asked",
+    "budgeted",
+    "built",
+    "calculated",
+    "checked",
+    "compared",
+    "contacted",
+    "created",
+    "cut",
+    "discussed",
+    "earned",
+    "found",
+    "handled",
+    "managed",
+    "negotiated",
+    "paid",
+    "planned",
+    "prioritized",
+    "reduced",
+    "repaid",
+    "resolved",
+    "saved",
+    "scheduled",
+    "tracked",
+    "worked",
+}
+_WORD_PATTERN = re.compile(r"[a-zA-Z']+")
+
 
 class ScenarioAnswer(SchemaModel):
-    """A single scenario question response with optional secondary pick and telemetry."""
+    """A single scenario question response with primary, least-like-me, and telemetry."""
 
     primary: str = Field(
         ..., min_length=2, max_length=10, description="Selected option ID (e.g. 's1_a')"
     )
-    least: str | None = Field(
-        default=None, description="Optional least-like-me option ID"
+    least: str = Field(
+        ..., min_length=2, max_length=10, description="Least-like-me option ID"
     )
     first_click_ms: int | None = Field(
         default=None, ge=0, le=120000, description="Time to first click in ms"
@@ -43,13 +78,8 @@ class ScenarioAnswer(SchemaModel):
 
     @field_validator("primary", "least")
     @classmethod
-    def validate_option_format(cls, v: str | None) -> str | None:
-        if v is None:
-            return None
-
+    def validate_option_format(cls, v: str) -> str:
         # Option IDs follow the pattern: s{n}_{letter} e.g. s1_a, s8_d
-        import re
-
         if not re.match(r"^s\d+_[a-z]$", v):
             raise ValueError(
                 f"Invalid scenario option ID format: '{v}'. Expected pattern: s1_a"
@@ -58,7 +88,7 @@ class ScenarioAnswer(SchemaModel):
 
     @model_validator(mode="after")
     def validate_least_differs_from_primary(self) -> "ScenarioAnswer":
-        if self.least is not None and self.least == self.primary:
+        if self.least == self.primary:
             raise ValueError("'least' option cannot be the same as 'primary' option.")
         return self
 
@@ -96,6 +126,45 @@ class AnswerPayload(SchemaModel):
         """Return a plain dict suitable for passing to parsers and analyzers."""
         return self.model_dump()
 
+    @field_validator("open_response_text")
+    @classmethod
+    def validate_open_response_quality(cls, value: str) -> str:
+        normalized = " ".join(value.strip().split())
+        tokens = [token.lower() for token in _WORD_PATTERN.findall(normalized)]
+        if len(tokens) < _MIN_OPEN_RESPONSE_WORDS:
+            raise ValueError(
+                "open_response_text must contain at least 10 meaningful words."
+            )
+
+        unique_ratio = len(set(tokens)) / len(tokens)
+        if unique_ratio < 0.40:
+            raise ValueError("open_response_text is too repetitive to score.")
+
+        word_counts: dict[str, int] = {}
+        for token in tokens:
+            word_counts[token] = word_counts.get(token, 0) + 1
+        if any(count > 5 for count in word_counts.values()):
+            raise ValueError("open_response_text contains repeated-word spam.")
+
+        if not any(token in _FIRST_PERSON_TOKENS for token in tokens):
+            raise ValueError(
+                "open_response_text must describe the applicant's own actions."
+            )
+        if not any(token in _OPEN_RESPONSE_ACTION_TOKENS for token in tokens):
+            raise ValueError(
+                "open_response_text must include concrete response actions."
+            )
+
+        compact = "".join(tokens)
+        if compact:
+            char_counts: dict[str, int] = {}
+            for char in compact:
+                char_counts[char] = char_counts.get(char, 0) + 1
+            if max(char_counts.values()) / len(compact) > 0.35:
+                raise ValueError("open_response_text appears to be character spam.")
+
+        return normalized
+
     @model_validator(mode="after")
     def validate_scenario_option_prefixes(self) -> "AnswerPayload":
         for field_name, expected_prefix in _SCENARIO_OPTION_PREFIXES.items():
@@ -105,12 +174,11 @@ class AnswerPayload(SchemaModel):
                 field_name=field_name,
                 expected_prefix=expected_prefix,
             )
-            if scenario_answer.least is not None:
-                _validate_scenario_option_prefix(
-                    scenario_answer.least,
-                    field_name=field_name,
-                    expected_prefix=expected_prefix,
-                )
+            _validate_scenario_option_prefix(
+                scenario_answer.least,
+                field_name=field_name,
+                expected_prefix=expected_prefix,
+            )
         return self
 
 
@@ -174,6 +242,13 @@ class ImprovementTip(SchemaModel):
     body: str = Field(..., min_length=1)
 
 
+class GovernanceSignals(SchemaModel):
+    scenario_consistency_score: float = Field(default=0.5, ge=0, le=1)
+    scenario_fast_gaming: bool = False
+    scenario_straight_lining_ratio: float = Field(default=0.0, ge=0, le=1)
+    scenario_change_rate: float = Field(default=0.0, ge=0, le=1)
+
+
 class ScoreResponse(SchemaModel):
     session_id: str = Field(..., min_length=1)
     credit_score: int = Field(..., ge=300, le=850)
@@ -184,6 +259,7 @@ class ScoreResponse(SchemaModel):
     counterfactual_actions: list[CounterfactualAction]
     loan_eligibility: LoanEligibility
     improvement_tips: list[ImprovementTip]
+    governance_signals: GovernanceSignals = Field(default_factory=GovernanceSignals)
     timestamp: datetime
 
 
@@ -193,6 +269,7 @@ __all__ = [
     "CounterfactualAction",
     "DeviceType",
     "ExplanationDirection",
+    "GovernanceSignals",
     "ExplanationItem",
     "ImprovementTip",
     "LoanEligibility",

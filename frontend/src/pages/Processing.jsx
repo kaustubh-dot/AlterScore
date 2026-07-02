@@ -48,7 +48,13 @@ export default function Processing({ payload, onComplete }) {
           onComplete(response.data);
         }, delay);
       } catch (err) {
-        console.error('Score request failed:', err);
+        if (import.meta.env.DEV) {
+          console.warn('Score request failed:', {
+            status: err?.response?.status,
+            code: err?.code,
+            message: err?.message,
+          });
+        }
         setError(formatApiError(err, 'Internal server issue.'));
       }
     };

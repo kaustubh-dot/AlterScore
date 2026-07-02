@@ -74,7 +74,7 @@
   color: var(--text-secondary);
   text-decoration: none;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 0.75rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   padding: 8px 16px;
@@ -142,4 +142,68 @@
 @keyframes pulseGreen {
   0%, 100% { transform: scale(1); opacity: 0.6; }
   50% { transform: scale(1.4); opacity: 1; }
+}
+
+@media (max-width: 640px) {
+  .navbar {
+    height: 68px;
+    background: rgba(8, 8, 9, 0.86);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+  }
+
+  .navbar-container {
+    gap: var(--space-3);
+  }
+
+  .navbar-logo,
+  .btn-logo-action {
+    gap: 7px;
+    min-width: 0;
+    font-size: 0.875rem;
+  }
+
+  .logo-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .logo-text {
+    max-width: 8.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .logo-tag {
+    display: none;
+  }
+
+  .navbar-links {
+    gap: var(--space-2);
+    flex-shrink: 0;
+  }
+
+  .navbar-link {
+    min-height: 42px;
+    padding: 10px 12px;
+    font-size: 0.75rem;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  .navbar-link svg,
+  .navbar-icon-button svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .navbar-link span {
+    display: none;
+  }
+
+  .navbar-icon-button {
+    width: 42px;
+    height: 42px;
+  }
 }

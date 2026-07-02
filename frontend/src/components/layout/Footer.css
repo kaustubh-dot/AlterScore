@@ -61,13 +61,24 @@
 }
 
 @media (max-width: 767px) {
+  .footer {
+    padding: var(--space-6) 0;
+  }
+
   .footer-brand {
     flex-direction: column;
     align-items: center;
     gap: var(--space-1);
+    font-size: 0.8125rem;
+    line-height: 1.45;
   }
   
   .brand-separator {
     display: none;
+  }
+
+  .footer-admin-link {
+    min-height: 40px;
+    font-size: 0.8125rem;
   }
 }

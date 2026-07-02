@@ -11,6 +11,16 @@ import './Results.css';
 const SCORE_MIN = 300;
 const SCORE_RANGE = 550;
 
+function asArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function formatBandLabel(band) {
+  return String(band || '')
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
 function getBandInfoForScore(score) {
   if (score >= 750) {
     return {
@@ -27,7 +37,7 @@ function getBandInfoForScore(score) {
       band: 'good',
       color: 'var(--score-good)',
       shadow: 'var(--shadow-score-good)',
-      loanMin: 12000,
+      loanMin: 10000,
       loanMax: 30000,
       description: 'Microloans up to Rs. 30,000 approved. Solid repayment probability.',
     };
@@ -47,7 +57,7 @@ function getBandInfoForScore(score) {
       band: 'poor',
       color: 'var(--score-poor)',
       shadow: 'var(--shadow-score-poor)',
-      loanMin: 2000,
+      loanMin: 0,
       loanMax: 5000,
       description: 'Microloans up to Rs. 5,000 approved. Sub-prime risk controls active.',
     };
@@ -105,13 +115,20 @@ export default function Results() {
   // Derived slider metrics based on user's actual choices
   const [originalVals] = useState(() => {
     if (!scoreData) return null;
-    const isGaming = scoreData.credit_score < 400 && scoreData.explanation.some(e => e.feature === 'avg_response_time_ms' && e.shap_value < 0);
-    const isCRTCorrect = scoreData.explanation.some(e => e.feature === 'CRT_score' && e.shap_value > 0);
-    const isConsistent = scoreData.explanation.some(e => e.feature === 'scenario_consistency_score' && e.shap_value > 0);
+    const explanation = asArray(scoreData.explanation);
+    const governanceSignals = scoreData.governance_signals || {};
+    const isGaming = scoreData.credit_score < 400 && explanation.some(e => e.feature === 'avg_response_time_ms' && e.shap_value < 0);
+    const isCRTCorrect = explanation.some(e => e.feature === 'CRT_score' && e.shap_value > 0);
+    const consistencySignal = explanation.find(e => e.feature === 'scenario_consistency_score');
+    const scenarioConsistency = typeof governanceSignals.scenario_consistency_score === 'number'
+      ? governanceSignals.scenario_consistency_score
+      : null;
     return {
       pace: isGaming ? 1.5 : 5.0,
       crt: isCRTCorrect ? 2 : 0,
-      consistency: isConsistent ? 1 : 0
+      consistency: scenarioConsistency !== null
+        ? (scenarioConsistency >= 0.9 ? 1 : 0)
+        : (consistencySignal ? (consistencySignal.shap_value > 0 ? 1 : 0) : 1)
     };
   });
 
@@ -119,6 +136,7 @@ export default function Results() {
   const [optPace, setOptPace] = useState(() => originalVals?.pace ?? 5.0); // response pace in seconds
   const [optCRT, setOptCRT] = useState(() => originalVals?.crt ?? 0); // CRT answers correct (0-2)
   const [optConsistency, setOptConsistency] = useState(() => originalVals?.consistency ?? 0); // 0 (mismatch) or 1 (match)
+  const [simulatorTouched, setSimulatorTouched] = useState(false);
 
   // Trigger Cinematic Reveal Animation
   useEffect(() => {
@@ -191,11 +209,12 @@ export default function Results() {
   const crtShift = originalVals ? (optCRT - originalVals.crt) * 35 : 0;
   const consistencyShift = originalVals ? (optConsistency - originalVals.consistency) * 75 : 0;
   
-  const currentScore = Math.max(300, Math.min(850, scoreData.credit_score + paceShift + crtShift + consistencyShift));
+  const adjustedScore = Math.max(300, Math.min(850, scoreData.credit_score + paceShift + crtShift + consistencyShift));
+  const currentScore = simulatorTouched ? adjustedScore : scoreData.credit_score;
 
   const repaymentProb = 0.35 + ((currentScore - 300) / 550) * 0.63;
   const percentile = Math.round(((currentScore - 300) / 550) * 98);
-  const simulationChanged = currentScore !== scoreData.credit_score;
+  const simulationChanged = simulatorTouched && currentScore !== scoreData.credit_score;
   const simulatedBandInfo = getBandInfoForScore(currentScore);
   const backendBandInfo = getBandInfoForScore(scoreData.credit_score);
   const backendEligibility = scoreData.loan_eligibility;
@@ -211,7 +230,10 @@ export default function Results() {
   const displayPercentile = simulationChanged
     ? percentile
     : (scoreData.percentile ?? Math.round(((scoreData.credit_score - SCORE_MIN) / SCORE_RANGE) * 98));
-  const maxAbsShap = Math.max(...scoreData.explanation.map((item) => Math.abs(item.shap_value)), 1);
+  const explanationItems = asArray(scoreData.explanation);
+  const counterfactualActions = asArray(scoreData.counterfactual_actions);
+  const improvementTips = asArray(scoreData.improvement_tips);
+  const maxAbsShap = Math.max(...explanationItems.map((item) => Math.abs(item.shap_value)), 1);
 
   const scoreToDisplay = (animationStep >= 3) ? currentScore : displayScore;
   const ringOffsetToDisplay = (animationStep >= 3) 
@@ -264,7 +286,7 @@ export default function Results() {
                   textShadow: animationStep >= 3 ? `0 0 10px ${displayBandColor}40` : 'none'
                 }}
               >
-                <TextReveal text={displayBand} />
+                <TextReveal text={formatBandLabel(displayBand)} />
               </span>
             </div>
           </div>
@@ -320,7 +342,7 @@ export default function Results() {
             </div>
 
             <GlowCard className="shap-table result-card">
-              {scoreData.explanation.map((item, idx) => {
+              {explanationItems.map((item, idx) => {
                 const isPos = item.direction === 'positive';
                 const percentage = Math.min((Math.abs(item.shap_value) / maxAbsShap) * 100, 100);
                 
@@ -371,7 +393,10 @@ export default function Results() {
                   max="8.0"
                   step="0.5"
                   value={optPace}
-                  onChange={(e) => setOptPace(parseFloat(e.target.value))}
+                  onChange={(e) => {
+                    setSimulatorTouched(true);
+                    setOptPace(parseFloat(e.target.value));
+                  }}
                   className="input-range-control"
                   aria-label="Deliberation pace"
                   aria-valuetext={`${optPace.toFixed(1)} seconds`}
@@ -389,7 +414,10 @@ export default function Results() {
                   max="2"
                   step="1"
                   value={optCRT}
-                  onChange={(e) => setOptCRT(parseInt(e.target.value))}
+                  onChange={(e) => {
+                    setSimulatorTouched(true);
+                    setOptCRT(parseInt(e.target.value));
+                  }}
                   className="input-range-control"
                   aria-label="Cognitive reflection correctness"
                   aria-valuetext={`${optCRT} of 2 correct`}
@@ -400,7 +428,7 @@ export default function Results() {
                 <div className="slider-label-row">
                   <span className="slider-name">Decision Frame Consistency (Matched trap questions)</span>
                   <span className="slider-val">
-                    {optConsistency === 1 ? '100% Consistent (Match)' : '0% Mismatch (Gaming Flag)'}
+                    {optConsistency === 1 ? '100% Consistent (Match)' : '0% Consistent (Gaming Flag)'}
                   </span>
                 </div>
                 <input
@@ -409,7 +437,10 @@ export default function Results() {
                   max="1"
                   step="1"
                   value={optConsistency}
-                  onChange={(e) => setOptConsistency(parseInt(e.target.value))}
+                  onChange={(e) => {
+                    setSimulatorTouched(true);
+                    setOptConsistency(parseInt(e.target.value));
+                  }}
                   className="input-range-control"
                   aria-label="Decision frame consistency"
                   aria-valuetext={optConsistency === 1 ? 'Consistent match' : 'Mismatch flag'}
@@ -435,7 +466,7 @@ export default function Results() {
           </div>
 
           <div className="dice-list">
-            {scoreData.counterfactual_actions.map((act, idx) => (
+            {counterfactualActions.map((act, idx) => (
               <ScrollReveal direction="scale" delay={idx * 100} key={idx}>
                 <GlowCard className="dice-card">
                   <span className="dice-feature-change">
@@ -458,7 +489,7 @@ export default function Results() {
           </div>
 
           <div className="tips-list">
-            {scoreData.improvement_tips.map((tip, idx) => (
+            {improvementTips.map((tip, idx) => (
               <ScrollReveal direction="scale" delay={idx * 100} key={idx}>
                 <GlowCard className="tip-card">
                   <h4 className="tip-header">{tip.title}</h4>

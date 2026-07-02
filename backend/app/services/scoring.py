@@ -212,6 +212,9 @@ class ScoringService:
                 "improvement_tips": [
                     tip.model_dump(mode="json") for tip in improvement_tips
                 ],
+                "governance_signals": _build_governance_signals(
+                    assembled.behavioral_features
+                ),
                 "timestamp": datetime.now(timezone.utc),
             }
         )
@@ -231,6 +234,9 @@ class ScoringService:
             "psychometric_features": _to_jsonable(assembled.psychometric_features),
             "raw_behavioral_features": _to_jsonable(assembled.raw_behavioral_features),
             "behavioral_features": _to_jsonable(assembled.behavioral_features),
+            "governance_signals": _build_governance_signals(
+                assembled.behavioral_features
+            ),
             "nlp_features": _to_jsonable(assembled.nlp_features),
             "raw_embedding_preview": _to_jsonable(assembled.raw_embedding[:12]),
             "feature_names": list(assembled.feature_frame.columns),
@@ -618,6 +624,31 @@ def _apply_governance_adjustment(
     return adjusted_probability, multiplier, reasons
 
 
+def _build_governance_signals(scenario_signals: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "scenario_consistency_score": float(
+            np.clip(
+                scenario_signals.get("scenario_consistency_score", 0.5),
+                0.0,
+                1.0,
+            )
+        ),
+        "scenario_fast_gaming": bool(
+            float(scenario_signals.get("scenario_fast_gaming", 0.0)) >= 1.0
+        ),
+        "scenario_straight_lining_ratio": float(
+            np.clip(
+                scenario_signals.get("scenario_straight_lining_ratio", 0.0),
+                0.0,
+                1.0,
+            )
+        ),
+        "scenario_change_rate": float(
+            np.clip(scenario_signals.get("scenario_change_rate", 0.0), 0.0, 1.0)
+        ),
+    }
+
+
 def _build_governance_feature_row(
     feature_row: dict[str, Any],
     scenario_signals: dict[str, Any],
@@ -631,6 +662,7 @@ def _build_governance_feature_row(
         "scenario_straight_lining_ratio": scenario_signals.get(
             "scenario_straight_lining_ratio", 0.0
         ),
+        "scenario_change_rate": scenario_signals.get("scenario_change_rate", 0.0),
     }
 
 
@@ -668,7 +700,10 @@ def _calculate_governance_multiplier(
 
     avg_time = float(feature_row.get("avg_response_time_ms", 5000.0))
     session_duration = float(feature_row.get("session_duration_sec", 300.0))
-    change_rate = float(feature_row.get("answer_change_rate", 0.0))
+    change_rate = max(
+        float(feature_row.get("answer_change_rate", 0.0)),
+        float(feature_row.get("scenario_change_rate", 0.0)),
+    )
     engagement = float(feature_row.get("engagement_score", 1.0))
     is_malicious_telemetry = (
         (avg_time < 2000.0) or (change_rate > 0.3) or (engagement < 0.3)
@@ -714,7 +749,10 @@ def _calculate_governance_multiplier(
         reasons.append(f"Frequent application defocus events (dropouts: {dropouts})")
 
     # 4. Low Engagement / Extreme Changes
-    change_rate = float(feature_row.get("answer_change_rate", 0.0))
+    change_rate = max(
+        float(feature_row.get("answer_change_rate", 0.0)),
+        float(feature_row.get("scenario_change_rate", 0.0)),
+    )
     if change_rate > 0.30:
         penalty = min(0.08, (change_rate - 0.30) * 0.2)
         multiplier -= penalty
@@ -746,8 +784,11 @@ def _calculate_governance_multiplier(
     straight_lining_ratio = float(
         feature_row.get("scenario_straight_lining_ratio", 0.0)
     )
-    if straight_lining_ratio >= 0.85:
-        penalty = 0.18
+    straight_lining_detected = straight_lining_ratio >= 0.85
+    if straight_lining_detected:
+        penalty = 0.08
+        if scenario_fast_gaming >= 1.0:
+            penalty += 0.10
         multiplier -= penalty
         reasons.append(
             f"Straight-lining response pattern detected (ratio: {straight_lining_ratio:.1%}) "
@@ -800,9 +841,10 @@ def _calculate_governance_multiplier(
     # is mechanical regardless of answer correctness, so we bypass the default
     # floor and drop to the severe floor. Each signal alone can occur for a fast
     # but legitimate user, so escalation requires a stack of >= 2.
+    extreme_fast_pattern = avg_time < 1000.0 and session_duration < 90.0
     strong_gaming_signals = [
-        ("straight-lining", straight_lining_ratio >= 0.85),
-        ("fast-pattern scenario gaming", scenario_fast_gaming >= 1.0),
+        ("straight-lining", straight_lining_detected),
+        ("extreme fast-pattern scenario gaming", extreme_fast_pattern),
         ("near-zero engagement", engagement < 0.10),
     ]
     fired = [name for name, hit in strong_gaming_signals if hit]

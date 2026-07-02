@@ -70,8 +70,13 @@ body::after {
 }
 
 @media (max-width: 767px) {
+  body {
+    font-size: 1rem;
+    line-height: 1.65;
+  }
+
   .container {
-    padding: 0 var(--space-4);
+    padding: 0 20px;
   }
 }
 
@@ -106,19 +111,24 @@ body::after {
   transition: all var(--duration-normal) var(--ease-smooth);
 }
 
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 .btn-primary {
   color: var(--bg-void);
   background: var(--accent-primary); /* Solid White */
 }
 
-.btn-primary:hover {
+.btn-primary:not(:disabled):hover {
   background: transparent;
   color: var(--text-primary);
   border-color: var(--text-primary);
   transform: translateY(-2px);
 }
 
-.btn-primary:active {
+.btn-primary:not(:disabled):active {
   transform: translateY(0);
 }
 
@@ -128,13 +138,13 @@ body::after {
   border: 1px solid var(--bg-border);
 }
 
-.btn-ghost:hover {
+.btn-ghost:not(:disabled):hover {
   color: var(--text-primary);
   border-color: var(--text-primary);
   transform: translateY(-2px);
 }
 
-.btn-ghost:active {
+.btn-ghost:not(:disabled):active {
   transform: translateY(0);
 }
 
@@ -367,6 +377,22 @@ body::after {
 }
 
 @media (max-width: 640px) {
+  .card-base {
+    padding: var(--space-5);
+  }
+
+  .btn {
+    min-height: 48px;
+    padding: 13px 18px;
+    font-size: 1rem;
+    gap: 8px;
+  }
+
+  .chip {
+    min-height: 28px;
+    font-size: 0.75rem;
+  }
+
   .input-range-control {
     height: 4px;
     margin: var(--space-2) 0;

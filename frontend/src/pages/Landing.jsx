@@ -9,6 +9,13 @@ import TextReveal from '../components/animation/TextReveal';
 import { QUESTIONS } from '../data/questions';
 import './Landing.css';
 
+function hasCompletedPreload() {
+  return (
+    document.body.classList.contains('preloader-done')
+    || sessionStorage.getItem('alterscore_preloader_seen') === 'true'
+  );
+}
+
 // Count-up helper hook
 function useCountUp(target, duration = 1500, startCount = false) {
   const [count, setCount] = useState(0);
@@ -50,7 +57,7 @@ function useCountUp(target, duration = 1500, startCount = false) {
 
 export default function Landing() {
   const { transitionTo } = usePageTransition();
-  const [isLoaded, setIsLoaded] = useState(() => document.body.classList.contains('preloader-done'));
+  const [isLoaded, setIsLoaded] = useState(hasCompletedPreload);
   const [hideScroll, setHideScroll] = useState(false);
   const [triggerStats, setTriggerStats] = useState(false);
   const statsRef = useRef(null);

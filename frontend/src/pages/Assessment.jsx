@@ -10,6 +10,88 @@ import './Assessment.css';
 
 const getNow = () => Date.now();
 
+const SCENARIO_FALLBACKS = {
+  scenario_s1: { primary: 's1_b', least: 's1_a', first_click_ms: 0, change_count: 0 },
+  scenario_s2: { primary: 's2_b', least: 's2_d', first_click_ms: 0, change_count: 0 },
+  scenario_s3: { primary: 's3_b', least: 's3_d', first_click_ms: 0, change_count: 0 },
+  scenario_s4: { primary: 's4_b', least: 's4_c', first_click_ms: 0, change_count: 0 },
+  scenario_s5: { primary: 's5_b', least: 's5_a', first_click_ms: 0, change_count: 0 },
+  scenario_s6: { primary: 's6_b', least: 's6_a', first_click_ms: 0, change_count: 0 },
+  scenario_s8: { primary: 's8_b', least: 's8_a', first_click_ms: 0, change_count: 0 },
+};
+
+const OPEN_RESPONSE_ACTION_TOKENS = new Set([
+  'adapted',
+  'adjusted',
+  'arranged',
+  'asked',
+  'budgeted',
+  'built',
+  'calculated',
+  'checked',
+  'compared',
+  'contacted',
+  'created',
+  'cut',
+  'discussed',
+  'earned',
+  'found',
+  'handled',
+  'managed',
+  'negotiated',
+  'paid',
+  'planned',
+  'prioritized',
+  'reduced',
+  'repaid',
+  'resolved',
+  'saved',
+  'scheduled',
+  'tracked',
+  'worked',
+]);
+const OPEN_RESPONSE_FIRST_PERSON_TOKENS = new Set(['i', 'me', 'my', 'mine', 'myself', 'we', 'our', 'us']);
+
+function getOpenResponseTokens(value) {
+  return String(value || '')
+    .toLowerCase()
+    .match(/[a-zA-Z']+/g) || [];
+}
+
+function isOpenResponseMeaningful(value, minWords = 10) {
+  const tokens = getOpenResponseTokens(value);
+  if (tokens.length < minWords) return false;
+  if (!tokens.some((token) => OPEN_RESPONSE_FIRST_PERSON_TOKENS.has(token))) return false;
+  if (!tokens.some((token) => OPEN_RESPONSE_ACTION_TOKENS.has(token))) return false;
+  return true;
+}
+
+function hasUsableAnswer(question, answer) {
+  if (answer === undefined || answer === null) {
+    return false;
+  }
+
+  if (question.type === 'number') {
+    const normalized = String(answer).trim();
+    return normalized !== '' && Number.isFinite(Number(normalized));
+  }
+
+  if (question.type === 'scenario') {
+    return Boolean(
+      answer.primary
+      && answer.primary !== ''
+      && answer.least
+      && answer.least !== answer.primary
+    );
+  }
+
+  if (question.type === 'text') {
+    return String(answer).trim() !== '';
+  }
+
+  return true;
+}
+
 export default function Assessment() {
   const { transitionTo } = usePageTransition();
   const { playClick, playSelect, playSuccess } = useSound();
@@ -100,20 +182,39 @@ export default function Assessment() {
     const qId = currentQ.id;
     const now = getNow();
     const rt = now - (questionStartRef.current || now);
+    const nextValue = currentQ.type === 'text'
+      ? String(value).slice(0, currentQ.maxLength || 1000)
+      : value;
+    const normalizedNumber =
+      currentQ.type === 'number' ? String(nextValue).trim() : null;
 
     // Track first click
     if (firstClicks[qId] === undefined) {
       setFirstClicks((f) => ({ ...f, [qId]: rt }));
     }
 
+    if (currentQ.type === 'number' && normalizedNumber === '') {
+      setAnswers((a) => {
+        const rest = { ...a };
+        delete rest[qId];
+        return rest;
+      });
+      setResponseTimes((r) => {
+        const rest = { ...r };
+        delete rest[qId];
+        return rest;
+      });
+      return;
+    }
+
     // Freeform inputs emit on every keystroke, so only discrete choices count as revisions.
     const tracksDiscreteChanges = currentQ.type === 'mcq' || currentQ.type === 'likert';
     const hasExisting = answers[qId] !== undefined;
-    if (tracksDiscreteChanges && hasExisting && answers[qId] !== value) {
+    if (tracksDiscreteChanges && hasExisting && answers[qId] !== nextValue) {
       setChangeCounts((c) => ({ ...c, [qId]: (c[qId] || 0) + 1 }));
     }
 
-    setAnswers((a) => ({ ...a, [qId]: value }));
+    setAnswers((a) => ({ ...a, [qId]: nextValue }));
     setResponseTimes((r) => ({ ...r, [qId]: rt }));
   };
 
@@ -129,14 +230,14 @@ export default function Assessment() {
     }
 
     setAnswers((prevAnswers) => {
-      const prev = prevAnswers[qId] || { primary: '', least: null, first_click_ms: null, change_count: 0 };
+      const prev = prevAnswers[qId] || { primary: '', least: '', first_click_ms: null, change_count: 0 };
       let updated = { ...prev };
       let changeDelta = 0;
 
       if (type === 'primary') {
         if (updated.primary !== optionId) {
           if (updated.primary) changeDelta += 1;
-          if (updated.least === optionId) updated.least = null;
+          if (updated.least === optionId) updated.least = '';
           updated.primary = optionId;
         }
       } else if (type === 'least') {
@@ -218,6 +319,8 @@ export default function Assessment() {
 
   const confirmExit = () => {
     playClick();
+    sessionStorage.removeItem('alterscore_telemetry_consented');
+    setConsented(false);
     transitionTo('/');
   };
 
@@ -277,13 +380,13 @@ export default function Assessment() {
       session_id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15),
       answers: {
         ...answers,
-        scenario_s1: answers['scenario_s1'] || { primary: 's1_b', least: null, first_click_ms: 0, change_count: 0 },
-        scenario_s2: answers['scenario_s2'] || { primary: 's2_b', least: null, first_click_ms: 0, change_count: 0 },
-        scenario_s3: answers['scenario_s3'] || { primary: 's3_b', least: null, first_click_ms: 0, change_count: 0 },
-        scenario_s4: answers['scenario_s4'] || { primary: 's4_b', least: null, first_click_ms: 0, change_count: 0 },
-        scenario_s5: answers['scenario_s5'] || { primary: 's5_b', least: null, first_click_ms: 0, change_count: 0 },
-        scenario_s6: answers['scenario_s6'] || { primary: 's6_b', least: null, first_click_ms: 0, change_count: 0 },
-        scenario_s8: answers['scenario_s8'] || { primary: 's8_b', least: null, first_click_ms: 0, change_count: 0 },
+        scenario_s1: answers['scenario_s1'] || SCENARIO_FALLBACKS.scenario_s1,
+        scenario_s2: answers['scenario_s2'] || SCENARIO_FALLBACKS.scenario_s2,
+        scenario_s3: answers['scenario_s3'] || SCENARIO_FALLBACKS.scenario_s3,
+        scenario_s4: answers['scenario_s4'] || SCENARIO_FALLBACKS.scenario_s4,
+        scenario_s5: answers['scenario_s5'] || SCENARIO_FALLBACKS.scenario_s5,
+        scenario_s6: answers['scenario_s6'] || SCENARIO_FALLBACKS.scenario_s6,
+        scenario_s8: answers['scenario_s8'] || SCENARIO_FALLBACKS.scenario_s8,
         honesty_trap_q1: answers['honesty_trap_q1'] !== undefined ? Number(answers['honesty_trap_q1']) : 3,
         open_response_text: answers['open_response_text'] || '',
       },
@@ -308,15 +411,15 @@ export default function Assessment() {
   };
 
   const currentAnswer = answers[currentQ.id];
-  const hasAnswer = currentAnswer !== undefined && (
-    currentQ.type !== 'scenario' || (currentAnswer.primary && currentAnswer.primary !== '')
-  );
+  const hasAnswer = hasUsableAnswer(currentQ, currentAnswer);
 
-  const wordCount = currentQ.type === 'text' 
-    ? (currentAnswer || '').trim().split(/\s+/).filter(Boolean).length 
+  const wordCount = currentQ.type === 'text'
+    ? (currentAnswer || '').trim().split(/\s+/).filter(Boolean).length
     : 0;
-  const isWordCountValid = currentQ.type === 'text' ? wordCount >= (currentQ.minWords || 10) : true;
-  const canContinue = hasAnswer && isWordCountValid;
+  const isTextResponseValid = currentQ.type === 'text'
+    ? isOpenResponseMeaningful(currentAnswer, currentQ.minWords || 10)
+    : true;
+  const canContinue = hasAnswer && isTextResponseValid;
 
   const renderControls = () => {
     if (currentQ.type === 'number') {
@@ -326,8 +429,9 @@ export default function Assessment() {
           <input
             type="number"
             inputMode="decimal"
-            value={currentAnswer || ''}
-            onChange={(e) => recordStandardAnswer(e.target.value)}
+            value={currentAnswer ?? ''}
+            onInput={(e) => recordStandardAnswer(e.currentTarget.value)}
+            onChange={(e) => recordStandardAnswer(e.currentTarget.value)}
             className="input-number"
             placeholder="0"
             aria-label={currentQ.question}
@@ -375,7 +479,7 @@ export default function Assessment() {
     }
 
     if (currentQ.type === 'scenario') {
-      const scenarioDetails = answers[currentQ.id] || { primary: '', least: null };
+      const scenarioDetails = answers[currentQ.id] || { primary: '', least: '' };
       return (
         <div className="options-list">
           {currentQ.options.map((opt, idx) => {
@@ -417,16 +521,17 @@ export default function Assessment() {
       return (
         <div className="textarea-wrapper">
           <textarea
-            value={currentAnswer || ''}
+            value={currentAnswer ?? ''}
             onChange={(e) => recordStandardAnswer(e.target.value)}
             className="input-textarea"
             placeholder="Type your response..."
             aria-label={currentQ.question}
+            maxLength={currentQ.maxLength || 1000}
             rows={5}
           />
           <div className="textarea-metadata">
-            <span className={`word-count-status ${isWordCountValid ? 'valid' : 'invalid'}`}>
-              {wordCount} words {isWordCountValid ? '✓ Met' : `(Need at least ${minWords})`}
+            <span className={`word-count-status ${isTextResponseValid ? 'valid' : 'invalid'}`}>
+              {wordCount} words {isTextResponseValid ? 'OK: includes your action' : `(Use at least ${minWords} words, first-person language, and a concrete action)`}
             </span>
             <span>Max {currentQ.maxLength || 1000} chars</span>
           </div>
@@ -435,7 +540,7 @@ export default function Assessment() {
               className="textarea-progress-fill"
               style={{
                 width: `${progressPercent}%`,
-                backgroundColor: isWordCountValid ? 'var(--accent-emerald)' : 'var(--accent-rose)',
+                backgroundColor: isTextResponseValid ? 'var(--accent-emerald)' : 'var(--accent-rose)',
               }}
             />
           </div>

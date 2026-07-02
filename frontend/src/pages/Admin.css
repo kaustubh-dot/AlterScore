@@ -160,6 +160,15 @@
   color: #ffffff;
 }
 
+.admin-mobile-logout {
+  display: none;
+  width: auto;
+  margin-top: var(--space-4);
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
 /* Sidebar action button styled like sidebar links */
 .btn-sidebar-action {
   background: transparent;
@@ -188,4 +197,40 @@
   0%, 100% { transform: translateX(0); }
   10%, 30%, 50%, 70%, 90% { transform: translateX(-6px); }
   20%, 40%, 60%, 80% { transform: translateX(6px); }
+}
+
+@media (max-width: 991px) {
+  .admin-mobile-logout {
+    display: inline-flex;
+  }
+}
+
+@media (max-width: 640px) {
+  .terminal-gate-container {
+    align-items: flex-start;
+    padding: 88px 20px var(--space-6);
+    overflow-y: auto;
+  }
+
+  .terminal-gate-body {
+    padding: var(--space-5);
+    font-size: 0.9375rem;
+    line-height: 1.65;
+  }
+
+  .terminal-gate-header,
+  .passcode-field-wrapper label,
+  .btn-back-link,
+  .btn-logout {
+    font-size: 0.8125rem;
+    line-height: 1.4;
+  }
+
+  .passcode-input-row {
+    min-height: 52px;
+  }
+
+  .gate-input {
+    font-size: 1.0625rem;
+  }
 }

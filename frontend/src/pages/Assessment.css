@@ -482,18 +482,21 @@
 /* Mobile responsive */
 @media (max-width: 640px) {
   .assessment-layout {
-    padding-top: 56px;
+    padding-top: 68px;
   }
 
   .assessment-exit-btn {
-    top: 12px;
-    left: 16px;
-    padding: 8px 12px;
+    top: 14px;
+    left: 20px;
+    min-height: 42px;
+    padding: 10px 14px;
+    font-size: 0.8125rem;
+    letter-spacing: 0.04em;
   }
 
   .assessment-container {
     align-items: flex-start;
-    padding: var(--space-4) 0 var(--space-6);
+    padding: var(--space-5) 0 var(--space-8);
   }
 
   .assessment-wrapper {
@@ -502,35 +505,37 @@
 
   .assessment-header {
     align-items: flex-start;
+    flex-direction: column;
     gap: var(--space-2);
     margin-bottom: var(--space-4);
-    font-size: 0.75rem;
-    line-height: 1.35;
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    letter-spacing: 0.045em;
   }
 
   .section-indicator {
-    max-width: 64%;
+    max-width: 100%;
   }
 
   .question-card {
-    padding: var(--space-5);
+    padding: var(--space-6) var(--space-5);
     min-height: auto;
   }
 
   .question-text {
-    font-size: 1.375rem;
-    line-height: 1.4;
-    margin-bottom: var(--space-4);
-  }
-
-  .question-hint {
-    font-size: 0.9375rem;
-    line-height: 1.5;
+    font-size: 1.625rem;
+    line-height: 1.25;
     margin-bottom: var(--space-5);
   }
 
+  .question-hint {
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: var(--space-6);
+  }
+
   .answer-control {
-    margin-top: var(--space-4);
+    margin-top: var(--space-5);
   }
 
   .number-prefix,
@@ -542,38 +547,53 @@
   .option-pill,
   .scenario-pill,
   .input-textarea {
-    font-size: 1rem;
+    font-size: 1.0625rem;
     line-height: 1.5;
   }
 
   .option-pill {
-    min-height: 52px;
-    padding: 14px var(--space-4);
+    min-height: 56px;
+    padding: 16px var(--space-4);
   }
 
   .consent-card {
     padding: var(--space-6) var(--space-5);
   }
 
+  .consent-text {
+    font-size: 1rem;
+  }
+
+  .spec-item {
+    font-size: 0.9375rem;
+    line-height: 1.45;
+  }
+
   .likert-scale {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    display: flex;
+    flex-direction: column;
     gap: var(--space-2);
   }
 
   .likert-option {
-    min-height: 76px;
-    padding: var(--space-3) var(--space-1);
+    min-height: 56px;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
   }
 
   .likert-number {
+    width: 30px;
     font-size: 1.125rem;
   }
 
   .likert-label {
-    font-size: 0.6875rem;
-    line-height: 1.25;
+    margin-top: 0;
+    font-size: 0.875rem;
+    line-height: 1.3;
     letter-spacing: 0.02em;
+    text-align: left;
   }
 
   .scenario-pill {
@@ -599,9 +619,9 @@
   .badge-tag,
   .option-pill-btn {
     width: 100%;
-    min-height: 46px;
-    font-size: 0.75rem;
-    padding: 11px 12px;
+    min-height: 48px;
+    font-size: 0.8125rem;
+    padding: 12px;
   }
 
   .textarea-metadata {
@@ -626,9 +646,9 @@
   }
 
   .controls-row .btn {
-    min-height: 48px;
+    min-height: 52px;
     width: 100%;
-    padding: 12px 14px !important;
-    font-size: 0.9375rem;
+    padding: 13px 14px !important;
+    font-size: 1rem;
   }
 }

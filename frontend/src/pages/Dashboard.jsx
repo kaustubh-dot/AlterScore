@@ -8,6 +8,82 @@ import useSound from '../hooks/useSound';
 import usePageTransition from '../hooks/usePageTransition';
 import './Dashboard.css';
 
+function asArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function formatBandLabel(band) {
+  return String(band || '')
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function formatOrdinal(value) {
+  const number = Math.round(Number(value) || 0);
+  const mod100 = number % 100;
+  if (mod100 >= 11 && mod100 <= 13) return `${number}th`;
+
+  switch (number % 10) {
+    case 1:
+      return `${number}st`;
+    case 2:
+      return `${number}nd`;
+    case 3:
+      return `${number}rd`;
+    default:
+      return `${number}th`;
+  }
+}
+
+function getBandInfo(score, backendBand, backendDescription) {
+  const normalizedBand = String(backendBand || '').toLowerCase();
+  const scoreBand = score >= 750 ? 'excellent' : score >= 650 ? 'good' : score >= 550 ? 'fair' : score >= 450 ? 'poor' : 'very_poor';
+  const band = ['excellent', 'good', 'fair', 'poor', 'very_poor'].includes(normalizedBand)
+    ? normalizedBand
+    : scoreBand;
+
+  const infoByBand = {
+    excellent: { color: 'var(--score-excellent)', shadow: 'var(--shadow-score-excellent)', desc: 'Excellent behavioral rating. Prime lending access approved.' },
+    good: { color: 'var(--score-good)', shadow: 'var(--shadow-score-good)', desc: 'Solid consistency and deliberate pacing. Standard microcredit active.' },
+    fair: { color: 'var(--score-fair)', shadow: 'var(--shadow-score-fair)', desc: 'Moderate rating. Minor pacing drift detected.' },
+    poor: { color: 'var(--score-poor)', shadow: 'var(--shadow-score-poor)', desc: 'Limited eligibility; financial coaching is recommended before larger borrowing.' },
+    very_poor: { color: 'var(--score-very-poor)', shadow: 'var(--shadow-score-very-poor)', desc: 'Funding deferred. Score below threshold. Credit counselling recommended.' },
+  };
+
+  return {
+    label: band,
+    ...infoByBand[band],
+    desc: backendDescription || infoByBand[band].desc,
+  };
+}
+
+function getSimulatorDefaults(data) {
+  if (!data) {
+    return { pace: 4.0, consistency: 1.0, focus: 0.5 };
+  }
+
+  const governance = data.governance_signals || {};
+  const explanation = asArray(data.explanation);
+  const hasPaceDrag = explanation.some(
+    (item) => item.feature === 'avg_response_time_ms' && item.direction === 'negative' && Number(item.shap_value) < 0
+  );
+  const hasConsistencyDrag = explanation.some(
+    (item) => item.feature === 'scenario_consistency_score' && Number(item.shap_value) < 0
+  );
+  const hasFocusLift = explanation.some(
+    (item) => item.feature === 'CRT_score' && Number(item.shap_value) > 0
+  );
+
+  return {
+    pace: governance.scenario_fast_gaming || hasPaceDrag ? 1.5 : 5.0,
+    consistency:
+      typeof governance.scenario_consistency_score === 'number'
+        ? (governance.scenario_consistency_score >= 0.9 ? 1.0 : 0.5)
+        : (hasConsistencyDrag ? 0.5 : 1.0),
+    focus: hasFocusLift ? 0.75 : 0.5,
+  };
+}
+
 export default function Dashboard() {
   const { transitionTo } = usePageTransition();
   const { playClick, playSelect } = useSound();
@@ -15,7 +91,13 @@ export default function Dashboard() {
   // Load results from localStorage
   const [scoreData] = useState(() => {
     const saved = localStorage.getItem('alterscore_results');
-    return saved ? JSON.parse(saved) : null;
+    if (!saved) return null;
+
+    try {
+      return JSON.parse(saved);
+    } catch {
+      return null;
+    }
   });
 
   const [demoMode, setDemoMode] = useState(false);
@@ -42,11 +124,14 @@ export default function Dashboard() {
   };
 
   const activeData = scoreData || (demoMode ? demoScoreData : null);
+  const simulatorDefaults = getSimulatorDefaults(activeData);
 
   // Interactive Simulator Sliders
-  const [simPace, setSimPace] = useState(5.0);
-  const [simConsistency, setSimConsistency] = useState(1.0);
-  const [simFocus, setSimFocus] = useState(0.8); // 80% focus
+  const [simulatorTouched, setSimulatorTouched] = useState(false);
+  const [simPace, setSimPace] = useState(simulatorDefaults.pace);
+  const [simConsistency, setSimConsistency] = useState(simulatorDefaults.consistency);
+  const [simFocus, setSimFocus] = useState(simulatorDefaults.focus);
+
   
   const originalScore = activeData ? activeData.credit_score : 580;
 
@@ -56,17 +141,20 @@ export default function Dashboard() {
   const focusShift = Math.round((simFocus - 0.5) * 80); // shift up/down based on focus
   
   const simulatedScore = Math.max(300, Math.min(850, originalScore + paceShift + consistencyShift + focusShift));
+  const currentScore = simulatorTouched ? simulatedScore : originalScore;
+  const displayRepaymentProbability = simulatorTouched
+    ? 0.35 + ((currentScore - 300) / 550) * 0.63
+    : (activeData?.repayment_probability ?? 0.35 + ((currentScore - 300) / 550) * 0.63);
+  const displayPercentile = simulatorTouched
+    ? Math.round(((currentScore - 300) / 550) * 98)
+    : (activeData?.percentile ?? Math.round(((currentScore - 300) / 550) * 98));
 
-  // Determine Bands
-  const getBandInfo = (score) => {
-    if (score >= 750) return { label: 'excellent', color: 'var(--score-excellent)', shadow: 'var(--shadow-score-excellent)', desc: 'Excellent behavioral rating. Prime lending access approved.' };
-    if (score >= 650) return { label: 'good', color: 'var(--score-good)', shadow: 'var(--shadow-score-good)', desc: 'Solid consistency and deliberate pacing. Standard microcredit active.' };
-    if (score >= 550) return { label: 'fair', color: 'var(--score-fair)', shadow: 'var(--shadow-score-fair)', desc: 'Moderate rating. Minor pacing drift detected.' };
-    if (score >= 450) return { label: 'poor', color: 'var(--score-poor)', shadow: 'var(--shadow-score-poor)', desc: 'High variance in scenario logic. Counseling recommended.' };
-    return { label: 'very_poor', color: 'var(--score-very-poor)', shadow: 'var(--shadow-score-very-poor)', desc: 'System flags triggered. Telemetry indicates gaming behavior.' };
-  };
-
-  const bandInfo = getBandInfo(simulatedScore);
+  const bandInfo = getBandInfo(
+    currentScore,
+    simulatorTouched ? null : activeData?.risk_band,
+    simulatorTouched ? null : activeData?.loan_eligibility?.description
+  );
+  const actionItems = asArray(activeData?.counterfactual_actions);
 
   const scoreDistribution = [
     { name: '300-349', count: 36, fill: 'var(--score-very-poor)' },
@@ -83,11 +171,25 @@ export default function Dashboard() {
   ];
 
   // SVG Circle Gauge dashoffset
-  const ringOffset = 440 - 440 * ((simulatedScore - 300) / 550);
+  const ringOffset = 440 - 440 * ((currentScore - 300) / 550);
 
   const enableDemo = () => {
+    const demoDefaults = getSimulatorDefaults(demoScoreData);
     playClick();
+    setSimulatorTouched(false);
+    setSimPace(demoDefaults.pace);
+    setSimConsistency(demoDefaults.consistency);
+    setSimFocus(demoDefaults.focus);
     setDemoMode(true);
+  };
+
+  const clearDemo = () => {
+    const savedDefaults = getSimulatorDefaults(scoreData);
+    setDemoMode(false);
+    setSimulatorTouched(false);
+    setSimPace(savedDefaults.pace);
+    setSimConsistency(savedDefaults.consistency);
+    setSimFocus(savedDefaults.focus);
   };
 
   if (!activeData) {
@@ -127,11 +229,11 @@ export default function Dashboard() {
           <span>AlterScore Portal</span>
         </div>
         <nav className="sidebar-menu">
-          <button onClick={() => transitionTo('/')} className="sidebar-item btn-sidebar-action">
+          <button onClick={() => transitionTo('/')} className="sidebar-item btn-sidebar-action" aria-label="Go to home">
             <ArrowLeft size={16} />
             <span>Home</span>
           </button>
-          <button onClick={() => transitionTo('/assessment')} className="sidebar-item btn-sidebar-action">
+          <button onClick={() => transitionTo('/assessment')} className="sidebar-item btn-sidebar-action" aria-label="Retake assessment">
             <RotateCcw size={16} />
             <span>Retake Test</span>
           </button>
@@ -143,7 +245,7 @@ export default function Dashboard() {
         {demoMode && (
           <div className="demo-badge-sidebar font-mono">
             <span>DEMO PROFILE ACTIVE</span>
-            <button onClick={() => setDemoMode(false)} className="btn-exit-demo">
+            <button onClick={clearDemo} className="btn-exit-demo">
               Clear
             </button>
           </div>
@@ -163,6 +265,15 @@ export default function Dashboard() {
           </h1>
         </header>
 
+        {demoMode && (
+          <div className="demo-banner-mobile font-mono">
+            <span>DEMO PROFILE ACTIVE</span>
+            <button onClick={clearDemo} className="btn-exit-demo">
+              Clear
+            </button>
+          </div>
+        )}
+
         {/* Dashboard Grid Layout */}
         <div className="dashboard-grid">
           
@@ -179,13 +290,13 @@ export default function Dashboard() {
                   <div className="hero-metric-item">
                     <span className="hero-metric-label">Repayment Probability</span>
                     <span className="hero-metric-val font-mono">
-                      {( (0.35 + ((simulatedScore - 300) / 550) * 0.63) * 100).toFixed(1)}%
+                      {(displayRepaymentProbability * 100).toFixed(1)}%
                     </span>
                   </div>
                   <div className="hero-metric-item">
                     <span className="hero-metric-label">Cohort Percentile</span>
                     <span className="hero-metric-val font-mono">
-                      {Math.round(((simulatedScore - 300) / 550) * 98)}th
+                      {formatOrdinal(displayPercentile)}
                     </span>
                   </div>
                 </div>
@@ -196,14 +307,14 @@ export default function Dashboard() {
                   className="dashboard-circle-wrapper"
                   style={{ boxShadow: bandInfo.shadow }}
                 >
-                  <svg width="180" height="180" className="score-svg">
-                    <circle cx="90" cy="90" r="70" fill="transparent" className="score-track" />
+                  <svg width="180" height="180" className="dashboard-score-svg">
+                    <circle cx="90" cy="90" r="70" fill="transparent" className="dashboard-score-track" />
                     <circle 
                       cx="90" 
                       cy="90" 
                       r="70" 
                       fill="transparent" 
-                      className="score-progress" 
+                      className="dashboard-score-progress"
                       style={{
                         stroke: bandInfo.color,
                         strokeDashoffset: ringOffset,
@@ -212,9 +323,9 @@ export default function Dashboard() {
                     />
                   </svg>
                   <div className="dashboard-score-text">
-                    <span className="db-score-num font-mono">{simulatedScore}</span>
+                    <span className="db-score-num font-mono">{currentScore}</span>
                     <span className="db-score-lbl" style={{ color: bandInfo.color }}>
-                      {bandInfo.label}
+                      {formatBandLabel(bandInfo.label)}
                     </span>
                   </div>
                 </div>
@@ -230,7 +341,9 @@ export default function Dashboard() {
                   <Sliders size={16} style={{ color: 'var(--accent-cyan)' }} />
                   <span>Interactive Credit Simulator</span>
                 </h3>
-                <span className="panel-badge">Adjust Traits</span>
+                <span className={`panel-badge ${simulatorTouched ? 'panel-badge-active' : ''}`}>
+                  {simulatorTouched ? 'Simulation Mode' : 'Saved Result'}
+                </span>
               </div>
               <div className="simulator-body">
                 <div className="sim-sliders-col">
@@ -246,6 +359,7 @@ export default function Dashboard() {
                       step="0.5"
                       value={simPace}
                       onChange={(e) => {
+                        setSimulatorTouched(true);
                         setSimPace(parseFloat(e.target.value));
                         playSelect();
                       }}
@@ -269,6 +383,7 @@ export default function Dashboard() {
                       step="0.5"
                       value={simConsistency}
                       onChange={(e) => {
+                        setSimulatorTouched(true);
                         setSimConsistency(parseFloat(e.target.value));
                         playSelect();
                       }}
@@ -290,6 +405,7 @@ export default function Dashboard() {
                       step="0.05"
                       value={simFocus}
                       onChange={(e) => {
+                        setSimulatorTouched(true);
                         setSimFocus(parseFloat(e.target.value));
                         playSelect();
                       }}
@@ -305,17 +421,17 @@ export default function Dashboard() {
                     <Sparkles size={14} className="advice-icon" />
                     <span>Simulator Insights:</span>
                     <p style={{ marginTop: '8px', color: 'var(--text-secondary)', fontSize: '11px', lineHeight: 1.5 }}>
-                      {paceShift < 0 
-                        ? '🚨 Rapid pacing under 2.5s triggers automation-flag warnings.'
-                        : '✓ Deliberate pacing above 3.5s satisfies logical calibration standards.'}
+                      {paceShift < 0
+                        ? '! Rapid pacing under 2.5s triggers automation-flag warnings.'
+                        : 'OK: Deliberate pacing above 3.5s satisfies logical calibration standards.'}
                       <br />
-                      {consistencyShift < 0 
-                        ? '🚨 Decision variance indicates erratic response strategies (-120 pts).'
-                        : '✓ Matched scenario patterns satisfy integrity checks (+0 pts).'}
+                      {consistencyShift < 0
+                        ? '! Decision variance indicates erratic response strategies (-120 pts).'
+                        : 'OK: Matched scenario patterns satisfy integrity checks (+0 pts).'}
                       <br />
-                      {focusShift >= 0 
-                        ? `✓ Focus rating of ${Math.round(simFocus * 100)}% adds +${focusShift} pts.`
-                        : `🚨 Lower focus decreases arpeggio scores by ${focusShift} pts.`}
+                      {focusShift >= 0
+                        ? `OK: Focus rating of ${Math.round(simFocus * 100)}% adds +${focusShift} pts.`
+                        : `! Lower focus decreases score by ${Math.abs(focusShift)} pts.`}
                     </p>
                   </div>
                 </div>
@@ -402,7 +518,7 @@ export default function Dashboard() {
                           const rangeParts = entry.name.split('-');
                           const min = parseInt(rangeParts[0]);
                           const max = parseInt(rangeParts[1]);
-                          const isMatch = simulatedScore >= min && simulatedScore <= max;
+                          const isMatch = currentScore >= min && currentScore <= max;
                           return (
                             <Cell 
                               key={`cell-${idx}`} 
@@ -427,7 +543,7 @@ export default function Dashboard() {
                 <span className="panel-badge">Score Gain Tips</span>
               </div>
               <div className="dashboard-action-list">
-                {activeData.counterfactual_actions.map((act, idx) => (
+                {actionItems.length > 0 ? actionItems.map((act, idx) => (
                   <div className="dashboard-action-card glass" key={idx}>
                     <span className="dashboard-action-gain">
                       Est Gain: +{act.estimated_score_gain} Pts
@@ -436,7 +552,13 @@ export default function Dashboard() {
                       {act.plain_language}
                     </span>
                   </div>
-                ))}
+                )) : (
+                  <div className="dashboard-action-card glass">
+                    <span className="dashboard-action-description">
+                      Complete another assessment to generate more personalized recommendations.
+                    </span>
+                  </div>
+                )}
               </div>
             </GlowCard>
           </ScrollReveal>

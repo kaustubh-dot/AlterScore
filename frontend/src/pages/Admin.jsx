@@ -8,13 +8,18 @@ import useSound from '../hooks/useSound';
 import usePageTransition from '../hooks/usePageTransition';
 import './Admin.css';
 
+const ADMIN_PASSCODE = import.meta.env.DEV
+  ? String(import.meta.env.VITE_ADMIN_PASSCODE || '').trim()
+  : '';
+const ADMIN_CONFIGURED = import.meta.env.DEV && ADMIN_PASSCODE.length > 0;
+
 export default function Admin() {
   const { transitionTo } = usePageTransition();
   const { muted, playClick, playSuccess } = useSound();
   
   // Authorization State
   const [isAuthorized, setIsAuthorized] = useState(() => {
-    return sessionStorage.getItem('alterscore_admin_authorized') === 'true';
+    return ADMIN_CONFIGURED && sessionStorage.getItem('alterscore_admin_authorized') === 'true';
   });
   const [passcode, setPasscode] = useState('');
   const [authError, setAuthError] = useState(false);
@@ -95,13 +100,15 @@ export default function Admin() {
       osc.start();
       osc.stop(audioCtx.currentTime + 0.35);
     } catch (e) {
-      console.warn('AudioContext buzz failed', e);
+      if (import.meta.env.DEV) {
+        console.warn('AudioContext buzz failed', e);
+      }
     }
   };
 
   const handleAuthSubmit = (e) => {
     e.preventDefault();
-    if (passcode === 'admin123') {
+    if (ADMIN_CONFIGURED && passcode === ADMIN_PASSCODE) {
       playSuccess();
       sessionStorage.setItem('alterscore_admin_authorized', 'true');
       setIsAuthorized(true);
@@ -198,6 +205,31 @@ export default function Admin() {
   const approvalRate = (tp + fp) / 1800;
   const defaultRate = fp / (tp + fp || 1);
 
+  if (!ADMIN_CONFIGURED) {
+    return (
+      <div className="terminal-gate-container">
+        <div className="terminal-gate-card">
+          <div className="terminal-gate-header">
+            <ShieldAlert size={16} className="gate-icon" />
+            <span>ALTERSCORE BEHAVIORAL ENGINE [v2.0.0-PROD]</span>
+          </div>
+          <div className="terminal-gate-body font-mono">
+            <p className="status-line">SYSTEM STATUS: CONSUMER MODE</p>
+            <p className="status-line text-warning">OPERATOR CONSOLE: UNAVAILABLE</p>
+            <p className="status-line">
+              Admin access is disabled for this build.
+            </p>
+            <div className="gate-options">
+              <button onClick={() => transitionTo('/')} className="btn-back-link font-mono">
+                &lt;-- RETURN TO CONSUMER APP
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!isAuthorized) {
     return (
       <div className="terminal-gate-container">
@@ -280,6 +312,10 @@ export default function Admin() {
           <h1 className="dashboard-title">
             <TextReveal text="Model Command Center" />
           </h1>
+          <button onClick={handleLogout} className="btn-logout admin-mobile-logout font-mono">
+            <LogOut size={12} />
+            <span>DE-AUTHORIZE</span>
+          </button>
         </header>
 
         {/* Top Level KPIs */}

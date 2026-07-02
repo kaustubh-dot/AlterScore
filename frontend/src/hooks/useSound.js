@@ -211,7 +211,9 @@ const startAmbient = (ctx) => {
         osc.stop(time + duration);
       }
     } catch (e) {
-      console.warn('Classical note play failed', e);
+      if (import.meta.env.DEV) {
+        console.warn('Classical note play failed', e);
+      }
     }
   };
 
@@ -306,7 +308,9 @@ const startAmbient = (ctx) => {
         }
         currentPieceIndex = nextPieceIndex;
       }
-      console.log(`[AlterScore Audio] Transitioning to: ${pieces[currentPieceIndex].name}`);
+      if (import.meta.env.DEV) {
+        console.log(`[AlterScore Audio] Transitioning to: ${pieces[currentPieceIndex].name}`);
+      }
 
       // Re-schedule interval for the new piece's tempo
       clearInterval(ambientInterval);
@@ -315,7 +319,9 @@ const startAmbient = (ctx) => {
   };
 
   // Start loop for the initial piece
-  console.log(`[AlterScore Audio] Starting playback with: ${pieces[currentPieceIndex].name}`);
+  if (import.meta.env.DEV) {
+    console.log(`[AlterScore Audio] Starting playback with: ${pieces[currentPieceIndex].name}`);
+  }
   playMeasure();
   ambientInterval = setInterval(playMeasure, pieces[currentPieceIndex].measureDuration);
 };

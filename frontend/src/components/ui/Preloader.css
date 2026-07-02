@@ -22,7 +22,7 @@
   gap: 10px;
   color: #FFFFFF;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 0.8125rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   width: 150px;
@@ -118,7 +118,7 @@
   font-size: 36px;
   font-weight: 500;
   color: #FFFFFF;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
 }
 
 .preloader-percent-symbol {
@@ -145,4 +145,31 @@
   background-color: var(--accent-cyan) !important;
   box-shadow: 0 0 8px var(--accent-cyan);
   transition: background-color 450ms, box-shadow 450ms;
+}
+
+@media (max-width: 640px) {
+  .preloader-overlay {
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--space-8);
+    padding: var(--space-8) 20px;
+  }
+
+  .preloader-icon-container,
+  .preloader-percent-container {
+    justify-content: center;
+    width: auto;
+  }
+
+  .preloader-scale-viewport {
+    height: min(260px, 42dvh);
+  }
+
+  .preloader-percent-num {
+    font-size: 3rem;
+  }
+
+  .preloader-percent-symbol {
+    font-size: 1rem;
+  }
 }

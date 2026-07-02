@@ -13,38 +13,38 @@
     },
     "scenario_s2": {
       "primary": "s2_a",
-      "least": null,
+      "least": "s2_d",
       "first_click_ms": 3500,
       "change_count": 1
     },
     "scenario_s3": {
       "primary": "s3_a",
-      "least": null,
+      "least": "s3_d",
       "first_click_ms": 6000,
       "change_count": 0
     },
     "scenario_s4": {
       "primary": "s4_a",
-      "least": null,
+      "least": "s4_c",
       "first_click_ms": 5000,
       "change_count": 0
     },
     "scenario_s5": {
       "primary": "s5_a",
-      "least": null,
+      "least": "s5_c",
       "first_click_ms": 5500,
       "change_count": 0
     },
     "scenario_s6": {
       "primary": "s6_a",
-      "least": null,
+      "least": "s6_d",
       "first_click_ms": 4000,
       "change_count": 0
     },
     "honesty_trap_q1": 2,
     "scenario_s8": {
       "primary": "s8_a",
-      "least": null,
+      "least": "s8_b",
       "first_click_ms": 3000,
       "change_count": 0
     },

@@ -171,8 +171,8 @@ def _build_score_requests() -> list[ScoreRequest]:
                 "CRT_q1": 10,
                 "honesty_trap_q1": 5,
                 "open_response_text": (
-                    "Things fell apart and I felt stuck before I made a plan "
-                    "to recover."
+                    "Things fell apart and I felt stuck before I planned steps "
+                    "to recover and repaid urgent bills."
                 ),
             },
             "behavioral": _base_behavioral()
@@ -190,10 +190,10 @@ def _build_score_requests() -> list[ScoreRequest]:
 
 
 def _base_answers() -> dict[str, int | float | str | dict]:
-    def _scenario(opt):
+    def _scenario(opt, least):
         return {
             "primary": opt,
-            "least": None,
+            "least": least,
             "first_click_ms": 4000,
             "change_count": 0,
         }
@@ -204,15 +204,18 @@ def _base_answers() -> dict[str, int | float | str | dict]:
         "financial_literacy_q1": 1,
         "CRT_q1": 5,
         "CRT_q2": 47,
-        "scenario_s1": _scenario("s1_b"),
-        "scenario_s2": _scenario("s2_b"),
-        "scenario_s3": _scenario("s3_b"),
-        "scenario_s4": _scenario("s4_b"),
-        "scenario_s5": _scenario("s5_b"),
-        "scenario_s6": _scenario("s6_c"),
+        "scenario_s1": _scenario("s1_b", "s1_a"),
+        "scenario_s2": _scenario("s2_b", "s2_d"),
+        "scenario_s3": _scenario("s3_b", "s3_d"),
+        "scenario_s4": _scenario("s4_b", "s4_c"),
+        "scenario_s5": _scenario("s5_b", "s5_a"),
+        "scenario_s6": _scenario("s6_c", "s6_a"),
         "honesty_trap_q1": 2,
-        "scenario_s8": _scenario("s8_b"),
-        "open_response_text": "I reduced expenses and found extra work.",
+        "scenario_s8": _scenario("s8_b", "s8_a"),
+        "open_response_text": (
+            "I reduced expenses, found extra work, paid urgent bills, and "
+            "planned repayments with my lender."
+        ),
     }
 
 

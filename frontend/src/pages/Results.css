@@ -37,26 +37,26 @@
   transition: box-shadow 1s ease-out;
 }
 
-.score-svg {
+.results-layout .score-svg {
   position: absolute;
   top: 0;
   left: 0;
   transform: rotate(-90deg);
 }
 
-.score-track {
+.results-layout .score-track {
   stroke: var(--bg-border);
   stroke-width: 3px;
 }
 
-.score-progress {
+.results-layout .score-progress {
   stroke-width: 3px;
   stroke-linecap: square;
   stroke-dasharray: 440;
   stroke-dashoffset: 440;
 }
 
-.score-fill {
+.results-layout .score-fill {
   stroke-width: 3px;
   stroke-linecap: square;
   transition: stroke-dashoffset 1.2s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.3s ease;
@@ -177,7 +177,7 @@
   font-weight: 300;
   color: var(--text-primary);
   margin-bottom: var(--space-3);
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
 }
 
 .card-body {
@@ -347,7 +347,7 @@
 }
 
 .optimizer-summary {
-  font-size: 11px;
+  font-size: 0.8125rem;
   color: var(--text-muted);
   line-height: 1.5;
   border-top: 1px solid var(--bg-border);
@@ -451,8 +451,8 @@
 
 @media (max-width: 640px) {
   .results-layout {
-    padding-top: 76px;
-    padding-bottom: var(--space-10);
+    padding-top: 88px;
+    padding-bottom: var(--space-12);
   }
 
   .results-container {
@@ -464,41 +464,42 @@
   }
 
   .score-circle-wrapper {
-    width: 176px;
-    height: 176px;
-    margin-bottom: var(--space-4);
+    width: 188px;
+    height: 188px;
+    margin-bottom: var(--space-5);
   }
 
-  .score-svg {
-    width: 176px;
-    height: 176px;
+  .results-layout .score-svg {
+    width: 188px;
+    height: 188px;
   }
 
-  .score-svg circle {
+  .results-layout .score-svg circle {
     cx: 88px;
     cy: 88px;
   }
 
   .score-sub {
-    font-size: 0.6875rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
   }
 
   .score-num {
-    font-size: 3rem;
+    font-size: 3.35rem;
     line-height: 1;
   }
 
   .score-band {
-    font-size: 0.75rem;
+    font-size: 0.8125rem;
   }
 
   .probability-label {
-    font-size: 0.8125rem;
+    font-size: 0.9375rem;
     line-height: 1.35;
   }
 
   .percentile-label {
-    font-size: 0.8125rem;
+    font-size: 0.9375rem;
   }
 
   .fade-in-content,
@@ -527,19 +528,25 @@
   }
 
   .result-card {
-    padding: var(--space-5) !important;
+    padding: var(--space-6) var(--space-5) !important;
+  }
+
+  .card-kicker {
+    font-size: 0.75rem;
+    line-height: 1.4;
+    letter-spacing: 0.06em;
   }
 
   .card-title {
-    font-size: 1.25rem;
+    font-size: 1.375rem;
     line-height: 1.25;
   }
 
   .card-body,
   .dice-description,
   .tip-body {
-    font-size: 0.9375rem;
-    line-height: 1.55;
+    font-size: 1rem;
+    line-height: 1.6;
   }
 
   .loan-amount-range {
@@ -553,8 +560,8 @@
   }
 
   .results-section-title {
-    font-size: 1.375rem !important;
-    line-height: 1.25;
+    font-size: 1.625rem !important;
+    line-height: 1.18;
   }
 
   .shap-table {
@@ -589,7 +596,7 @@
   }
 
   .optimizer-widget {
-    padding: var(--space-5);
+    padding: var(--space-6) var(--space-5);
   }
 
   .optimizer-header {
@@ -600,12 +607,12 @@
   }
 
   .optimizer-header .card-title {
-    font-size: 1rem !important;
+    font-size: 1.0625rem !important;
     line-height: 1.35;
   }
 
   .optimizer-tag {
-    font-size: 0.6875rem;
+    font-size: 0.75rem;
   }
 
   .slider-label-row {
@@ -617,12 +624,12 @@
   }
 
   .slider-val {
-    font-size: 0.8125rem;
+    font-size: 0.875rem;
     color: var(--text-primary);
   }
 
   .optimizer-summary {
-    font-size: 0.8125rem;
+    font-size: 0.9375rem;
   }
 
   .dice-card,
@@ -638,7 +645,12 @@
 
   .dice-feature-change {
     width: auto;
-    font-size: 0.8125rem;
+    font-size: 0.875rem;
+  }
+
+  .tip-header {
+    font-size: 1rem;
+    line-height: 1.35;
   }
 
   .actions-row {
@@ -648,8 +660,8 @@
   }
 
   .actions-row .btn {
-    min-height: 48px;
+    min-height: 52px;
     width: 100%;
-    font-size: 0.9375rem;
+    font-size: 1rem;
   }
 }

@@ -35,9 +35,23 @@ def runtime_artifacts(tmp_path):
 
 def _build_request(preset: dict) -> dict:
     answers = preset["answers"].copy()
+    scenario_least_candidates = {
+        "scenario_s1": ("s1_b", "s1_a", "s1_c", "s1_d"),
+        "scenario_s2": ("s2_d", "s2_b", "s2_c", "s2_a"),
+        "scenario_s3": ("s3_d", "s3_b", "s3_c", "s3_a"),
+        "scenario_s4": ("s4_c", "s4_b", "s4_a", "s4_d"),
+        "scenario_s5": ("s5_c", "s5_b", "s5_a", "s5_d"),
+        "scenario_s6": ("s6_d", "s6_a", "s6_b", "s6_c"),
+        "scenario_s8": ("s8_b", "s8_a", "s8_c", "s8_d"),
+    }
     for k, v in answers.items():
         if k.startswith("scenario_") and isinstance(v, str):
-            answers[k] = {"primary": v}
+            least = next(
+                candidate
+                for candidate in scenario_least_candidates[k]
+                if candidate != v
+            )
+            answers[k] = {"primary": v, "least": least}
 
     return {
         "session_id": f"test_{preset['id']}",
@@ -64,7 +78,11 @@ PRESETS = {
             "scenario_s6": "s6_a",
             "honesty_trap_q1": 2,
             "scenario_s8": "s8_a",
-            "open_response_text": "We faced a significant agricultural price decline during harvest season. I analyzed price variations, renegotiated store inventory terms with key suppliers, and held key grains for better trade prices.",
+            "open_response_text": (
+                "We faced a significant agricultural price decline during harvest season. "
+                "I compared price variations, negotiated store inventory terms with key "
+                "suppliers, and planned better grain sale timing."
+            ),
         },
         "behavioral": {
             "avg_response_time_ms": 5300.0,
@@ -94,7 +112,10 @@ PRESETS = {
             "scenario_s6": "s6_d",
             "honesty_trap_q1": 3,
             "scenario_s8": "s8_d",
-            "open_response_text": "I had a crisis and solved it. Standard situation.",
+            "open_response_text": (
+                "I faced a sudden cash crisis, cut extra spending, asked my family "
+                "for help, and paid the urgent bill."
+            ),
         },
         "behavioral": {
             "avg_response_time_ms": 550.0,
@@ -154,7 +175,10 @@ PRESETS = {
             "scenario_s6": "s6_b",
             "honesty_trap_q1": 3,
             "scenario_s8": "s8_c",
-            "open_response_text": "I had a sudden emergency when my laptop broke and I needed it for client projects.",
+            "open_response_text": (
+                "I had a sudden emergency when my laptop broke, so I contacted a repair "
+                "shop, planned my payments, and saved client work first."
+            ),
         },
         "behavioral": {
             "avg_response_time_ms": 3200.0,
