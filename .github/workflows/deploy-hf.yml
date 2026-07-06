@@ -40,7 +40,11 @@ jobs:
           cp -R models "$SPACE_DIR/models"
           cp -R scripts "$SPACE_DIR/scripts"
           cp Dockerfile "$SPACE_DIR/Dockerfile"
-          cp .gitattributes "$SPACE_DIR/.gitattributes"
+          # Write a minimal .gitattributes for the backend deploy package.
+          # The repo-level file now includes LFS rules for frontend assets
+          # (*.webp, *.gif, *.svg, etc.) that are not shipped in the backend
+          # package and would cause HF push rejections.
+          printf '*.pkl filter=lfs diff=lfs merge=lfs -text\n*.pt filter=lfs diff=lfs merge=lfs -text\n*.png filter=lfs diff=lfs merge=lfs -text\n' > "$SPACE_DIR/.gitattributes"
 
           cat > "$SPACE_DIR/README.md" <<'EOF'
           ---
