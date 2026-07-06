@@ -25,6 +25,7 @@ _SCENARIO_OPTION_PREFIXES = {
     "scenario_s8": "s8_",
 }
 
+
 class ScenarioAnswer(SchemaModel):
     """A single scenario question response with primary, least-like-me, and telemetry."""
 

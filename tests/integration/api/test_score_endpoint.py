@@ -50,9 +50,9 @@ def test_score_endpoint_accepts_low_quality_open_text_for_scoring(
 ) -> None:
     settings = build_runtime_settings(trained_model_dir)
     payload = _load_valid_score_payload()
-    payload["answers"]["open_response_text"] = (
-        "asdf qwer zxcv blorf snargle flibbert nonsense token salad"
-    )
+    payload["answers"][
+        "open_response_text"
+    ] = "asdf qwer zxcv blorf snargle flibbert nonsense token salad"
     app = create_app(settings)
 
     with TestClient(app) as client:
