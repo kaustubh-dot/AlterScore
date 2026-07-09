@@ -20,6 +20,12 @@ Scores creditworthiness from psychometrics, behavioral telemetry, and language �
 
 Traditional underwriting excludes ~1.4 billion adults who lack a formal credit history. AlterScore replaces *"what have you borrowed before?"* with *"how do you reason, decide, and follow through?"* — turning a five-minute assessment into a calibrated 300–850 score with a transparent reason for every point.
 
+<p align="center">
+  <img src="docs/assets/readme-illustrations/01-behavioral-evidence.png" alt="Xiaohei turns behavioral evidence into a transparent credit score" width="880">
+  <br>
+  <em>Behavioral evidence fills the gap when a traditional credit file is empty.</em>
+</p>
+
 ## How it works
 
 ```
@@ -27,6 +33,12 @@ Psychometrics ─┐
 Telemetry      ├──▶  Feature pipeline  ──▶  Monotonic XGBoost  ──▶  Score + SHAP + counterfactuals
 Open-text NLP ─┘                              (governance-gated)
 ```
+
+<p align="center">
+  <img src="docs/assets/readme-illustrations/02-governed-pipeline.png" alt="Xiaohei operates the governed AlterScore scoring pipeline" width="880">
+  <br>
+  <em>Three evidence streams pass through governance gates before producing a score and explanation.</em>
+</p>
 
 Three input streams feed a governed model whose every prediction is checked against:
 
@@ -44,6 +56,12 @@ Manifest-backed, hash-verified runtime — `models/registry/production_manifest.
 | `xgboost_monotonic` | 0.779 | 0.177 | 0.035 | stable | passed |
 
 Creditworthiness is driven by hard-to-fake evidence — objective cognition (numeracy, CRT, financial literacy) and scenario psychometrics lead the model — while spoofable process-timing telemetry feeds only the anti-gaming governance layer, never the score.
+
+<p align="center">
+  <img src="docs/assets/readme-illustrations/03-governance-guardrails.png" alt="Xiaohei balances the model on governance guardrails" width="880">
+  <br>
+  <em>The production model is useful only while monotonicity, calibration, fairness, explainability, and verification hold.</em>
+</p>
 
 > Trained on a synthetic dataset for demonstration. Not for real lending decisions.
 
@@ -72,6 +90,12 @@ cd frontend && npm install && npm run dev
 ALTERSCORE_ENV=test pytest        # backend
 cd frontend && npm run lint && npm run build
 ```
+
+<p align="center">
+  <img src="docs/assets/readme-illustrations/04-user-workflow.png" alt="Xiaohei walks through the AlterScore run, assessment, features, result, and next step" width="880">
+  <br>
+  <em>Run the API, complete the assessment, and turn the resulting score into a concrete next step.</em>
+</p>
 
 ## Layout
 
