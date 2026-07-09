@@ -42,16 +42,13 @@ checked with `python -m backend.ml.registry.promotion_gates`.
 
 These thresholds must not be weakened during cleanup or release preparation.
 
-## Production-Track Scripts
+## Production-Track Commands
 
-Primary governed evaluation scripts:
+Primary governed evaluation and promotion commands:
 
-- [scripts/training/train_calibrated_monotonic_xgboost.py](C:/Kaustubh/Projects/AlterScore/scripts/training/train_calibrated_monotonic_xgboost.py)
-- [scripts/training/promote_monotonic_xgboost.py](C:/Kaustubh/Projects/AlterScore/scripts/training/promote_monotonic_xgboost.py) (compatibility wrapper for the calibrated trainer)
-
-Research-only supporting script retained for governance comparison:
-
-- [scripts/retrain_tabnet_repair_experiment.py](C:/Kaustubh/Projects/AlterScore/scripts/retrain_tabnet_repair_experiment.py)
+- `python scripts/training/train_calibrated_monotonic_xgboost.py`
+- `python scripts/training/promote_monotonic_xgboost.py`
+- `python -m backend.ml.registry.promotion_gates --manifest models/registry/production_manifest.json --allow-promoted-incompatibility`
 
 ## Promotion Review Standard
 

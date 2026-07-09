@@ -1,70 +1,60 @@
 # Project Structure
 
-## Purpose
-
-This repository is organized around a governed production scoring path plus a
-preserved research trail.
-
-The goal is to make it easy to distinguish:
-
-- active production-grade scoring architecture
-- governance infrastructure and reports
-- research-only experiments
-- archived generated outputs
+AlterScore is organized around a deployed FastAPI backend, a Vercel-hosted
+React frontend, and a checked-in manifest-backed model bundle.
 
 ## Top-Level Layout
 
 | Path | Role |
 |---|---|
-| `backend/` | FastAPI runtime, inference, offline ML, governance logic |
-| `frontend/` | React/Vite borrower UI and evaluator-facing frontend |
-| `models/` | Checked-in production runtime bundle, manifest, explainers, and core reports |
-| `scripts/` | Active setup, training, governance, and maintenance entrypoints |
-| `tests/` | Unit and integration coverage |
-| `docs/` | Active architecture, governance, setup, decisions, and project memory |
-| `runtime/` | Local generated outputs, split into governed reports and research archive |
-| `archive/` | Repository-level archive notes and historical experiment guidance |
-| `data/` | Generated datasets and validation artifacts |
-| `experiments/` | Reserved space for future experiment configs and run bookkeeping |
+| `.github/workflows/` | CI, backend deployment, and keepalive workflows |
+| `backend/` | FastAPI app, scoring service, ML runtime, and offline ML helpers |
+| `frontend/` | React/Vite assessment flow, results views, and dashboard |
+| `models/` | Production manifest, runtime model artifacts, explainers, and reports |
+| `scripts/` | Setup, training, promotion, and validation entry points |
+| `tests/` | Unit, integration, API, and pipeline coverage |
+| `docs/` | Setup, deployment, API, governance, and runtime references |
+| `data/` | Git-kept placeholders for generated local datasets and reports |
+| `runtime/` | Ignored local logs and test scratch space |
 
-## Documentation Layout
+## Deployment-Critical Files
 
-| Path | Role |
+| File | Why It Matters |
 |---|---|
-| `docs/governance/` | Production-track architecture, governed comparisons, fairness hardening reviews |
-| `docs/research_archive/` | Research-only audit reports and TabNet investigation history |
-| `docs/adr/` | Architecture decision records |
-| `docs/context_templates/` | Handoff, session summary, and AI workflow templates |
+| `Dockerfile` | Hugging Face Spaces backend image |
+| `.github/workflows/deploy-hf.yml` | Packages and pushes the backend Space |
+| `.github/workflows/ci.yml` | Backend, frontend, and governance checks |
+| `frontend/vercel.json` | SPA route rewrites for Vercel |
+| `frontend/.env.production` | Public deployed API base URL |
+| `models/registry/production_manifest.json` | Runtime artifact contract |
 
-## Runtime Layout
+## Active Documentation
 
-| Path | Role |
+| File | Purpose |
 |---|---|
-| `runtime/governed_reports/` | Production-track governed evaluation outputs |
-| `runtime/research_archive/` | Local research outputs kept for comparison, not production |
-| `runtime/logs/` | Local request and execution logs |
+| `docs/SETUP.md` | Local setup and validation |
+| `docs/DEPLOYMENT.md` | Production deployment and release checks |
+| `docs/API_CONTRACTS.md` | API request/response contracts |
+| `docs/BACKEND_RUNTIME_ARCHITECTURE.md` | Backend runtime and artifact loading |
+| `docs/GOVERNANCE_WORKFLOW.md` | Promotion gates and model governance |
+| `docs/MODEL_REGISTRY.md` | Current model artifact inventory |
+| `docs/MODEL_SELECTION_DECISIONS.md` | Why the monotonic runtime is preferred |
+| `docs/DATA_SCHEMA.md` | Dataset and feature schema reference |
+| `docs/ROLLBACK_CHECKLIST.md` | Manifest-based rollback procedure |
 
-## Active Production Track
+Historical process docs, PRD drafts, handoff templates, experiment logs, and
+research archives have been removed from the active repository surface.
 
-The current active production-track work centers on:
+## Runtime Path
 
-- manifest-backed monotonic `XGBoost` serving
-- runtime report and fairness reconciliation
-- dashboard and deployment validation
+The backend starts at `backend.app.main:app`, loads settings, reads
+`models/registry/production_manifest.json`, validates declared checksums, and
+serves the manifest-backed artifacts through `/api/score` and analytics routes.
 
-Primary entrypoints:
+Primary runtime references:
 
-- [scripts/training/promote_monotonic_xgboost.py](file:///c:/Kaustubh/Projects/AlterScore/scripts/training/promote_monotonic_xgboost.py)
-- [scripts/training/train_baselines.py](file:///c:/Kaustubh/Projects/AlterScore/scripts/training/train_baselines.py)
-- [backend/ml/training/classical/monotonic_constraints.py](file:///c:/Kaustubh/Projects/AlterScore/backend/ml/training/classical/monotonic_constraints.py)
-- [models/registry/production_manifest.json](file:///c:/Kaustubh/Projects/AlterScore/models/registry/production_manifest.json)
-
-## Research Archive
-
-TabNet, MLP, Stacking Ensemble training modules, experiments, and associated integration tests are preserved under the repository-level archive for governance reference and benchmark comparison:
-
-- `archive/research_experiments/` (Archived training scripts and exploratory modules)
-- `archive/models/` (Legacy model binaries and report metrics)
-- `archive/tests/` (Archived test suites for legacy models)
-
-They are intentionally segregated and not part of the primary trusted production serving path.
+- `backend/app/core/artifact_loader.py`
+- `backend/app/services/scoring.py`
+- `backend/app/services/analytics.py`
+- `backend/ml/inference/feature_assembly.py`
+- `models/registry/production_manifest.json`

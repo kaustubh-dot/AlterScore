@@ -6,16 +6,16 @@ deployment, and ML engineers must understand before modifying runtime code.
 ## Active Runtime Model
 
 `models/registry/production_manifest.json` points to `xgboost_monotonic`
-(model version `0.4.0`) as the active runtime model. It is a single calibrated
+(model version `0.7.0`) as the active runtime model. It is a single calibrated
 monotonic constrained-tree scorer loaded from:
 
 ```text
 models/artifacts/xgboost_monotonic.pkl
 ```
 
-The calibrated stacking ensemble and its base models remain checked in as
-benchmark and rollback/reference artifacts, but the default manifest no longer
-loads the six-model ensemble path.
+The default manifest does not load the older ensemble path. Some non-active
+classical artifacts remain in the repository because tests and fallback loaders
+exercise them.
 
 ## Current Inference Path
 
@@ -108,26 +108,25 @@ If a scoring-critical artifact fails validation, `/api/score` returns `503`.
 ## Current Caveats
 
 - The checked-in runtime report is the operational source of truth: held-out
-  test AUC is `0.7549`, ECE is `0.0353`, and post-governance AUC is `0.7543`.
+  test AUC is `0.7787`, ECE is `0.0346`, and post-governance AUC is `0.7767`.
   Older governed-review figures such as `0.8040` and `0.8090` are historical
   experiment results from different candidate/report contexts.
 - The fairness report includes subgroup metrics, calibration parity, a
   full-profile individual-fairness proxy, and post-governance subgroup impact.
-- `production_manifest.json` records `codex-scoring-calibration-roadmap` as the
-  current code reference; replace it with an immutable commit identifier during
-  the next formal release cut.
+- `production_manifest.json` currently records `main` as the code reference.
+  Use an immutable commit identifier for a formal release cut.
 
 ## Environment Constraints
 
 | Component | Version | Notes |
 |---|---|---|
-| Python | `3.12.x` recommended | Python `3.10` is the syntax floor; Python `3.14.x` is not the recommended local setup path |
-| scikit-learn | `>=1.5.0,<1.6.0` | Required by checked-in calibrated artifacts |
+| Python | `3.12.x` recommended | Python `3.14.x` is not the recommended local setup path |
+| scikit-learn | `==1.5.1` | Required by checked-in calibrated artifacts |
 | XGBoost | `>=2.1.3,<2.2` | Required by the active monotonic runtime |
-| PyTorch / pytorch-tabnet | Runtime dependencies | Still required while reference ensemble/TabNet artifacts remain loadable and tested |
+| PyTorch / pytorch-tabnet | Runtime dependencies | Required by installed backend dependency set and legacy loader/test paths |
 | Node.js | `>=18 <25` | Frontend build |
-| Vite | `6.0.5` | Frontend dev/build tooling |
-| React | `18.3.1` | Frontend framework |
+| Vite | `8.x` | Frontend dev/build tooling |
+| React | `19.x` | Frontend framework |
 
 Do not upgrade backend or frontend dependencies without running the affected
 test/build suite and updating the relevant docs.

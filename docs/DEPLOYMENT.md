@@ -1,124 +1,100 @@
 # AlterScore Deployment
 
-## Deployment Philosophy
+AlterScore deploys the backend and frontend separately from the same GitHub
+repository.
 
-AlterScore should be reproducible locally before it is deployed anywhere.
-Deployment must package three things together:
+## Current Production Targets
 
-- the FastAPI backend
-- the React frontend build
-- the checked-in manifest-backed model bundle
-
-## Current Deployment Readiness
-
-- Local backend serving is implemented.
-- Local frontend serving is implemented.
-- Manifest-backed artifact loading is implemented.
-- Deployment will use local/manual process documentation rather than image packaging.
-- Release smoke validation is still pending.
-
-## Environment Variables
-
-| Variable | Example | Purpose |
+| Component | Target | Source |
 |---|---|---|
-| `ALTERSCORE_ENV` | `local` | Runtime environment label |
-| `ALTERSCORE_API_VERSION` | `0.1.0` | Health/version reporting |
-| `ALTERSCORE_REPO_ROOT` | repository root | Optional path override |
-| `ALTERSCORE_MODEL_MANIFEST` | `models/registry/production_manifest.json` | Serving manifest |
-| `ALTERSCORE_RUNTIME_MODEL_PATH` | `models/artifacts/xgboost_monotonic.pkl` | Explicit dev/test override path |
-| `ALTERSCORE_REQUEST_LOG_PATH` | `runtime/logs/requests.jsonl` | Append-only request log path |
-| `ALTERSCORE_LOG_LEVEL` | `INFO` | Backend log level |
-| `ALTERSCORE_CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Allowed frontend origins |
-| `VITE_API_BASE_URL` | `http://127.0.0.1:8000/api` | Frontend API base URL |
+| Backend API | Hugging Face Spaces Docker app | `.github/workflows/deploy-hf.yml` |
+| Frontend SPA | Vercel | `frontend/vercel.json` and Vercel Git integration |
 
-## Local Development Commands
+Backend deployment packages only what the API needs: `backend/`, `models/`,
+`scripts/`, `Dockerfile`, and a minimal Hugging Face Space README.
 
-Run from the repository root:
+## Backend Deployment
 
-```powershell
-# Backend
-& 'C:\Users\Kaustubh\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe' scripts\setup\check_environment.py
-& 'C:\Users\Kaustubh\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe' -m venv backend\.venv-cleanup
-backend\.venv-cleanup\Scripts\python.exe -m pip install -r backend\requirements.txt
-backend\.venv-cleanup\Scripts\python.exe -m uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000
+On push to `main`, `.github/workflows/deploy-hf.yml` builds a Hugging Face
+Space package and force-pushes it to the configured Space when `HF_TOKEN` is
+available in GitHub secrets.
 
-# Frontend
-cd frontend
-& 'C:\Program Files\nodejs\npm.cmd' install
-& 'C:\Program Files\nodejs\npm.cmd' run dev -- --host 127.0.0.1 --port 5173
+Required GitHub secret:
+
+| Secret | Purpose |
+|---|---|
+| `HF_TOKEN` | Push access to the Hugging Face Space |
+
+The deployed backend starts through the root `Dockerfile` and loads
+`models/registry/production_manifest.json`.
+
+## Frontend Deployment
+
+Vercel builds `frontend/` from the GitHub repository. The SPA rewrite rule in
+`frontend/vercel.json` sends client-side routes to `index.html`.
+
+Production API configuration is committed in `frontend/.env.production`:
+
+```text
+VITE_API_BASE_URL=https://coolbot22-alterscore-backend.hf.space/api
 ```
 
-## Validation Notes
+`VITE_*` values are public build-time values, not secrets.
 
-- Python `3.12.x` is the recommended local backend interpreter family.
-- Python `3.14.x` is not the recommended local setup path for this repository.
-- During cleanup validation on May 22, 2026, backend dependency resolution
-  succeeded in a fresh Python 3.12 environment, but the install in this synced
-  Windows workspace hit a local file-lock error inside `site-packages` before a
-  full clean-room startup could be completed.
+## Runtime Artifact Bundle
 
-## Artifact Bundle Checklist
+The active production manifest is `xgboost_monotonic_calibrated_v4`
+(`model_version` `0.7.0`). It checksum-locks:
 
-### Core Runtime Artifacts
+- `models/artifacts/xgboost_monotonic.pkl`
+- `models/preprocessors/preprocessor_monotonic.pkl`
+- `models/preprocessors/text_pca.pkl`
+- `models/explainers/shap_explainer_monotonic.pkl`
+- `models/explainers/dice_explainer_monotonic.pkl`
+- `models/reports/metrics_monotonic.json`
+- `models/reports/baseline_metrics_monotonic.json`
+- `models/reports/fairness_report_monotonic.json`
+- `models/reports/psi_report_monotonic.json`
+- `models/reports/global_importance_monotonic.json`
+- `models/reports/population_percentiles_monotonic.json`
 
-- [x] `models/artifacts/xgboost_monotonic.pkl`
-- [x] `models/preprocessors/preprocessor_monotonic.pkl`
-- [x] `models/preprocessors/text_pca.pkl`
-- [x] `models/registry/production_manifest.json`
+Do not remove or regenerate these files without updating
+`production_manifest.json` and rerunning the promotion gates.
 
-### Reference Ensemble / Base Models
+## Release Checks
 
-- [x] `models/artifacts/logistic_best.pkl`
-- [x] `models/artifacts/rf_best.pkl`
-- [x] `models/artifacts/xgb_best.pkl`
-- [x] `models/artifacts/lgbm_best.pkl`
-- [x] `models/artifacts/tabnet_epoch_best.zip`
-- [x] `models/artifacts/mlp_best.pt`
-- [x] `models/artifacts/calibrated_stacking_config.json`
+Run these before merging deployment-affecting changes:
 
-### Explainability Artifacts
+```bash
+ALTERSCORE_ENV=test python -m pytest
+python scripts/validation/verify_reproducibility.py
+python -m backend.ml.registry.promotion_gates --manifest models/registry/production_manifest.json --allow-promoted-incompatibility
+cd frontend && npm run build
+```
 
-- [x] `models/explainers/shap_explainer_monotonic.pkl`
-- [x] `models/explainers/dice_explainer_monotonic.pkl`
+## Health Checks
 
-### Report Artifacts
+Backend:
 
-- [x] `models/reports/metrics_monotonic.json`
-- [x] `models/reports/baseline_metrics_monotonic.json`
-- [x] `models/reports/fairness_report_monotonic.json`
-- [x] `models/reports/psi_report_monotonic.json`
-- [x] `models/reports/global_importance_monotonic.json`
-- [x] `models/reports/population_percentiles_monotonic.json`
+```bash
+curl https://coolbot22-alterscore-backend.hf.space/api/health
+```
 
-## Backend Startup Requirements
+Expected:
 
-At startup the backend must:
+- `status` is `ok`
+- `manifest_backed` is `true`
+- `model_loaded` is `true`
+- no scoring-critical missing or invalid artifacts
 
-1. Load settings.
-2. Resolve repository-relative paths.
-3. Prefer the production manifest for the default local runtime.
-4. Validate manifest-declared checksums.
-5. Load scoring-critical artifacts before serving `/api/score`.
-6. Report loaded, missing, and invalid artifacts through `/api/health`.
+Frontend:
 
-## Health And Rollback
+- Vercel build succeeds
+- deployed app can call `/api/health` through `VITE_API_BASE_URL`
+- assessment flow can submit to `/api/score`
 
-Minimum health checks:
+## Rollback
 
-- `GET /api/health` returns 200.
-- `manifest_backed` is `true` for the checked-in bundle.
-- `model_loaded` is `true`.
-
-Rollback expectation for future deployments:
-
-1. Restore the prior manifest-backed bundle.
-2. Restart the backend.
-3. Verify `/api/health`.
-4. Run a score smoke test with `tests/fixtures/score_request_valid.json`.
-5. Record the rollback in the handoff and state documents.
-
-## Current Gaps Before Real Deployment
-
-- `deploy/cloud/` is still scaffolding only.
-- `deploy/monitoring/` is still scaffolding only.
-- Release smoke docs need to be finalized after the dashboard work is complete.
+Rollback is manifest-based. Restore the last known-good manifest and all
+artifact files referenced by its `artifacts` block, then rerun health and score
+smoke checks. See [Rollback checklist](ROLLBACK_CHECKLIST.md).

@@ -114,7 +114,7 @@ cd frontend && npm run lint && npm run build
 
 ## Docs
 
-[Project structure](docs/PROJECT_STRUCTURE.md) · [Governance workflow](docs/GOVERNANCE_WORKFLOW.md) · [Model selection](docs/MODEL_SELECTION_DECISIONS.md) · [API contracts](docs/API_CONTRACTS.md) · [Setup](docs/SETUP.md)
+[Setup](docs/SETUP.md) · [Deployment](docs/DEPLOYMENT.md) · [API contracts](docs/API_CONTRACTS.md) · [Runtime architecture](docs/BACKEND_RUNTIME_ARCHITECTURE.md) · [Governance workflow](docs/GOVERNANCE_WORKFLOW.md) · [Model registry](docs/MODEL_REGISTRY.md) · [Project structure](docs/PROJECT_STRUCTURE.md)
 
 ---
 

@@ -11,7 +11,8 @@ from backend.app.core.settings import DEFAULT_CORS_ORIGINS, load_settings
 
 
 def test_repo_root_resolves_to_project_root() -> None:
-    assert (REPO_ROOT / "docs" / "AI_WORKFLOW_RULES.md").is_file()
+    assert (REPO_ROOT / "README.md").is_file()
+    assert (REPO_ROOT / "models" / "registry" / "production_manifest.json").is_file()
     assert (REPO_ROOT / "backend").is_dir()
 
 

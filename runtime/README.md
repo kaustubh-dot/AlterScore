@@ -1,11 +1,11 @@
 # Runtime Outputs
 
-This directory is for local generated outputs and is intentionally split into:
+This directory holds local runtime files that are useful while developing but
+should not be treated as source artifacts.
 
-- `governed_reports/`: production-track governed evaluation outputs
-- `research_archive/`: research-only experiment outputs kept for comparison
 - `logs/`: local request and execution logs
+- `pytest-*` and `pytest-workspace/`: local test scratch space
 
-Most large generated contents in `runtime/` are ignored by git. The tracked
-documents in `docs/` are the durable source of truth for release and
-presentation material.
+Most generated contents under `runtime/` are ignored by git. The deployable
+model bundle lives under `models/`, and durable setup/deployment documentation
+lives under `docs/`.

@@ -20,16 +20,16 @@
 |---|---|---|---|
 | GET | `/api/health` | Service and artifact health | Startup artifact cache |
 | POST | `/api/score` | Compute score for one assessment | Inference service |
-| GET | `/api/model-stats` | Production model metrics | `models/reports/metrics.json` |
-| GET | `/api/baseline-comparison` | Baseline and loan-officer comparison | `models/reports/baseline_metrics.json` |
-| GET | `/api/fairness-report` | Fairness audit | `models/reports/fairness_report.json` |
-| GET | `/api/drift-report` | PSI drift report | `models/reports/psi_report.json` |
-| GET | `/api/global-importance` | SHAP global importance | `models/reports/global_importance.json` |
+| GET | `/api/model-stats` | Production model metrics | Manifest `metrics` artifact |
+| GET | `/api/baseline-comparison` | Baseline and loan-officer comparison | Manifest `baseline_metrics` artifact |
+| GET | `/api/fairness-report` | Fairness audit | Manifest `fairness_report` artifact |
+| GET | `/api/drift-report` | PSI drift report | Manifest `psi_report` artifact |
+| GET | `/api/global-importance` | SHAP global importance | Manifest `global_importance` artifact |
 | GET | `/api/score-distribution` | Population score histogram | Population predictions and percentiles |
-| GET | `/api/roc-data` | ROC curve points for models | `models/reports/metrics.json` |
-| GET | `/api/pr-curve` | Precision-recall curve points | `models/reports/metrics.json` |
-| GET | `/api/calibration-curve` | Calibration curve points | `models/reports/metrics.json` |
-| GET | `/api/confusion-matrix` | Confusion matrix at optimal threshold | `models/reports/metrics.json` |
+| GET | `/api/roc-data` | ROC curve points for models | Manifest `metrics` artifact |
+| GET | `/api/pr-curve` | Precision-recall curve points | Manifest `metrics` artifact |
+| GET | `/api/calibration-curve` | Calibration curve points | Manifest `metrics` artifact |
+| GET | `/api/confusion-matrix` | Confusion matrix at optimal threshold | Manifest `metrics` artifact |
 
 ## Common Error Response
 
@@ -62,8 +62,8 @@ Current runtime note:
   "model_loaded": true,
   "artifact_source": "manifest",
   "manifest_backed": true,
-  "manifest_version": "calibrated_stacking_ensemble_v1",
-  "model_version": "0.2.0",
+  "manifest_version": "xgboost_monotonic_calibrated_v4",
+  "model_version": "0.7.0",
   "artifacts_loaded": [
     "production_manifest",
     "runtime_model",
@@ -206,7 +206,7 @@ Current runtime note:
 
 Current runtime note:
 - The response fields above remain required, and the checked-in bundle now returns real `explanation` items when the persisted SHAP artifact loads successfully.
-- The checked-in bundle now returns `counterfactual_actions` from the persisted `models/explainers/dice_explainer.pkl` artifact, which stores bounded actionable counterfactual policies against the loaded model bundle and is validated at startup.
+- The checked-in bundle now returns `counterfactual_actions` from the persisted `models/explainers/dice_explainer_monotonic.pkl` artifact, which stores bounded actionable counterfactual policies against the loaded model bundle and is validated at startup.
 - The fallback may legitimately report `estimated_score_gain = 0` when the applicant is already at the current score ceiling but a simulated change still improves repayment probability.
 - When `models/preprocessors/text_pca.pkl` is present, runtime semantic dimensions use the persisted PCA artifact; the temporary zero-fill fallback remains only for intentionally PCA-less test bundles.
 - Score requests are now append-logged to `runtime/logs/requests.jsonl` by default, without storing the raw answers or behavioral payload in the JSONL entry.
@@ -417,12 +417,12 @@ Current foundation note:
 
 ```json
 {
-  "model_name": "stacking_ensemble",
-  "model_type": "ensemble",
-  "auc_roc": 0.81,
-  "auc_pr": 0.86,
-  "ks_statistic": 0.47,
-  "brier_score": 0.14,
+  "model_name": "xgboost_monotonic",
+  "model_type": "classical_monotonic",
+  "auc_roc": 0.7787,
+  "auc_pr": 0.84,
+  "ks_statistic": 0.43,
+  "brier_score": 0.1768,
   "expected_calibration_error": 0.03,
   "accuracy": 0.76,
   "precision": 0.79,
@@ -451,7 +451,7 @@ Current foundation note:
 
 ```json
 {
-  "model_name": "logistic_regression",
+  "model_name": "xgboost_monotonic",
   "row_count": 10000,
   "summary": {
     "min_score": 300,
