@@ -33,6 +33,12 @@ class Settings:
     enable_debug_score: bool
     rate_limit_enabled: bool
     score_rate_limit: str
+    release_sha: str = "local"
+    signing_secret: str | None = None
+    attempt_ttl_seconds: int = 2700
+    attempt_store_max_entries: int = 10_000
+    result_ttl_seconds: int = 86_400
+    result_store_max_entries: int = 10_000
 
 
 def _split_csv(value: str | None) -> tuple[str, ...]:
@@ -88,6 +94,12 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
     score_rate_limit = (
         source.get("ALTERSCORE_SCORE_RATE_LIMIT", "").strip() or "30/minute"
     )
+    release_sha = (
+        source.get("ALTERSCORE_RELEASE_SHA", "").strip()
+        or source.get("GIT_SHA", "").strip()
+        or "local"
+    )
+    signing_secret = source.get("ALTERSCORE_SIGNING_SECRET") or None
 
     return Settings(
         environment=environment,
@@ -102,6 +114,16 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         enable_debug_score=_env_flag(source.get("ALTERSCORE_ENABLE_DEBUG_SCORE")),
         rate_limit_enabled=rate_limit_enabled,
         score_rate_limit=score_rate_limit,
+        release_sha=release_sha,
+        signing_secret=signing_secret,
+        attempt_ttl_seconds=int(source.get("ALTERSCORE_ATTEMPT_TTL_SECONDS", "2700")),
+        attempt_store_max_entries=int(
+            source.get("ALTERSCORE_ATTEMPT_STORE_MAX_ENTRIES", "10000")
+        ),
+        result_ttl_seconds=int(source.get("ALTERSCORE_RESULT_TTL_SECONDS", "86400")),
+        result_store_max_entries=int(
+            source.get("ALTERSCORE_RESULT_STORE_MAX_ENTRIES", "10000")
+        ),
     )
 
 

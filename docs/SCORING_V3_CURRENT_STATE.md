@@ -8,15 +8,15 @@
 
 | Field | Value |
 |---|---|
-| Updated | 2026-07-15 14:22:18 +05:30 |
+| Updated | 2026-07-15 17:08:40 +05:30 |
 | Branch | `codex/scoring-production-hardening` |
 | HEAD before v3 phased work | `aacf2b52f6d0d6eeed6eef5d90e73a4716981793` |
-| Current HEAD | `aacf2b52f6d0d6eeed6eef5d90e73a4716981793` |
-| Last commit | `aacf2b5 chore: clean stale project docs` |
-| Active phase | Phase 4 - Secure anonymous API |
-| Luna status | Not started (Phase 4) |
-| Codex review | Passed (Phase 3) |
-| Overall status | Phase 3 passed after Codex contract corrections; Phase 4 is the approved immediate next action and has not started |
+| Review-start HEAD | `0c398d6d14bb3ae65360b02863d5142f4df1b043` |
+| Review-start commit | `0c398d6 feat: add deterministic v3 scoring phases` |
+| Active phase | Phase 5 - Frontend assessment migration |
+| Luna status | Not started (Phase 5) |
+| Codex review | Passed (Phase 4) |
+| Overall status | Phase 4 passed after Codex security corrections; Phase 5 is the immediate next action and has not started |
 
 ## Current branch condition
 
@@ -52,6 +52,11 @@
 - Phase 3 added only the isolated unified scorer package, its focused tests,
   and this tracking update. It does not wire an API, change frontend behavior,
   alter the v1 scorer, regenerate model artifacts, or modify deployment.
+- Phase 4 added only the secure anonymous v2 transport, bounded in-memory
+  attempt/result stores, signed attempt tokens, result signing/digest logic,
+  readiness/liveness routes, and Phase 4 regression tests. The legacy v1
+  surface remains registered; frontend migration, cleanup, deployment, and
+  model-artifact work were not started.
 
 ## Work completed before v3
 
@@ -483,20 +488,76 @@ serializer, frontend question bank, analytics route, v1 retirement path,
 deployment workflow, or model-artifact pipeline. The branching weakness
 threshold is an internal deterministic Phase 3 recommendation rule and is not
 an underwriting or creditworthiness claim. Phase 4 is approved to begin but
-has not started.
+has now been implemented and handed to Codex for review below.
+
+## Phase 4 implementation and Codex review
+
+Phase 4 is complete and passed Codex review. The implementation is isolated
+under `backend/app/api/v2/` and preserves the v1 API, frontend source,
+deployment workflows, model artifacts, and legacy files.
+
+- The frozen versions remain `contract_version: 2.0`,
+  `assessment_version: india-en-3.0.0`, and
+  `scoring_policy_version: readiness-rubric-1.0.0`.
+- `GET /api/v2/assessment/form` issues exactly eight objective, four static
+  SJT, six branching, and six behavior items with per-attempt numeric values,
+  opaque IDs, randomized options, a 2,700-second expiry, and no answer keys,
+  rubrics, generation bounds, seeds, or private rationales.
+- `POST /api/v2/assessment/score` accepts only the frozen version fields,
+  issued public IDs, strict integer/choice values, behavior selections, and a
+  bounded optional narrative. Duplicate JSON keys are rejected before schema
+  validation; bearer tokens are signed, domain-separated, single-use, and
+  never stored raw.
+- Results use the Phase 3 exact formulas, public-ID-remapped explanations,
+  SHA-256 JCS-compatible explanation digests, HMAC-SHA256 signatures, a
+  24-hour bounded redacted verification store, and no raw answer/narrative,
+  behavior, option timeline, rubric, or token data in verification records.
+- `/api/live` is process liveness only. `/api/ready` reports the six frozen
+  checks in order and returns HTTP 503 when signing configuration is missing.
+  v2/live/ready responses set `Cache-Control: no-store` and
+  `Referrer-Policy: no-referrer`; form and score limits use bounded salted
+  network-hash state.
+- Verification and replay/tampering failures are explicit and privacy-safe;
+  no unsigned result summary is returned. Legacy ML startup degradation does
+  not prevent v2 liveness/readiness from serving structured responses.
+- Codex corrected the review findings before approval: assessment token issuance
+  and scoring now fail closed on plaintext transport; v2 access-log client
+  scope is redacted after retaining only a temporary input for salted rate
+  limiting; signing readiness requires a base64url encoding of at least 32
+  sufficiently diverse bytes; and deeply nested JSON is rejected before it
+  can escape as an internal error.
+
+### Codex Phase 4 verification
+
+- Focused adversarial API suite: **17 passed in 7.48 s**.
+- Combined backend-unit and API-integration regression: **284 passed in
+  16.01 s**.
+- Ruff on the Phase 4 API, app integration, settings, and tests: **All checks
+  passed**.
+- `git diff --check`: **PASS** with only preserved line-ending and
+  global-ignore permission warnings.
+
+### Phase 4 limitations and next boundary
+
+The in-memory attempt and verification stores intentionally lose state on
+process restart and keep no durable or user-indexed history. Deployment must
+supply a securely generated `secrets.token_urlsafe(32)`-equivalent signing
+secret and establish the trusted HTTPS ASGI scheme before v2 becomes ready.
+Phase 4 does not migrate the frontend, retire/archive legacy files, change
+analytics behavior, modify deployment workflows, or regenerate model artifacts.
 
 ## Immediate next action
 
-Luna implements Phase 4, the secure anonymous API, and stops at `READY FOR
-REVIEW`; it must not begin Phase 5.
+Luna may implement Phase 5 frontend assessment migration only, then stop at
+`READY FOR REVIEW`; do not begin Phase 6.
 
 ## Blockers
 
-None. Deployment and Phase 5 work remain unauthorized. The user explicitly
-authorized a scoped v3 commit and push; unrelated dirty-worktree paths remain
-preserved and unstaged.
+None for Phase 5 implementation. Production readiness remains fail-closed
+until deployment supplies the required signing secret and trusted HTTPS ASGI
+scheme. All unrelated dirty-worktree paths remain preserved and unstaged.
 
-## Last verification evidence
+## Historical verification evidence before Phase 4
 
 Codex re-review iteration 6 independently verified:
 
@@ -520,6 +581,19 @@ Codex re-review iteration 6 independently verified:
   and catalog integrity rejects cross-category presentation-ID collisions.
 - review decision: `PASS` for Phase 1; Phase 2 handoff follows this historical
   evidence section.
+
+## Latest Phase 4 verification evidence
+
+- Initial Luna claims were independently re-tested rather than accepted.
+- Codex focused Phase 4 adversarial API suite: **17 passed in 7.48 s**.
+- Codex combined backend-unit and API-integration suite: **284 passed in
+  16.01 s**.
+- Codex Phase 4 Ruff check: **All checks passed!**
+- `git diff --check`: **PASS**; only preserved LF/CRLF normalization and
+  inaccessible global-ignore warnings were emitted.
+- The review started from `0c398d6d14bb3ae65360b02863d5142f4df1b043`; all
+  pre-existing tracked and untracked changes were preserved.
+- Phase 5 has not started; it is now the approved immediate next action.
 
 ## Update template
 

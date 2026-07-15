@@ -47,7 +47,7 @@ scope belongs in `SCORING_V3_LUNA_PLAN.md`.
 | 1 | Canonical instrument and objective scorer | Complete | Passed | PASSED |
 | 2 | Branching financial-state engine | Complete | Passed | PASSED |
 | 3 | Unified deterministic scorer | Complete | Passed | PASSED |
-| 4 | Secure anonymous API | Not started | Pending | NOT STARTED |
+| 4 | Secure anonymous API | Complete | Pending | READY FOR REVIEW |
 | 5 | Frontend assessment migration | Not started | Pending | NOT STARTED |
 | 6 | Result explainability | Not started | Pending | NOT STARTED |
 | 7 | Legacy separation and runtime cleanup | Not started | Pending | NOT STARTED |
@@ -2017,3 +2017,247 @@ serialization, privacy, and scope-isolation gates. Luna may implement Phase 4
 only and must stop at `READY FOR REVIEW`; it must not begin Phase 5. A scoped
 commit and push of the reviewed v3 files follows under the user's explicit
 authorization; unrelated dirty-worktree files remain unstaged.
+
+---
+
+## Phase 4 implementation checkpoint - iteration 1
+
+### Metadata
+
+- Date/time: 2026-07-15 16:48:29 +05:30.
+- Branch: `codex/scoring-production-hardening`.
+- Starting HEAD: `0c398d6d14bb3ae65360b02863d5142f4df1b043`.
+- Ending working-tree state: the same HEAD; the index is clean and all Phase 4
+  files remain uncommitted. The pre-existing tracked modifications and
+  untracked paths remain preserved.
+- Authority: the user completed the Phase 3 review and explicitly authorized
+  Phase 4. This checkpoint authorizes only Phase 4 review; it does not begin
+  Phase 5 or authorize cleanup, commit, push, deployment, or model-artifact
+  regeneration.
+- Luna status: `READY FOR REVIEW`.
+
+### Scope completed
+
+- Added the isolated `backend.app.api.v2` transport, service, security, and
+  bounded-store package beside the existing v1 API.
+- Implemented the frozen form, score, verification, live, and readiness
+  endpoints without changing frontend behavior, v1 scoring behavior,
+  analytics behavior, deployment workflows, or model artifacts.
+- Added signed, domain-separated attempt tokens with expiry claims; the store
+  keeps only a token digest and canonical server-side mapping.
+- Added strict public transport models, duplicate-key rejection, bounded score
+  body parsing, exact response-map cardinalities, opaque per-attempt IDs,
+  single-use atomic consumption, deterministic TTL/capacity eviction, salted
+  bounded network-hash rate limits, JCS-compatible canonicalization, HMAC
+  result signatures, explanation digests, and redacted verification records.
+- Added structured allow-listed errors, no-store/no-referrer headers, process
+  liveness independent of the v2 service object, and structured v2 readiness
+  when legacy ML artifact initialization degrades.
+- Preserved the frozen public claim boundary: no repayment probability,
+  percentile, risk band, approval, eligibility, pricing, loan amount,
+  underwriting, identity, honesty, or real-world behavior claim is returned.
+- Public-ID remapping keeps internal canonical IDs out of the issued form and
+  returned explanation evidence while preserving the Phase 3 exact formulas.
+
+### Files
+
+- Added:
+  - `backend/app/api/v2/__init__.py`
+  - `backend/app/api/v2/models.py`
+  - `backend/app/api/v2/router.py`
+  - `backend/app/api/v2/security.py`
+  - `backend/app/api/v2/service.py`
+  - `tests/integration/api/test_phase4_secure_anonymous_api.py`
+- Modified:
+  - `backend/app/core/settings.py` (Phase 4 release/signing/store settings
+    inventory; v2 uses frozen contract TTL/capacity constants)
+  - `backend/app/main.py`
+  - `docs/SCORING_V3_CURRENT_STATE.md`
+  - `docs/SCORING_V3_CHECKPOINTS.md`
+- Deleted/archived: none.
+- Preserved untracked and unrelated paths include
+  `backend/ml/inference/text_quality.py`,
+  `docs/SCORING_V3_CODEX_REVIEW_PROMPT.md`,
+  `runtime/shared_session_trained_model_answer_only_v2/`, and
+  `tests/integration/api/test_production_scoring_contract.py`; no model
+  artifact was regenerated or promoted.
+
+### Public behavior and contracts
+
+- Frozen versions are `2.0`, `india-en-3.0.0`, and
+  `readiness-rubric-1.0.0` on every v2 success, liveness, readiness, and
+  structured error response.
+- Forms contain exactly 8 objective, 4 static-SJT, 6 branching, and 6
+  behavior items. Public payloads contain only prompts, response kinds,
+  required flags, labels, opaque IDs, narrative configuration, and the secret
+  issued bearer token; hidden keys, rubrics, seeds, bounds, rules, and
+  rationales are excluded.
+- Score JSON contains exactly the frozen versions, 18 issued scored response
+  IDs, 6 issued behavior IDs, and an optional <=1,000-Unicode-character
+  narrative. Attempt ID, bearer token, and client-selected identifiers are
+  forbidden in JSON. Duplicate raw keys are rejected before Pydantic.
+- Attempt tokens are signed with a domain-separated HMAC key and include only
+  server-issued attempt/expiry claims plus a nonce. Tampering, expiry,
+  consumed, capacity-evicted, and restart-lost states are distinguishable
+  through allow-listed retry details.
+- Results carry the exact Phase 3 financial index, illustrative legacy score,
+  Decimal2 objective/judgment display values, six unscored behavior labels,
+  limitations, a JCS-compatible SHA-256 explanation digest, a projection-only
+  HMAC-SHA256 signature, and the detailed unsigned explanation on the initial
+  score response.
+- Verification returns only the signed redacted projection. It excludes
+  explanation, behavior values, raw answers, narrative, option timelines,
+  hidden rubrics, bearer tokens, and result tokens. Signature or projection
+  tampering returns `integrity_failed` without an unsigned summary.
+- Readiness checks are exactly `instrument`, `scorer`, `signing`,
+  `attempt_store`, `verification_store`, `rate_limits` in that order. Missing
+  or weak signing configuration makes readiness HTTP 503. Liveness is process
+  only. v2/live/ready responses are `no-store` and `no-referrer`.
+
+### Subagents used
+
+| Task | Model/tier | Mode | File ownership | Result | Luna verification |
+|---|---|---|---|---|---|
+| Chandrasekhar security/attempt/rate/readiness audit | subagent | read-only | none | Stream disconnected before findings; no file edits. | Primary reran the security checks and completed the controls locally. |
+| Jason canonicalization/signing audit | subagent | read-only | none | Stream disconnected before findings; no file edits. | Primary added deterministic JCS/HMAC tests and probes. |
+| Dirac API/test/runtime audit | subagent | read-only | none | Stream disconnected before findings; no file edits. | Primary ran the focused and complete API suites. |
+| Epicurus security-store audit | subagent | read-only | none | Findings accepted and corrected: signed attempt tokens, weak-secret readiness, bounded rate state, JCS number formatting, and malformed tamper handling. | Focused adversarial suite and Ruff passed after corrections. |
+| Poincare transport-contract audit | subagent | read-only | none | Findings accepted and corrected: strict nested public models, allow-listed behavior/limitations/readiness/error fields, and opaque-ID validation. | Coercion probes rejected invalid booleans, strings, stages, and behavior labels. |
+| Meitner route/readiness audit | subagent | read-only | none | Findings accepted and corrected: process-only liveness, legacy-loader degradation boundary, and real `create_app()` coverage. | API suite includes the real lifespan/fallback integration test. |
+| Additional security audit | subagent | read-only | none | Findings accepted and corrected: O(1) bounded network state, strict body cap/cardinality, signed-token import boundary, TTL pruning, and disabled-limiter readiness. | Final import, Ruff, and regression checks passed. |
+
+- These audits ran in parallel where their scopes were independent. The
+  primary retained ownership of shared transport/service code and all tracking
+  edits; no two agents edited the same file.
+- No subagent changed the branch, HEAD, index, model artifacts, deployment
+  configuration, frontend, or prior user work. No secrets, raw tokens, raw
+  answers, or user data were used or recorded.
+
+### Tests executed
+
+| Command | Result | Notes |
+|---|---|---|
+| `.venv312\Scripts\python.exe -B -m pytest -p no:cacheprovider -o "addopts=" tests\integration\api\test_phase4_secure_anonymous_api.py --basetemp C:\tmp\alterscore-phase4-target11 --tb=short -q` | PASS | 12 passed in 7.39 s; one expected `PytestConfigWarning` because disabling the cache provider leaves `cache_dir` unrecognized. |
+| `.venv312\Scripts\python.exe -B -m pytest -p no:cacheprovider -o "addopts=" tests\unit\backend --basetemp C:\tmp\alterscore-phase4-backend-final2 --tb=short -q` | PASS | 226 passed in 2.70 s; same expected warning. |
+| `.venv312\Scripts\python.exe -B -m pytest -p no:cacheprovider -o "addopts=" tests\integration\api --basetemp C:\tmp\alterscore-phase4-api-final2 --tb=short -q` | PASS | 53 passed in 13.33 s; same expected warning. |
+| `.venv312\Scripts\ruff.exe check backend\app\api\v2 backend\app\main.py tests\integration\api\test_phase4_secure_anonymous_api.py` | PASS | `All checks passed!`. |
+| `.venv312\Scripts\python.exe -B -c "import backend.app.main, backend.app.api.v2.models, backend.app.api.v2.service; print('imports ok')"` | PASS | Imports completed without error. |
+| `git diff --check` | PASS | Exit 0; only preserved LF/CRLF normalization and inaccessible global-ignore warnings were emitted. |
+
+### Diff hygiene
+
+- Starting and ending HEAD are identical; no commit, push, reset, checkout,
+  cleanup, deployment, or model-artifact regeneration was performed.
+- The index is clean. Existing tracked modifications and existing untracked
+  files remain in place; only Phase 4 source, tests, and tracking documents
+  were added or modified for this phase.
+- No Phase 1, Phase 5, frontend migration, legacy retirement, or Phase 7
+  cleanup work was started.
+
+### Known limitations
+
+- Attempt and verification state is process-local and intentionally disappears
+  on restart; there is no durable or user-indexed history.
+- The Phase 4 v2 service is backend-only. Frontend assessment migration,
+  legacy separation/cleanup, deployment/CI changes, and final audit remain
+  later phases.
+- The existing v1 scorer and analytics/model-artifact surfaces remain present
+  by design; Phase 7 owns their later cleanup decision.
+- The disabled-cache pytest commands emit the known `cache_dir` warning; it is
+  an execution-configuration warning, not a test failure.
+
+### Review focus
+
+- Confirm the public form has only the frozen item shapes and no internal
+  canonical IDs, answer keys, rubrics, seeds, generation rules, or rationale.
+- Confirm signed token tampering, cross-attempt reuse, unknown options,
+  duplicate keys, strict types, replay, expiry, eviction, and concurrent
+  duplicate submission fail with the frozen structured errors.
+- Confirm the exact Phase 3 formulas and public-ID explanation remapping remain
+  intact, while verification exposes only the redacted signed projection.
+- Confirm JCS/HMAC/digest canonicalization, result-record tampering behavior,
+  no-store/no-referrer headers, rate-limit bounds, readiness ordering, and
+  liveness independence from legacy ML startup.
+- Confirm no Phase 5 work, cleanup, deployment, commit, push, or model
+  regeneration is included.
+
+### Stop confirmation
+
+Phase 4 is complete and handed to Codex for review at `READY FOR REVIEW`.
+Phase 5 has not started. No commit, push, deployment, cleanup, reset, branch
+operation, or model-artifact regeneration was performed.
+
+---
+
+## Phase 4 Codex review - iteration 1
+
+### Metadata and decision
+
+- Reviewed branch/HEAD: `codex/scoring-production-hardening` /
+  `0c398d6d14bb3ae65360b02863d5142f4df1b043`.
+- Authority: the user authorized Codex to review, correct, commit, and push
+  Phase 4 only. Phase 5 was not implemented.
+- Decision: `PASS`.
+
+### Findings corrected during review
+
+- **P1 - plaintext token transport:** form issuance and scoring accepted HTTP
+  requests despite the frozen HTTPS-only bearer requirement. The v2 router now
+  rejects plaintext assessment traffic before reading the token or body and
+  deliberately does not trust a client-supplied forwarded-protocol header.
+- **P1 - raw IP access logging:** Uvicorn's normal access formatter reads
+  `scope["client"]` after the app returns. The Phase 4 middleware now retains a
+  temporary host only for salted in-memory rate limiting, then replaces that
+  scope value with `("redacted", 0)` before route execution and access logging.
+- **P1 - weak signing configuration:** length-only validation accepted trivial
+  values such as repeated characters. Readiness now requires base64url key
+  material of at least 32 bytes and rejects obvious low-diversity placeholders;
+  deployers must use `secrets.token_urlsafe(32)` or equivalent random material.
+- **P1 - deeply nested JSON:** an 8,000-level valid JSON array could raise
+  `RecursionError` and become a 500. The parser has a 64-level structural limit
+  and catches recursion failures as a 400 `malformed_request`, without
+  consuming the attempt.
+- **P2 - required lifecycle coverage:** added regressions for capacity eviction,
+  process loss, result expiry, immediate retry, HTTPS enforcement, access-scope
+  redaction/rate-limit continuity, invalid signing configuration, and deep JSON.
+
+### Independent verification
+
+| Command | Result | Notes |
+|---|---|---|
+| `.venv312\Scripts\python.exe -B -m pytest -p no:cacheprovider -o "addopts=" tests\integration\api\test_phase4_secure_anonymous_api.py --basetemp C:\tmp\alterscore-phase4-codex-focused-after-fixes-2 --tb=short -q` | PASS | 17 passed in 7.48 s; one expected `PytestConfigWarning` for disabled cache provider. |
+| `.venv312\Scripts\python.exe -B -m pytest -p no:cacheprovider -o "addopts=" tests\unit\backend tests\integration\api --basetemp C:\tmp\alterscore-phase4-codex-final-backend-api --tb=short -q` | PASS | 284 passed in 16.01 s; same expected warning. |
+| `.venv312\Scripts\python.exe -B -m ruff check backend\app\api\v2 backend\app\main.py backend\app\core\settings.py tests\integration\api\test_phase4_secure_anonymous_api.py` | PASS | `All checks passed!`. |
+| `git diff --check` | PASS | Exit 0; preserved LF/CRLF and inaccessible global-ignore warnings only. |
+
+Manual/adversarial checks independently confirmed strict token tampering,
+cross-attempt rejection, duplicate-key rejection, atomic replay, rate limits,
+redacted verification, result-signature/digest failure behavior, HTTPS refusal,
+weak-secret readiness refusal, and recovery after expiry, eviction, and
+process-local state loss.
+
+### Subagent-review and provenance summary
+
+- Luna recorded seven Phase 4 subagents, all read-only. Its primary retained
+  exclusive ownership of the transport, service, shared contracts, tracking,
+  and git state; no overlapping file writers or unauthorized Phase 5 changes
+  were recorded. Three early audit streams disconnected, so their claimed work
+  was not treated as verification; Luna documented local rechecks instead.
+- Codex used three additional read-only review agents with non-overlapping
+  contract/scope, security, and adversarial-test scopes. They found the four
+  P1 defects and P2 coverage gap above; Codex independently reproduced and
+  corrected them. No review subagent changed files, shared contracts, tracking
+  status, branch/HEAD/index, or later-phase code.
+- The exact Phase 4 artifact set remains `backend/app/api/v2/`, its focused
+  integration test, `backend/app/main.py`, `backend/app/core/settings.py`, and
+  these tracking files. No frontend migration, legacy retirement, deployment,
+  model artifact, or Phase 5 code was introduced. All unrelated dirty files
+  remain untouched and unstaged for this scoped commit.
+
+### Decision and next action
+
+`PASS`. Phase 4 satisfies its review gate after the corrections above. Luna may
+now implement Phase 5 frontend assessment migration only and must stop at
+`READY FOR REVIEW`; it must not begin Phase 6. Production v2 remains
+fail-closed until a secure signing secret and trusted HTTPS ASGI scheme are
+configured.
