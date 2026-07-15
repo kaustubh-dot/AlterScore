@@ -47,9 +47,9 @@ scope belongs in `SCORING_V3_LUNA_PLAN.md`.
 | 1 | Canonical instrument and objective scorer | Complete | Passed | PASSED |
 | 2 | Branching financial-state engine | Complete | Passed | PASSED |
 | 3 | Unified deterministic scorer | Complete | Passed | PASSED |
-| 4 | Secure anonymous API | Complete | Pending | READY FOR REVIEW |
-| 5 | Frontend assessment migration | Complete | Pending | READY FOR REVIEW |
-| 6 | Result explainability | Not started | Pending | NOT STARTED |
+| 4 | Secure anonymous API | Complete | Passed | PASSED |
+| 5 | Frontend assessment migration | Complete | Passed | PASSED |
+| 6 | Result explainability | Complete | Passed | PASSED |
 | 7 | Legacy separation and runtime cleanup | Not started | Pending | NOT STARTED |
 | 8 | CI, deployment, and operational hardening | Not started | Pending | NOT STARTED |
 | 9 | Final audit and handoff | Not started | Pending | NOT STARTED |
@@ -2482,3 +2482,231 @@ StrictMode/recovery, accessibility, responsive, and production-bundle review
 gates after the scoped fixes. Luna may now implement Phase 6 result
 explainability only and must stop at `READY FOR REVIEW`; Phase 7 must not
 begin.
+
+---
+
+## Phase 6 implementation checkpoint - iteration 1
+
+### Metadata
+
+- Date/time: 2026-07-15 20:41:24 +05:30.
+- Branch: `codex/scoring-production-hardening`.
+- Starting HEAD: `d74e59d5b8577d301646f73e049ca4a3588798f`.
+- Ending HEAD: `d74e59d5b8577d301646f73e049ca4a3588798f`; index clean and all
+  Phase 6 work remains uncommitted.
+- The worktree was already substantially dirty. Existing tracked changes,
+  existing untracked paths, model artifacts, legacy files, and prior Phase 5
+  work were preserved; no reset, clean, checkout, deletion, commit, push,
+  deployment, or model-artifact regeneration was performed.
+- Authority: the user completed the Phase 5 review and explicitly authorized
+  Phase 6 result explainability. This checkpoint authorizes only Phase 6
+  review; it does not authorize Phase 7 cleanup or any git/release operation.
+- Luna status: `READY FOR REVIEW`.
+
+### Scope completed
+
+- Kept the Phase 3/4 backend `ScoreResponse.explanation` contract unchanged
+  and added a strict frontend validator for its exact public shape.
+- Reconciled the displayed objective contribution, exact judgment
+  contribution, exact weighted total, half-up final index, and 300-to-850
+  transformation using integer/`BigInt` rational checks rather than floating
+  point arithmetic.
+- Validated all eight canonical objective concepts and their issued-value
+  names, submitted/correct answer consistency, four static-SJT principle
+  records, two scenario records, three ordered stages per scenario, all eleven
+  state fields, state-delta continuity, four terminal dimensions, and
+  evidence-linked recommendations.
+- Changed the active result flow to retain the complete signed score response
+  in the existing 24-hour `sessionStorage` entry. The stored response has no
+  attempt token, submission maps, or narrative; legacy redacted summaries are
+  still accepted as summary-only recovery states.
+- Rebuilt the result surface with score summary, formula waterfall, worked
+  objective evidence, principle-level SJT explanations, branching state
+  replays, terminal dimensions, deterministic recommendation links,
+  limitations, and the redacted verification link.
+- Preserved the public boundary: no option IDs, rubric points, full SJT point
+  tables, SHAP/probability language, lending claims, or new scoring authority
+  were introduced in the frontend.
+- Added focused Phase 6 contract tests and retained Phase 5 regression/bundle
+  coverage. Updated the summary dashboard to handle detailed and summary-only
+  cache entries without displaying detailed evidence.
+
+### Files
+
+- Added:
+  - `frontend/tests/phase6-explainability.test.mjs`
+- Modified:
+  - `frontend/package.json`
+  - `frontend/src/lib/assessmentV2.js`
+  - `frontend/src/pages/Assessment.jsx`
+  - `frontend/src/pages/Dashboard.jsx`
+  - `frontend/src/pages/Results.jsx`
+  - `frontend/src/pages/Results.css`
+  - `frontend/tests/phase5-contract.test.mjs`
+  - `docs/SCORING_V3_CURRENT_STATE.md`
+  - `docs/SCORING_V3_CHECKPOINTS.md`
+- Deleted/archived: None.
+- Backend runtime, API schemas, scoring formulas, deployment workflows,
+  analytics, model artifacts, legacy question files, and Phase 7 targets were
+  not changed for Phase 6.
+
+### Public behavior and contracts
+
+- A successful v2 response now remains available to the result route with its
+  full signed explanation for the current browser session and for at most the
+  server-issued 24-hour result lifetime.
+- If only an older redacted summary is available, the UI shows the verified
+  summary and limitations and explicitly says that detailed evidence is not
+  available; it never invents recovered answers or timelines.
+- Result presentation preserves server-issued public IDs only for internal
+  evidence linking. It renders labels and safe state evidence, never option
+  IDs or hidden rubrics.
+- The verification link continues to point to the redacted signed projection,
+  which contains no explanation, behavior values, narrative, raw answers, or
+  token.
+
+### Subagents used
+
+| Task | Model/tier | Mode | File ownership | Result | Luna verification |
+|---|---|---|---|---|---|
+| Linnaeus objective explanation audit | light explorer | read-only | none | Confirmed exact objective fields, canonical issued-value names/formulas, formula fractions, and safe display boundaries. | Actual backend response probe and Phase 6 validator/tests passed; no edits accepted. |
+| Parfit branching replay audit | light explorer | read-only | none | Confirmed two three-stage replays, eleven state fields, timeline continuity, public-ID remapping, and no option IDs/rubrics. | Validator enforces continuity and Phase 6 tests reject broken timelines; no edits accepted. |
+| Herschel result accessibility/privacy audit | light explorer | read-only | none | Identified responsive, keyboard, screen-reader, reduced-motion, storage, and bundle checks. | Result UI/CSS and source-contract tests cover the bounded findings; no edits accepted. |
+
+- Parallel work used disjoint read-only audit scopes; no two agents edited the
+  same file and no subagent changed contracts, tracking, git state, or phase
+  status.
+
+### Tests executed
+
+| Command | Result | Notes |
+|---|---|---|
+| `npm.cmd run lint` from `frontend` | PASS | ESLint exit 0. |
+| `npm.cmd run build` from `frontend` | PASS | Vite 8.0.16; 1,839 modules transformed; ignored production `dist` emitted. |
+| `npm.cmd run test:phase5` from `frontend` | PASS | 11 passed. Includes emitted-bundle secrecy scan. |
+| `npm.cmd run test:phase6` from `frontend` | PASS | 5 passed; formula, objective, branching, recommendation, hidden-field, and UI-boundary coverage. |
+| Read-only generated v2 score `TestClient` → Node `isV2ScoreResponse` probe | PASS | Actual signed response reported `frontend validator: true`; no response was persisted. |
+| `.venv312\Scripts\python.exe -B -m pytest -p no:cacheprovider -o "addopts=" tests\integration\api\test_phase4_secure_anonymous_api.py --basetemp C:\tmp\alterscore-phase6-focused --tb=short -q` | PASS | 17 passed in 7.35 s; one expected `PytestConfigWarning` for disabled cache provider. |
+| `.venv312\Scripts\python.exe -B -m pytest -p no:cacheprovider -o "addopts=" tests\unit\backend tests\integration\api --basetemp C:\tmp\alterscore-phase6-backend-api --tb=short -q` | PASS | 284 passed in 16.15 s; same expected warning. |
+| `.venv312\Scripts\ruff.exe check backend\app\api\v2 backend\app\unified_scoring tests\integration\api\test_phase4_secure_anonymous_api.py` | PASS | `All checks passed!`. |
+| `git diff --check` | PASS | No whitespace errors; preserved LF/CRLF and global-ignore permission warnings only. |
+
+### Diff hygiene
+
+- `git diff --check`: **PASS**.
+- Unrelated changes introduced: **No**. Existing dirty tracked/untracked
+  files remain preserved and unstaged.
+- One exploratory Ruff invocation included the JavaScript adapter and emitted
+  parser errors; it was a diagnostic-command mistake, not a source failure.
+  The corrected Python-only Ruff command above passed.
+
+### Known limitations
+
+- Detailed explanation evidence is session-only. Clearing storage, losing the
+  browser session, or a backend process restart can leave only the redacted
+  summary or no result.
+- Browser visual automation was not run in this implementation pass. Static
+  semantic checks, responsive CSS, reduced-motion rules, lint, build, and
+  contract tests were completed; Codex should perform final in-app visual and
+  keyboard review.
+- Production readiness remains fail-closed until a secure signing secret and
+  trusted HTTPS ASGI scheme are supplied.
+
+### Review focus
+
+- Confirm the complete signed response is retained only in session storage and
+  never includes the attempt token or submission payload.
+- Probe the exact formula/recommendation validator with malformed fractions,
+  wrong evidence IDs, extra rubric fields, and discontinuous state timelines.
+- Inspect mobile/keyboard/screen-reader behavior across the formula, objective,
+  SJT, branching, clear-result, and summary-only recovery states.
+- Confirm the result page does not reveal option IDs, hidden scoring tables,
+  answer-generation details, or public ML/credit claims.
+
+### Stop confirmation
+
+Phase 6 is complete and handed to Codex for review at `READY FOR REVIEW`.
+Phase 7, cleanup, deployment, commit, push, and model-artifact regeneration
+have not started.
+
+---
+
+## Codex Phase 6 PASS review
+
+### Review metadata
+
+- Date/time: 2026-07-15 21:24:38 +05:30.
+- Branch: `codex/scoring-production-hardening`.
+- Review baseline HEAD: `d74e59d5b8577d301646f73e049ca4a3588798f`
+  (`fix: harden phase 5 client assessment boundary`).
+- Scope reviewed: only Phase 6 result explainability and its stated frontend,
+  test, and tracking paths. No Phase 7, CI/deployment, legacy cleanup, API,
+  scoring, or model-artifact work was begun.
+- The existing dirty tracked and untracked worktree paths were preserved. No
+  reset, clean, checkout, branch switch, discard, or checkpoint rewrite was
+  performed.
+
+### Independent review and corrections
+
+- **P1 corrected — formula display reconciliation:** the initial client
+  validator treated the displayed decimal-2 judgment score as the hidden score
+  used to compute `judgment_contribution_exact`. A real signed API response
+  correctly retains an exact unrounded fraction, so this rejected legitimate
+  results. The validator now derives the public decimal-2 display from that
+  exact contribution using server-consistent half-up rounding, while still
+  reconciling the objective contribution, total fraction, index, and legacy
+  transformation exactly.
+- **P1 corrected — recommendation evidence:** client validation now requires
+  objective evidence to cite missed objectives, branching evidence to cite
+  scenarios below the server's `< 60` weakness boundary, maintenance only when
+  no weakness remains, and at least one recommendation where weakness exists.
+- **P1 corrected — privacy boundary:** the route and bounded session cache now
+  store only a strict detailed display projection, not the raw `ScoreResponse`.
+  The projection excludes `behavior_profile`; it already excludes attempt
+  tokens, submission maps, and narrative.
+- **P1 corrected — explanation integrity:** validation now requires each of
+  the eight canonical concepts exactly once, reconciles objective correctness
+  with the displayed objective score, and checks scenario score recomposition
+  against the four independently rounded public terminal dimensions.
+- **P2 corrected — accessible evidence links:** repeated generic link names
+  were replaced with distinct Objective/Simulation evidence labels and
+  matching accessible names.
+- No unresolved Phase 6 findings remain.
+
+### Subagent and scope audit
+
+- Luna's Linnaeus (objective), Parfit (branch replay), and Herschel
+  (accessibility/privacy) work was recorded as disjoint, read-only audits with
+  no file ownership. Their task boundaries, accepted findings, and Luna's
+  verification were inspected.
+- Codex independently repeated the important claims rather than accepting
+  them. No two agents edited the same file concurrently; no subagent changed
+  shared contracts, tracking status, Git state, or later-phase code.
+- Codex's independent read-only audits likewise found no Phase 7 changes or
+  unauthorized API/scoring-contract changes in the Phase 6 set.
+
+### Independent verification
+
+| Command or check | Result |
+|---|---|
+| `npm.cmd run test:phase5` from `frontend` | PASS — 11/11. |
+| `npm.cmd run test:phase6` from `frontend` | PASS — 7/7, including adversarial formula, recommendation, objective, scenario, hidden-rubric, and privacy-projection checks. |
+| `npm.cmd run lint` from `frontend` | PASS — ESLint exit 0. |
+| `npm.cmd run build` from `frontend` | PASS — Vite 8.0.16, 1,839 modules transformed. |
+| Generated signed v2 `TestClient` response through the frontend validator | PASS — raw response and display projection accepted; 8 objectives, 2 scenarios, no `behavior_profile` in the projection. |
+| `.venv312\Scripts\python.exe -B -m pytest -p no:cacheprovider -o "addopts=" tests\unit\backend\test_unified_scoring.py tests\unit\backend\test_unified_scoring_invariants.py tests\integration\api\test_phase4_secure_anonymous_api.py --basetemp C:\tmp\alterscore-phase6-codex-focused` | PASS — 157 passed, 1 known `PytestConfigWarning`. |
+| `.venv312\Scripts\python.exe -B -m pytest -p no:cacheprovider -o "addopts=" tests\unit\backend tests\integration\api --basetemp C:\tmp\alterscore-phase6-codex-backend-api --tb=short -q` | PASS — 284 passed, 1 known `PytestConfigWarning`. |
+| `git diff --check` | PASS — no whitespace errors; only pre-existing line-ending/global-ignore warnings. |
+
+- The in-app browser is isolated from the local Vite server, so it could not
+  perform a live visual smoke test. Static semantic inspection, responsive and
+  reduced-motion CSS review, accessible-name coverage, lint, and production
+  build checks passed instead.
+
+### Decision and next action
+
+`PASS`. Phase 6 satisfies its frozen explanation arithmetic, objective worked
+solutions, branch replay, evidence, privacy, public-boundary, accessibility,
+and scope gates after the scoped corrections. Luna may implement Phase 7
+legacy separation and runtime cleanup only, then stop at `READY FOR REVIEW`.
+Phase 8, deployment, CI work, and final audit must not begin.

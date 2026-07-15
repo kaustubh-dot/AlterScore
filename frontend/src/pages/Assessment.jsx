@@ -8,8 +8,9 @@ import {
   buildScoreSubmission,
   getAssessmentSteps,
   getStepLabel,
+  isV2ScoreResponse,
   saveSignedResult,
-  toSignedResultSummary,
+  toV2DetailedResult,
   validateAllResponses,
   validateFormResponse,
   validateStepResponse,
@@ -234,8 +235,8 @@ export default function Assessment() {
   };
 
   const handleScoreResult = (scoreData) => {
-    const signedSummary = toSignedResultSummary(scoreData);
-    if (!signedSummary || !saveSignedResult(signedSummary)) {
+    const detailedResult = isV2ScoreResponse(scoreData) ? toV2DetailedResult(scoreData) : null;
+    if (!detailedResult || !saveSignedResult(detailedResult)) {
       actionLockRef.current = false;
       setSubmissionPayload(null);
       setIsSubmitting(false);
@@ -243,7 +244,7 @@ export default function Assessment() {
       setFormError('The server response could not be verified for this browser session. Request a fresh assessment form.');
       return;
     }
-    transitionTo('/results', { state: signedSummary });
+    transitionTo('/results', { state: detailedResult });
   };
 
   const handleSubmissionBack = () => {

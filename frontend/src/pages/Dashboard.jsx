@@ -4,14 +4,15 @@ import { getV2VerificationUrl } from '../lib/api';
 import {
   clearSignedResult,
   getStoredSignedResult,
+  isV2DetailedResult,
 } from '../lib/assessmentV2';
 import usePageTransition from '../hooks/usePageTransition';
 import useSound from '../hooks/useSound';
 import './Dashboard.css';
 
-function displayScore(value) {
-  if (Number.isInteger(value)) return (value / 100).toFixed(2);
-  return Number.isFinite(Number(value)) ? Number(value).toFixed(2) : '—';
+function displayScore(value, detailed) {
+  const number = detailed ? Number(value) : Number(value) / 100;
+  return Number.isFinite(number) ? number.toFixed(2) : '—';
 }
 
 export default function Dashboard() {
@@ -32,6 +33,7 @@ export default function Dashboard() {
     );
   }
 
+  const detailed = isV2DetailedResult(result);
   const verificationUrl = getV2VerificationUrl(result.result_id);
   const clearResult = () => {
     playClick();
@@ -68,23 +70,23 @@ export default function Dashboard() {
           </section>
 
           <div className="grid-6-6">
-            <section className="dashboard-panel-card glass">
-              <div className="panel-header"><h2 className="panel-title">Domain summaries</h2><span className="panel-badge">Display values</span></div>
+            <section className="dashboard-panel-card glass" aria-labelledby="dashboard-domains-heading">
+              <div className="panel-header"><h2 id="dashboard-domains-heading" className="panel-title">Domain summaries</h2><span className="panel-badge">Display values</span></div>
               <div className="dashboard-metric-list">
-                <div><span>Financial knowledge</span><strong className="font-mono">{displayScore(result.objective_score)}</strong></div>
-                <div><span>Decision judgement</span><strong className="font-mono">{displayScore(result.judgment_score)}</strong></div>
+                <div><span>Financial knowledge</span><strong className="font-mono">{displayScore(result.objective_score, detailed)}</strong></div>
+                <div><span>Decision judgement</span><strong className="font-mono">{displayScore(result.judgment_score, detailed)}</strong></div>
                 <div><span>Illustrative transformation</span><strong className="font-mono">{result.legacy_demo_score}</strong></div>
               </div>
             </section>
-            <section className="dashboard-panel-card glass">
-              <div className="panel-header"><h2 className="panel-title">Integrity</h2><span className="panel-badge">{result.integrity_status}</span></div>
+            <section className="dashboard-panel-card glass" aria-labelledby="dashboard-integrity-heading">
+              <div className="panel-header"><h2 id="dashboard-integrity-heading" className="panel-title">Integrity</h2><span className="panel-badge">{result.integrity_status}</span></div>
               <p className="dashboard-panel-copy">The server issued this form, validated the response IDs, consumed the attempt once, and signed the result.</p>
               <a className="dashboard-verification-link" href={verificationUrl} target="_blank" rel="noreferrer">Verify signed summary <ExternalLink size={14} aria-hidden="true" /></a>
             </section>
           </div>
 
-          <section className="dashboard-panel-card glass">
-            <div className="panel-header"><h2 className="panel-title">Limitations</h2><span className="panel-badge">Public boundary</span></div>
+          <section className="dashboard-panel-card glass" aria-labelledby="dashboard-limitations-heading">
+            <div className="panel-header"><h2 id="dashboard-limitations-heading" className="panel-title">Limitations</h2><span className="panel-badge">Public boundary</span></div>
             <ul className="dashboard-limitations">{result.limitations.map((limitation) => <li key={limitation}>{limitation}</li>)}</ul>
           </section>
         </div>

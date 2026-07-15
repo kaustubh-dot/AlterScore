@@ -10,11 +10,13 @@ import {
   buildScoreSubmission,
   getAssessmentSteps,
   getStoredSignedResult,
+  isV2DetailedResult,
   isCurrentV2SignedResultSummary,
   isV2ScoreResponse,
   isV2SignedResultSummary,
   parseIntegerAnswer,
   saveSignedResult,
+  toV2DetailedResult,
   toSignedResultSummary,
   validateAllResponses,
   validateFormResponse,
@@ -142,6 +144,119 @@ function makeAnswers(form) {
   return answers;
 }
 
+const OBJECTIVE_VALUE_NAMES = {
+  cash_flow: ['opening_cash', 'inflow', 'expenses'],
+  simple_interest: ['principal', 'annual_rate_percent', 'term_years'],
+  borrowing_cost_comparison: [
+    'principal', 'term_years', 'offer_a_rate_percent', 'offer_a_fee',
+    'offer_b_rate_percent', 'offer_b_fee', 'offer_a_total_repayment', 'offer_b_total_repayment',
+  ],
+  discount_price: ['marked_price', 'discount_rate_percent', 'discount'],
+  inflation_price: ['current_price', 'inflation_rate_percent'],
+  due_date_shortfall: ['due_amount', 'available_amount'],
+  repayment_total: ['principal', 'annual_rate_percent', 'term_years', 'fee', 'interest'],
+  emergency_buffer: ['monthly_essential_costs', 'buffer_months'],
+};
+
+const STATE_FIELDS = [
+  'cash_available', 'required_payments_due', 'required_payments_met', 'confirmed_inflows',
+  'essential_expenses', 'emergency_buffer', 'new_borrowing', 'borrowing_cost',
+  'avoidable_cost', 'late_payments', 'unfunded_commitments',
+];
+
+function makeState(seed = 0) {
+  return {
+    cash_available: 1000 + seed,
+    required_payments_due: 500,
+    required_payments_met: 250,
+    confirmed_inflows: 300,
+    essential_expenses: 200,
+    emergency_buffer: 100,
+    new_borrowing: 0,
+    borrowing_cost: 0,
+    avoidable_cost: 0,
+    late_payments: 0,
+    unfunded_commitments: 0,
+  };
+}
+
+function zeroDelta() {
+  return Object.fromEntries(STATE_FIELDS.map((field) => [field, 0]));
+}
+
+function makeScenario(index, scenarioScore = 80) {
+  const startingState = makeState(index * 100);
+  let before = startingState;
+  const timeline = [1, 2, 3].map((stage) => {
+    const delta = zeroDelta();
+    delta.cash_available = stage * 10;
+    const after = { ...before, cash_available: before.cash_available + delta.cash_available };
+    const entry = {
+      stage_index: stage,
+      presentation_id: opaqueIdentifier('item', `scenario_${index}_stage_${stage}`),
+      selected_option_label: `Issued decision ${stage}`,
+      state_before: before,
+      state_delta: delta,
+      state_after: after,
+    };
+    before = after;
+    return entry;
+  });
+  return {
+    scenario_presentation_id: opaqueIdentifier('scenario', `scenario_${index}`),
+    starting_state: startingState,
+    timeline,
+    terminal_state: before,
+    dimensions: {
+      obligation_coverage: scenarioScore,
+      liquidity_retention: scenarioScore,
+      cost_efficiency: scenarioScore,
+      plan_feasibility: scenarioScore,
+    },
+    scenario_score: scenarioScore,
+  };
+}
+
+function makeExplanation() {
+  return {
+    formula: {
+      objective_score: 75,
+      judgment_score: 68.5,
+      objective_weight: '0.55',
+      judgment_weight: '0.45',
+      objective_contribution_exact: '165/4',
+      judgment_contribution_exact: '1233/40',
+      weighted_total_exact: '2883/40',
+      financial_decision_index: 72,
+      legacy_demo_score: 696,
+    },
+    objective_items: Object.entries(OBJECTIVE_VALUE_NAMES).map(([concept, names], index) => ({
+      presentation_id: opaqueIdentifier('item', `objective_explanation_${index}`),
+      concept,
+      issued_values: names.map((name, valueIndex) => ({ name, value: valueIndex + 10, unit: 'INR' })),
+      submitted_answer: index < 2 ? 31 : 30,
+      correct_answer: 30,
+      is_correct: index >= 2,
+      worked_calculation: '10 + 20 = 30 INR',
+      concept_explanation: `The ${concept} calculation checks the quantities before acting.`,
+    })),
+    static_sjt_items: Array.from({ length: 4 }, (_, index) => ({
+      presentation_id: opaqueIdentifier('item', `static_explanation_${index}`),
+      selected_option_label: `Selected action ${index}`,
+      principle: 'protect required payments',
+      protects: 'This protects timing and obligations.',
+      risks: 'The trade-off should still be checked.',
+      stronger_principle: 'Stronger principle: protect required payments',
+    })),
+    branching_scenarios: [makeScenario(0), makeScenario(1)],
+    recommendations: [{
+      recommendation: 'Review the first calculation before acting.',
+      evidence_type: 'objective',
+      evidence_ids: [opaqueIdentifier('item', 'objective_explanation_0')],
+    }],
+  };
+}
+
 function makeResult(expiresAt = '2026-07-16T10:00:00Z') {
   return {
     ...V2_CONTRACT,
@@ -163,7 +278,7 @@ function makeResult(expiresAt = '2026-07-16T10:00:00Z') {
     limitations: ['Educational readiness rubric only.'],
     result_signature: `hmac-sha256-v1:${'A'.repeat(43)}`,
     explanation_digest: `sha256:${'a'.repeat(64)}`,
-    explanation: { phase: 'server-only detail' },
+    explanation: makeExplanation(),
   };
 }
 
@@ -252,7 +367,7 @@ test('handles v2 lifecycle errors and retry metadata without exposing raw data',
   }), 7);
 });
 
-test('projects the response to the redacted signed summary before navigation or storage', () => {
+test('retains a bounded signed explanation projection without raw submission or behavior data', () => {
   const storage = new MemoryStorage();
   const now = Date.parse('2026-07-15T10:00:00Z');
   const result = {
@@ -261,26 +376,24 @@ test('projects the response to the redacted signed summary before navigation or 
       presentation_id: opaqueIdentifier('behavior', index),
       selected_value: 'Always',
     })),
-    explanation: {
-      objective_items: [{ correct_answer: 42, worked_calculation: 'server-only' }],
-      narrative: 'respondent-only text',
-    },
   };
   assert.equal(isV2ScoreResponse(result), true);
+  const detailed = toV2DetailedResult(result);
+  assert.equal(isV2DetailedResult(detailed), true);
   const summary = toSignedResultSummary(result);
   assert.equal(isV2SignedResultSummary(summary), true);
   assert.equal(isCurrentV2SignedResultSummary(summary, now), true);
   assert.equal(summary.objective_score, 7500);
   assert.equal(summary.judgment_score, 6850);
   assert.equal(saveSignedResult(result, now, storage), false);
-  assert.equal(saveSignedResult(summary, now, storage), true);
+  assert.equal(saveSignedResult(detailed, now, storage), true);
   assert.equal(JSON.parse(storage.getItem(V2_RESULT_STORAGE_KEY)).result.result_signature.startsWith('hmac-sha256-v1:'), true);
   assert.equal(storage.getItem(V2_RESULT_STORAGE_KEY).includes('attempt_token'), false);
   assert.equal(storage.getItem(V2_RESULT_STORAGE_KEY).includes('"behavior_profile":'), false);
-  assert.equal(storage.getItem(V2_RESULT_STORAGE_KEY).includes('"explanation":'), false);
-  assert.equal(storage.getItem(V2_RESULT_STORAGE_KEY).includes('"correct_answer":'), false);
+  assert.equal(storage.getItem(V2_RESULT_STORAGE_KEY).includes('"explanation":'), true);
+  assert.equal(storage.getItem(V2_RESULT_STORAGE_KEY).includes('"correct_answer":'), true);
   assert.equal(storage.getItem(V2_RESULT_STORAGE_KEY).includes('"narrative":'), false);
-  assert.deepEqual(getStoredSignedResult(now + V2_RESULT_TTL_MS - 1, storage), summary);
+  assert.deepEqual(getStoredSignedResult(now + V2_RESULT_TTL_MS - 1, storage), detailed);
   assert.equal(getStoredSignedResult(now + V2_RESULT_TTL_MS, storage), null);
   assert.equal(storage.getItem(V2_RESULT_STORAGE_KEY), null);
 });

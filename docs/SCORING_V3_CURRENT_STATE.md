@@ -8,17 +8,17 @@
 
 | Field | Value |
 |---|---|
-| Updated | 2026-07-15 18:24:40 +05:30 |
+| Updated | 2026-07-15 21:24:38 +05:30 |
 | Branch | `codex/scoring-production-hardening` |
 | HEAD before v3 phased work | `aacf2b52f6d0d6eeed6eef5d90e73a4716981793` |
 | Review-start HEAD | `0c398d6d14bb3ae65360b02863d5142f4df1b043` |
 | Review-start commit | `0c398d6 feat: add deterministic v3 scoring phases` |
-| Current HEAD | `078aedf2237aece5a71b72d6bbeafc2e34c607dd` |
-| Current HEAD commit | `078aedf feat: harden phase 4 anonymous scoring API` |
-| Active phase | Phase 6 - Result explainability (not started) |
-| Luna status | Complete (Phase 5 implementation) |
-| Codex review | Passed (Phase 5) |
-| Overall status | Phase 5 passed Codex review after scoped privacy, validation, cache, and HTTPS recovery fixes; Phase 6 has not started |
+| Review baseline HEAD | `d74e59d5b8577d301646f73e049ca4a3588798f` |
+| Review baseline commit | `d74e59d fix: harden phase 5 client assessment boundary` |
+| Active phase | Phase 7 - Legacy separation and runtime cleanup (not started) |
+| Luna status | Not started (Phase 7) |
+| Codex review | Passed (Phase 6) |
+| Overall status | Phase 6 passed Codex review after scoped explanation-contract, evidence, accessibility, and privacy fixes; Phase 7 has not started |
 
 ## Current branch condition
 
@@ -42,7 +42,9 @@
   promotion.
 - No runtime scoring, API, question-bank, frontend source, deployment workflow,
   or checked-in model artifact was intentionally changed by Phase 0.
-- The checked-in HEAD predates the uncommitted hardening work.
+- The Phase 6 review baseline included the Phase 5 review correction;
+  substantial unrelated hardening work remains uncommitted in the preserved
+  worktree.
 - Phase 1 added only the new backend-owned instrument package and its isolated
   unit test, plus this tracking update. Existing legacy scorer, schemas,
   frontend, model artifacts, deployment workflow, and prior untracked files
@@ -71,6 +73,18 @@
   only the bounded 24-hour `sessionStorage` signed-result cache; legacy
   `localStorage` result authorities and public admin passcode detection were
   removed from the active frontend.
+- Phase 6 now retains a detailed, signed score projection in `sessionStorage`
+  for the active browser session, while preserving the older redacted-summary
+  fallback. The detailed projection intentionally omits `behavior_profile`;
+  the result page presents the frozen formula reconciliation, all
+  eight worked objective explanations, four principle-level static-SJT
+  explanations, two three-stage branching replays, evidence-linked
+  recommendations, limitations, and the redacted verification link.
+- Phase 6 adds strict client validation for the nested explanation shape,
+  exact rational contribution fractions, state-transition continuity,
+  recommendation evidence, and the absence of option IDs or hidden rubric
+  fields. The active frontend still has no scoring authority and no backend
+  formula/API/deployment/model-artifact changes were made in this phase.
 
 ## Work completed before v3
 
@@ -639,14 +653,90 @@ UI before a bearer token can be attached.
 - No Phase 6 code, explanation rendering, legacy retirement, deployment, or
   model artifact work was introduced. Unrelated dirty paths remain unstaged.
 
+## Phase 6 implementation verification
+
+Phase 6 result explainability is complete and handed to Codex at `READY FOR
+REVIEW`. The active frontend consumes the frozen `ScoreResponse.explanation`
+payload already produced by Phase 3/4; no new backend explanation fields,
+formulas, signing projections, recommendation rules, or transport contracts
+were introduced.
+
+- `frontend/src/lib/assessmentV2.js` now validates the complete public
+  explanation shape: exact formula fractions and half-up index reconciliation,
+  all eight canonical objective issued-value sets, four static-SJT principle
+  records, two three-stage branching timelines with state continuity, and
+  recommendation evidence tied to actual missed or weak items.
+- The active score flow converts a signed `ScoreResponse` to a bounded
+  24-hour detailed display projection before session storage or route state.
+  It retains the explanation evidence needed for the result route but omits
+  behavior values, attempt tokens, submission maps, and narrative; older
+  redacted summaries remain readable as summary-only recovery states.
+- `frontend/src/pages/Results.jsx` and its styles now present the primary and
+  secondary scores, formula waterfall, worked objective solutions, selected
+  principle-level SJT evidence, state-before/delta/state-after branching
+  replays, terminal dimensions, deterministic recommendations, limitations,
+  and the redacted verification link. No option IDs, rubric points, complete
+  SJT scoring table, SHAP language, probability, or lending claim is shown.
+- `frontend/src/pages/Dashboard.jsx` remains summary-only and correctly
+  handles either a detailed Phase 6 cache entry or a legacy redacted summary.
+- Legacy question-bank files, v1 routes, analytics, deployment workflows,
+  model artifacts, and Phase 7 cleanup targets remain preserved and were not
+  changed for this phase.
+
+### Phase 6 verification evidence
+
+- `npm.cmd run lint` from `frontend`: **PASS**, ESLint exit 0.
+- `npm.cmd run build` from `frontend`: **PASS**, Vite 8.0.16, 1,839 modules
+  transformed, production assets emitted under ignored `frontend/dist`.
+- `npm.cmd run test:phase5` from `frontend`: **PASS**, 11 tests passed.
+- `npm.cmd run test:phase6` from `frontend`: **PASS**, 7 tests passed. The
+  suite independently checks all eight objective concepts, formula fractions,
+  server-consistent decimal-2 judgment reconciliation, half-up boundaries,
+  recommendation evidence, timeline continuity, hidden-field rejection, and
+  result-page public boundaries.
+- Read-only backend-to-frontend contract probe using an actual generated and
+  signed v2 response: **PASS**, raw response and its detailed projection were
+  accepted; the projection had eight objectives, two scenarios, and no
+  `behavior_profile` field.
+- Focused v2 API regression:
+  `.venv312\Scripts\python.exe -B -m pytest -p no:cacheprovider -o
+  "addopts=" tests\integration\api\test_phase4_secure_anonymous_api.py
+  --basetemp C:\tmp\alterscore-phase6-focused --tb=short -q`: **17 passed
+  in 7.35 s**.
+- Combined backend unit/API regression:
+  `.venv312\Scripts\python.exe -B -m pytest -p no:cacheprovider -o
+  "addopts=" tests\unit\backend tests\integration\api
+  --basetemp C:\tmp\alterscore-phase6-backend-api --tb=short -q`: **284
+  passed in 37.90 s**.
+- Python Ruff on the v2/unified-scoring and focused API-test scope: **All
+  checks passed!**
+- `git diff --check`: **PASS**; only preserved LF/CRLF normalization and
+  inaccessible global Git-ignore warnings were emitted.
+
+### Phase 6 limitations and next boundary
+
+- The detailed response is intentionally session-only; clearing the browser
+  cache or losing the process-local result makes the detailed evidence
+  unavailable, while the UI can only show a still-valid redacted summary.
+- The isolated in-app browser could not connect to the local Vite server, so
+  visual automation was unavailable. Codex independently reviewed the result
+  semantics, responsive/reduced-motion CSS, accessible link labels, and
+  focused contract coverage; lint and the production build passed.
+- One exploratory Ruff command incorrectly included the JavaScript adapter and
+  reported parser errors; the corrected Python-only command above passed. No
+  source failure resulted from that diagnostic command.
+- Production readiness remains fail-closed until deployment supplies the
+  secure signing secret and trusted HTTPS ASGI scheme.
+
 ## Immediate next action
 
-Luna may implement Phase 6 result explainability only, then stop at `READY FOR
-REVIEW`; do not begin Phase 7 or any cleanup, deployment, or release work.
+Luna may implement Phase 7 legacy separation and runtime cleanup only, then
+stop at `READY FOR REVIEW`. Do not begin Phase 8, CI/deployment work, or a
+release operation.
 
 ## Blockers
 
-None for Phase 6 implementation. Production readiness remains fail-closed
+None for Phase 7 implementation. Production readiness remains fail-closed
 until deployment supplies the required signing secret and trusted HTTPS ASGI
 scheme. All unrelated dirty-worktree paths remain preserved and unstaged.
 
