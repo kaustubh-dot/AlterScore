@@ -48,7 +48,7 @@ scope belongs in `SCORING_V3_LUNA_PLAN.md`.
 | 2 | Branching financial-state engine | Complete | Passed | PASSED |
 | 3 | Unified deterministic scorer | Complete | Passed | PASSED |
 | 4 | Secure anonymous API | Complete | Pending | READY FOR REVIEW |
-| 5 | Frontend assessment migration | Not started | Pending | NOT STARTED |
+| 5 | Frontend assessment migration | Complete | Pending | READY FOR REVIEW |
 | 6 | Result explainability | Not started | Pending | NOT STARTED |
 | 7 | Legacy separation and runtime cleanup | Not started | Pending | NOT STARTED |
 | 8 | CI, deployment, and operational hardening | Not started | Pending | NOT STARTED |
@@ -2261,3 +2261,224 @@ now implement Phase 5 frontend assessment migration only and must stop at
 `READY FOR REVIEW`; it must not begin Phase 6. Production v2 remains
 fail-closed until a secure signing secret and trusted HTTPS ASGI scheme are
 configured.
+
+---
+
+## Phase 5 implementation checkpoint - iteration 1
+
+### Metadata
+
+- Date/time: 2026-07-15 17:50:23 +05:30.
+- Branch: `codex/scoring-production-hardening`.
+- Starting HEAD: `078aedf2237aece5a71b72d6bbeafc2e34c607dd`.
+- Ending HEAD: `078aedf2237aece5a71b72d6bbeafc2e34c607dd`.
+- Starting and ending index: clean; all work remains uncommitted.
+- The worktree was already substantially dirty. Existing tracked changes,
+  existing untracked paths, model artifacts, and the preserved legacy question
+  bank were not reset, cleaned, regenerated, committed, pushed, or discarded.
+- Authority: the user completed the Phase 4 review and explicitly authorized
+  Phase 5 frontend assessment migration. This checkpoint authorizes only Phase
+  5 review; it does not begin Phase 6 or authorize cleanup, deployment, commit,
+  push, or model-artifact regeneration.
+- Luna status: `READY FOR REVIEW`.
+
+### Scope completed
+
+- Migrated the active frontend assessment from the local question bank to the
+  frozen v2 form and score routes.
+- Added strict client-side version/form-shape checks for exactly 8 objective,
+  4 static-SJT, 6 branching, 6 behavior, and optional narrative items.
+- Preserved the server-issued item order, opaque presentation/option IDs, and
+  randomized option order; branching stages now accept exactly one issued
+  option instead of the legacy Most/Least interaction.
+- Kept objective responses as client-validated safe integers without inventing
+  hidden bounds, keys, rubrics, weights, generation tables, or explanations.
+- Sent the attempt token only as `Authorization: Bearer ...` to
+  `POST /api/v2/assessment/score`; it is not included in JSON, URLs,
+  navigation state, or browser storage.
+- Added StrictMode-safe single-request lifecycle handling, abort cleanup,
+  timeout/cancellation handling, structured 409/422/429/503 handling, fresh
+  form recovery, immediate retry controls, focus management, live progress,
+  radiogroup semantics, validation announcements, mobile touch targets, and
+  reduced-motion handling.
+- Replaced the legacy result/dashboard authorities with the minimal v2 signed
+  summary. The signed result alone is retained in a bounded 24-hour
+  `sessionStorage` entry with expiry and clear actions. Detailed explanation
+  rendering remains Phase 6 scope.
+- Removed the active frontend import path to `frontend/src/data/questions.js`
+  and removed public `VITE_ADMIN_PASSCODE` detection. The legacy file remains
+  preserved for the later Phase 7 retirement decision.
+- Added dependency-free Node contract tests and a production-bundle scan over
+  every emitted asset.
+
+### Files
+
+- Added:
+  - `frontend/src/lib/assessmentV2.js`
+  - `frontend/tests/phase5-contract.test.mjs`
+- Modified for Phase 5 frontend migration:
+  - `frontend/README.md`
+  - `frontend/package.json`
+  - `frontend/src/lib/api.js`
+  - `frontend/src/utils/apiErrors.js`
+  - `frontend/src/pages/Assessment.jsx`
+  - `frontend/src/pages/Assessment.css`
+  - `frontend/src/pages/Processing.jsx`
+  - `frontend/src/pages/Processing.css`
+  - `frontend/src/pages/Results.jsx`
+  - `frontend/src/pages/Results.css`
+  - `frontend/src/pages/Dashboard.jsx`
+  - `frontend/src/pages/Dashboard.css`
+  - `frontend/src/pages/Landing.jsx`
+  - `frontend/src/components/layout/Footer.jsx`
+- Preserved existing dirty frontend files and legacy assets, including
+  `frontend/src/data/questions.js`; no files were deleted or archived for
+  Phase 5.
+
+### Public behavior and contracts
+
+- The assessment begins by requesting a fresh HTTPS-only v2 form. A valid form
+  is held in memory only while the attempt is active.
+- The UI renders the server prompt and labels without displaying opaque IDs,
+  hidden answer keys, rubrics, transition deltas, seeds, or scoring rules.
+- Score JSON is built with only the frozen three version literals,
+  `responses`, `behavior_profile`, and optional `narrative`; no client-selected
+  attempt ID or token is sent in the body.
+- Expired, consumed, stale, timeout, and uncertain-network submission states
+  offer a new server form. Validation and rate-limit errors return to the UI
+  without a page reload or artificial cooldown.
+- Results show only the primary index, illustrative legacy transformation,
+  domain display values, integrity status, limitations, and a verification
+  link. The frontend does not claim repayment probability, approval,
+  eligibility, pricing, a loan amount, or a human/identity verification.
+
+### Subagents used
+
+| Task | Mode | File ownership | Result | Luna verification |
+|---|---|---|---|---|
+| Fermat frontend/API seam audit | read-only explorer | none | Mapped v2 form/score boundaries, branching single-choice transport, HTTPS, and legacy imports. | Findings incorporated into the UI/API adapter; no edits accepted from the agent. |
+| Gibbs accessibility/error-flow audit | read-only explorer | none | Identified StrictMode cancellation, focus/ARIA, 409/422/429/503, timeout, and fresh-attempt gaps. | All bounded Phase 5 items were implemented and covered by source-contract tests plus lint/build. |
+| Hilbert bundle secrecy audit | read-only explorer | none | Identified legacy question/result authorities, persistent cache, public passcode exposure, and whole-bundle scan requirements. | Active import/cache/passcode paths were removed; final emitted-asset scan passed. |
+
+- No subagent edited files, changed shared contracts, modified status, reset
+  the worktree, switched branches, committed, pushed, deployed, or started
+  Phase 6.
+
+### Tests executed
+
+| Command | Result | Exact result / notes |
+|---|---|---|
+| `npm.cmd run lint` from `frontend` | PASS | ESLint exit 0 with no findings. |
+| `npm.cmd run build` from `frontend` | PASS | Vite 8.0.16; 1,839 modules transformed; production bundle emitted under ignored `frontend/dist`; exit 0. |
+| `npm.cmd run test:phase5` from `frontend` | PASS | 9 passed in 0.15s; form/version/numeric/branching/behavior/cache/error/accessibility/lifecycle/bundle tests all passed. |
+| `.venv312\Scripts\python.exe -B -m pytest -p no:cacheprovider -o "addopts=" tests\integration\api\test_phase4_secure_anonymous_api.py --basetemp C:\tmp\alterscore-phase5-phase4-focused --tb=short -q` | PASS | 17 passed in 7.19s; one expected `PytestConfigWarning` because `cacheprovider` was disabled. |
+| `.venv312\Scripts\python.exe -B -m pytest -p no:cacheprovider -o "addopts=" tests\unit\backend tests\integration\api --basetemp C:\tmp\alterscore-phase5-backend-api --tb=short -q` | PASS | 284 passed in 24.63s; same expected `PytestConfigWarning`. |
+| `.venv312\Scripts\ruff.exe check backend\app\api\v2 backend\app\main.py backend\app\core\settings.py tests\integration\api\test_phase4_secure_anonymous_api.py` | PASS | `All checks passed!`. |
+| `git diff --check` | PASS | Exit 0; preserved LF/CRLF normalization warnings only. The inaccessible global Git ignore warning was also preserved in Git output. |
+
+### Failures and known limitations
+
+- An isolated first build command targeting
+  `C:\tmp\alterscore-phase5-frontend-dist` failed before compilation with
+  `EPERM` because the sandbox could not create that output directory. The
+  normal ignored `frontend/dist` build passed immediately afterward; no
+  source or tracked artifact was affected.
+- A browser automation/accessibility runner is not installed in the frontend;
+  accessibility coverage is static contract coverage plus the existing CSS
+  focus/reduced-motion implementation. Visual browser verification remains a
+  review follow-up.
+- v2 form and result state remain process-local on the backend and disappear
+  on restart. The browser cache retains only the signed result for at most 24
+  hours and cannot recover detailed evidence after it is cleared.
+- Deployment still must provide a secure signing secret and trusted HTTPS ASGI
+  scheme. Phase 5 does not change deployment, CI, v1 retirement, analytics,
+  model artifacts, or legacy-file cleanup.
+
+### Diff hygiene and stop confirmation
+
+- Starting and ending HEAD are identical; the index is clean and all existing
+  work remains uncommitted.
+- No model artifact was generated or modified by Phase 5. The ignored
+  `frontend/dist` output was produced only for verification.
+- Phase 6 result explainability, Phase 7 cleanup/legacy retirement, deployment,
+  commit, push, reset, checkout, branch operation, and artifact regeneration
+  were not started.
+
+Phase 5 is complete and handed to Codex for review at `READY FOR REVIEW`.
+
+---
+
+## Codex Phase 5 PASS review
+
+### Metadata and scope
+
+- Date/time: 2026-07-15 18:24:40 +05:30.
+- Branch and review HEAD: `codex/scoring-production-hardening` at
+  `078aedf2237aece5a71b72d6bbeafc2e34c607dd`
+  (`feat: harden phase 4 anonymous scoring API`).
+- Decision: `PASS` after Codex corrected four defects entirely within the
+  completed Phase 5 frontend scope. Phase 6 has not started.
+- The already-dirty worktree and all unrelated tracked and untracked files
+  were preserved. Only the Phase 5 artifacts and these tracking records are
+  included in the scoped commit that follows this review.
+
+### Review findings corrected before approval
+
+- **P1, privacy boundary:** `Assessment.jsx` formerly passed and cached the
+  full score response, which can contain behavior selections and the Phase 6
+  explanation payload. `assessmentV2.js` now projects it to an exact signed,
+  redacted verification summary before route state or `sessionStorage`; the
+  latter rejects raw responses.
+- **P1, fail-closed transport:** `api.js` allowed an insecure configured API
+  URL and synchronously threw a secure-transport failure, which could leave
+  the UI loading. Absolute API origins must now be HTTPS and failures are
+  returned as handled rejected requests before any bearer header is assembled.
+- **P2, stale/malformed recovery:** strict signed-summary/cache validation now
+  clears malformed, expired, or lifecycle-inconsistent cache entries instead
+  of rendering them; persisted expiry is the server's canonical 24-hour
+  expiry, never a renewed client TTL.
+- **P2, contract validation:** form validation now rejects extra fields,
+  malformed opaque IDs/tokens, duplicate options, leaked fields, incomplete
+  decision-simulation stages, and invalid behavior-label sets before the UI
+  can render or submit them.
+
+### Independent verification
+
+| Command | Result | Exact result / notes |
+|---|---|---|
+| `npm.cmd run test:phase5` from `frontend` | PASS | 11 passed, 0 failed, 0 skipped in 398.646 ms. Includes redaction/cache, malformed form, HTTPS transport, StrictMode/accessibility, and emitted-bundle checks. |
+| `npm.cmd run lint` from `frontend` | PASS | ESLint exit 0. |
+| `npm.cmd run build` from `frontend` | PASS | Vite 8.0.16 transformed 1,839 modules and emitted ignored `frontend/dist` assets. |
+| `.venv312\\Scripts\\python.exe -B -m pytest -p no:cacheprovider -o 'addopts=' tests\\integration\\api\\test_phase4_secure_anonymous_api.py --basetemp C:\\tmp\\alterscore-phase5-codex-final-api-2 --tb=short -q` | PASS | 17 passed in 7.81 s; one expected `PytestConfigWarning` for the disabled cache provider. |
+| `.venv312\\Scripts\\python.exe -B -m pytest -p no:cacheprovider -o 'addopts=' tests\\unit\\backend tests\\integration\\api --basetemp C:\\tmp\\alterscore-phase5-codex-final-backend-api --tb=short -q` | PASS | 284 passed in 16.32 s; same expected warning. |
+| `git diff --check` | PASS | Exit 0; only pre-existing global-ignore and LF/CRLF warnings were emitted. |
+
+Manual in-app browser checks verified that HTTP transport is refused before a
+token can be sent, the assessment error exposes a functional `Try again`
+control without reload, and the mobile Results route presents the accessible
+no-current-result recovery state. The temporary responsive viewport override
+was reset and the review tab was closed.
+
+### Subagent and scope audit
+
+- Luna recorded Fermat (frontend/API seams), Gibbs (accessibility/error flow),
+  and Hilbert (bundle secrecy). Each was read-only with no file ownership; Luna
+  retained integration, tracking, contract, and git ownership. Their results
+  and Luna's verification were inspected rather than trusted as proof.
+- Codex used three independent read-only audits for UI/accessibility,
+  contract/bundle, and adversarial tests. They found the corrected findings
+  above. No Luna or Codex review subagent edited files, overlapped a writer,
+  changed contracts or tracking, touched branch/HEAD/index, or introduced
+  Phase 6 code.
+- The reviewed Phase 5 set is limited to the frontend migration files,
+  `frontend/src/lib/assessmentV2.js`, `frontend/tests/phase5-contract.test.mjs`,
+  and the Phase 5 tracker records. No files were deleted or archived for this
+  phase; legacy authorities remain preserved for Phase 7.
+
+### Decision and next action
+
+`PASS`. Phase 5 satisfies its frontend/API parity, privacy, strict-form,
+StrictMode/recovery, accessibility, responsive, and production-bundle review
+gates after the scoped fixes. Luna may now implement Phase 6 result
+explainability only and must stop at `READY FOR REVIEW`; Phase 7 must not
+begin.

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-function normalizeApiBaseUrl(rawValue) {
+export function normalizeApiBaseUrl(rawValue) {
   if (!rawValue) {
     return '/api';
   }
@@ -10,17 +10,64 @@ function normalizeApiBaseUrl(rawValue) {
     return '/api';
   }
 
-  return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`;
+  if (trimmed.startsWith('/')) {
+    return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`;
+  }
+
+  try {
+    const configuredUrl = new URL(trimmed);
+    if (configuredUrl.protocol !== 'https:') return null;
+    return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`;
+  } catch {
+    return null;
+  }
 }
 
-export const API_BASE_URL = normalizeApiBaseUrl(import.meta.env.VITE_API_BASE_URL);
+const configuredApiBaseUrl = import.meta.env?.VITE_API_BASE_URL;
+const normalizedApiBaseUrl = normalizeApiBaseUrl(configuredApiBaseUrl);
+const apiConfigurationError = configuredApiBaseUrl && !normalizedApiBaseUrl
+  ? new Error('The assessment API must use an HTTPS URL.')
+  : null;
+
+export const API_BASE_URL = normalizedApiBaseUrl || '/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
+  timeout: 30000,
 });
 
 export function getHealthUrl() {
   return `${API_BASE_URL}/health`;
+}
+
+function getSecureApiTransportError() {
+  if (apiConfigurationError) return apiConfigurationError;
+  if (API_BASE_URL.startsWith('/')
+    && typeof window !== 'undefined'
+    && window.location.protocol !== 'https:') {
+    return new Error('The assessment API requires HTTPS before an attempt token can be sent.');
+  }
+  return null;
+}
+
+export function fetchV2AssessmentForm(config = {}) {
+  const transportError = getSecureApiTransportError();
+  if (transportError) return Promise.reject(transportError);
+  return api.get('/v2/assessment/form', config);
+}
+
+export function submitV2Assessment(form, submission, config = {}) {
+  const transportError = getSecureApiTransportError();
+  if (transportError) return Promise.reject(transportError);
+  const headers = {
+    ...(config.headers || {}),
+    Authorization: `Bearer ${form.attempt_token}`,
+  };
+  return api.post('/v2/assessment/score', submission, { ...config, headers });
+}
+
+export function getV2VerificationUrl(resultId) {
+  return `${API_BASE_URL}/v2/results/verify/${encodeURIComponent(resultId)}`;
 }
 
 export default api;

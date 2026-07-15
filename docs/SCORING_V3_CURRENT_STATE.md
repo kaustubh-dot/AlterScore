@@ -8,15 +8,17 @@
 
 | Field | Value |
 |---|---|
-| Updated | 2026-07-15 17:08:40 +05:30 |
+| Updated | 2026-07-15 18:24:40 +05:30 |
 | Branch | `codex/scoring-production-hardening` |
 | HEAD before v3 phased work | `aacf2b52f6d0d6eeed6eef5d90e73a4716981793` |
 | Review-start HEAD | `0c398d6d14bb3ae65360b02863d5142f4df1b043` |
 | Review-start commit | `0c398d6 feat: add deterministic v3 scoring phases` |
-| Active phase | Phase 5 - Frontend assessment migration |
-| Luna status | Not started (Phase 5) |
-| Codex review | Passed (Phase 4) |
-| Overall status | Phase 4 passed after Codex security corrections; Phase 5 is the immediate next action and has not started |
+| Current HEAD | `078aedf2237aece5a71b72d6bbeafc2e34c607dd` |
+| Current HEAD commit | `078aedf feat: harden phase 4 anonymous scoring API` |
+| Active phase | Phase 6 - Result explainability (not started) |
+| Luna status | Complete (Phase 5 implementation) |
+| Codex review | Passed (Phase 5) |
+| Overall status | Phase 5 passed Codex review after scoped privacy, validation, cache, and HTTPS recovery fixes; Phase 6 has not started |
 
 ## Current branch condition
 
@@ -57,6 +59,18 @@
   readiness/liveness routes, and Phase 4 regression tests. The legacy v1
   surface remains registered; frontend migration, cleanup, deployment, and
   model-artifact work were not started.
+- Phase 5 migrated the active assessment flow to the v2 server-issued form and
+  score routes. It preserves opaque item/option IDs, collects one choice per
+  static or branching item, keeps behavior and narrative separate from score
+  authority, and retains the bearer token only in memory. The legacy question
+  bank remains on disk but is no longer imported by the active frontend graph.
+- Phase 5 added strict client-side form/version/response-shape checks, numeric
+  integer validation, focus and live-region semantics, StrictMode-safe score
+  request lifecycle handling, fresh-form recovery, structured v2 error
+  handling, and dependency-free frontend contract/bundle tests. Results use
+  only the bounded 24-hour `sessionStorage` signed-result cache; legacy
+  `localStorage` result authorities and public admin passcode detection were
+  removed from the active frontend.
 
 ## Work completed before v3
 
@@ -546,14 +560,93 @@ secret and establish the trusted HTTPS ASGI scheme before v2 becomes ready.
 Phase 4 does not migrate the frontend, retire/archive legacy files, change
 analytics behavior, modify deployment workflows, or regenerate model artifacts.
 
+## Phase 5 implementation and Codex review
+
+Phase 5 is complete and handed to Codex at `READY FOR REVIEW`. The active
+frontend now fetches `GET /api/v2/assessment/form`, renders the server-issued
+numeric, static-SJT, branching, behavior, and optional narrative items in the
+issued order, and submits exactly the frozen version fields, opaque response
+IDs, behavior IDs, and optional narrative to
+`POST /api/v2/assessment/score` with the bearer attempt token in the
+`Authorization` header only.
+
+- Added `frontend/src/lib/assessmentV2.js` for frozen version constants,
+  public form-shape validation, integer/choice validation, exact payload
+  construction, lifecycle error/cache helpers, and the 24-hour signed-result
+  session boundary.
+- Added `frontend/tests/phase5-contract.test.mjs` and the
+  `frontend` `test:phase5` script. The suite covers form architecture and
+  version mismatch, numeric validation, opaque branching/behavior payloads,
+  lifecycle/rate-limit metadata, StrictMode/accessibility seams, cache expiry
+  and clearing, and every emitted production asset for legacy scoring secrets
+  and fields.
+- Replaced the legacy assessment submission and processing flow, removed the
+  active frontend import path to `data/questions.js`, and replaced legacy
+  result/dashboard displays with a minimal v2 signed summary. Detailed
+  explanation presentation remains Phase 6 scope.
+- Preserved `frontend/src/data/questions.js` and all legacy files for the
+  later Phase 7 decision; no cleanup, archive, deployment, backend scoring,
+  API contract, model-artifact, or deployment-workflow change was made in this
+  phase.
+
+### Phase 5 verification evidence
+
+- `npm.cmd run lint` from `frontend`: **PASS**, ESLint exit 0.
+- `npm.cmd run build` from `frontend`: **PASS**, Vite 8.0.16, 1,839 modules,
+  production assets emitted under ignored `frontend/dist`.
+- `npm.cmd run test:phase5` from `frontend`: **PASS**, 9 tests passed in
+  0.15s; the emitted-bundle scan found no legacy answer keys, feature
+  mappings, v1 score fields, result cache fields, or public env-secret
+  sentinels.
+- Phase 4 focused regression: **17 passed in 7.19s** with the known
+  `PytestConfigWarning` caused by disabling the pytest cache provider.
+- Combined backend-unit and API-integration regression: **284 passed in
+  24.63s** with the same known `PytestConfigWarning`.
+- Ruff on the Phase 4 API/app/settings/test scope: **All checks passed!**
+- An isolated build to `C:\tmp\alterscore-phase5-frontend-dist` initially
+  failed before compilation because the sandbox could not create that output
+  directory (`EPERM`); the normal ignored `frontend/dist` production build
+  then passed. No source or tracked artifact was affected by the failed
+  attempt.
+
+### Phase 5 limitations and next boundary
+
+The frontend cannot make the backend v2 routes usable over plaintext HTTP;
+local and deployed environments must provide the trusted HTTPS ASGI scheme
+required by Phase 4. The in-memory attempt/result stores still lose state on
+process restart. Phase 5 intentionally does not render the detailed
+explanation, retire the v1 route, archive the legacy bank/model/research
+files, change deployment/CI, or regenerate model artifacts.
+
+### Codex Phase 5 review outcome
+
+Codex independently reviewed the Phase 5 implementation, Luna's three
+read-only subagent reports, the full Phase 5 diff, and all added artifacts.
+The review corrected the Phase-5-only findings before approval: raw score
+responses containing behavior and explanation data are now redacted before
+navigation or `sessionStorage`; cached summaries have exact signed shapes and
+server-authoritative expiry; malformed or overbroad forms are rejected before
+rendering; and insecure API configurations fail closed through the retryable
+UI before a bearer token can be attached.
+
+- Frontend contract suite: **11 passed**; lint and Vite 8.0.16 production
+  build: **PASS** (1,839 modules).
+- Focused v2 API security regression: **17 passed**; combined backend unit/API
+  regression: **284 passed**, with only the known `PytestConfigWarning` for
+  the disabled cache provider.
+- Browser checks confirmed the accessible mobile no-result recovery and the
+  retryable HTTPS fail-closed assessment error. `git diff --check`: **PASS**.
+- No Phase 6 code, explanation rendering, legacy retirement, deployment, or
+  model artifact work was introduced. Unrelated dirty paths remain unstaged.
+
 ## Immediate next action
 
-Luna may implement Phase 5 frontend assessment migration only, then stop at
-`READY FOR REVIEW`; do not begin Phase 6.
+Luna may implement Phase 6 result explainability only, then stop at `READY FOR
+REVIEW`; do not begin Phase 7 or any cleanup, deployment, or release work.
 
 ## Blockers
 
-None for Phase 5 implementation. Production readiness remains fail-closed
+None for Phase 6 implementation. Production readiness remains fail-closed
 until deployment supplies the required signing secret and trusted HTTPS ASGI
 scheme. All unrelated dirty-worktree paths remain preserved and unstaged.
 
@@ -593,7 +686,8 @@ Codex re-review iteration 6 independently verified:
   inaccessible global-ignore warnings were emitted.
 - The review started from `0c398d6d14bb3ae65360b02863d5142f4df1b043`; all
   pre-existing tracked and untracked changes were preserved.
-- Phase 5 has not started; it is now the approved immediate next action.
+- At the Phase 4 review boundary, Phase 5 had not started; the current Phase 5
+  implementation is recorded above and is now awaiting Codex review.
 
 ## Update template
 

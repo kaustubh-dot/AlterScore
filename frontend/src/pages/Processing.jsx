@@ -1,109 +1,143 @@
-import { useEffect, useState, useRef } from 'react';
-import { ShieldAlert, Check } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Check, ShieldAlert } from 'lucide-react';
 import SignalCanvas from '../components/hero/SignalCanvas';
+import { submitV2Assessment } from '../lib/api';
+import {
+  formatApiError,
+  getApiErrorCode,
+  isAttemptLifecycleError,
+  isCancellationError,
+  isTimeoutError,
+} from '../utils/apiErrors';
 import useSound from '../hooks/useSound';
-import api from '../lib/api';
-import { formatApiError } from '../utils/apiErrors';
 import './Processing.css';
-export default function Processing({ payload, onComplete }) {
-  const [activeStep, setActiveStep] = useState(0);
+
+const PROCESSING_STEPS = [
+  'Validating the issued response set',
+  'Checking the frozen contract versions',
+  'Verifying the one-time attempt',
+  'Calculating readiness domains',
+  'Preparing the signed result',
+  'Completing the secure response',
+];
+
+function shouldRequestFreshAttempt(error) {
+  const code = getApiErrorCode(error);
+  return isAttemptLifecycleError(error)
+    || isTimeoutError(error)
+    || !error?.response
+    || ['internal_error', 'result_not_found'].includes(code);
+}
+
+export default function Processing({ form, submission, onComplete, onBack, onFreshAttempt }) {
+  const [activeStep, setActiveStep] = useState(() => (
+    typeof window !== 'undefined'
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      ? PROCESSING_STEPS.length
+      : 0
+  ));
   const [error, setError] = useState(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const requestFiredRef = useRef(false);
+  const requestRecordRef = useRef(null);
   const { playStep } = useSound();
 
-  const steps = [
-    { label: 'Parsing psychometric responses' },
-    { label: 'Extracting behavioral telemetry' },
-    { label: 'Running NLP semantic scanner' },
-    { label: 'Computing derived features' },
-    { label: 'Applying governance constraints' },
-    { label: 'Calibrating score bands' },
-  ];
-
-  // Steps transition effect
   useEffect(() => {
-    if (activeStep >= steps.length) return;
-    const interval = setTimeout(() => {
-      setActiveStep((prev) => {
-        const next = prev + 1;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reducedMotion) return undefined;
+    if (activeStep >= PROCESSING_STEPS.length) return undefined;
+
+    const timeout = window.setTimeout(() => {
+      setActiveStep((previous) => {
+        const next = previous + 1;
         playStep();
         return next;
       });
-    }, 600);
-    return () => clearTimeout(interval);
-  }, [activeStep, playStep, steps.length]);
+    }, 420);
+    return () => window.clearTimeout(timeout);
+  }, [activeStep, playStep]);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setElapsedSeconds((seconds) => seconds + 1);
-    }, 1000);
-
-    return () => clearInterval(interval);
+    const interval = window.setInterval(() => setElapsedSeconds((seconds) => seconds + 1), 1000);
+    return () => window.clearInterval(interval);
   }, []);
 
-  // Firing API request to score
   useEffect(() => {
-    if (requestFiredRef.current) return;
-    requestFiredRef.current = true;
+    let record = requestRecordRef.current;
+    if (!record || record.controller.signal.aborted) {
+      record = {
+        controller: new AbortController(),
+        active: true,
+        started: false,
+        finished: false,
+        abortTimer: null,
+        onComplete,
+      };
+      requestRecordRef.current = record;
+    } else {
+      record.active = true;
+      record.onComplete = onComplete;
+      if (record.abortTimer) window.clearTimeout(record.abortTimer);
+    }
 
-    const startTime = Date.now();
+    if (!record.started) {
+      record.started = true;
+      const startedAt = Date.now();
 
-    const computeScore = async () => {
-      try {
-        const response = await api.post('/score', payload);
-        const delay = Math.max(3600 - (Date.now() - startTime), 500);
-        setTimeout(() => {
-          onComplete(response.data);
-        }, delay);
-      } catch (err) {
-        if (import.meta.env.DEV) {
-          console.warn('Score request failed:', {
-            status: err?.response?.status,
-            code: err?.code,
-            message: err?.message,
+      const submit = async () => {
+        try {
+          const response = await submitV2Assessment(form, submission, {
+            signal: record.controller.signal,
           });
+          if (!record.active || record.finished) return;
+          record.finished = true;
+          const minimumDisplayTime = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 600;
+          const delay = Math.max(minimumDisplayTime - (Date.now() - startedAt), 0);
+          window.setTimeout(() => {
+            if (record.active) record.onComplete(response.data);
+          }, delay);
+        } catch (requestError) {
+          if (!record.active || isCancellationError(requestError)) return;
+          setError(requestError);
         }
-        setError(formatApiError(err, 'Internal server issue.'));
-      }
+      };
+
+      submit();
+    }
+
+    return () => {
+      record.active = false;
+      record.abortTimer = window.setTimeout(() => {
+        if (!record.active && !record.finished) record.controller.abort();
+      }, 0);
     };
+  }, [form, onComplete, submission]);
 
-    computeScore();
-  }, [payload, onComplete]);
-
-  const progressPercent = Math.min((activeStep / steps.length) * 100, 100);
-  const isWaitingForScore = activeStep >= steps.length;
+  const progressPercent = Math.min((activeStep / PROCESSING_STEPS.length) * 100, 100);
+  const isWaitingForScore = activeStep >= PROCESSING_STEPS.length;
 
   if (error) {
+    const freshAttempt = shouldRequestFreshAttempt(error);
     return (
       <div className="processing-layout">
         <SignalCanvas />
         <div className="processing-container container">
-          <div className="processing-card" style={{ borderColor: 'rgba(244, 63, 94, 0.3)' }}>
-            <div className="processing-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-              <div className="consent-icon animate-pulse-glow" style={{ borderColor: 'rgba(244, 63, 94, 0.4)', color: 'var(--accent-rose)' }}>
-                <ShieldAlert size={28} />
-              </div>
-              <span className="processing-title" style={{ color: 'var(--accent-rose)', letterSpacing: '0.08em' }}>Submission Rejected</span>
+          <div className="processing-card processing-error-card" role="alert" aria-live="assertive">
+            <div className="processing-header processing-error-header">
+              <div className="consent-icon" aria-hidden="true"><ShieldAlert size={28} /></div>
+              <span className="processing-title">Submission needs attention</span>
             </div>
-            
-            <div className="processing-body" style={{ padding: 'var(--space-6) 0', textAlign: 'center' }}>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: 1.6, marginBottom: '24px', maxWidth: '480px', marginLeft: 'auto', marginRight: 'auto' }}>
-                {error}
-              </p>
-              
-              <button 
-                onClick={() => window.location.reload()} 
-                className="btn btn-primary"
-                style={{ 
-                  margin: '0 auto', 
-                  borderColor: 'rgba(244, 63, 94, 0.3)', 
-                  background: 'rgba(244, 63, 94, 0.1)',
-                  color: '#FFFFFF' 
-                }}
-              >
-                <span>Go Back & Restart</span>
-              </button>
+            <div className="processing-body">
+              <p className="processing-copy">{formatApiError(error, 'The signed result could not be prepared.')}</p>
+              <div className="processing-actions">
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={freshAttempt ? onFreshAttempt : onBack}
+                >
+                  {freshAttempt ? 'Get a fresh form' : 'Return to assessment'}
+                </button>
+                <button type="button" className="btn btn-ghost" onClick={onBack}>Review responses</button>
+              </div>
             </div>
           </div>
         </div>
@@ -114,59 +148,44 @@ export default function Processing({ payload, onComplete }) {
   return (
     <div className="processing-layout">
       <SignalCanvas />
-      
       <div className="processing-container container">
-        <div className="processing-card">
+        <div className="processing-card" role="status" aria-live="polite">
           <div className="processing-header">
-            <span className="processing-title">Cognitive Pipeline Calibration</span>
-            <div className="processing-meter-container">
-              <div 
-                className="processing-meter-fill"
-                style={{ width: `${progressPercent}%` }}
-              />
+            <span className="processing-title">Preparing your verified assessment result</span>
+            <div
+              className="processing-meter-container"
+              role="progressbar"
+              aria-valuenow={activeStep}
+              aria-valuemin="0"
+              aria-valuemax={PROCESSING_STEPS.length}
+              aria-label="Submission progress"
+            >
+              <div className="processing-meter-fill" style={{ width: `${progressPercent}%` }} />
             </div>
           </div>
-          
+
           <div className="processing-body">
             <div className="steps-list">
-              {steps.map((step, idx) => {
-                const isCompleted = idx < activeStep;
-                const isActive = idx === activeStep;
-                
+              {PROCESSING_STEPS.map((step, index) => {
+                const isCompleted = index < activeStep;
+                const isActive = index === activeStep;
                 return (
-                  <div 
-                    key={idx} 
-                    className={`step-row ${isCompleted ? 'completed' : ''} ${isActive ? 'active' : ''}`}
-                  >
-                    <span className="step-icon">
-                      {isCompleted ? (
-                        <Check size={10} className="tick-enter" />
-                      ) : isActive ? (
-                        <span className="pulse-indicator" />
-                      ) : (
-                        '—'
-                      )}
+                  <div key={step} className={`step-row ${isCompleted ? 'completed' : ''} ${isActive ? 'active' : ''}`}>
+                    <span className="step-icon" aria-hidden="true">
+                      {isCompleted ? <Check size={10} className="tick-enter" /> : isActive ? <span className="pulse-indicator" /> : '—'}
                     </span>
-                    <span className="step-label">{step.label}</span>
+                    <span className="step-label">{step}</span>
                     {isCompleted && <span className="step-status">COMPLETED</span>}
                     {isActive && <span className="step-status scanning">PROCESSING</span>}
                   </div>
                 );
               })}
             </div>
-            
+
             <div className="processing-footer">
-              <span
-                className="processing-eta"
-                style={{ display: isWaitingForScore ? 'none' : undefined }}
-              >
-                Calibrating behavioral telemetry • Please wait
+              <span className="processing-eta">
+                {isWaitingForScore ? `Finalizing secure response · ${elapsedSeconds}s elapsed` : 'The one-time attempt is being checked'}
               </span>
-              {isWaitingForScore && (
-                <span className="processing-eta">
-                  {`Finalizing score response - ${elapsedSeconds}s elapsed`}
-                </span>
-              )}
             </div>
           </div>
         </div>

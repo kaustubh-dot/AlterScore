@@ -6,7 +6,7 @@ import ScrollReveal from '../components/animation/ScrollReveal';
 import GlowCard from '../components/ui/GlowCard';
 import MagneticButton from '../components/ui/MagneticButton';
 import TextReveal from '../components/animation/TextReveal';
-import { QUESTIONS } from '../data/questions';
+import { PUBLIC_ASSESSMENT_ITEM_COUNT } from '../lib/assessmentV2';
 import './Landing.css';
 
 function hasCompletedPreload() {
@@ -108,15 +108,15 @@ export default function Landing() {
     };
   }, [isLoaded]);
 
-  const stat1 = useCountUp(1.4, 2000, triggerStats);
-  const stat2 = useCountUp(39, 1500, triggerStats);
-  const stat3 = useCountUp(0.76, 2000, triggerStats);
-  const stat4 = useCountUp(5, 1200, triggerStats);
+  const stat1 = useCountUp(PUBLIC_ASSESSMENT_ITEM_COUNT, 1200, triggerStats);
+  const stat2 = useCountUp(18, 1200, triggerStats);
+  const stat3 = useCountUp(6, 1200, triggerStats);
+  const stat4 = useCountUp(0, 1200, triggerStats);
 
   const startAssessment = () => {
     transitionTo('/assessment');
   };
-  const questionCount = QUESTIONS.length;
+  const questionCount = PUBLIC_ASSESSMENT_ITEM_COUNT;
 
   return (
     <div className={`landing-page ${isLoaded ? 'loaded' : ''}`} style={!isLoaded ? { opacity: 0, pointerEvents: 'none' } : undefined}>
@@ -127,20 +127,20 @@ export default function Landing() {
             <SignalCanvas />
             <div className="hero-content container">
               <div style={{ marginBottom: '16px' }}>
-                <TextReveal text="Cognitive Credit System" delay={100} />
+                <TextReveal text="Synthetic Assessment Demo" delay={100} />
               </div>
               
               <h1 className="hero-headline">
-                <TextReveal text="Credit intelligence" delay={250} /> <br />
-                <TextReveal text="beyond history." delay={450} />
+                <TextReveal text="Transparent scoring" delay={250} /> <br />
+                <TextReveal text="for product testing." delay={450} />
               </h1>
 
               <ScrollReveal direction="up" delay={550}>
                 <p className="hero-sub">
-                  AlterScore reads how you reason, decide, and write — not what
-                  you've borrowed — to fairly score the 1.4&nbsp;billion adults the
-                  credit bureau never sees. A five-minute assessment returns an
-                  explainable 300–850 score and the reasons behind it.
+                  AlterScore is a synthetic educational demonstration of a server-issued
+                  readiness assessment. It returns a 0–100 index and an illustrative
+                  300–850 transformation — never a repayment prediction, lending decision,
+                  eligibility result, or bureau score.
                 </p>
               </ScrollReveal>
 
@@ -155,7 +155,7 @@ export default function Landing() {
 
               <ScrollReveal direction="up" delay={800}>
                 <div className="hero-meta">
-                  <span>{questionCount} Questions • ~5 Minutes • Instant Decision</span>
+                  <span>{questionCount} Questions • ~5 Minutes • Illustrative Result</span>
                 </div>
               </ScrollReveal>
             </div>
@@ -170,8 +170,8 @@ export default function Landing() {
           <section className="section section-features">
             <div className="container">
               <div className="section-header">
-                <span className="section-eyebrow">Interactive Sensors</span>
-                <h2 className="section-title"><TextReveal text="What We Measure" /></h2>
+                <span className="section-eyebrow">Assessment evidence</span>
+                <h2 className="section-title"><TextReveal text="What the assessment covers" /></h2>
               </div>
 
               <div className="features-grid">
@@ -182,8 +182,8 @@ export default function Landing() {
                     </div>
                     <h3 className="feature-title">Cognitive Reflection</h3>
                     <p className="feature-desc">
-                      Numeracy and reasoning tasks reveal how you weigh risk and
-                      resist fast, intuitive errors under uncertainty.
+                      Objective items test financial knowledge with server-issued
+                      values. The browser receives no answer keys or scoring rules.
                     </p>
                   </GlowCard>
                 </ScrollReveal>
@@ -193,10 +193,10 @@ export default function Landing() {
                     <div className="feature-icon-wrapper">
                       <Eye size={20} />
                     </div>
-                    <h3 className="feature-title">Silent Telemetry</h3>
+                    <h3 className="feature-title">Structured Scenarios</h3>
                     <p className="feature-desc">
-                      Response timing, hesitation, and revisions are captured
-                      passively — signals of deliberation no form can ask for.
+                      Decision simulations present opaque, randomized options and
+                      evaluate the selected path on the server. Timing and device data are not used.
                     </p>
                   </GlowCard>
                 </ScrollReveal>
@@ -206,10 +206,10 @@ export default function Landing() {
                     <div className="feature-icon-wrapper">
                       <HeartHandshake size={20} />
                     </div>
-                    <h3 className="feature-title">Resilience & Agency</h3>
+                    <h3 className="feature-title">Resilience & Planning</h3>
                     <p className="feature-desc">
-                      Scenario choices and open text surface future orientation,
-                      conscientiousness, and how you plan when resources are tight.
+                      Optional behavior reflection helps you describe your habits,
+                      but it is explicitly unscored and does not change the index.
                     </p>
                   </GlowCard>
                 </ScrollReveal>
@@ -239,10 +239,10 @@ export default function Landing() {
                       <div className="step-number-wrapper">
                         <span className="step-number">01</span>
                       </div>
-                      <h3 className="step-title">Profile Agency</h3>
+                      <h3 className="step-title">Answer the assessment</h3>
                       <p className="step-desc">
-                        Answer {questionCount} adaptive questions in about five minutes — no
-                        documents or credit history required.
+                        Answer {questionCount} server-issued items in about five minutes.
+                        No documents, identity, or credit history are used.
                       </p>
                     </GlowCard>
                   </ScrollReveal>
@@ -252,10 +252,10 @@ export default function Landing() {
                       <div className="step-number-wrapper">
                         <span className="step-number">02</span>
                       </div>
-                      <h3 className="step-title">Parse Telemetry</h3>
+                      <h3 className="step-title">Apply the readiness rubric</h3>
                       <p className="step-desc">
-                        Behavioral signals and language are scored by a calibrated,
-                        governance-gated machine learning model.
+                        The backend applies the frozen deterministic rubric. Browser
+                        telemetry, device data, and hidden text signals are excluded.
                       </p>
                     </GlowCard>
                   </ScrollReveal>
@@ -265,10 +265,10 @@ export default function Landing() {
                       <div className="step-number-wrapper">
                         <span className="step-number">03</span>
                       </div>
-                      <h3 className="step-title">Score Verdict</h3>
+                      <h3 className="step-title">View the signed summary</h3>
                       <p className="step-desc">
-                        Get a 300–850 score with its risk band, SHAP explanations,
-                        and concrete actions to improve over time.
+                        Get the readiness index, domain summaries, limitations, and
+                        a verification link — not a financial verdict.
                       </p>
                     </GlowCard>
                   </ScrollReveal>
@@ -283,29 +283,29 @@ export default function Landing() {
               <div className="stats-grid">
                 <ScrollReveal direction="up" delay={100}>
                   <div className="stat-item">
-                    <div className="stat-number">{triggerStats ? `${stat1}B` : '0B'}</div>
-                    <div className="stat-label">Unbanked Adults</div>
+                    <div className="stat-number">{triggerStats ? stat1 : '0'}</div>
+                    <div className="stat-label">Assessment items</div>
                   </div>
                 </ScrollReveal>
                 
                 <ScrollReveal direction="up" delay={200}>
                   <div className="stat-item">
                     <div className="stat-number">{triggerStats ? stat2 : '0'}</div>
-                    <div className="stat-label">Behavioral Features</div>
+                    <div className="stat-label">Scored items</div>
                   </div>
                 </ScrollReveal>
 
                 <ScrollReveal direction="up" delay={300}>
                   <div className="stat-item">
-                    <div className="stat-number">{triggerStats ? stat3 : '0.00'}</div>
-                    <div className="stat-label">Model AUC</div>
+                    <div className="stat-number">{triggerStats ? stat3 : '0'}</div>
+                    <div className="stat-label">Unscored reflections</div>
                   </div>
                 </ScrollReveal>
 
                 <ScrollReveal direction="up" delay={400}>
                   <div className="stat-item">
-                    <div className="stat-number">{triggerStats ? `${stat4}m` : '0m'}</div>
-                    <div className="stat-label">Time to Score</div>
+                    <div className="stat-number">{triggerStats ? stat4 : '0'}</div>
+                    <div className="stat-label">Browser/device inputs</div>
                   </div>
                 </ScrollReveal>
               </div>
@@ -318,7 +318,7 @@ export default function Landing() {
             <div className="cta-container container">
               <ScrollReveal direction="scale">
                 <h2 className="cta-title">
-                  <TextReveal text="Ready to be seen differently?" />
+                  <TextReveal text="Ready to test the assessment?" />
                 </h2>
               </ScrollReveal>
               <ScrollReveal direction="up" delay={200}>
