@@ -3,12 +3,16 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
     "test:phase5": "node --test tests/phase5-contract.test.mjs",
     "test:phase6": "node --test tests/phase6-explainability.test.mjs",
+    "test:phase7": "node --test tests/phase7-separation.test.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

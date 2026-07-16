@@ -1,0 +1,83 @@
+{
+  "model_name": "xgboost_monotonic",
+  "model_type": "classical_monotonic",
+  "items": [
+    {
+      "feature": "numeracy_score",
+      "display_name": "Numeracy Score",
+      "mean_abs_shap": 0.3267,
+      "category": "psychometric",
+      "rank": 1
+    },
+    {
+      "feature": "financial_literacy_score",
+      "display_name": "Financial Literacy Score",
+      "mean_abs_shap": 0.2732,
+      "category": "psychometric",
+      "rank": 2
+    },
+    {
+      "feature": "CRT_score",
+      "display_name": "CRT Score",
+      "mean_abs_shap": 0.2244,
+      "category": "psychometric",
+      "rank": 3
+    },
+    {
+      "feature": "locus_of_control",
+      "display_name": "Proactive Problem Solving",
+      "mean_abs_shap": 0.0303,
+      "category": "psychometric",
+      "rank": 4
+    },
+    {
+      "feature": "reciprocity_norm",
+      "display_name": "Reciprocity Norm",
+      "mean_abs_shap": 0.0259,
+      "category": "psychometric",
+      "rank": 5
+    },
+    {
+      "feature": "resilience_score",
+      "display_name": "Business Resilience",
+      "mean_abs_shap": 0.023,
+      "category": "psychometric",
+      "rank": 6
+    },
+    {
+      "feature": "social_capital_score",
+      "display_name": "Network Support Reliance",
+      "mean_abs_shap": 0.0222,
+      "category": "psychometric",
+      "rank": 7
+    },
+    {
+      "feature": "future_orientation",
+      "display_name": "Long-Term Financial Planning",
+      "mean_abs_shap": 0.0218,
+      "category": "psychometric",
+      "rank": 8
+    },
+    {
+      "feature": "honesty_score",
+      "display_name": "Honesty Score",
+      "mean_abs_shap": 0.02,
+      "category": "psychometric",
+      "rank": 9
+    },
+    {
+      "feature": "conscientiousness_score",
+      "display_name": "Financial Consistency and Follow-Through",
+      "mean_abs_shap": 0.0182,
+      "category": "psychometric",
+      "rank": 10
+    },
+    {
+      "feature": "loss_aversion_score",
+      "display_name": "Financial Risk Tolerance",
+      "mean_abs_shap": 0.0142,
+      "category": "psychometric",
+      "rank": 11
+    }
+  ]
+}

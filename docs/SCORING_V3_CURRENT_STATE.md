@@ -8,24 +8,26 @@
 
 | Field | Value |
 |---|---|
-| Updated | 2026-07-15 21:24:38 +05:30 |
+| Updated | 2026-07-16 17:50:29 +05:30 |
 | Branch | `codex/scoring-production-hardening` |
+| Phase 7 implementation/review base HEAD | `7d856efd5507eb4bacf387d23968a67f82ddbd97` (`feat: add phase 6 result explainability`) |
 | HEAD before v3 phased work | `aacf2b52f6d0d6eeed6eef5d90e73a4716981793` |
 | Review-start HEAD | `0c398d6d14bb3ae65360b02863d5142f4df1b043` |
 | Review-start commit | `0c398d6 feat: add deterministic v3 scoring phases` |
 | Review baseline HEAD | `d74e59d5b8577d301646f73e049ca4a3588798f` |
 | Review baseline commit | `d74e59d fix: harden phase 5 client assessment boundary` |
-| Active phase | Phase 7 - Legacy separation and runtime cleanup (not started) |
-| Luna status | Not started (Phase 7) |
-| Codex review | Passed (Phase 6) |
-| Overall status | Phase 6 passed Codex review after scoped explanation-contract, evidence, accessibility, and privacy fixes; Phase 7 has not started |
+| Active phase | Phase 8 - CI, deployment, and operational hardening (not started) |
+| Luna status | Not started (Phase 8) |
+| Codex review | Passed (Phase 7) |
+| Overall status | Phase 7 legacy separation and runtime cleanup passed Codex review after scoped corrective cleanup; Phase 8 is the immediate next action and has not started |
 
 ## Current branch condition
 
-- The working tree already contains substantial uncommitted scoring-hardening,
-  frontend, model-artifact, test, documentation, and cleanup changes.
-- These existing changes must be preserved. Luna must not reset, checkout, or
-  overwrite them.
+- The reviewed Phase 7 tracked change set and archive are the intended
+  publication scope. The unrelated untracked review prompt and runtime bundle
+  remain outside that scope and must be preserved.
+- No reset, clean, checkout, branch switch, or overwrite was used during the
+  review or correction pass.
 - At baseline capture, `git diff --stat` reported 76 tracked files, 4,389
   insertions, and 8,581 deletions. HEAD remained unchanged throughout Phase 0.
 - At baseline capture, the untracked paths were `backend/ml/inference/text_quality.py`,
@@ -85,6 +87,26 @@
   recommendation evidence, and the absence of option IDs or hidden rubric
   fields. The active frontend still has no scoring authority and no backend
   formula/API/deployment/model-artifact changes were made in this phase.
+- Phase 7 retired the model-backed v1 scoring and analytics surfaces from the
+  production graph. `POST /api/score` and `POST /api/debug-score` now return
+  `410 Gone`; `/api/v1/score` remains absent; former analytics routes are not
+  registered; and artifact-free v2 readiness plus the compatibility health
+  probe do not import archived research code.
+- Phase 7 moved the synthetic XGBoost model, model artifacts, explainers,
+  feature/NLP/training code, legacy schemas/services/routes, old tests, and
+  the legacy frontend question/admin/design files under
+  `research/legacy_synthetic_model/` without regenerating or deleting their
+  contents. Production requirements and the Docker image are now serving-only
+  allowlists.
+- Phase 7 replaced the reachable Admin surface with a direct-link-only static
+  Research Lab whose copy states that labels and fairness reports are
+  synthetic, AUC measures recovery of generated data, and the model does not
+  score public assessments. The v2 score formulas, question architecture,
+  public v2 response contract, and active assessment behavior were not
+  changed.
+- At Luna handoff, Phase 7 preserved the existing dirty and untracked worktree
+  and did not deploy, regenerate model artifacts, commit, or push. Codex then
+  corrected only verified Phase 7 defects; Phase 8 has not begun.
 
 ## Work completed before v3
 
@@ -249,7 +271,10 @@ leaking the complete hidden rubric, link to result verification, and ground
 recommendations in actual weaknesses. SHAP-style attribution and fabricated
 score gains are explicitly out of scope for the v3 result.
 
-## Current v1 contract and retirement inventory
+## Historical pre-Phase 7 v1 contract and retirement inventory
+
+The following section records the pre-Phase 7 v1 contract for auditability. It
+is historical evidence, not the active public contract after Phase 7.
 
 - The active public scorer is `POST /api/score`; local debug is
   `POST /api/debug-score`. There is no current `/api/v1/score` route. The
@@ -728,17 +753,128 @@ were introduced.
 - Production readiness remains fail-closed until deployment supplies the
   secure signing secret and trusted HTTPS ASGI scheme.
 
+## Phase 7 implementation and Codex review
+
+Phase 7 legacy separation and runtime cleanup passed Codex review. The active
+production graph is v2-only for scoring and readiness: it contains the v2
+instrument, branching engine, unified scorer, secure anonymous transport, and
+the explicit v1 retirement tombstones. The archived model and research tree is
+not imported by `backend/app`.
+
+### Scope and inventory
+
+- Retired `POST /api/score` and `POST /api/debug-score` with explicit `410`
+  responses. No `/api/v1/score` alias was introduced. The former analytics
+  paths are absent. `/api/health` remains a small artifact-free compatibility
+  liveness probe while `/api/live` and `/api/ready` remain the v2 probes.
+- Removed the legacy artifact loader, model-backed scorer, analytics and
+  request-logging services, legacy schemas/routes, heavy production
+  dependencies, and model/script copies from the production image boundary.
+- Archived the synthetic XGBoost artifacts, SHAP/DiCE explainers, NLP and
+  feature pipeline, training/validation/setup scripts, legacy tests/fixtures,
+  old frontend question/admin/design files, and associated research
+  requirements under `research/legacy_synthetic_model/`.
+- Added the static `/research` Research Lab and removed the `/admin` route,
+  public admin detection, and unused legacy frontend API seams. The active
+  frontend has no question answer key, model analytics dependency, or research
+  API/storage import.
+- Updated the v2 API, runtime, data, deployment, rollback, governance, setup,
+  model-selection/registry, project-structure, backend, frontend, and active
+  design documentation. The HF packaging workflow no longer copies archived
+  `models` or `scripts`; broader CI/deployment hardening remains Phase 8.
+
+### Subagent audit
+
+Four read-only audits ran in parallel and had no file ownership or Git
+authority. James audited API retirement/readiness and accepted the minimal
+`410` boundary plus compatibility health probe. Erdos audited the serving
+dependency/import closure and accepted the allowlisted production image and
+research archive boundary. Descartes audited the frontend and accepted the
+static Research Lab/direct-link-only separation. Schrodinger audited stale
+terms, dead files, and documentation and identified the active design document
+and deployment-copy boundary that were corrected here. No subagent edited
+files, changed tracking status, or performed deployment operations.
+
+### Verification evidence
+
+- `npm.cmd run lint` from `frontend`: **PASS**, ESLint exit 0.
+- `npm.cmd run test:phase5` from `frontend`: **PASS**, 11 tests passed.
+- `npm.cmd run test:phase6` from `frontend`: **PASS**, 7 tests passed.
+- `npm.cmd run test:phase7` from `frontend`: **PASS**, 3 tests passed.
+- `npm.cmd run build` from `frontend`: **PASS**, Vite 8.0.16, 1,839 modules
+  transformed, production assets emitted under ignored `frontend/dist`.
+- `.venv312\Scripts\ruff.exe check backend\app
+  tests\integration\api\test_phase4_secure_anonymous_api.py
+  tests\integration\api\test_phase7_legacy_retirement.py tests\unit\backend`:
+  **PASS**, `All checks passed!`.
+- `.venv312\Scripts\python.exe -B -m pytest -p no:cacheprovider -o
+  "addopts=" tests\unit\backend
+  tests\integration\api\test_phase4_secure_anonymous_api.py
+  tests\integration\api\test_phase7_legacy_retirement.py
+  --basetemp C:\tmp\alterscore-phase7-backend-final --tb=short -q`:
+  **PASS**, 221 tests passed in 4.21 seconds, with one known
+  `PytestConfigWarning` for `cache_dir` because the cache plugin was disabled.
+
+### Codex review corrections and independent verification
+
+- Codex independently found and corrected one P1: the active CI workflow still
+  invoked deleted spaCy, reproducibility, model-registry, and `backend.ml`
+  paths. The review retired those obsolete legacy steps without adding Phase 8
+  gates, and added a Phase 7 regression test that rejects their return.
+- Codex also corrected stale active route documentation, development test
+  dependency instructions, Node/Vite compatibility metadata, the obsolete
+  Ruff `scripts/` exception, and the retired top-level model ignore rule. The
+  model ignore is anchored to `/models/`, so the archive remains stageable.
+- Codex independently ran the complete active backend set with isolated
+  scratch space: **222 passed in 4.47 seconds**. The focused Phase 7 API suite
+  then passed **8 tests in 1.27 seconds**. The disabled-cache invocation emits
+  one expected `PytestConfigWarning` for `cache_dir`; it is not emitted by the
+  normal cache-enabled CI configuration.
+- Frontend lint, Phase 5 (11), Phase 6 (7), and Phase 7 (3) tests all passed;
+  the Vite 8.0.16 production build transformed 1,839 modules. `npm.cmd ci
+  --dry-run --ignore-scripts` passed, confirming package/lockfile parity.
+- Black passed on the reviewed Phase 7 Python files; Ruff passed on `backend`
+  and `tests`; `git diff --check` passed. An independent archive mapping found
+  **114 expected archived paths, zero missing**, and **120 archive files**;
+  archive files are not ignored and generic LFS attributes cover the binary
+  artifacts.
+- Luna's four recorded subagents and Codex's three review auditors were all
+  read-only, had no file ownership, and did not change contracts, tracking,
+  Git state, or Phase 8. Codex was the sole writer during correction. No two
+  agents edited a file concurrently, and unrelated untracked files were left
+  untouched.
+- **Decision: PASS.** No Phase 8 code, release/deployment operation, or model
+  regeneration was started.
+
+### Limitations and handoff
+
+- The archived ML/research tests were not run as production tests; their
+  dependencies are documented separately in
+  `research/legacy_synthetic_model/requirements-research.txt`.
+- The existing untracked `runtime/shared_session_trained_model_answer_only_v2/`
+  bundle was preserved and is not imported, copied into the image, or promoted
+  as a public artifact. Ignored build/cache output was not treated as a source
+  change.
+- Codex removed the stale CI and deployment references to the archived spaCy,
+  ML, model-registry, validation-script, and LFS paths. This was archive-boundary
+  repair only; blocking CI, release parity, deployment gates, monitoring, and
+  rollback automation remain Phase 8 scope.
+- Browser visual automation was not run; static Research Lab checks, lint,
+  build, and contract coverage passed. Production remains fail-closed until a
+  secure signing secret and trusted HTTPS ASGI scheme are supplied.
+
 ## Immediate next action
 
-Luna may implement Phase 7 legacy separation and runtime cleanup only, then
-stop at `READY FOR REVIEW`. Do not begin Phase 8, CI/deployment work, or a
-release operation.
+Luna may implement Phase 8 CI, deployment, and operational hardening only, then
+stop at `READY FOR REVIEW`. Do not begin Phase 9, deploy, or regenerate model
+artifacts as part of this handoff.
 
 ## Blockers
 
-None for Phase 7 implementation. Production readiness remains fail-closed
-until deployment supplies the required signing secret and trusted HTTPS ASGI
-scheme. All unrelated dirty-worktree paths remain preserved and unstaged.
+None for the Phase 8 handoff. Production readiness remains fail-closed until
+deployment supplies the required signing secret and trusted HTTPS ASGI scheme.
+The unrelated untracked review-prompt and runtime-bundle paths remain
+preserved and unstaged.
 
 ## Historical verification evidence before Phase 4
 

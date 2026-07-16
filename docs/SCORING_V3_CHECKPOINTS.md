@@ -50,7 +50,7 @@ scope belongs in `SCORING_V3_LUNA_PLAN.md`.
 | 4 | Secure anonymous API | Complete | Passed | PASSED |
 | 5 | Frontend assessment migration | Complete | Passed | PASSED |
 | 6 | Result explainability | Complete | Passed | PASSED |
-| 7 | Legacy separation and runtime cleanup | Not started | Pending | NOT STARTED |
+| 7 | Legacy separation and runtime cleanup | Complete | Passed | PASSED |
 | 8 | CI, deployment, and operational hardening | Not started | Pending | NOT STARTED |
 | 9 | Final audit and handoff | Not started | Pending | NOT STARTED |
 
@@ -2710,3 +2710,234 @@ solutions, branch replay, evidence, privacy, public-boundary, accessibility,
 and scope gates after the scoped corrections. Luna may implement Phase 7
 legacy separation and runtime cleanup only, then stop at `READY FOR REVIEW`.
 Phase 8, deployment, CI work, and final audit must not begin.
+
+---
+
+## Phase 7 implementation checkpoint - iteration 1
+
+### Metadata
+
+- Date/time: 2026-07-15 22:13:29 +05:30.
+- Branch: codex/scoring-production-hardening.
+- Starting HEAD: 7d856efd5507eb4bacf387d23968a67f82ddbd97.
+- Ending HEAD: 7d856efd5507eb4bacf387d23968a67f82ddbd97; the index is clean
+  and all Phase 7 work is uncommitted.
+- The worktree was already substantially dirty. Existing tracked changes,
+  existing untracked paths, model artifacts, runtime bundles, and prior phase
+  work were preserved. No reset, clean, checkout, branch switch, discard,
+  commit, push, deployment, or model-artifact regeneration was performed.
+- Authority: the user completed the Phase 6 review and explicitly authorized
+  Phase 7 legacy separation and runtime cleanup. This checkpoint authorizes
+  only Phase 7 review; it does not authorize Phase 8 or publication.
+- Luna status: READY FOR REVIEW.
+
+### Scope completed
+
+- Retired POST /api/score and POST /api/debug-score with explicit 410
+  responses. No /api/v1/score alias was introduced. Former analytics paths
+  are absent, while artifact-free /api/live, /api/ready, and compatibility
+  /api/health probes remain available.
+- Removed the legacy artifact loader, model-backed scorer, analytics and
+  request-logging services, legacy schemas/routes, heavy production
+  dependencies, and model/script copies from the production image boundary.
+- Archived the synthetic XGBoost artifacts, SHAP/DiCE explainers, feature and
+  NLP pipeline, training/validation/setup scripts, legacy tests and fixtures,
+  old frontend question/admin/design files, and research requirements under
+  research/legacy_synthetic_model/.
+- Added a static /research Research Lab and removed the /admin route, public
+  admin detection, and unused legacy frontend API seams. The Research Lab
+  explicitly states that labels and fairness reports are synthetic, AUC
+  measures recovery of generated data, and the model does not score public
+  assessments.
+- Updated the v2 API, runtime, data, deployment, rollback, governance, setup,
+  model-selection/registry, project-structure, backend, frontend, and active
+  design documentation. The HF packaging workflow no longer copies archived
+  models or scripts; broader CI/deployment hardening remains Phase 8.
+- Preserved the v2 score formulas, question architecture, public v2 response
+  contract, and active assessment behavior. No Phase 8 work was started.
+
+### Files
+
+- Added:
+  - .dockerignore
+  - backend/app/api/v1/routes/retired.py
+  - backend/README.md
+  - frontend/src/pages/ResearchLab.jsx
+  - frontend/src/pages/ResearchLab.css
+  - frontend/tests/phase7-separation.test.mjs
+  - frontend/design.md
+  - tests/integration/api/test_phase7_legacy_retirement.py
+  - research/legacy_synthetic_model/README.md
+  - research/legacy_synthetic_model/requirements-research.txt
+  - research/legacy_synthetic_model/source and archived model artifacts
+- Modified:
+  - .env.example, Dockerfile, .github/workflows/deploy-hf.yml
+  - backend/app/main.py, backend/app/core/settings.py,
+    backend/app/api/v1/router.py, backend/app/api/v2/service.py
+  - backend/requirements.txt and backend/requirements-dev.txt
+  - frontend App/Navbar/Footer/API/assessment modules, package metadata,
+    README, index metadata, and Phase 7 test script
+  - pytest.ini and tests/conftest.py
+  - active README and docs/API_CONTRACTS.md,
+    docs/BACKEND_RUNTIME_ARCHITECTURE.md, docs/DATA_SCHEMA.md,
+    docs/DEPLOYMENT.md, docs/GOVERNANCE_WORKFLOW.md,
+    docs/MODEL_REGISTRY.md, docs/MODEL_SELECTION_DECISIONS.md,
+    docs/PROJECT_STRUCTURE.md, docs/ROLLBACK_CHECKLIST.md, and docs/SETUP.md
+  - this current-state file and this checkpoint tracker
+- Deleted/archived from their production paths:
+  - backend/ml, models, legacy backend services/schemas/routes/core helpers
+  - scripts/data, scripts/setup, scripts/training, scripts/validation, and
+    scripts/manual_test_payloads.py
+  - legacy integration/unit/ML tests and fixtures
+  - frontend/src/data/questions.js and frontend/src/pages/Admin.*
+  - the historical frontend/design.md, preserved as design-legacy.md under
+    research/legacy_synthetic_model/source.
+
+### Public behavior and contracts
+
+- The public v2 instrument and scorer remain the only score authority.
+  Retirement requests are explicit and do not fall through to a model.
+- Readiness checks validate only the instrument, deterministic scorer, signing
+  configuration, bounded stores, and rate limits; no model artifact is needed.
+- Production dependency and Docker COPY boundaries contain serving-only code.
+  Research routes, artifacts, explainers, NLP, training, and analytics are
+  unavailable from the public application.
+- The static Research Lab has no assessment, API, storage, answer-key, or
+  model-result dependency and is not linked from the assessment navigation.
+
+### Subagents used
+
+| Task | Model/tier | Mode | File ownership | Result | Luna verification |
+|---|---|---|---|---|---|
+| James API retirement/readiness audit | light explorer | read-only | none | Confirmed active v1 scoring and analytics boundaries, absence of a v1 alias, and the safe compatibility health choice. | Implemented 410 tombstones, absent /api/v1/score, absent analytics routes, and artifact-free probes; focused tests passed. |
+| Erdos runtime/dependency audit | light explorer | read-only | none | Confirmed the v2 serving import closure and identified heavy legacy dependencies/artifacts for the archive. | Production requirements, Docker allowlist, and AST/import checks passed. |
+| Descartes frontend separation audit | light explorer | read-only | none | Confirmed the old question bank and Admin surface were not needed by the active graph and recommended a static direct-link-only Research Lab. | Active frontend tests, lint, and build passed; no subagent edits accepted. |
+| Schrodinger stale/dead/docs audit | light explorer | read-only | none | Identified stale design documentation and the deployment model/script copy boundary; kept CI migration as Phase 8 scope. | Archived/replaced the design doc, updated HF packaging, and left CI workflow hardening untouched. |
+
+- Parallel work used disjoint read-only audits. No subagent edited files, changed
+  contracts, updated tracking status, or performed Git/deployment operations.
+
+### Tests executed
+
+| Command | Result | Notes |
+|---|---|---|
+| npm.cmd run lint from frontend | PASS | ESLint exit 0. |
+| npm.cmd run test:phase5 from frontend | PASS | 11 passed. |
+| npm.cmd run test:phase6 from frontend | PASS | 7 passed. |
+| npm.cmd run test:phase7 from frontend | PASS | 3 passed, including static Research Lab and legacy-graph scans. |
+| npm.cmd run build from frontend | PASS | Vite 8.0.16; 1,839 modules transformed; ignored frontend/dist emitted. |
+| .venv312\Scripts\ruff.exe check backend\app tests\integration\api\test_phase4_secure_anonymous_api.py tests\integration\api\test_phase7_legacy_retirement.py tests\unit\backend | PASS | All checks passed! |
+| .venv312\Scripts\python.exe -B -m pytest -p no:cacheprovider -o "addopts=" tests\unit\backend tests\integration\api\test_phase4_secure_anonymous_api.py tests\integration\api\test_phase7_legacy_retirement.py --basetemp C:\tmp\alterscore-phase7-backend-final --tb=short -q | PASS | 221 passed in 4.21 seconds; one known PytestConfigWarning for cache_dir because the cache plugin was disabled. |
+| git diff --check | PASS | No whitespace errors; Git reported existing LF/CRLF normalization warnings. Status commands separately reported the inaccessible global-ignore file. |
+
+### Baseline failures and corrective verification
+
+- The first frontend Phase 7 run reported 2 passed and 1 failed because the
+  test searched for “generated data” while the copy used “generated-data”.
+  The disclosure wording was normalized and the final run passed 3/3.
+- The first focused elevated backend run reported 22 passed and 1 failed
+  because the new image-boundary test matched the word “scripts” in a
+  Dockerfile comment. The assertion was narrowed to COPY instructions and the
+  final retained backend suite passed 221/221.
+- A sandboxed Python invocation terminated with Windows status 0xC0000022
+  before pytest started. The same suite was rerun in the approved elevated
+  workspace interpreter; this was an environment execution limitation, not a
+  source-test result.
+
+### Diff hygiene
+
+- No files were staged, committed, pushed, deployed, or regenerated.
+- Legacy files were moved into the named research archive with path checks;
+  their contents remain available for offline research review.
+- Existing dirty and untracked paths, including
+  runtime/shared_session_trained_model_answer_only_v2/, remain preserved.
+
+### Known limitations
+
+- Archived ML/research tests were not run as production tests; their heavy
+  dependencies are documented in research/legacy_synthetic_model/requirements-research.txt.
+- .github/workflows/ci.yml still contains broader CI assumptions for the
+  archived research environment. CI gates, deployment gates, readiness-monitor
+  migration, and operational hardening remain Phase 8 scope.
+- Browser visual automation was not run; static semantic checks, responsive
+  and reduced-motion rules, lint, build, and contract tests passed.
+- Production remains fail-closed until deployment supplies a secure signing
+  secret and trusted HTTPS ASGI scheme.
+
+### Review focus
+
+- Verify the archive contains the complete legacy source/artifact set and no
+  production import reaches it.
+- Probe 410/404 retirement behavior, artifact-free readiness, serving-only
+  dependencies, and the static Research Lab disclosures.
+- Confirm that the v2 formulas, question architecture, public response
+  contract, and active frontend assessment behavior were not changed by the
+  cleanup boundary.
+
+### Stop confirmation
+
+Phase 7 is complete and handed to Codex for review at READY FOR REVIEW.
+Phase 8, deployment execution, commit, push, and model-artifact regeneration
+have not started.
+
+---
+
+## Codex Phase 7 review checkpoint - PASS
+
+### Metadata
+
+- Date/time: 2026-07-16 17:50:29 +05:30.
+- Branch: `codex/scoring-production-hardening`.
+- Phase 7 implementation/review base HEAD:
+  `7d856efd5507eb4bacf387d23968a67f82ddbd97`.
+- Authority: the user explicitly authorized Codex to correct verified Phase 7
+  defects, then commit and push the reviewed phase. No authority extends to
+  Phase 8 implementation, deployment execution, model regeneration, or
+  rewriting checkpoint history.
+- Decision: `PASS`.
+
+### Review result and scoped corrections
+
+- Confirmed the Phase 7 public/research boundary: `POST /api/score` and
+  `/api/debug-score` return `410`, `/api/v1/score` and analytics routes remain
+  absent, readiness has no artifact dependency, and the serving Docker image
+  copies only `backend/app`.
+- Corrected P1 stale CI references to deleted spaCy, `backend.ml`, model
+  registry, and validation-script paths. The obsolete legacy governance job
+  was retired; this removes invalid references and does not introduce Phase 8
+  release/gating work.
+- Corrected P2 route documentation, development test-dependency instructions,
+  Node/Vite compatibility metadata, the stale Ruff scripts exception, and the
+  retired root-model ignore rule. `/models/` is anchored so the research
+  archive is not ignored. Added a Phase 7 automation regression test.
+- The static Research Lab remains direct-link-only, has no API/storage/question
+  dependency, and discloses synthetic labels/fairness, generated-data AUC, and
+  non-public model scoring. No Phase 8 code or contract change was begun.
+
+### Independent verification
+
+| Command / check | Result |
+|---|---|
+| `.venv312\\Scripts\\python.exe -B -m pytest -p no:cacheprovider -o "addopts=" tests\\unit\\backend tests\\integration\\api --basetemp C:\\tmp\\alterscore-phase7-final-pytest --tb=short` | PASS: 222 passed in 4.47 s; one expected cache-provider-disabled `PytestConfigWarning`. |
+| Focused `test_phase7_legacy_retirement.py` with the same isolated options | PASS: 8 passed in 1.27 s. |
+| `npm.cmd run lint`, `test:phase5`, `test:phase6`, `test:phase7`, and `build` | PASS: lint exit 0; 11, 7, and 3 tests; Vite 8.0.16 transformed 1,839 modules. |
+| `npm.cmd ci --dry-run --ignore-scripts` | PASS: package/lockfile parity. |
+| Black on reviewed Phase 7 Python files; Ruff on `backend tests` | PASS. |
+| Archive mapping and `git check-ignore` | PASS: 114 expected archive targets, 0 missing, 120 archive files, and archive paths are not ignored. |
+| `git diff --check` | PASS; no whitespace errors (only pre-existing line-ending/global-ignore warnings). |
+
+### Subagent and scope review
+
+- Luna's James, Erdos, Descartes, and Schrodinger audits were all read-only,
+  had no file ownership, and neither changed shared contracts/tracking nor
+  began Phase 8. Codex independently checked their accepted/rejected findings
+  against the implementation and reproduced the relevant results.
+- Codex's runtime, archive/docs, and frontend/API auditors were likewise
+  read-only. No two agents edited any file concurrently; Codex was the sole
+  correction writer. Unrelated `docs/SCORING_V3_CODEX_REVIEW_PROMPT.md` and
+  `runtime/shared_session_trained_model_answer_only_v2/` remain untouched.
+
+### Handoff
+
+Phase 7 is `PASSED`. The immediate next action is Phase 8 CI, deployment, and
+operational hardening. It is not started by this review.

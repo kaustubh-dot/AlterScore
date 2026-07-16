@@ -1,0 +1,263 @@
+{
+  "manifest_schema_version": "1.0.0",
+  "manifest_version": "xgboost_monotonic_answer_only_v6",
+  "model_version": "0.9.0",
+  "run_id": "20260710_103318_xgboost_monotonic_calibrated",
+  "created_at": "2026-07-10T10:33:20Z",
+  "code_ref": "codex/scoring-production-hardening",
+  "data_version": "synthetic_v3.1.0_answer_only",
+  "feature_registry_version": "0.2.0",
+  "runtime_model_name": "xgboost_monotonic",
+  "runtime_model_type": "classical_monotonic",
+  "target": "repayment_label",
+  "split": {
+    "train": "cohort_month 1-8",
+    "validation": "cohort_month 9-10",
+    "test": "cohort_month 11-12"
+  },
+  "artifacts": {
+    "runtime_model": {
+      "path": "models/artifacts/xgboost_monotonic.pkl",
+      "sha256": "c3f48d9a23fb034408dad50f38ca940b2504458aed567ea2e3ffaaf3fd35ec38"
+    },
+    "preprocessor": {
+      "path": "models/preprocessors/preprocessor_monotonic.pkl",
+      "sha256": "bf5da8c2bdd178a6da3eae61a4b5a3cf3f8a6614f559abc4e2c668bddf5667f1"
+    },
+    "shap_explainer": {
+      "path": "models/explainers/shap_explainer_monotonic.pkl",
+      "sha256": "128baf756b3d9a336c615c122948d59f2402123c848af9ba7698d7c1d88d8561"
+    },
+    "dice_explainer": {
+      "path": "models/explainers/dice_explainer_monotonic.pkl",
+      "sha256": "2ee89474e6eef1b7907535aadf6e56da6d4e736ebce20fdab03d11b245a2732b"
+    },
+    "metrics": {
+      "path": "models/reports/metrics_monotonic.json",
+      "sha256": "c4701b78272a01971fec800365c792463112b8bccf0d975aa06044c5de23d6b1"
+    },
+    "baseline_metrics": {
+      "path": "models/reports/baseline_metrics_monotonic.json",
+      "sha256": "4fc521d9b2550d4c2c45301c99f1452525bbfdb608359a0e473f7d0b74dccc3f"
+    },
+    "fairness_report": {
+      "path": "models/reports/fairness_report_monotonic.json",
+      "sha256": "f53ccf4501f00d975dd2df11dd9d6c42e0712c7f97ae892581654fd04b274ee6"
+    },
+    "psi_report": {
+      "path": "models/reports/psi_report_monotonic.json",
+      "sha256": "a17917dbccd7ebbd52d86e51b7d158fe0526179e9653fc3901af7077f912de2b"
+    },
+    "global_importance": {
+      "path": "models/reports/global_importance_monotonic.json",
+      "sha256": "d50a4db588a8615cdf7f883ec495c9b670e550d9b5f0583c04bfd1c8c1f0802b"
+    },
+    "population_percentiles": {
+      "path": "models/reports/population_percentiles_monotonic.json",
+      "sha256": "d1617b85a87f246f48f630b46c27a28ccc9379591c5a0458bb081af02b7a87a6"
+    }
+  },
+  "metrics_summary": {
+    "test_split": "test_months_11_12",
+    "test_auc_roc": 0.8287,
+    "expected_calibration_error": 0.0507,
+    "calibration": "isotonic"
+  },
+  "fairness_summary": {
+    "overall_auc": 0.8287,
+    "worst_auc_gap": 0.0266,
+    "post_governance_available": true,
+    "post_governance_overall_auc": 0.8287,
+    "individual_fairness_flagged_pair_share": 0.0215,
+    "individual_fairness_max_score_gap": 124,
+    "verdict": "Model shows acceptable fairness across all tested demographic groups. No subgroup shows AUC deviation >4% from the overall model."
+  },
+  "drift_summary": {
+    "max_psi": 0.0059,
+    "verdict": "stable"
+  },
+  "score_mapping": {
+    "method": "log_odds",
+    "score_base": 596.0,
+    "log_odds_factor": 63.478581799114394,
+    "probability_clip_min": 1e-06,
+    "probability_clip_max": 0.99,
+    "score_min": 300,
+    "score_max": 850,
+    "calibration": "isotonic",
+    "policy": {
+      "pdo": 44.0,
+      "anchor_score": 640.0,
+      "anchor_odds": 2.0,
+      "note": "base and log_odds_factor are derived from pdo/anchor \u2014 do not hand-edit"
+    }
+  },
+  "training_summary": {
+    "row_count": 10000,
+    "seed": 42,
+    "training_device": "cpu",
+    "parallel_workers": -1,
+    "calibration": "isotonic",
+    "xgboost_params": {
+      "n_estimators": 320,
+      "learning_rate": 0.035,
+      "max_depth": 2,
+      "min_child_weight": 12,
+      "reg_lambda": 3.0,
+      "gamma": 0.05,
+      "subsample": 0.88,
+      "colsample_bytree": 0.9,
+      "objective": "binary:logistic",
+      "eval_metric": "logloss",
+      "random_state": 42,
+      "n_jobs": -1,
+      "tree_method": "hist",
+      "device": "cpu",
+      "monotone_constraints": [
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "verbosity": 0
+    },
+    "monotonic_constraint_counts": {
+      "positive": 10,
+      "negative": 0,
+      "zero": 1
+    },
+    "masked_features": [],
+    "feature_weights": {
+      "CRT_score": 2.0,
+      "conscientiousness_score": 1.25,
+      "financial_literacy_score": 2.0,
+      "future_orientation": 1.25,
+      "honesty_score": 1.25,
+      "locus_of_control": 1.25,
+      "numeracy_score": 2.0,
+      "resilience_score": 1.25
+    }
+  },
+  "promotion_status": "promoted",
+  "promotion_notes": "Calibrated monotonic XGBoost bundle regenerated from the deterministic synthetic v2 generator. The runtime model uses isotonic calibration, manifest-backed score mapping, active monotonic constraints, and promotion-gate-aligned reports.",
+  "promotion_gate_summary": {
+    "status": "passed",
+    "promotion_status": "promoted",
+    "policy_version": "promotion_gate_policy_v2",
+    "blocking_failures": [],
+    "warnings": [],
+    "checks": [
+      {
+        "name": "test_auc_roc",
+        "status": "pass",
+        "message": "Test AUC-ROC must be at least 0.750 for xgboost_monotonic.",
+        "metric_value": 0.8287,
+        "threshold": 0.75,
+        "blocking": true
+      },
+      {
+        "name": "expected_calibration_error",
+        "status": "pass",
+        "message": "Expected calibration error must stay below 0.080.",
+        "metric_value": 0.0507,
+        "threshold": 0.08,
+        "blocking": true
+      },
+      {
+        "name": "subgroup_auc_gap",
+        "status": "pass",
+        "message": "Worst subgroup AUC gap must be <= 0.075.",
+        "metric_value": 0.0266,
+        "threshold": 0.075,
+        "blocking": true
+      },
+      {
+        "name": "calibration_parity_ece",
+        "status": "pass",
+        "message": "Fairness calibration parity ECE must stay below 0.080.",
+        "metric_value": 0.0507,
+        "threshold": 0.08,
+        "blocking": true
+      },
+      {
+        "name": "individual_fairness_flagged_share",
+        "status": "pass",
+        "message": "Similar-pair score-gap flagged share must stay below 0.100.",
+        "metric_value": 0.0215,
+        "threshold": 0.1,
+        "blocking": true
+      },
+      {
+        "name": "individual_fairness_max_score_gap",
+        "status": "pass",
+        "message": "Maximum similar-pair score gap must stay below 160 points.",
+        "metric_value": 124.0,
+        "threshold": 160.0,
+        "blocking": true
+      },
+      {
+        "name": "post_governance_auc_drop",
+        "status": "pass",
+        "message": "Post-governance AUC drop must stay below 0.010.",
+        "metric_value": 0.0,
+        "threshold": 0.01,
+        "blocking": true
+      },
+      {
+        "name": "post_governance_approval_rate_delta",
+        "status": "pass",
+        "message": "Absolute post-governance approval-rate shift must stay below 0.050.",
+        "metric_value": 0.0,
+        "threshold": 0.05,
+        "blocking": false
+      },
+      {
+        "name": "drift_max_psi",
+        "status": "pass",
+        "message": "Maximum PSI must stay below 0.30.",
+        "metric_value": 0.0059,
+        "threshold": 0.3,
+        "blocking": false
+      },
+      {
+        "name": "score_dist_median",
+        "status": "pass",
+        "message": "Population median score must be in [580, 700]. A median below 580 indicates the mapping is collapsing all applicants into Poor.",
+        "metric_value": 646.0,
+        "threshold": 580.0,
+        "blocking": true
+      },
+      {
+        "name": "score_dist_max_reachable",
+        "status": "pass",
+        "message": "Population max score must reach at least 760. A ceiling below this means Good/Excellent are unreachable.",
+        "metric_value": 850.0,
+        "threshold": 760.0,
+        "blocking": true
+      },
+      {
+        "name": "score_dist_p95",
+        "status": "pass",
+        "message": "95th-percentile score must be >= 720 (Good band). Currently 850.",
+        "metric_value": 850.0,
+        "threshold": 720.0,
+        "blocking": true
+      },
+      {
+        "name": "score_dist_good_plus_share",
+        "status": "pass",
+        "message": "At least 15% of population must score Good or Excellent (>=650). Currently 48.0%.",
+        "metric_value": 0.48,
+        "threshold": 0.15,
+        "blocking": true
+      }
+    ]
+  }
+}

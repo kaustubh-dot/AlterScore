@@ -1,71 +1,40 @@
-# Governance Workflow
+# Governance workflow
 
-## Philosophy
+AlterScore separates the public deterministic assessment from offline
+synthetic-model research.
 
-AlterScore does not promote production candidates on aggregate AUC alone.
+## Public release gates
 
-A model is treated as production-ready only if it is:
+Every public release must verify:
 
-- predictively strong
-- monotonicity-audited
-- counterfactually stable
-- fairness-reviewed
-- calibration-reviewed
-- explainable
-- operationally reproducible
+1. frozen contract, assessment, and scoring-policy versions;
+2. exact objective, judgment, branching, and legacy-transform arithmetic;
+3. opaque single-use attempt IDs and HTTPS-only bearer transport;
+4. signed results with redacted verification projections;
+5. session-only detailed evidence with no token or raw submission persistence;
+6. public-boundary language that excludes repayment, lending, approval,
+   creditworthiness, pricing, and human-validation claims;
+7. v1 `410 Gone`, unavailable analytics routes, and no archived-research
+   imports in the serving graph;
+8. frontend lint, production build, v2 contract tests, and Phase 7 separation
+   tests.
 
-## Production Candidate Flow
+## Research boundary
 
-1. Generate or load the evaluation dataset with temporal splits.
-2. Train the candidate using the approved production-track feature policy.
-3. Evaluate discrimination and calibration on validation and held-out test data.
-4. Run monotonic sensitivity audits.
-5. Run pairwise counterfactual stability audits.
-6. Run subgroup fairness and calibration-parity analysis.
-7. Review proxy-sensitive features and subgroup SHAP behavior.
-8. Compare against the current runtime baseline.
-9. Promote only if all active governance gates pass.
+Archived synthetic labels, fairness reports, AUC values, explainers, parsers,
+and training scripts are stored under `research/legacy_synthetic_model/`.
+Labels and fairness data are synthetic. AUC measures recovery of generated data,
+not external validation or repayment outcomes. The archived model does not
+score public assessments.
 
-## Hard Gates
+Research work must use its separate requirements file and environment. It may
+not add imports, artifacts, routes, feature authorities, or dependencies to
+the public v2 image without a new reviewed phase and explicit authorization.
 
-The repository currently treats these as hard promotion requirements. Numeric
-thresholds are versioned in `models/registry/promotion_gate_policy.json` and
-checked with `python -m backend.ml.registry.promotion_gates`.
+## Operational interpretation
 
-- monotonic acceptance gate
-- pairwise counterfactual acceptance gate
-- fairness gate, including subgroup and individual-fairness proxy checks
-- calibration gate
-- drift gate
-- post-governance impact gate
-- production bundle compatibility
-
-These thresholds must not be weakened during cleanup or release preparation.
-
-## Production-Track Commands
-
-Primary governed evaluation and promotion commands:
-
-- `python scripts/training/train_calibrated_monotonic_xgboost.py`
-- `python scripts/training/promote_monotonic_xgboost.py`
-- `python -m backend.ml.registry.promotion_gates --manifest models/registry/production_manifest.json --allow-promoted-incompatibility`
-
-## Promotion Review Standard
-
-Promotion is not justified solely because:
-
-- AUC improves
-- calibration improves in one slice
-- ranking beats the previous ensemble
-
-Promotion requires the full governance stack to remain green.
-
-## Current Operating Position
-
-The active checked-in runtime is calibrated monotonic `XGBoost`.
-
-The current manifest is promoted because all blocking gates pass under
-`promotion_gate_policy_v2`, which adds score-distribution gates (median band,
-P95 reachability, Good-or-better share) on top of the calibration, fairness,
-and drift gates. PSI is `stable` at max `0.0152`, well below the blocking
-`0.30` alert threshold.
+`/api/live` is liveness, while `/api/ready` is the public readiness contract.
+Readiness is based on the canonical instrument, deterministic scorer, signing,
+bounded stores, and network rate limiter; it does not inspect ML artifacts.
+Deployment credential gates, post-deploy automation, and full-release rollback
+remain operational hardening work for Phase 8.

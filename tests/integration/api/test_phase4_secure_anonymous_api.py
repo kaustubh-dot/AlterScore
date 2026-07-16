@@ -481,18 +481,12 @@ def test_unknown_result_is_privacy_preserving() -> None:
         }
 
 
-def test_real_create_app_keeps_v2_alive_when_legacy_loader_fails(monkeypatch) -> None:
+def test_real_create_app_is_independent_of_archived_artifacts() -> None:
     from backend.app import main
-    from backend.app.core.paths import REPO_ROOT
     from backend.app.core.settings import load_settings
 
-    def fail_legacy_loader(*args, **kwargs):
-        raise RuntimeError("legacy loader failure is intentionally redacted")
-
-    monkeypatch.setattr(main, "load_runtime_artifact_bundle", fail_legacy_loader)
     settings = load_settings(
         {
-            "ALTERSCORE_REPO_ROOT": str(REPO_ROOT),
             "ALTERSCORE_SIGNING_SECRET": TEST_SIGNING_SECRET,
             "ALTERSCORE_ENV": "local",
         }
@@ -506,4 +500,4 @@ def test_real_create_app_keeps_v2_alive_when_legacy_loader_fails(monkeypatch) ->
         assert ready.status_code == 200
         assert ready.json()["status"] == "ready"
         assert health.status_code == 200
-        assert health.json()["status"] == "error"
+        assert health.json()["service"] == "public-v2"

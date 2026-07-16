@@ -1,0 +1,645 @@
+"""Deterministic synthetic data generation for the AlterScore pipeline."""
+
+from __future__ import annotations
+
+from typing import Final
+
+import numpy as np
+import pandas as pd
+
+from backend.ml.nlp.extractor import RAW_TEXT_RESPONSE_COLUMN
+from backend.ml.features.scenario_analyzer import (
+    _OPTION_CODEBOOK,
+    _SCENARIO_EVIDENCE_IDS,
+    _LEAST_SELECTION_WEIGHT,
+    _PRIMARY_WEIGHT,
+    _SECONDARY_WEIGHT,
+)
+from backend.ml.preprocessing.feature_registry import TARGET
+
+DEFAULT_ROW_COUNT: Final[int] = 10_000
+DEFAULT_SEED: Final[int] = 42
+DEFAULT_COHORT_YEAR: Final[int] = 2025
+
+TEMPORAL_SPLIT_MONTHS: Final[dict[str, tuple[int, ...]]] = {
+    "train": tuple(range(1, 9)),
+    "validation": (9, 10),
+    "test": (11, 12),
+}
+
+_MONTH_DISTRIBUTION_WEIGHTS: Final[np.ndarray] = np.array(
+    [0.085, 0.085, 0.085, 0.085, 0.085, 0.085, 0.085, 0.085, 0.07, 0.07, 0.09, 0.09],
+    dtype=float,
+)
+_MONTH_LENGTHS: Final[np.ndarray] = np.array(
+    [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
+    dtype=int,
+)
+_POSITIVE_RESILIENCE_OPENERS: Final[tuple[str, ...]] = (
+    "When income fell, I stayed calm and made a plan.",
+    "I felt pressure, but I decided to act early and stay in control.",
+    "I was confident I could recover, so I started working on a better plan.",
+)
+_NEGATIVE_RESILIENCE_OPENERS: Final[tuple[str, ...]] = (
+    "Things fell apart and bad things kept happening.",
+    "I felt stuck and worse after the loss.",
+    "The crisis felt overwhelming and I was unable to think clearly at first.",
+)
+_HIGH_AGENCY_ACTIONS: Final[tuple[str, ...]] = (
+    "I budgeted strictly, found extra work, and saved what I could.",
+    "I managed my expenses, negotiated payments, and worked to rebuild income.",
+    "I reduced spending, planned repayments, and handled the problem directly.",
+)
+_MODERATE_AGENCY_ACTIONS: Final[tuple[str, ...]] = (
+    "I asked for help, learned what to change, and started improving the situation.",
+    "I made some changes, found support, and tried to recover step by step.",
+    "I chose a smaller plan, worked steadily, and looked for better options.",
+)
+_LOW_AGENCY_ACTIONS: Final[tuple[str, ...]] = (
+    "I had no choice and felt nothing I did would help.",
+    "I gave up for a while because I felt unable to do anything.",
+    "I felt forced to wait and stayed stuck instead of acting.",
+)
+_PROBLEM_SOLVING_CLOSERS: Final[tuple[str, ...]] = (
+    "That plan helped me improve and feel more stable.",
+    "The steps gave me relief and a better path forward.",
+    "Working through it helped me recover and build confidence.",
+)
+_NEUTRAL_CLOSERS: Final[tuple[str, ...]] = (
+    "I kept going and looked for a practical next step.",
+    "I tried to stay steady while the situation changed.",
+    "I focused on the next thing I could do.",
+)
+_NEGATIVE_CLOSERS: Final[tuple[str, ...]] = (
+    "I still felt stuck and afraid things would get worse.",
+    "The problem felt unresolved and I lost confidence.",
+    "It was hard to recover and I felt unable to improve much.",
+)
+
+
+def generate_synthetic_dataset(
+    row_count: int = DEFAULT_ROW_COUNT,
+    seed: int = DEFAULT_SEED,
+) -> pd.DataFrame:
+    """Generate a deterministic in-memory synthetic dataset.
+
+    v2 assessment calibration notes (updated for scenario-based question bank):
+    - Scenario-driven features (conscientiousness, locus_of_control, future_orientation,
+      resilience, social_capital, reciprocity, loss_aversion) are clipped to [0.25, 1.0].
+      In v2, the worst realistic multi-scenario average is ~0.25 (picking the lowest-coded
+      option across all 7 scenarios), so the old [0.0, 1.0] floor was too pessimistic.
+    - risk_consistency_flag probability is tightened to [0.02, 0.18].
+      In v2, there are no direct risk-pair questions, so the flag defaults to 0 at runtime
+      for most users. The generator now reflects the much lower conflict rate.
+    - delay_discounting_rate floor raised to 0.20 to match future_orientation floor.
+    - Objective-answer and honesty values use the same discrete transformations
+      as the serving parser. Non-serving telemetry and text columns remain only
+      as offline diagnostic data and never enter the active feature registry.
+    """
+
+    if row_count <= 0:
+        raise ValueError("row_count must be a positive integer.")
+
+    rng = np.random.default_rng(seed)
+    cohort_month = _build_cohort_months(row_count)
+
+    capacity = rng.normal(0.0, 1.0, row_count)
+    discipline = 0.38 * capacity + rng.normal(0.0, 0.92, row_count)
+    stability = 0.24 * discipline + rng.normal(0.0, 0.97, row_count)
+    integrity = 0.20 * discipline + 0.18 * stability + rng.normal(0.0, 0.94, row_count)
+    social = 0.18 * discipline + 0.28 * stability + rng.normal(0.0, 0.93, row_count)
+
+    # Runtime parses objective answers into discrete values, rather than using
+    # continuous latent scores. Sample those same observable outcomes here so
+    # the training distribution matches serving exactly.
+    numeracy_q1_score = _sample_answer_score(
+        rng,
+        _sigmoid(0.95 * capacity + 0.18 * discipline),
+        partial_probability=0.16,
+    )
+    numeracy_q2_score = _sample_answer_score(
+        rng,
+        _sigmoid(0.88 * capacity + 0.20 * discipline),
+    )
+    numeracy_score = (numeracy_q1_score + numeracy_q2_score) / 2.0
+    crt_q1_score = _sample_answer_score(
+        rng,
+        _sigmoid(0.82 * capacity + 0.12 * discipline),
+    )
+    crt_q2_score = _sample_answer_score(
+        rng,
+        _sigmoid(0.76 * capacity + 0.16 * discipline),
+    )
+    crt_score = (crt_q1_score + crt_q2_score) / 2.0
+    financial_literacy_score = _sample_answer_score(
+        rng,
+        _sigmoid(0.58 * capacity + 0.30 * discipline),
+    )
+    suspicious_honesty_trap = rng.random(row_count) < np.clip(
+        0.35 - 0.22 * _sigmoid(integrity),
+        0.04,
+        0.42,
+    )
+    high_objective_score = (numeracy_score >= 0.5) & (crt_score >= 0.5)
+    base_honesty_score = (1.0 - 0.25 * suspicious_honesty_trap) * (
+        1.0 - 0.20 * (suspicious_honesty_trap & high_objective_score)
+    )
+
+    # --- Scenario-driven features (Discrete sampling via Codebook) ---
+    # We simulate users picking options from the scenario codebook based on their latent traits.
+
+    # Initialize zero arrays
+    feature_accumulators = {
+        "future_orientation": np.zeros(row_count),
+        "conscientiousness_score": np.zeros(row_count),
+        "social_capital_score": np.zeros(row_count),
+        "locus_of_control": np.zeros(row_count),
+        "resilience_score": np.zeros(row_count),
+        "loss_aversion_score": np.zeros(row_count),
+        "reciprocity_norm": np.zeros(row_count),
+        "honesty_score": np.zeros(row_count),
+    }
+    feature_counts = {k: np.zeros(row_count) for k in feature_accumulators}
+
+    latent_prefs = {
+        "future_orientation": _sigmoid(0.62 * discipline + 0.24 * stability),
+        "conscientiousness_score": _sigmoid(0.58 * discipline + 0.16 * stability),
+        "social_capital_score": _sigmoid(0.64 * social + 0.18 * integrity),
+        "locus_of_control": _sigmoid(0.56 * stability + 0.18 * discipline),
+        "resilience_score": _sigmoid(0.54 * stability + 0.22 * social),
+        "loss_aversion_score": _sigmoid(0.22 * stability - 0.12 * capacity),
+        "reciprocity_norm": _sigmoid(0.56 * social + 0.20 * integrity),
+        "honesty_score": base_honesty_score,
+    }
+
+    # Match runtime evidence assembly: S8 is a consistency check only, and the
+    # least-like-me selection contributes an inverted, lower-weight signal.
+    for s_id in sorted(_SCENARIO_EVIDENCE_IDS):
+        prefix = s_id.split("_")[1]
+        options = [k for k in _OPTION_CODEBOOK.keys() if k.startswith(prefix)]
+
+        affinities = []
+        for opt in options:
+            p_feat, p_val, s_feat, s_val = _OPTION_CODEBOOK[opt]
+            aff = (
+                p_val * latent_prefs[p_feat]
+                + s_val * latent_prefs[s_feat]
+                + rng.normal(0, 0.2, row_count)
+            )
+            affinities.append(aff)
+
+        affinities = np.array(affinities)
+        best_opt_indices = np.argmax(affinities, axis=0)
+        least_opt_indices = np.argmin(affinities, axis=0)
+
+        for i in range(row_count):
+            chosen_opt = options[best_opt_indices[i]]
+            p_feat, p_val, s_feat, s_val = _OPTION_CODEBOOK[chosen_opt]
+            feature_accumulators[p_feat][i] += p_val * _PRIMARY_WEIGHT
+            feature_counts[p_feat][i] += _PRIMARY_WEIGHT
+            feature_accumulators[s_feat][i] += s_val * _SECONDARY_WEIGHT
+            feature_counts[s_feat][i] += _SECONDARY_WEIGHT
+
+            least_opt = options[least_opt_indices[i]]
+            least_p_feat, least_p_val, least_s_feat, least_s_val = _OPTION_CODEBOOK[
+                least_opt
+            ]
+            feature_accumulators[least_p_feat][i] += (
+                (1.0 - least_p_val) * _PRIMARY_WEIGHT * _LEAST_SELECTION_WEIGHT
+            )
+            feature_counts[least_p_feat][i] += (
+                _PRIMARY_WEIGHT * _LEAST_SELECTION_WEIGHT
+            )
+            feature_accumulators[least_s_feat][i] += (
+                (1.0 - least_s_val) * _SECONDARY_WEIGHT * _LEAST_SELECTION_WEIGHT
+            )
+            feature_counts[least_s_feat][i] += (
+                _SECONDARY_WEIGHT * _LEAST_SELECTION_WEIGHT
+            )
+
+    for f in feature_accumulators:
+        avg_contributions = np.full(row_count, 0.5, dtype=float)
+        np.divide(
+            feature_accumulators[f],
+            feature_counts[f],
+            out=avg_contributions,
+            where=feature_counts[f] > 0,
+        )
+        # Use raw codebook averages — no artificial floor.
+        # Matches the runtime scenario_analyzer which now uses weighted_avg directly.
+        feature_accumulators[f] = np.clip(avg_contributions, 0.0, 1.0)
+
+    future_orientation = feature_accumulators["future_orientation"]
+    conscientiousness_score = feature_accumulators["conscientiousness_score"]
+    social_capital_score = feature_accumulators["social_capital_score"]
+    locus_of_control = feature_accumulators["locus_of_control"]
+    resilience_score = feature_accumulators["resilience_score"]
+    loss_aversion_score = feature_accumulators["loss_aversion_score"]
+    reciprocity_norm = feature_accumulators["reciprocity_norm"]
+    scenario_honesty_score = feature_accumulators["honesty_score"]
+    # Serving starts from the honesty-trap score and blends only 15% of the
+    # scenario contribution. Mirror that policy before training.
+    honesty_score = np.clip(
+        0.85 * base_honesty_score + 0.15 * scenario_honesty_score,
+        0.0,
+        1.0,
+    )
+
+    delay_discounting_rate = np.clip(
+        0.68 * future_orientation
+        + 0.12 * _sigmoid(0.35 * discipline)
+        + rng.normal(0.0, 0.08, row_count),
+        0.20,
+        1.0,
+    )
+    risk_attitude = np.clip(
+        0.52 + 0.10 * capacity - 0.06 * discipline + rng.normal(0.0, 0.16, row_count),
+        0.02,
+        0.98,
+    )
+    risk_consistency_probability = np.clip(
+        0.08 - 0.04 * discipline - 0.03 * capacity + rng.normal(0.0, 0.03, row_count),
+        0.02,
+        0.18,
+    )
+    risk_consistency_flag = (
+        rng.random(row_count) < risk_consistency_probability
+    ).astype(int)
+
+    device_type = rng.choice(
+        np.array(["mobile", "desktop", "tablet"], dtype=object),
+        size=row_count,
+        p=[0.72, 0.20, 0.08],
+    )
+    time_of_day = rng.choice(
+        np.array(["morning", "afternoon", "evening", "night"], dtype=object),
+        size=row_count,
+        p=[0.22, 0.34, 0.29, 0.15],
+    )
+
+    avg_response_time_ms = np.clip(
+        5_900
+        - 1_050 * capacity
+        - 380 * discipline
+        + 250 * (device_type == "mobile")
+        + 120 * (time_of_day == "night")
+        + rng.normal(0.0, 620.0, row_count),
+        900.0,
+        12_000.0,
+    )
+    answer_change_rate = np.clip(
+        0.18
+        - 0.06 * discipline
+        - 0.04 * integrity
+        + 0.03 * risk_consistency_flag
+        + rng.normal(0.0, 0.04, row_count),
+        0.0,
+        0.45,
+    )
+    dropout_lambda = np.clip(
+        0.32
+        + 0.12 * (risk_attitude > 0.72)
+        + 0.08 * (answer_change_rate > 0.18)
+        - 0.08 * discipline
+        + 0.05 * (device_type == "mobile"),
+        0.05,
+        1.20,
+    )
+    dropout_count = np.clip(rng.poisson(dropout_lambda), 0, 6).astype(int)
+    scroll_hesitation_score = np.clip(
+        0.48
+        - 0.10 * discipline
+        - 0.08 * stability
+        + 0.12 * answer_change_rate
+        + rng.normal(0.0, 0.08, row_count),
+        0.02,
+        0.98,
+    )
+    risk_response_speed_ratio = np.clip(
+        0.90
+        + 0.24 * (risk_attitude - 0.5)
+        - 0.28 * (crt_score - 0.5)
+        + rng.normal(0.0, 0.14, row_count),
+        0.30,
+        2.50,
+    )
+    typing_speed_wpm = np.clip(
+        28.0
+        + 7.5 * capacity
+        + 4.0 * conscientiousness_score
+        + 1.5 * (device_type == "desktop")
+        + rng.normal(0.0, 4.4, row_count),
+        10.0,
+        85.0,
+    )
+    session_duration_sec = np.clip(
+        (avg_response_time_ms * 27.0 / 1_000.0)
+        * (1.08 + 0.55 * scroll_hesitation_score + 0.20 * answer_change_rate)
+        + dropout_count * 24.0
+        + rng.normal(0.0, 22.0, row_count),
+        120.0,
+        1_400.0,
+    )
+
+    text_agency_score = np.clip(
+        0.20
+        + 0.34 * locus_of_control
+        + 0.18 * resilience_score
+        + 0.14 * conscientiousness_score
+        + rng.normal(0.0, 0.08, row_count),
+        0.0,
+        1.0,
+    )
+    text_sentiment_compound = np.clip(
+        -0.12
+        + 0.92 * (resilience_score - 0.5)
+        + 0.38 * (future_orientation - 0.5)
+        + 0.18 * (social_capital_score - 0.5)
+        + rng.normal(0.0, 0.18, row_count),
+        -1.0,
+        1.0,
+    )
+    problem_solving_probability = np.clip(
+        0.18
+        + 0.34 * resilience_score
+        + 0.20 * conscientiousness_score
+        + 0.12 * text_agency_score
+        + rng.normal(0.0, 0.05, row_count),
+        0.05,
+        0.95,
+    )
+    text_problem_solving_flag = (
+        rng.random(row_count) < problem_solving_probability
+    ).astype(int)
+    text_semantic_dim1 = (
+        1.35 * (text_agency_score - 0.5)
+        + 0.95 * (resilience_score - 0.5)
+        + rng.normal(0.0, 0.65, row_count)
+    )
+    text_semantic_dim2 = (
+        1.10 * text_sentiment_compound
+        - 0.60 * (risk_attitude - 0.5)
+        + rng.normal(0.0, 0.70, row_count)
+    )
+
+    psychological_credit_index = (
+        0.22 * numeracy_score
+        + 0.18 * honesty_score
+        + 0.16 * future_orientation
+        + 0.12 * locus_of_control
+        + 0.10 * social_capital_score
+        + 0.08 * conscientiousness_score
+        + 0.06 * crt_score
+        + 0.05 * financial_literacy_score
+        + 0.03 * (1.0 - loss_aversion_score)
+    )
+    cognitive_consistency_index = np.clip(
+        crt_score * (1.0 - risk_consistency_flag) * (1.0 - answer_change_rate),
+        0.0,
+        1.0,
+    )
+    repayment_intention_score = np.clip(
+        locus_of_control * social_capital_score * honesty_score,
+        0.0,
+        1.0,
+    )
+    impulsivity_index = np.clip(
+        risk_attitude / (crt_score + 0.1),
+        0.0,
+        5.0,
+    )
+    cognitive_load_index = np.clip(
+        1.0 * (1.0 + answer_change_rate) * (1.0 + dropout_count * 0.2),
+        0.0,
+        None,
+    )
+    engagement_score = np.clip(
+        (1.0 - scroll_hesitation_score)
+        * (1.0 - answer_change_rate)
+        * np.clip(1.0 - dropout_count / 4.0, 0.0, 1.0),
+        0.0,
+        1.0,
+    )
+    behavioral_trust_score = np.clip(
+        engagement_score * honesty_score * (1.0 - impulsivity_index),
+        -1.0,
+        1.0,
+    )
+
+    gender = rng.choice(
+        np.array(["male", "female", "non_binary"], dtype=object),
+        size=row_count,
+        p=[0.50, 0.47, 0.03],
+    )
+    age_group = rng.choice(
+        np.array(["18-25", "26-35", "36-50", "50+"], dtype=object),
+        size=row_count,
+        p=[0.25, 0.38, 0.27, 0.10],
+    )
+    region = rng.choice(
+        np.array(["urban", "semi-urban", "rural"], dtype=object),
+        size=row_count,
+        p=[0.30, 0.35, 0.35],
+    )
+    education_level = rng.choice(
+        np.array(["none", "primary", "secondary", "graduate"], dtype=object),
+        size=row_count,
+        p=[0.10, 0.24, 0.46, 0.20],
+    )
+    application_date = _build_application_dates(cohort_month, rng)
+
+    risk_balance = 1.0 - np.clip(np.abs(risk_attitude - 0.55) / 0.55, 0.0, 1.0)
+
+    # The synthetic target intentionally depends only on direct, declared
+    # assessment answers. Browser/device data, opaque text semantics, legacy
+    # composites, and protected attributes are absent from this formula and from
+    # the model registry, so they cannot become hidden proxies at inference time.
+    repayment_logit = (
+        2.20 * (numeracy_score - 0.50)
+        + 1.75 * (crt_score - 0.50)
+        + 1.45 * (financial_literacy_score - 0.50)
+        + 1.10 * (future_orientation - 0.50)
+        + 0.35 * (0.50 - loss_aversion_score)
+        + 1.10 * (locus_of_control - 0.50)
+        + 1.20 * (conscientiousness_score - 0.50)
+        + 0.55 * (social_capital_score - 0.50)
+        + 1.40 * (honesty_score - 0.50)
+        + 0.90 * (resilience_score - 0.50)
+        + 0.50 * (reciprocity_norm - 0.50)
+        + rng.normal(0.0, 0.38, row_count)
+        - 1.30
+    )
+    repayment_probability = _sigmoid(repayment_logit)
+    repayment_label = (rng.random(row_count) < repayment_probability).astype(int)
+    resilience_text = _build_resilience_texts(
+        rng,
+        text_agency_score=text_agency_score,
+        text_sentiment_compound=text_sentiment_compound,
+        text_problem_solving_flag=text_problem_solving_flag,
+    )
+
+    dataset = pd.DataFrame(
+        {
+            "numeracy_score": numeracy_score,
+            "CRT_score": crt_score,
+            "financial_literacy_score": financial_literacy_score,
+            "future_orientation": future_orientation,
+            "delay_discounting_rate": delay_discounting_rate,
+            "risk_attitude": risk_attitude,
+            "risk_consistency_flag": risk_consistency_flag,
+            "loss_aversion_score": loss_aversion_score,
+            "locus_of_control": locus_of_control,
+            "conscientiousness_score": conscientiousness_score,
+            "social_capital_score": social_capital_score,
+            "honesty_score": honesty_score,
+            "resilience_score": resilience_score,
+            "reciprocity_norm": reciprocity_norm,
+            "avg_response_time_ms": avg_response_time_ms,
+            "answer_change_rate": answer_change_rate,
+            "session_duration_sec": session_duration_sec,
+            "dropout_count": dropout_count,
+            "scroll_hesitation_score": scroll_hesitation_score,
+            "risk_response_speed_ratio": risk_response_speed_ratio,
+            "typing_speed_wpm": typing_speed_wpm,
+            "text_sentiment_compound": text_sentiment_compound,
+            "text_agency_score": text_agency_score,
+            "text_problem_solving_flag": text_problem_solving_flag,
+            "text_semantic_dim1": text_semantic_dim1,
+            "text_semantic_dim2": text_semantic_dim2,
+            "psychological_credit_index": psychological_credit_index,
+            "cognitive_consistency_index": cognitive_consistency_index,
+            "repayment_intention_score": repayment_intention_score,
+            "impulsivity_index": impulsivity_index,
+            "cognitive_load_index": cognitive_load_index,
+            "engagement_score": engagement_score,
+            "behavioral_trust_score": behavioral_trust_score,
+            "device_type": device_type,
+            "time_of_day": time_of_day,
+            "gender": gender,
+            "age_group": age_group,
+            "region": region,
+            "education_level": education_level,
+            "cohort_month": cohort_month,
+            "application_date": application_date,
+            TARGET: repayment_label,
+            RAW_TEXT_RESPONSE_COLUMN: resilience_text,
+        },
+    )
+
+    return dataset
+
+
+def _build_cohort_months(row_count: int) -> np.ndarray:
+    raw_counts = _MONTH_DISTRIBUTION_WEIGHTS * row_count
+    month_counts = np.floor(raw_counts).astype(int)
+    remainder = row_count - int(month_counts.sum())
+
+    if remainder:
+        order = np.argsort(-(raw_counts - month_counts))
+        month_counts[order[:remainder]] += 1
+
+    return np.concatenate(
+        [
+            np.full(month_count, month_index + 1, dtype=int)
+            for month_index, month_count in enumerate(month_counts)
+        ]
+    )
+
+
+def _build_application_dates(
+    cohort_month: np.ndarray, rng: np.random.Generator
+) -> list[str]:
+    days = [
+        int(rng.integers(1, _MONTH_LENGTHS[int(month) - 1] + 1))
+        for month in cohort_month
+    ]
+    return [
+        f"{DEFAULT_COHORT_YEAR}-{int(month):02d}-{day:02d}"
+        for month, day in zip(cohort_month, days, strict=True)
+    ]
+
+
+def _build_resilience_texts(
+    rng: np.random.Generator,
+    *,
+    text_agency_score: np.ndarray,
+    text_sentiment_compound: np.ndarray,
+    text_problem_solving_flag: np.ndarray,
+) -> list[str]:
+    texts: list[str] = []
+
+    for agency, sentiment, problem_solving in zip(
+        text_agency_score,
+        text_sentiment_compound,
+        text_problem_solving_flag,
+        strict=True,
+    ):
+        if sentiment >= 0.2:
+            opener_pool = _POSITIVE_RESILIENCE_OPENERS
+        elif sentiment <= -0.2:
+            opener_pool = _NEGATIVE_RESILIENCE_OPENERS
+        else:
+            opener_pool = _POSITIVE_RESILIENCE_OPENERS + _NEGATIVE_RESILIENCE_OPENERS
+
+        if agency >= 0.65:
+            action_pool = _HIGH_AGENCY_ACTIONS
+        elif agency >= 0.4:
+            action_pool = _MODERATE_AGENCY_ACTIONS
+        else:
+            action_pool = _LOW_AGENCY_ACTIONS
+
+        if int(problem_solving) == 1:
+            closer_pool = _PROBLEM_SOLVING_CLOSERS
+        elif sentiment <= -0.2:
+            closer_pool = _NEGATIVE_CLOSERS
+        else:
+            closer_pool = _NEUTRAL_CLOSERS
+
+        texts.append(
+            " ".join(
+                [
+                    str(rng.choice(opener_pool)),
+                    str(rng.choice(action_pool)),
+                    str(rng.choice(closer_pool)),
+                ]
+            )
+        )
+
+    return texts
+
+
+def _clip01(values: np.ndarray) -> np.ndarray:
+    return np.clip(values, 0.0, 1.0)
+
+
+def _sample_answer_score(
+    rng: np.random.Generator,
+    correct_probability: np.ndarray,
+    *,
+    partial_probability: float = 0.0,
+) -> np.ndarray:
+    """Sample the discrete score levels emitted by the runtime answer parser."""
+
+    correct = np.clip(np.asarray(correct_probability, dtype=float), 0.0, 1.0)
+    partial = np.minimum(
+        float(np.clip(partial_probability, 0.0, 1.0)),
+        1.0 - correct,
+    )
+    draws = rng.random(correct.shape[0])
+    return np.where(
+        draws < correct,
+        1.0,
+        np.where(draws < correct + partial, 0.5, 0.0),
+    )
+
+
+def _sigmoid(values: np.ndarray) -> np.ndarray:
+    return 1.0 / (1.0 + np.exp(-values))
+
+
+__all__ = [
+    "DEFAULT_ROW_COUNT",
+    "DEFAULT_SEED",
+    "TEMPORAL_SPLIT_MONTHS",
+    "generate_synthetic_dataset",
+]

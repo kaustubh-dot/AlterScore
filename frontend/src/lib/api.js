@@ -36,10 +36,6 @@ const api = axios.create({
   timeout: 30000,
 });
 
-export function getHealthUrl() {
-  return `${API_BASE_URL}/health`;
-}
-
 function getSecureApiTransportError() {
   if (apiConfigurationError) return apiConfigurationError;
   if (API_BASE_URL.startsWith('/')
@@ -69,5 +65,3 @@ export function submitV2Assessment(form, submission, config = {}) {
 export function getV2VerificationUrl(resultId) {
   return `${API_BASE_URL}/v2/results/verify/${encodeURIComponent(resultId)}`;
 }
-
-export default api;

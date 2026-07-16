@@ -86,36 +86,9 @@ data/reports/*
 data/validation/*
 !data/validation/.gitkeep
 
-# Model binaries, explainers, preprocessors, and generated reports
-models/artifacts/*
-!models/artifacts/logistic_best.pkl
-!models/artifacts/calibrated_stacking.pkl
-!models/artifacts/calibrated_stacking_config.json
-!models/artifacts/rf_best.pkl
-!models/artifacts/xgb_best.pkl
-!models/artifacts/lgbm_best.pkl
-!models/artifacts/xgboost_monotonic.pkl
-models/preprocessors/*
-!models/preprocessors/preprocessor.pkl
-!models/preprocessors/text_pca.pkl
-!models/preprocessors/preprocessor_monotonic.pkl
-models/explainers/*
-!models/explainers/shap_explainer.pkl
-!models/explainers/dice_explainer.pkl
-!models/explainers/shap_explainer_monotonic.pkl
-!models/explainers/dice_explainer_monotonic.pkl
-models/reports/*
-!models/reports/baseline_metrics.json
-!models/reports/fairness_report.json
-!models/reports/global_importance.json
-!models/reports/metrics.json
-!models/reports/population_percentiles.json
-!models/reports/psi_report.json
-!models/reports/shap_summary.png
-!models/reports/*_monotonic.json
-models/registry/*
-!models/registry/production_manifest.json
-!models/registry/promotion_gate_policy.json
+# The active production model root is retired. Legacy artifacts are preserved
+# only under research/legacy_synthetic_model/.
+/models/
 
 # Experiment outputs
 experiments/runs/*

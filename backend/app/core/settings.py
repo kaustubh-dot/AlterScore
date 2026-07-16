@@ -1,17 +1,11 @@
-"""Runtime settings for the AlterScore backend."""
+"""Runtime settings for the public, artifact-free AlterScore API."""
+
+from __future__ import annotations
 
 from dataclasses import dataclass
 from functools import lru_cache
 from os import environ
-from pathlib import Path
 from typing import Mapping
-
-from backend.app.core.paths import (
-    PRODUCTION_MANIFEST_RELATIVE_PATH,
-    REPO_ROOT,
-    REQUEST_LOG_RELATIVE_PATH,
-    resolve_repo_path,
-)
 
 DEFAULT_CORS_ORIGINS = (
     "http://localhost:5173",
@@ -19,111 +13,42 @@ DEFAULT_CORS_ORIGINS = (
 )
 
 
-@dataclass(frozen=True)
-class Settings:
-    environment: str
-    api_version: str
-    repo_root: Path
-    model_manifest_path: Path
-    runtime_model_path: Path | None
-    request_log_path: Path
-    log_level: str
-    cors_origins: tuple[str, ...]
-    cors_origin_regex: str | None
-    enable_debug_score: bool
-    rate_limit_enabled: bool
-    score_rate_limit: str
-    release_sha: str = "local"
-    signing_secret: str | None = None
-    attempt_ttl_seconds: int = 2700
-    attempt_store_max_entries: int = 10_000
-    result_ttl_seconds: int = 86_400
-    result_store_max_entries: int = 10_000
-
-
 def _split_csv(value: str | None) -> tuple[str, ...]:
     if not value:
         return ()
-
     return tuple(item.strip() for item in value.split(",") if item.strip())
 
 
-def _env_flag(value: str | None, *, default: bool = False) -> bool:
-    if value is None:
-        return default
-    return value.strip().lower() in {"1", "true", "yes", "on"}
+@dataclass(frozen=True)
+class Settings:
+    """Settings consumed by the v2 service and HTTP boundary."""
+
+    environment: str
+    api_version: str
+    cors_origins: tuple[str, ...]
+    cors_origin_regex: str | None
+    release_sha: str = "local"
+    signing_secret: str | None = None
 
 
 def load_settings(env: Mapping[str, str] | None = None) -> Settings:
-    """Load settings from environment variables without side effects."""
-    source = environ if env is None else env
-    repo_root = (
-        Path(source["ALTERSCORE_REPO_ROOT"]).resolve()
-        if source.get("ALTERSCORE_REPO_ROOT")
-        else REPO_ROOT
-    )
-    manifest_value = source.get("ALTERSCORE_MODEL_MANIFEST")
-    model_manifest_path = (
-        resolve_repo_path(manifest_value, repo_root)
-        if manifest_value
-        else resolve_repo_path(PRODUCTION_MANIFEST_RELATIVE_PATH, repo_root)
-    )
-    runtime_model_value = source.get("ALTERSCORE_RUNTIME_MODEL_PATH")
-    runtime_model_path = (
-        resolve_repo_path(runtime_model_value, repo_root)
-        if runtime_model_value
-        else None
-    )
-    request_log_value = source.get("ALTERSCORE_REQUEST_LOG_PATH")
-    request_log_path = (
-        resolve_repo_path(request_log_value, repo_root)
-        if request_log_value
-        else resolve_repo_path(REQUEST_LOG_RELATIVE_PATH, repo_root)
-    )
-    cors_origins = _split_csv(source.get("ALTERSCORE_CORS_ORIGINS"))
-    cors_origin_regex = source.get("ALTERSCORE_CORS_ORIGIN_REGEX") or None
-    environment = source.get("ALTERSCORE_ENV", "local")
+    """Load public API settings without reading model or artifact paths."""
 
-    # Rate limiting protects the expensive scoring pipeline. It defaults on only
-    # in production so tests and local development stay unthrottled; an explicit
-    # ALTERSCORE_RATE_LIMIT_ENABLED flag overrides the default either way.
-    rate_limit_enabled = _env_flag(
-        source.get("ALTERSCORE_RATE_LIMIT_ENABLED"),
-        default=environment == "production",
-    )
-    score_rate_limit = (
-        source.get("ALTERSCORE_SCORE_RATE_LIMIT", "").strip() or "30/minute"
-    )
+    source = environ if env is None else env
+    environment = source.get("ALTERSCORE_ENV", "local")
     release_sha = (
         source.get("ALTERSCORE_RELEASE_SHA", "").strip()
         or source.get("GIT_SHA", "").strip()
         or "local"
     )
-    signing_secret = source.get("ALTERSCORE_SIGNING_SECRET") or None
-
     return Settings(
         environment=environment,
-        api_version=source.get("ALTERSCORE_API_VERSION", "0.1.0"),
-        repo_root=repo_root,
-        model_manifest_path=model_manifest_path,
-        runtime_model_path=runtime_model_path,
-        request_log_path=request_log_path,
-        log_level=source.get("ALTERSCORE_LOG_LEVEL", "INFO").upper(),
-        cors_origins=cors_origins or DEFAULT_CORS_ORIGINS,
-        cors_origin_regex=cors_origin_regex,
-        enable_debug_score=_env_flag(source.get("ALTERSCORE_ENABLE_DEBUG_SCORE")),
-        rate_limit_enabled=rate_limit_enabled,
-        score_rate_limit=score_rate_limit,
+        api_version=source.get("ALTERSCORE_API_VERSION", "0.2.0"),
+        cors_origins=_split_csv(source.get("ALTERSCORE_CORS_ORIGINS"))
+        or DEFAULT_CORS_ORIGINS,
+        cors_origin_regex=source.get("ALTERSCORE_CORS_ORIGIN_REGEX") or None,
         release_sha=release_sha,
-        signing_secret=signing_secret,
-        attempt_ttl_seconds=int(source.get("ALTERSCORE_ATTEMPT_TTL_SECONDS", "2700")),
-        attempt_store_max_entries=int(
-            source.get("ALTERSCORE_ATTEMPT_STORE_MAX_ENTRIES", "10000")
-        ),
-        result_ttl_seconds=int(source.get("ALTERSCORE_RESULT_TTL_SECONDS", "86400")),
-        result_store_max_entries=int(
-            source.get("ALTERSCORE_RESULT_STORE_MAX_ENTRIES", "10000")
-        ),
+        signing_secret=source.get("ALTERSCORE_SIGNING_SECRET") or None,
     )
 
 
@@ -132,9 +57,4 @@ def get_settings() -> Settings:
     return load_settings()
 
 
-__all__ = [
-    "DEFAULT_CORS_ORIGINS",
-    "Settings",
-    "get_settings",
-    "load_settings",
-]
+__all__ = ["DEFAULT_CORS_ORIGINS", "Settings", "get_settings", "load_settings"]

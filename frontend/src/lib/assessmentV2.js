@@ -695,12 +695,6 @@ export function isCurrentV2SignedResultSummary(result, now = Date.now()) {
   return expiresAt !== null && currentTime < expiresAt;
 }
 
-export function isCurrentV2ScoreResponse(result, now = Date.now()) {
-  const currentTime = Number.isFinite(now) ? now : Date.now();
-  const expiresAt = isV2ScoreResponse(result) ? parseCanonicalTimestamp(result.expires_at) : null;
-  return expiresAt !== null && currentTime < expiresAt;
-}
-
 export function isCurrentV2DetailedResult(result, now = Date.now()) {
   const currentTime = Number.isFinite(now) ? now : Date.now();
   const expiresAt = isV2DetailedResult(result) ? parseCanonicalTimestamp(result.expires_at) : null;

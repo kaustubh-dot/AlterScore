@@ -8,7 +8,5 @@ target-version = "py312"
 ignore = []
 
 [lint.per-file-ignores]
-# Ignore E402 (import not at top of file) in scripts and tests
-# because of sys.path.insert/pytestmark usage.
-"scripts/**/*.py" = ["E402"]
+# Ignore E402 (import not at top of file) in tests because of sys.path.insert.
 "tests/**/*.py" = ["E402"]

@@ -25,10 +25,6 @@ export default function Navbar() {
   }, []);
 
   const isDashboard = location.pathname === '/dashboard';
-  const isAdmin = location.pathname === '/admin';
-
-  // Do not render default navbar options on Admin page to keep sidebar focus
-  if (isAdmin) return null;
 
   return (
     <nav className={`navbar ${scrolled ? 'navbar-scrolled' : ''}`}>

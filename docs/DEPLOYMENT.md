@@ -1,100 +1,55 @@
-# AlterScore Deployment
+# Deployment
 
-AlterScore deploys the backend and frontend separately from the same GitHub
-repository.
+AlterScore deploys the public FastAPI v2 service to Hugging Face Spaces and
+the React SPA to Vercel. Deploy both from the same reviewed release commit.
 
-## Current Production Targets
+## Runtime boundary
 
-| Component | Target | Source |
-|---|---|---|
-| Backend API | Hugging Face Spaces Docker app | `.github/workflows/deploy-hf.yml` |
-| Frontend SPA | Vercel | `frontend/vercel.json` and Vercel Git integration |
+The production Docker image installs only `backend/requirements.txt` and
+allow-lists `backend/app`. It does not contain `models/`, `research/`,
+`scripts/`, tests, frontend sources, serialized artifacts, explainers, NLP
+packages, or training dependencies. The old synthetic model is retained only
+under `research/legacy_synthetic_model/`.
 
-Backend deployment packages only what the API needs: `backend/`, `models/`,
-`scripts/`, `Dockerfile`, and a minimal Hugging Face Space README.
-
-## Backend Deployment
-
-On push to `main`, `.github/workflows/deploy-hf.yml` builds a Hugging Face
-Space package and force-pushes it to the configured Space when `HF_TOKEN` is
-available in GitHub secrets.
-
-Required GitHub secret:
-
-| Secret | Purpose |
-|---|---|
-| `HF_TOKEN` | Push access to the Hugging Face Space |
-
-The deployed backend starts through the root `Dockerfile` and loads
-`models/registry/production_manifest.json`.
-
-## Frontend Deployment
-
-Vercel builds `frontend/` from the GitHub repository. The SPA rewrite rule in
-`frontend/vercel.json` sends client-side routes to `index.html`.
-
-Production API configuration is committed in `frontend/.env.production`:
+Required environment values are:
 
 ```text
-VITE_API_BASE_URL=https://coolbot22-alterscore-backend.hf.space/api
+ALTERSCORE_ENV=production
+ALTERSCORE_API_VERSION=0.2.0
+ALTERSCORE_RELEASE_SHA=<exact deployed commit>
+ALTERSCORE_SIGNING_SECRET=<base64url secret with at least 32 random bytes>
+ALTERSCORE_CORS_ORIGINS=https://alterscore.vercel.app
 ```
 
-`VITE_*` values are public build-time values, not secrets.
+Do not place the signing secret in the repository, frontend variables, image
+layers, logs, or URLs. The v2 assessment rejects plaintext transport before a
+bearer token is processed.
 
-## Runtime Artifact Bundle
+## Probes
 
-The active production manifest is `xgboost_monotonic_calibrated_v4`
-(`model_version` `0.7.0`). It checksum-locks:
+- `/api/live` is the process liveness probe.
+- `/api/health` is a temporary artifact-free compatibility probe for existing
+  monitors.
+- `/api/ready` is the v2 readiness contract and must report all six checks as
+  `pass` before a public assessment is considered available.
 
-- `models/artifacts/xgboost_monotonic.pkl`
-- `models/preprocessors/preprocessor_monotonic.pkl`
-- `models/preprocessors/text_pca.pkl`
-- `models/explainers/shap_explainer_monotonic.pkl`
-- `models/explainers/dice_explainer_monotonic.pkl`
-- `models/reports/metrics_monotonic.json`
-- `models/reports/baseline_metrics_monotonic.json`
-- `models/reports/fairness_report_monotonic.json`
-- `models/reports/psi_report_monotonic.json`
-- `models/reports/global_importance_monotonic.json`
-- `models/reports/population_percentiles_monotonic.json`
+Readiness does not inspect model files or research reports. It fails closed if
+the signing configuration or serving stores are unavailable.
 
-Do not remove or regenerate these files without updating
-`production_manifest.json` and rerunning the promotion gates.
+## Coordinated release checks
 
-## Release Checks
-
-Run these before merging deployment-affecting changes:
+Run before release:
 
 ```bash
-ALTERSCORE_ENV=test python -m pytest
-python scripts/validation/verify_reproducibility.py
-python -m backend.ml.registry.promotion_gates --manifest models/registry/production_manifest.json --allow-promoted-incompatibility
-cd frontend && npm run build
+python -m pip install -r backend/requirements-dev.txt
+python -m pytest tests/unit/backend tests/integration/api/test_phase4_secure_anonymous_api.py tests/integration/api/test_phase7_legacy_retirement.py
+cd frontend && npm run lint && npm run build && npm run test:phase5 && npm run test:phase6 && npm run test:phase7
 ```
 
-## Health Checks
+Then verify the deployed v2 form, score, and redacted result-verification
+routes using the exact release metadata. A frontend-only or backend-only
+release is not a coherent public release.
 
-Backend:
-
-```bash
-curl https://coolbot22-alterscore-backend.hf.space/api/health
-```
-
-Expected:
-
-- `status` is `ok`
-- `manifest_backed` is `true`
-- `model_loaded` is `true`
-- no scoring-critical missing or invalid artifacts
-
-Frontend:
-
-- Vercel build succeeds
-- deployed app can call `/api/health` through `VITE_API_BASE_URL`
-- assessment flow can submit to `/api/score`
-
-## Rollback
-
-Rollback is manifest-based. Restore the last known-good manifest and all
-artifact files referenced by its `artifacts` block, then rerun health and score
-smoke checks. See [Rollback checklist](ROLLBACK_CHECKLIST.md).
+Deployment credential gating, post-deploy smoke automation, readiness monitor
+migration, and whole-release rollback automation remain operational hardening
+work for Phase 8.

@@ -1,0 +1,15 @@
+# Optional offline-only dependencies for the archived synthetic model.
+# Never install this file in the public serving image.
+numpy>=1.26,<2.0
+pandas>=2.1,<2.2
+scipy>=1.13,<1.14
+scikit-learn==1.5.1
+joblib>=1.4,<2.0
+vaderSentiment>=3.3.2,<4.0
+spacy>=3.8.3,<3.9
+sentence-transformers>=3.3.1,<4.0
+xgboost>=2.1.3,<2.2
+lightgbm>=4.6,<4.7
+shap>=0.46,<0.47
+torch>=2.12,<2.13
+pytorch-tabnet>=4.1,<4.2

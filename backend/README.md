@@ -1,50 +1,25 @@
-# AlterScore Backend
+# AlterScore public backend
 
-FastAPI service for the manifest-backed AlterScore scoring runtime. It exposes
-health, scoring, and analytics routes without retraining models at request
-time.
+The serving backend exposes the anonymous, deterministic v2 assessment:
 
-## Runtime
+- `GET /api/v2/assessment/form`
+- `POST /api/v2/assessment/score`
+- `GET /api/v2/results/verify/{result_id}`
+- `GET /api/live`
+- `GET /api/ready`
 
-- App import path: `backend.app.main:app`
-- Production manifest: `models/registry/production_manifest.json`
-- Active runtime: calibrated monotonic `XGBoost`
-- API surface: `/api/health`, `/api/score`, and report-backed analytics routes
-- Recommended Python: `3.12.x`
+The former model-backed `POST /api/score` and `/api/debug-score` routes return
+`410 Gone`. Former analytics routes are not registered. The public runtime does
+not import or load model artifacts, explainers, NLP packages, training scripts,
+or the archived synthetic XGBoost source.
 
-## Quick Start
-
-Run from the repository root:
+Run locally with:
 
 ```bash
-python -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
-python -m pip install --upgrade pip
 python -m pip install -r backend/requirements.txt
-python -m spacy download en_core_web_sm
 python -m uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-Health check:
-
-```bash
-curl http://127.0.0.1:8000/api/health
-```
-
-Healthy manifest-backed startup reports `manifest_backed: true`,
-`model_loaded: true`, and no missing or invalid scoring-critical artifacts.
-
-## Tests
-
-```bash
-python -m pip install -r backend/requirements-dev.txt
-ALTERSCORE_ENV=test python -m pytest
-```
-
-## Read Next
-
-- [Project README](../README.md)
-- [Setup](../docs/SETUP.md)
-- [Deployment](../docs/DEPLOYMENT.md)
-- [Backend runtime architecture](../docs/BACKEND_RUNTIME_ARCHITECTURE.md)
-- [API contracts](../docs/API_CONTRACTS.md)
+Set `ALTERSCORE_SIGNING_SECRET` to a generated base64url secret before using
+the assessment or expecting `/api/ready` to report `ready`. Research-only
+material is preserved under `research/legacy_synthetic_model/`.

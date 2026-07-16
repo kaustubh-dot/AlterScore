@@ -1,60 +1,41 @@
-# Project Structure
+# Project structure
 
-AlterScore is organized around a deployed FastAPI backend, a Vercel-hosted
-React frontend, and a checked-in manifest-backed model bundle.
+AlterScore is organized around a public deterministic v2 service, a Vercel
+React frontend, and a clearly separated offline research archive.
 
-## Top-Level Layout
+## Active layout
 
 | Path | Role |
-|---|---|
-| `.github/workflows/` | CI, backend deployment, and keepalive workflows |
-| `backend/` | FastAPI app, scoring service, ML runtime, and offline ML helpers |
-| `frontend/` | React/Vite assessment flow, results views, and dashboard |
-| `models/` | Production manifest, runtime model artifacts, explainers, and reports |
-| `scripts/` | Setup, training, promotion, and validation entry points |
-| `tests/` | Unit, integration, API, and pipeline coverage |
-| `docs/` | Setup, deployment, API, governance, and runtime references |
-| `data/` | Git-kept placeholders for generated local datasets and reports |
-| `runtime/` | Ignored local logs and test scratch space |
+| --- | --- |
+| `backend/app/api/v2/` | Anonymous form, score, verification, liveness, and readiness routes |
+| `backend/app/instrument/` | Canonical server-owned objective and judgment instrument |
+| `backend/app/branching/` | Deterministic financial-state transitions and replays |
+| `backend/app/unified_scoring/` | Frozen score composition and explanation construction |
+| `frontend/` | Assessment, processing, explainable results, dashboard, and static Research Lab |
+| `tests/` | Public v2, instrument, branching, unified-scoring, and Phase 7 coverage |
+| `docs/` | Active contract, architecture, setup, deployment, rollback, and methodology docs |
 
-## Deployment-Critical Files
+## Research archive
 
-| File | Why It Matters |
-|---|---|
-| `Dockerfile` | Hugging Face Spaces backend image |
-| `.github/workflows/deploy-hf.yml` | Packages and pushes the backend Space |
-| `.github/workflows/ci.yml` | Backend, frontend, and governance checks |
-| `frontend/vercel.json` | SPA route rewrites for Vercel |
-| `frontend/.env.production` | Public deployed API base URL |
-| `models/registry/production_manifest.json` | Runtime artifact contract |
+`research/legacy_synthetic_model/` contains the former ML source tree, model
+artifacts, explainers, parsers, training/validation scripts, client question
+bank, Admin surface, and legacy tests. It is not imported by `backend/app`,
+copied by the production Dockerfile, or reachable through public research
+routes.
 
-## Active Documentation
+The archive's labels and fairness reports are synthetic. Archived AUC values
+measure recovery of generated data. The archived model does not score public
+assessments.
 
-| File | Purpose |
-|---|---|
-| `docs/SETUP.md` | Local setup and validation |
-| `docs/DEPLOYMENT.md` | Production deployment and release checks |
-| `docs/API_CONTRACTS.md` | API request/response contracts |
-| `docs/BACKEND_RUNTIME_ARCHITECTURE.md` | Backend runtime and artifact loading |
-| `docs/GOVERNANCE_WORKFLOW.md` | Promotion gates and model governance |
-| `docs/MODEL_REGISTRY.md` | Current model artifact inventory |
-| `docs/MODEL_SELECTION_DECISIONS.md` | Why the monotonic runtime is preferred |
-| `docs/DATA_SCHEMA.md` | Dataset and feature schema reference |
-| `docs/ROLLBACK_CHECKLIST.md` | Manifest-based rollback procedure |
+## Deployment-critical files
 
-Historical process docs, PRD drafts, handoff templates, experiment logs, and
-research archives have been removed from the active repository surface.
+| File | Role |
+| --- | --- |
+| `Dockerfile` | Allow-listed v2 serving image |
+| `.dockerignore` | Build-context defense in depth |
+| `backend/requirements.txt` | Serving-only dependencies |
+| `frontend/.env.production` | Public frontend API base URL |
+| `.github/workflows/deploy-hf.yml` | Backend package delivery; release hardening is tracked separately |
 
-## Runtime Path
-
-The backend starts at `backend.app.main:app`, loads settings, reads
-`models/registry/production_manifest.json`, validates declared checksums, and
-serves the manifest-backed artifacts through `/api/score` and analytics routes.
-
-Primary runtime references:
-
-- `backend/app/core/artifact_loader.py`
-- `backend/app/services/scoring.py`
-- `backend/app/services/analytics.py`
-- `backend/ml/inference/feature_assembly.py`
-- `models/registry/production_manifest.json`
+The production entrypoint is `backend.app.main:app`. It does not load a model
+manifest, serialized artifact, report, or legacy request logger.

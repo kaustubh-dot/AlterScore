@@ -1,7 +1,10 @@
 # AlterScore Frontend
 
-React/Vite single-page app for the borrower assessment flow, score results,
-and evaluator dashboard.
+React/Vite single-page app for the anonymous v2 assessment, explainable
+results, session-only dashboard, and static offline Research Lab.
+
+Use Node.js `20.19.x` or `>=22.12.0`; the locked Vite toolchain does not
+support Node 18.
 
 ## Local Development
 
@@ -35,4 +38,6 @@ Useful checks:
 npm run lint
 npm run build
 npm run test:phase5
+npm run test:phase6
+npm run test:phase7
 ```

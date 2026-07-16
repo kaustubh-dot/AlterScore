@@ -17,16 +17,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
-          lfs: true
 
       - name: Skip When Token Is Missing
         if: env.HF_TOKEN == ''
         run: |
           echo "::warning::HF_TOKEN is not configured, so Hugging Face deployment was skipped."
-
-      - name: Install Git LFS
-        if: env.HF_TOKEN != ''
-        run: git lfs install
 
       - name: Build Backend Space Package
         if: env.HF_TOKEN != ''
@@ -37,18 +32,11 @@ jobs:
           mkdir -p "$SPACE_DIR"
 
           cp -R backend "$SPACE_DIR/backend"
-          cp -R models "$SPACE_DIR/models"
-          cp -R scripts "$SPACE_DIR/scripts"
           cp Dockerfile "$SPACE_DIR/Dockerfile"
-          # Write a minimal .gitattributes for the backend deploy package.
-          # The repo-level file now includes LFS rules for frontend assets
-          # (*.webp, *.gif, *.svg, etc.) that are not shipped in the backend
-          # package and would cause HF push rejections.
-          printf '*.pkl filter=lfs diff=lfs merge=lfs -text\n*.pt filter=lfs diff=lfs merge=lfs -text\n*.png filter=lfs diff=lfs merge=lfs -text\n' > "$SPACE_DIR/.gitattributes"
 
           cat > "$SPACE_DIR/README.md" <<'EOF'
           ---
-          title: AlterScore Backend
+          title: AlterScore Public API
           emoji: 📊
           colorFrom: green
           colorTo: blue
@@ -57,9 +45,9 @@ jobs:
           pinned: false
           ---
 
-          # AlterScore Backend
+          # AlterScore Public API
 
-          Manifest-backed FastAPI scoring backend for AlterScore.
+          Artifact-free deterministic v2 assessment API for AlterScore.
           EOF
 
       - name: Push Backend Package
@@ -69,7 +57,6 @@ jobs:
           SPACE_DIR="$RUNNER_TEMP/alterscore-hf-space"
           cd "$SPACE_DIR"
           git init
-          git lfs install
           git config user.email "bot@alterscore.ai"
           git config user.name "AlterScore Deployment Bot"
           git remote add origin "https://coolbot22:${HF_TOKEN}@huggingface.co/spaces/coolbot22/alterscore-backend"

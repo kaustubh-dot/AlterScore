@@ -1,0 +1,120 @@
+.research-lab-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: clamp(7rem, 14vh, 10rem) 0 var(--space-12);
+  background: var(--bg-void);
+}
+
+.research-lab-shell {
+  max-width: 980px;
+}
+
+.research-lab-hero {
+  max-width: 700px;
+  margin-bottom: var(--space-10);
+}
+
+.research-lab-kicker,
+.research-lab-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--accent-cyan);
+  font-size: var(--text-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.research-lab-hero h1 {
+  margin: var(--space-4) 0 var(--space-4);
+  color: var(--text-primary);
+  font-size: clamp(2.5rem, 7vw, 5.5rem);
+  letter-spacing: -0.06em;
+  line-height: 0.95;
+}
+
+.research-lab-lede {
+  max-width: 60ch;
+  color: var(--text-secondary);
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  line-height: 1.7;
+}
+
+.research-lab-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.research-lab-card {
+  min-height: 230px;
+  padding: clamp(var(--space-5), 4vw, var(--space-8));
+  border: 1px solid var(--bg-border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+}
+
+.research-lab-card-wide {
+  grid-column: 1 / -1;
+  min-height: auto;
+}
+
+.research-lab-card h2 {
+  margin: var(--space-4) 0 var(--space-3);
+  color: var(--text-primary);
+  font-size: clamp(1.25rem, 2vw, 1.7rem);
+  line-height: 1.2;
+}
+
+.research-lab-card p {
+  margin: 0;
+  max-width: 68ch;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.research-lab-lockline {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--bg-border);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.research-lab-actions {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: var(--space-8);
+}
+
+.research-lab-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+@media (max-width: 700px) {
+  .research-lab-page {
+    padding-top: 6.5rem;
+  }
+
+  .research-lab-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .research-lab-card-wide {
+    grid-column: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .research-lab-page * {
+    scroll-behavior: auto;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

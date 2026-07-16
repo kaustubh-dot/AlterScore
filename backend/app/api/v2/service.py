@@ -114,8 +114,7 @@ class AnonymousAssessmentService:
             ttl_seconds=result_ttl_seconds,
             max_entries=result_store_max_entries,
         )
-        # Phase 4's public contract applies these limits in every environment.
-        # The legacy v1 limiter remains independently configured.
+        # The public v2 contract applies these limits in every environment.
         self.rate_limiter = NetworkRateLimiter(enabled=rate_limits_enabled)
 
     def _metadata(self, request_id: str) -> dict[str, str]:

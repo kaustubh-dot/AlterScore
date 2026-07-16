@@ -1,132 +1,54 @@
-# Backend Runtime Architecture
+# Backend runtime architecture
 
-This document explains the current backend architecture that frontend,
-deployment, and ML engineers must understand before modifying runtime code.
+The production backend is a small, artifact-free FastAPI service. Its import
+graph is limited to the public v2 API, canonical instrument, branching engine,
+unified deterministic scorer, standard-library security stores, and FastAPI /
+Pydantic serving dependencies.
 
-## Active Runtime Model
+## Startup path
 
-`models/registry/production_manifest.json` points to `xgboost_monotonic`
-(model version `0.7.0`) as the active runtime model. It is a single calibrated
-monotonic constrained-tree scorer loaded from:
+1. `backend.app.main:create_app` loads CORS, release metadata, and the signing
+   secret from environment settings.
+2. The lifespan creates `AnonymousAssessmentService`.
+3. No model manifest, serialized artifact, research report, NLP model, or
+   legacy request logger is read during import or startup.
+4. `/api/live` reports process liveness. `/api/ready` checks the canonical
+   instrument, deterministic scorer, signing configuration, bounded attempt and
+   verification stores, and v2 network limiter.
 
-```text
-models/artifacts/xgboost_monotonic.pkl
-```
+Readiness is therefore independent of model artifacts. A missing signing
+secret makes the service fail closed for scoring, but never causes a research
+artifact lookup.
 
-The default manifest does not load the older ensemble path. Some non-active
-classical artifacts remain in the repository because tests and fallback loaders
-exercise them.
+## Public request path
 
-## Current Inference Path
+The v2 service issues a seeded server-side form, translates only the issued
+opaque IDs, scores through `backend.app.unified_scoring`, signs the public
+projection, and stores only the redacted verification record. Branching
+transitions and objective answer keys remain server-side in the canonical
+instrument package.
 
-```mermaid
-flowchart TD
-    A["ScoreRequest"] --> B["feature_assembly.py"]
-    B --> C["35 canonical model features"]
-    C --> D["Saved monotonic preprocessor"]
-    D --> E["xgboost_monotonic.pkl"]
-    E --> F["governance multiplier"]
-    F --> G["score_mapper.py"]
-    G --> H["ScoreResponse"]
-    D -.-> I["SHAP explainer"]
-    I -.-> H
-    D -.-> J["DICE counterfactual explainer"]
-    J -.-> H
-```
+The middleware temporarily captures the network host only for the salted v2
+rate-limit hash, then redacts the ASGI client tuple before access logging.
+Successful detailed explanations are returned only on the score response;
+verification remains a redacted public proof.
 
-## Key Components
+## Retired and isolated surfaces
 
-- `backend/app/core/artifact_loader.py` loads the manifest, validates
-  checksums, and resolves the active bundle.
-- `backend/app/services/scoring.py` assembles features, transforms them through
-  the saved preprocessor, predicts repayment probability, applies the bounded
-  governance multiplier, maps to a credit score, and generates explanations and
-  counterfactual actions.
-- `backend/ml/training/classical/monotonic_constraints.py` defines the
-  constrained-tree feature policy used by the promoted runtime.
-- `backend/app/services/analytics.py` serves dashboard data from the
-  manifest-declared report artifacts.
+`POST /api/score` and `/api/debug-score` are dependency-free `410 Gone`
+tombstones. Former analytics routes are not registered. The old scorer,
+artifact loader, parsers, explainers, training scripts, serialized models, and
+legacy tests live under `research/legacy_synthetic_model/` and are not
+imported by `backend/app`.
 
-The ensemble adapter in `backend/ml/inference/ensemble_adapter.py` is still
-available for manifests that declare `runtime_model_type: "ensemble"`, but it
-is not used by the active manifest.
+The frontend Research Lab is static and direct-link-only. It describes the
+archive without making network calls, reading result state, or influencing
+public scoring.
 
-## Stable Systems
+## Production image boundary
 
-| System | Path | Why It Is Sensitive |
-|---|---|---|
-| Manifest loader | `backend/app/core/artifact_loader.py` | Checksum verification and runtime selection |
-| Scoring service | `backend/app/services/scoring.py` | End-to-end score response construction |
-| Feature assembly | `backend/ml/inference/feature_assembly.py` | Raw request to canonical feature row |
-| Preprocessing pipeline | `backend/ml/preprocessing/pipeline.py` | Serialized artifacts depend on it |
-| Feature registry | `backend/ml/preprocessing/feature_registry.py` | Canonical 35-feature contract |
-| Analytics service | `backend/app/services/analytics.py` | Report-backed dashboard API |
-| Health route | `backend/app/api/v1/routes/health.py` | Manifest-backed readiness reporting |
-| Production manifest | `models/registry/production_manifest.json` | SHA256-verified runtime contract |
-
-If you change any of these files, run the smallest relevant tests first, then
-run the broader affected suite before finalizing. For model/artifact changes,
-also run `python -m pytest tests/integration/api/test_checked_in_runtime_bundle_smoke.py`.
-
-## Artifact Relationships
-
-```text
-production_manifest.json
-  runtime_model              -> models/artifacts/xgboost_monotonic.pkl
-  preprocessor               -> models/preprocessors/preprocessor_monotonic.pkl
-  text_pca                   -> models/preprocessors/text_pca.pkl
-  shap_explainer             -> models/explainers/shap_explainer_monotonic.pkl
-  dice_explainer             -> models/explainers/dice_explainer_monotonic.pkl
-  metrics                    -> models/reports/metrics_monotonic.json
-  baseline_metrics           -> models/reports/baseline_metrics_monotonic.json
-  fairness_report            -> models/reports/fairness_report_monotonic.json
-  psi_report                 -> models/reports/psi_report_monotonic.json
-  global_importance          -> models/reports/global_importance_monotonic.json
-  population_percentiles     -> models/reports/population_percentiles_monotonic.json
-```
-
-At startup, the backend:
-
-1. Loads settings.
-2. Loads and parses the manifest.
-3. Verifies artifact checksums.
-4. Deserializes and validates each artifact.
-5. Reports loaded, missing, and invalid artifacts in `/api/health`.
-
-If a scoring-critical artifact fails validation, `/api/score` returns `503`.
-
-## Explainability Dependencies
-
-| Artifact | Purpose | Runtime Behavior |
-|---|---|---|
-| `shap_explainer_monotonic.pkl` | Per-user explanations | Optional; score still works with an empty explanation list |
-| `dice_explainer_monotonic.pkl` | Counterfactual actions | Optional fallback exists, but the checked-in bundle includes it |
-| `global_importance_monotonic.json` | Dashboard importance | Served by `/api/global-importance` |
-| `fairness_report_monotonic.json` | Dashboard fairness | Served by `/api/fairness-report` |
-| `psi_report_monotonic.json` | Dashboard drift | Served by `/api/drift-report` |
-
-## Current Caveats
-
-- The checked-in runtime report is the operational source of truth: held-out
-  test AUC is `0.7787`, ECE is `0.0346`, and post-governance AUC is `0.7767`.
-  Older governed-review figures such as `0.8040` and `0.8090` are historical
-  experiment results from different candidate/report contexts.
-- The fairness report includes subgroup metrics, calibration parity, a
-  full-profile individual-fairness proxy, and post-governance subgroup impact.
-- `production_manifest.json` currently records `main` as the code reference.
-  Use an immutable commit identifier for a formal release cut.
-
-## Environment Constraints
-
-| Component | Version | Notes |
-|---|---|---|
-| Python | `3.12.x` recommended | Python `3.14.x` is not the recommended local setup path |
-| scikit-learn | `==1.5.1` | Required by checked-in calibrated artifacts |
-| XGBoost | `>=2.1.3,<2.2` | Required by the active monotonic runtime |
-| PyTorch / pytorch-tabnet | Runtime dependencies | Required by installed backend dependency set and legacy loader/test paths |
-| Node.js | `>=18 <25` | Frontend build |
-| Vite | `8.x` | Frontend dev/build tooling |
-| React | `19.x` | Frontend framework |
-
-Do not upgrade backend or frontend dependencies without running the affected
-test/build suite and updating the relevant docs.
+`Dockerfile` installs only `backend/requirements.txt` and copies only
+`backend/app`. `.dockerignore` excludes source, tests, model artifacts,
+research, scripts, data, and local runtime output as defense in depth. The
+research requirements file is for a separate offline environment and is never
+installed in production.

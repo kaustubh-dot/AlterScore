@@ -13,7 +13,7 @@ import './styles/global.css';
 
 const Results = lazy(() => import('./pages/Results'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
-const Admin = lazy(() => import('./pages/Admin'));
+const ResearchLab = lazy(() => import('./pages/ResearchLab'));
 
 function AppContent() {
   const [showPreloader, setShowPreloader] = useState(() => {
@@ -89,7 +89,7 @@ function AppContent() {
               <Route path="/assessment" element={<Assessment />} />
               <Route path="/results" element={<Results />} />
               <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/admin" element={<Admin />} />
+              <Route path="/research" element={<ResearchLab />} />
             </Routes>
           </Suspense>
         </div>
