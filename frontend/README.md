@@ -30,14 +30,21 @@ requirement with a client-supplied forwarded-protocol header.
 ## Production
 
 Vercel builds the app from this directory. `frontend/.env.production` points
-the deployed SPA at the Hugging Face Spaces backend.
+the deployed SPA at the Hugging Face Spaces backend. Each production build
+must receive the exact backend release SHA through `VITE_RELEASE_SHA`; the
+release gate rejects missing or local values.
 
 Useful checks:
 
 ```bash
 npm run lint
-npm run build
+VITE_RELEASE_SHA=<40-character-reviewed-sha> npm run build
 npm run test:phase5
 npm run test:phase6
 npm run test:phase7
+npm run test:phase8
 ```
+
+The inline assignment uses POSIX shell syntax. For PowerShell, set
+`$env:VITE_RELEASE_SHA = '<40-character-reviewed-sha>'` before running
+`npm.cmd run build`.

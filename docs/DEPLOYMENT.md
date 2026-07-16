@@ -1,55 +1,124 @@
 # Deployment
 
-AlterScore deploys the public FastAPI v2 service to Hugging Face Spaces and
-the React SPA to Vercel. Deploy both from the same reviewed release commit.
+AlterScore releases the public FastAPI v2 service and React SPA as one
+coherent release. Deployment is only invoked by the CI-gated workflow or an
+explicitly authorized manual rollback; this Phase 8 pass does not deploy.
 
-## Runtime boundary
+## Release identity
 
-The production Docker image installs only `backend/requirements.txt` and
-allow-lists `backend/app`. It does not contain `models/`, `research/`,
-`scripts/`, tests, frontend sources, serialized artifacts, explainers, NLP
-packages, or training dependencies. The old synthetic model is retained only
-under `research/legacy_synthetic_model/`.
+Every release uses one exact 40-character lowercase Git SHA:
 
-Required environment values are:
+```text
+contract_version=2.0
+assessment_version=india-en-3.0.0
+scoring_policy_version=readiness-rubric-1.0.0
+source_sha=<exact reviewed commit>
+frontend_release_sha=<same exact reviewed commit>
+backend_release_sha=<same exact reviewed commit>
+```
+
+The frontend CI job requires `VITE_RELEASE_SHA=$GITHUB_SHA` before building.
+Vercel must provide the same value for its production build. The frontend
+rejects missing or local production release values and preflights the backend
+`/api/live` metadata before issuing a form request.
+
+The backend image receives `ALTERSCORE_RELEASE_SHA` through the Docker build
+argument. Production readiness also requires a non-local
+`ALTERSCORE_SIGNING_KEY_VERSION` and a valid `ALTERSCORE_SIGNING_SECRET`.
+The signing secret is never stored in source, the frontend, image layers, or
+the generated package. The generated Hugging Face package contains a
+secret-free `release-metadata.json` with the release and key-version reference.
+
+Required backend runtime values:
 
 ```text
 ALTERSCORE_ENV=production
 ALTERSCORE_API_VERSION=0.2.0
 ALTERSCORE_RELEASE_SHA=<exact deployed commit>
 ALTERSCORE_SIGNING_SECRET=<base64url secret with at least 32 random bytes>
+ALTERSCORE_SIGNING_KEY_VERSION=<non-local key reference>
 ALTERSCORE_CORS_ORIGINS=https://alterscore.vercel.app
 ```
 
-Do not place the signing secret in the repository, frontend variables, image
-layers, logs, or URLs. The v2 assessment rejects plaintext transport before a
-bearer token is processed.
+## CI and deployment gates
 
-## Probes
+`AlterScore CI` is blocking for Python quality, frontend lint, the production
+release-SHA gate, the Phase 5–8 frontend tests, the complete backend suite,
+the serving-image build, and the frozen release-contract scan.
 
-- `/api/live` is the process liveness probe.
-- `/api/health` is a temporary artifact-free compatibility probe for existing
-  monitors.
-- `/api/ready` is the v2 readiness contract and must report all six checks as
-  `pass` before a public assessment is considered available.
+`deploy-hf.yml` accepts only a successful trusted `push` run from this
+repository's `main` branch. It rejects stale successful runs whose SHA is no
+longer the `main` tip, serializes with rollback in one production-release
+queue, checks out that exact SHA, and requires the Hugging Face, Vercel,
+signing-key-version, signing-secret, and frontend configuration values before
+changing either target. Missing credentials fail the job; they are never
+treated as a successful skip.
 
-Readiness does not inspect model files or research reports. It fails closed if
-the signing configuration or serving stores are unavailable.
+The trusted release workflow builds and promotes the Vercel production bundle
+from the same reviewed SHA with `VITE_RELEASE_SHA` set to that SHA. Disable
+provider-side Git auto-promotion for the production Vercel target; the
+workflow is the deployment authority. Configure `ALTERSCORE_FRONTEND_URL` as a
+repository variable for the paired post-deploy parity check.
 
-## Coordinated release checks
+The Vercel CLI is version-pinned in both forward deployment and rollback so a
+mutable `latest` package is not executed with production credentials.
 
-Run before release:
+Before any deployment or rollback, configure the hosting provider with the
+same signing secret stored in the Actions secret store. The workflow checks
+that the existing public `/api/ready` signing check passes before it publishes
+a package, so missing or invalid provider signing configuration fails before a
+new release is pushed. The package itself binds the non-secret signing-key
+version and never contains the signing secret.
+
+## Runtime probes
+
+- `/api/live` is the process liveness and release-metadata probe.
+- `/api/health` remains a compatibility route for existing callers.
+- `/api/ready` is the public v2 readiness contract.
+
+The Docker healthcheck and scheduled monitor call `/api/ready` and require
+HTTP success, `status=ready`, the frozen six check names in order, and every
+check to report `pass`. A degraded or not-ready scorer cannot appear healthy.
+Readiness does not inspect model files or archived research.
+
+## Post-deploy smoke
+
+The deployment workflow runs the standard-library smoke runner after the
+backend package is published and the frontend target is available:
 
 ```bash
-python -m pip install -r backend/requirements-dev.txt
-python -m pytest tests/unit/backend tests/integration/api/test_phase4_secure_anonymous_api.py tests/integration/api/test_phase7_legacy_retirement.py
-cd frontend && npm run lint && npm run build && npm run test:phase5 && npm run test:phase6 && npm run test:phase7
+python scripts/ci/smoke_release.py \
+  --base-url https://coolbot22-alterscore-backend.hf.space \
+  --frontend-url https://alterscore.vercel.app \
+  --expected-release-sha <exact reviewed commit>
 ```
 
-Then verify the deployed v2 form, score, and redacted result-verification
-routes using the exact release metadata. A frontend-only or backend-only
-release is not a coherent public release.
+It checks live/readiness metadata, readiness semantics, the frozen 18-plus-6
+form shape, wrong-version rejection, a valid score, redacted verification,
+single-use replay rejection, and the exact release/version fragments in the
+frontend bundle. Response bodies, tokens, submissions, and secrets are never
+printed.
 
-Deployment credential gating, post-deploy smoke automation, readiness monitor
-migration, and whole-release rollback automation remain operational hardening
-work for Phase 8.
+After a successful paired smoke, the workflow uploads a concrete secret-free
+release-manifest artifact derived from
+`docs/RELEASE_MANIFEST_TEMPLATE.json`. Record its workflow URL with the
+release. Rollback queries for the non-expired `release-manifest-<SHA>` artifact
+before checkout, so it cannot restore a SHA that has not completed a paired
+post-smoke forward release.
+
+## Rollback
+
+`rollback-release.yml` is manual only. It requires the exact SHA from a
+non-expired verified release-manifest artifact, explicit `ROLLBACK`
+confirmation, HF credentials, Vercel credentials, signing-key version, and
+the configured frontend URL. It builds the backend package and frontend from
+the same SHA, restores both targets, and runs the paired smoke checks. Use it
+only after recording the release manifest and rollback reason.
+
+Attempts and verification records are bounded in memory. A restart or rollback
+can invalidate in-flight attempt tokens and make prior verification links
+unavailable; issue a fresh form after the pair is healthy.
+
+Do not place signing material in repository variables, frontend variables,
+image layers, logs, URLs, or release metadata. Commit, push, deploy, and
+rollback execution require separate authorization from this implementation.

@@ -16,8 +16,11 @@ Every public release must verify:
    creditworthiness, pricing, and human-validation claims;
 7. v1 `410 Gone`, unavailable analytics routes, and no archived-research
    imports in the serving graph;
-8. frontend lint, production build, v2 contract tests, and Phase 7 separation
-   tests.
+8. frontend lint, exact-release build, v2 contract tests, Phase 7 separation,
+   and Phase 8 release tests.
+9. blocking backend quality/tests, serving-image build, readiness semantics,
+   exact frontend/backend SHA parity, post-deploy smoke, and paired rollback
+   verification.
 
 ## Research boundary
 
@@ -33,8 +36,14 @@ the public v2 image without a new reviewed phase and explicit authorization.
 
 ## Operational interpretation
 
-`/api/live` is liveness, while `/api/ready` is the public readiness contract.
-Readiness is based on the canonical instrument, deterministic scorer, signing,
-bounded stores, and network rate limiter; it does not inspect ML artifacts.
-Deployment credential gates, post-deploy automation, and full-release rollback
-remain operational hardening work for Phase 8.
+`/api/live` is liveness and release identity, while `/api/ready` is the public
+readiness contract. Readiness is based on the canonical instrument,
+deterministic scorer, exact production release identity, signing, bounded
+stores, and network rate limiter; it does not inspect ML artifacts.
+
+CI is the deployment authority: a deployment may consume only the exact SHA
+of a successful `AlterScore CI` workflow. Missing deployment credentials fail
+closed. Docker and uptime monitoring require semantic readiness, not only an
+HTTP status. Frontend and backend releases must carry the same SHA and frozen
+contract versions, and the manual rollback workflow restores both targets
+from one recorded release manifest.

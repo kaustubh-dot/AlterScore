@@ -8,18 +8,20 @@
 
 | Field | Value |
 |---|---|
-| Updated | 2026-07-16 17:50:29 +05:30 |
+| Updated | 2026-07-17 00:14:26 +05:30 |
 | Branch | `codex/scoring-production-hardening` |
+| Phase 8 implementation start HEAD | `749835304ae9dc5aadfd9768fb964947ce0bc3a5` (`feat: complete phase 7 legacy separation`) |
+| Phase 8 review base HEAD | `749835304ae9dc5aadfd9768fb964947ce0bc3a5` |
 | Phase 7 implementation/review base HEAD | `7d856efd5507eb4bacf387d23968a67f82ddbd97` (`feat: add phase 6 result explainability`) |
 | HEAD before v3 phased work | `aacf2b52f6d0d6eeed6eef5d90e73a4716981793` |
 | Review-start HEAD | `0c398d6d14bb3ae65360b02863d5142f4df1b043` |
 | Review-start commit | `0c398d6 feat: add deterministic v3 scoring phases` |
 | Review baseline HEAD | `d74e59d5b8577d301646f73e049ca4a3588798f` |
 | Review baseline commit | `d74e59d fix: harden phase 5 client assessment boundary` |
-| Active phase | Phase 8 - CI, deployment, and operational hardening (not started) |
-| Luna status | Not started (Phase 8) |
-| Codex review | Passed (Phase 7) |
-| Overall status | Phase 7 legacy separation and runtime cleanup passed Codex review after scoped corrective cleanup; Phase 8 is the immediate next action and has not started |
+| Active phase | Phase 9 - final audit and handoff (not started) |
+| Luna status | Complete (Phase 8 implementation) |
+| Codex review | Passed (Phase 8) |
+| Overall status | Phase 8 operational hardening passed Codex review after scoped corrections; Phase 9 is the immediate next action and has not started |
 
 ## Current branch condition
 
@@ -264,7 +266,7 @@ diagnostic/unscored and cannot affect any score. Anonymous integrity is
 bounded: server-seeded new values, scenario variants, opaque presentation
 IDs, randomized option order, and single-use signed attempts are required;
 calculators, search, another person answering, screenshots, multiple devices,
-and distributed black-box probing remain outside the guarantee. Explainability
+and distributed black-box probing remain outside the covered integrity controls. Explainability
 must reconcile the formula, show objective worked solutions, show branching
 state timelines and terminal dimensions, explain static SJT principles without
 leaking the complete hidden rubric, link to result verification, and ground
@@ -319,14 +321,13 @@ is historical evidence, not the active public contract after Phase 7.
   questions and answer/scenario signals; result history is browser-local.
 - Dependencies retain the broad FastAPI/NumPy/Pandas/SciPy/scikit-learn/XGBoost/
   LightGBM/SHAP/Torch/TabNet/spaCy/sentence-transformers/VADER/training
-  surface. CI runs Python lint, frontend lint/build, pytest, reproducibility,
-  and promotion-gate checks. HF deployment skips when `HF_TOKEN` is absent;
-  otherwise it creates a temporary context containing `backend/`, `models/`,
-  `scripts/`, `Dockerfile`, generated `.gitattributes`, and a generated README,
-  then force-pushes. The
-  Dockerfile's `COPY . .` and `/api/health` container healthcheck therefore
-  depend on that supplied context. The scheduled keepalive masks health
-  failures with `|| echo`.
+  surface. CI now runs pinned Python quality checks, blocking frontend lint/build
+  and Phase 5–8 tests, the complete backend pytest suite, a serving-image build,
+  and an exact-SHA release-contract gate. HF deployment consumes only a
+  successful main-branch CI `head_sha`, fails closed when required credentials
+  are absent, packages only `backend/` and the serving Dockerfile, and runs
+  backend/frontend parity smoke checks. Docker and the scheduled monitor use
+  semantic `/api/ready` checks rather than masking health failures.
 - Later retire/archive seams include the v1 scorer and actual `/api/score`
   route, the XGBoost/model artifacts and research dependencies, SHAP/DiCE/NLP/
   text-PCA paths, analytics/Admin, health/promotion coupling, the rate limiter
@@ -863,16 +864,94 @@ files, changed tracking status, or performed deployment operations.
   build, and contract coverage passed. Production remains fail-closed until a
   secure signing secret and trusted HTTPS ASGI scheme are supplied.
 
+## Phase 8 implementation and handoff
+
+Phase 8 implementation is complete and stopped at `READY FOR REVIEW`.
+Runtime scoring formulas, public question architecture, frozen contract values,
+and deployment targets were not changed by a live operation.
+
+- CI now blocks frontend lint, the exact frontend release-SHA gate, production
+  build, Phase 5–8 frontend tests, the complete backend suite, the serving-image
+  build, and the release-contract scan.
+- Production release metadata is carried through `VITE_RELEASE_SHA`,
+  `ALTERSCORE_RELEASE_SHA`, the secret-free release manifest, and frontend/API
+  parity checks. Production readiness fails for a local/invalid SHA, missing
+  signing secret, or missing non-local signing-key version.
+- Generator fuzz/secrecy and independent 54-path branching gates are named in
+  `tests/unit/backend/test_phase8_hardening.py`; existing contract and
+  anonymous anti-cheat suites remain in the complete backend gate, and the
+  emitted frontend bundle scan now runs after build and checks release secrecy.
+- HF deployment consumes only the successful CI workflow SHA, fails closed on
+  missing credentials, uses semantic `/api/ready` probes, runs public v2 smoke
+  checks, and has a manual matching-pair rollback workflow.
+- `docs/RELEASE_MANIFEST_TEMPLATE.json` records the required source, target,
+  backend package commit, signing-key, and smoke fields without containing
+  secrets.
+
+Verification completed in this implementation pass: frontend lint/build and
+Phase 5–8 tests passed with an exact test SHA; complete backend unit/API tests
+passed; Ruff and workflow YAML parsing passed; the release package helper
+produced matching SHA metadata and a secret-free package. Live deployment and
+post-deploy smoke were not executed.
+
+Final verification: backend unit/API suite 227 passed; frontend Phase 5/6/7/8
+tests passed 11/7/3/4; frontend lint, exact-SHA verification/build, scoped Ruff
+checks, and all four workflow YAML parses passed. The corrected CI Python
+quality step is syntactically valid.
+
+The existing untracked `docs/SCORING_V3_CODEX_REVIEW_PROMPT.md` and
+`runtime/shared_session_trained_model_answer_only_v2/` remain preserved.
+Phase 8 changes are uncommitted. No Phase 9 work, deployment, commit, push, or
+model-artifact regeneration was started.
+
+### Phase 8 limitations
+
+- The local `.venv312`/Black executable displayed a Windows application error
+  before formatter execution. CI uses blocking Ruff checks for active code and
+  a pinned formatter check for the Phase 8 scripts/test; the historical
+  repository-wide Black check was not made a new gate because it reports
+  pre-existing formatting drift across earlier phase files.
+- The public smoke runner requires reachable HTTPS backend/frontend targets and
+  was validated locally only through CLI, prompt-answer, and package-helper
+  checks; no external target was contacted.
+
+## Phase 8 Codex review outcome
+
+Phase 8 passed Codex review after scoped corrections. The review preserved the
+pre-existing untracked review prompt and runtime bundle, did not deploy, and
+did not begin Phase 9.
+
+- Deployment now accepts only a trusted successful same-repository `push` CI
+  run for the current `main` SHA, serializes forward/rollback operations, and
+  fails closed for every required credential.
+- Production-like environments reject invalid release metadata and local
+  signing-key sentinels even when settings are constructed directly. The
+  frontend build rejects an absent SHA before Vite runs and verifies API
+  metadata on live/form/score boundaries.
+- Release packaging requires the exact clean Git source tree and copies only
+  tracked serving modules. Rollback first requires a non-expired post-smoke
+  release-manifest artifact, and both workflows pin the Vercel CLI and set up
+  Python before running release scripts.
+- Independent verification passed: 231 backend unit/API tests; focused Phase 8
+  gates (9); frontend lint, exact-SHA build, and Phase 5/6/7/8 tests
+  (11/7/3/4); Ruff; workflow YAML parsing; smoke/package CLI checks; and
+  `git diff --check`. The disabled cache plugin emitted one expected
+  `PytestConfigWarning` for `cache_dir`.
+- Luna's Cicero, James, Parfit, and Bacon reports were all read-only and were
+  independently checked. No subagent edited a file, shared contract, tracker,
+  Git state, or Phase 9 code; Codex was the sole correction writer.
+
 ## Immediate next action
 
-Luna may implement Phase 8 CI, deployment, and operational hardening only, then
-stop at `READY FOR REVIEW`. Do not begin Phase 9, deploy, or regenerate model
-artifacts as part of this handoff.
+Luna may begin Phase 9 final audit and handoff only, then stop for Codex
+review. Do not deploy, rewrite release history, or make unrelated changes as
+part of that next phase.
 
 ## Blockers
 
 None for the Phase 8 handoff. Production readiness remains fail-closed until
-deployment supplies the required signing secret and trusted HTTPS ASGI scheme.
+an authorized deployment supplies the exact release SHA, non-local
+signing-key version, secure signing secret, and trusted HTTPS ASGI scheme.
 The unrelated untracked review-prompt and runtime-bundle paths remain
 preserved and unstaged.
 

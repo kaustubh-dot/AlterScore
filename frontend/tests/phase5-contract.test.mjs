@@ -459,6 +459,9 @@ test('production bundle contains only the v2 assessment transport and no legacy 
   try {
     files = await collectFiles(dist);
   } catch {
+    if (process.env.CI === 'true') {
+      assert.fail('Production bundle is required before the CI secrecy scan.');
+    }
     t.skip('Run npm run build before the emitted-bundle scan.');
     return;
   }
@@ -469,6 +472,8 @@ test('production bundle contains only the v2 assessment transport and no legacy 
     'repayment_probability', 'percentile', 'shap_value', 'counterfactual_actions',
     'improvement_tips', 'text_quality', 'session_id', 'VITE_ADMIN_PASSCODE',
     'VITE_API_KEY', 'VITE_SIGNING_SECRET', 'VITE_ATTEMPT_TOKEN', 'VITE_PASSWORD',
+    'rubric_points', 'generation_rule', 'objective_01', 'static_sjt_01',
+    'scenario_emi_supplier', 'answer_key',
   ]) {
     assert.equal(emitted.includes(forbidden), false, `forbidden bundle token: ${forbidden}`);
   }

@@ -1,5 +1,8 @@
 export function formatApiError(error, fallbackMessage = 'Request failed.') {
   if (isCancellationError(error)) return 'The request was cancelled.';
+  if (error?.code === 'release_mismatch') {
+    return 'The assessment client and scoring service releases do not match. Please try again later.';
+  }
 
   if (error?.response) {
     const { status, statusText, data } = error.response;

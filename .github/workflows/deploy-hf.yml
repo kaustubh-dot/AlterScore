@@ -1,57 +1,106 @@
-name: Deploy to Hugging Face Spaces
+name: Deploy AlterScore backend after CI
 
 on:
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows: ["AlterScore CI"]
+    types: [completed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: alterscore-production-release
+  cancel-in-progress: false
 
 jobs:
   deploy:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
     runs-on: ubuntu-latest
     env:
-      HF_TOKEN: ${{ secrets.HF_TOKEN }}
-      HF_SPACE_REPO: https://huggingface.co/spaces/coolbot22/alterscore-backend
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      SIGNING_KEY_VERSION: ${{ secrets.ALTERSCORE_SIGNING_KEY_VERSION }}
+      ALTERSCORE_SIGNING_SECRET: ${{ secrets.ALTERSCORE_SIGNING_SECRET }}
+      HF_SPACE_REPO: https://huggingface.co/spaces/coolbot22/alterscore-backend
+      BACKEND_URL: https://coolbot22-alterscore-backend.hf.space
+      FRONTEND_URL: ${{ vars.ALTERSCORE_FRONTEND_URL }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
     steps:
-      - name: Checkout Code
+      - name: Checkout the exact CI commit
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 1
 
-      - name: Skip When Token Is Missing
-        if: env.HF_TOKEN == ''
+      - name: Reject a stale successful CI run
+        shell: bash
         run: |
-          echo "::warning::HF_TOKEN is not configured, so Hugging Face deployment was skipped."
+          set -euo pipefail
+          git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
+          test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
+          test "$(git rev-parse origin/main)" = "$RELEASE_SHA"
 
-      - name: Build Backend Space Package
-        if: env.HF_TOKEN != ''
+      - name: Require deployment credentials and release identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$HF_TOKEN"
+          test -n "$SIGNING_KEY_VERSION"
+          test -n "$ALTERSCORE_SIGNING_SECRET"
+          test -n "$FRONTEND_URL"
+          test -n "$VERCEL_TOKEN"
+          test -n "$VERCEL_ORG_ID"
+          test -n "$VERCEL_PROJECT_ID"
+          test -n "$RELEASE_SHA"
+          test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
+          test "${#RELEASE_SHA}" = "40"
+          case "$RELEASE_SHA" in
+            (*[!0-9a-f]*) echo "release SHA is not lowercase hexadecimal" >&2; exit 1 ;;
+          esac
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Require provider signing readiness before publication
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/ci/smoke_release.py --base-url "$BACKEND_URL" --preflight-signing
+
+      - name: Set up Node.js 20.19.0
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.19.0"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build exact frontend release
+        working-directory: frontend
+        env:
+          VITE_RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          npm ci
+          npm run build
+
+      - name: Build immutable backend release package
+        shell: bash
         run: |
           set -euo pipefail
           SPACE_DIR="$RUNNER_TEMP/alterscore-hf-space"
           rm -rf "$SPACE_DIR"
-          mkdir -p "$SPACE_DIR"
+          python scripts/ci/prepare_hf_release.py --output "$SPACE_DIR" --release-sha "$RELEASE_SHA" --signing-key-version "$SIGNING_KEY_VERSION"
 
-          cp -R backend "$SPACE_DIR/backend"
-          cp Dockerfile "$SPACE_DIR/Dockerfile"
-
-          cat > "$SPACE_DIR/README.md" <<'EOF'
-          ---
-          title: AlterScore Public API
-          emoji: 📊
-          colorFrom: green
-          colorTo: blue
-          sdk: docker
-          app_port: 7860
-          pinned: false
-          ---
-
-          # AlterScore Public API
-
-          Artifact-free deterministic v2 assessment API for AlterScore.
-          EOF
-
-      - name: Push Backend Package
-        if: env.HF_TOKEN != ''
+      - name: Publish exact backend package
+        shell: bash
         run: |
           set -euo pipefail
           SPACE_DIR="$RUNNER_TEMP/alterscore-hf-space"
@@ -59,7 +108,69 @@ jobs:
           git init
           git config user.email "bot@alterscore.ai"
           git config user.name "AlterScore Deployment Bot"
-          git remote add origin "https://coolbot22:${HF_TOKEN}@huggingface.co/spaces/coolbot22/alterscore-backend"
           git add .
-          git commit -m "deploy(hf): package backend runtime"
-          git push origin HEAD:refs/heads/main --force
+          git commit -m "deploy(hf): release ${RELEASE_SHA}"
+          git remote add origin "$HF_SPACE_REPO"
+          git -c http.extraheader="AUTHORIZATION: Bearer $HF_TOKEN" push origin HEAD:refs/heads/main --force
+          echo "BACKEND_PACKAGE_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      - name: Publish matching frontend release
+        working-directory: frontend
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx --yes vercel@54.21.1 link --project "$VERCEL_PROJECT_ID" --scope "$VERCEL_ORG_ID" --token "$VERCEL_TOKEN" --yes
+          npx --yes vercel@54.21.1 deploy dist --prod --scope "$VERCEL_ORG_ID" --token "$VERCEL_TOKEN" --yes
+
+      - name: Run post-deploy v2 smoke checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 30); do
+            if python scripts/ci/smoke_release.py --base-url "$BACKEND_URL" --frontend-url "$FRONTEND_URL" --expected-release-sha "$RELEASE_SHA"; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 30 ]; then sleep 20; fi
+          done
+          echo "post-deploy smoke checks did not pass for the exact release" >&2
+          exit 1
+
+      - name: Record verified release manifest
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          release_sha = os.environ["RELEASE_SHA"]
+          manifest = {
+              "source_sha": release_sha,
+              "frontend_release_sha": release_sha,
+              "backend_release_sha": release_sha,
+              "contract_version": "2.0",
+              "assessment_version": "india-en-3.0.0",
+              "scoring_policy_version": "readiness-rubric-1.0.0",
+              "frontend_url": os.environ["FRONTEND_URL"],
+              "backend_url": os.environ["BACKEND_URL"],
+              "backend_package_commit": os.environ["BACKEND_PACKAGE_COMMIT"],
+              "signing_key_version": os.environ["SIGNING_KEY_VERSION"],
+              "smoke_status": "passed",
+              "workflow_run_url": (
+                  f"{os.environ['GITHUB_SERVER_URL']}/{os.environ['GITHUB_REPOSITORY']}"
+                  f"/actions/runs/{os.environ['GITHUB_RUN_ID']}"
+              ),
+              "recorded_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+          }
+          destination = Path(os.environ["RUNNER_TEMP"]) / "release-manifest.json"
+          destination.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+          print(destination)
+          PY
+
+      - name: Retain verified release manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-manifest-${{ github.event.workflow_run.head_sha }}
+          path: ${{ runner.temp }}/release-manifest.json
+          if-no-files-found: error

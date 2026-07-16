@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from decimal import Decimal
 import base64
+import re
 import secrets
 from typing import Any
 
@@ -78,6 +79,8 @@ RESULT_TTL_SECONDS = 86_400
 RESULT_STORE_MAX_ENTRIES = 10_000
 MIN_SIGNING_SECRET_BYTES = 32
 MIN_SIGNING_SECRET_DISTINCT_BYTES = 16
+RELEASE_SHA_PATTERN = re.compile(r"^[0-9a-f]{40}$")
+NON_PRODUCTION_ENVIRONMENTS = frozenset({"local", "test", "development"})
 
 
 class AnonymousAssessmentService:
@@ -94,10 +97,20 @@ class AnonymousAssessmentService:
         result_ttl_seconds: int = 86_400,
         result_store_max_entries: int = 10_000,
         rate_limits_enabled: bool = True,
+        environment: str = "local",
+        signing_key_version: str | None = None,
     ) -> None:
+        resolved_environment = environment
+        resolved_signing_key_version = signing_key_version
         if settings is not None:
             release_sha = getattr(settings, "release_sha", release_sha)
             signing_secret = getattr(settings, "signing_secret", signing_secret)
+            resolved_environment = getattr(
+                settings, "environment", resolved_environment
+            )
+            resolved_signing_key_version = getattr(
+                settings, "signing_key_version", resolved_signing_key_version
+            )
             # These are frozen public-contract values. Settings may expose the
             # names for deployment inventory, but cannot silently alter v2 TTLs.
             attempt_ttl_seconds = ATTEMPT_TTL_SECONDS
@@ -106,6 +119,8 @@ class AnonymousAssessmentService:
             result_store_max_entries = RESULT_STORE_MAX_ENTRIES
         self.release_sha = release_sha or "local"
         self.signing_secret = signing_secret
+        self.environment = (resolved_environment or "local").strip().lower() or "local"
+        self.signing_key_version = (resolved_signing_key_version or "local").strip() or "local"
         self.attempt_store = AttemptStore(
             ttl_seconds=attempt_ttl_seconds,
             max_entries=attempt_store_max_entries,
@@ -125,6 +140,18 @@ class AnonymousAssessmentService:
             "request_id": request_id,
             "release_sha": self.release_sha,
         }
+
+    def _release_ready(self) -> bool:
+        return (
+            self.environment in NON_PRODUCTION_ENVIRONMENTS
+            or RELEASE_SHA_PATTERN.fullmatch(self.release_sha) is not None
+        )
+
+    def _require_release_ready(self, error_code: str) -> None:
+        """Reject serving operations when a production-like release is unidentified."""
+
+        if not self._release_ready():
+            raise V2DomainError(error_code, 503, {"failed_checks": ["scorer"]})
 
     def _signing_ready(self) -> bool:
         """Accept only a sufficiently diverse base64url-encoded 256-bit key.
@@ -153,6 +180,10 @@ class AnonymousAssessmentService:
         return (
             len(key_material) >= MIN_SIGNING_SECRET_BYTES
             and len(set(key_material)) >= MIN_SIGNING_SECRET_DISTINCT_BYTES
+            and (
+                self.environment in NON_PRODUCTION_ENVIRONMENTS
+                or self.signing_key_version.casefold() != "local"
+            )
         )
 
     def rate_limit(self, bucket: str, client_host: str | None) -> int | None:
@@ -170,8 +201,12 @@ class AnonymousAssessmentService:
 
         scorer_status = (
             ("pass", "deterministic scorer available")
-            if callable(score_unified_assessment)
-            else ("fail", "deterministic scorer unavailable")
+            if callable(score_unified_assessment) and self._release_ready()
+            else (
+                ("fail", "release metadata unavailable")
+                if not self._release_ready()
+                else ("fail", "deterministic scorer unavailable")
+            )
         )
         checks.append(ReadyCheck(name="scorer", status=scorer_status[0], message=scorer_status[1]))
 
@@ -227,6 +262,7 @@ class AnonymousAssessmentService:
         }
 
     def issue_form(self, request_id: str | None = None) -> FormResponse:
+        self._require_release_ready("form_unavailable")
         if not self._signing_ready():
             raise V2DomainError("form_unavailable", 503, {"failed_checks": ["signing"]})
         issued_at = utc_now()
@@ -267,6 +303,7 @@ class AnonymousAssessmentService:
         request_id: str | None = None,
     ) -> ScoreResponse:
         self._check_versions(submission)
+        self._require_release_ready("not_ready")
         if not self._signing_ready():
             raise V2DomainError("not_ready", 503, {"failed_checks": ["signing"]})
 
@@ -375,6 +412,7 @@ class AnonymousAssessmentService:
     def verify(
         self, result_id: str, request_id: str | None = None
     ) -> VerificationResponse:
+        self._require_release_ready("not_ready")
         record = self.verification_store.get(result_id)
         if record is None:
             raise V2DomainError("result_not_found", 404, {})

@@ -1,5 +1,5 @@
 # Public AlterScore v2 serving dependencies.
 # Research/model-training dependencies live outside the production graph.
-fastapi>=0.115.6,<0.116
-uvicorn[standard]>=0.34,<0.35
-pydantic>=2.10.4,<2.11
+fastapi==0.115.6
+uvicorn[standard]==0.34.3
+pydantic==2.10.6

@@ -1,0 +1,147 @@
+name: Roll back AlterScore release pair
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_sha:
+        description: Exact previously reviewed 40-character release SHA
+        required: true
+        type: string
+      confirmation:
+        description: Type ROLLBACK to restore both targets
+        required: true
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: alterscore-production-release
+  cancel-in-progress: false
+
+jobs:
+  validate-release:
+    name: Validate reviewed rollback release
+    runs-on: ubuntu-latest
+    outputs:
+      release_sha: ${{ steps.release.outputs.release_sha }}
+    env:
+      RELEASE_SHA: ${{ inputs.release_sha }}
+      CONFIRMATION: ${{ inputs.confirmation }}
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - name: Require explicit confirmation and exact release SHA
+        id: release
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$CONFIRMATION" = "ROLLBACK"
+          test "${#RELEASE_SHA}" = "40"
+          case "$RELEASE_SHA" in
+            (*[!0-9a-f]*) echo "release SHA is not lowercase hexadecimal" >&2; exit 1 ;;
+          esac
+          printf 'release_sha=%s\n' "$RELEASE_SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Require a verified post-smoke release manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          artifacts="$(curl --fail --silent --show-error --retry 3 \
+            -H 'Accept: application/vnd.github+json' \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H 'X-GitHub-Api-Version: 2022-11-28' \
+            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/artifacts?name=release-manifest-$RELEASE_SHA&per_page=100")"
+          python -c 'import json, sys; payload=json.load(sys.stdin); expected="release-manifest-" + sys.argv[1]; artifacts=payload.get("artifacts", []); valid=any(isinstance(item, dict) and item.get("name") == expected and item.get("expired") is False and isinstance(item.get("size_in_bytes"), int) and item["size_in_bytes"] > 0 for item in artifacts); sys.exit(0 if valid else 1)' "$RELEASE_SHA" <<< "$artifacts"
+
+  rollback:
+    name: Restore matching frontend and backend release
+    needs: validate-release
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+      RELEASE_SHA: ${{ needs.validate-release.outputs.release_sha }}
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      SIGNING_KEY_VERSION: ${{ secrets.ALTERSCORE_SIGNING_KEY_VERSION }}
+      ALTERSCORE_SIGNING_SECRET: ${{ secrets.ALTERSCORE_SIGNING_SECRET }}
+      HF_SPACE_REPO: https://huggingface.co/spaces/coolbot22/alterscore-backend
+      BACKEND_URL: https://coolbot22-alterscore-backend.hf.space
+      FRONTEND_URL: ${{ vars.ALTERSCORE_FRONTEND_URL }}
+    steps:
+      - name: Checkout the verified release SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate-release.outputs.release_sha }}
+          fetch-depth: 1
+
+      - name: Require credentials and exact identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$HF_TOKEN"
+          test -n "$VERCEL_TOKEN"
+          test -n "$VERCEL_ORG_ID"
+          test -n "$VERCEL_PROJECT_ID"
+          test -n "$SIGNING_KEY_VERSION"
+          test -n "$ALTERSCORE_SIGNING_SECRET"
+          test -n "$FRONTEND_URL"
+          test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Require provider signing readiness before restoration
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/ci/smoke_release.py --base-url "$BACKEND_URL" --preflight-signing
+
+      - name: Restore exact backend package
+        shell: bash
+        run: |
+          set -euo pipefail
+          SPACE_DIR="$RUNNER_TEMP/alterscore-hf-space"
+          rm -rf "$SPACE_DIR"
+          python scripts/ci/prepare_hf_release.py --output "$SPACE_DIR" --release-sha "$RELEASE_SHA" --signing-key-version "$SIGNING_KEY_VERSION"
+          cd "$SPACE_DIR"
+          git init
+          git config user.email "bot@alterscore.ai"
+          git config user.name "AlterScore Rollback Bot"
+          git add .
+          git commit -m "rollback(hf): restore ${RELEASE_SHA}"
+          git remote add origin "$HF_SPACE_REPO"
+          git -c http.extraheader="AUTHORIZATION: Bearer $HF_TOKEN" push origin HEAD:refs/heads/main --force
+
+      - name: Set up Node.js 20.19.0
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.19.0"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build exact frontend release
+        working-directory: frontend
+        env:
+          VITE_RELEASE_SHA: ${{ needs.validate-release.outputs.release_sha }}
+        run: |
+          npm ci
+          npm run build
+
+      - name: Promote exact frontend release
+        working-directory: frontend
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx --yes vercel@54.21.1 link --project "$VERCEL_PROJECT_ID" --scope "$VERCEL_ORG_ID" --token "$VERCEL_TOKEN" --yes
+          npx --yes vercel@54.21.1 deploy dist --prod --scope "$VERCEL_ORG_ID" --token "$VERCEL_TOKEN" --yes
+
+      - name: Run paired release smoke checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/ci/smoke_release.py --base-url "$BACKEND_URL" --frontend-url "$FRONTEND_URL" --expected-release-sha "$RELEASE_SHA"

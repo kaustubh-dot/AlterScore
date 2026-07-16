@@ -8,11 +8,13 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "npm run verify:release && vite build",
     "lint": "eslint .",
+    "verify:release": "node verify-release-sha.mjs",
     "test:phase5": "node --test tests/phase5-contract.test.mjs",
     "test:phase6": "node --test tests/phase6-explainability.test.mjs",
     "test:phase7": "node --test tests/phase7-separation.test.mjs",
+    "test:phase8": "node --test tests/phase8-release.test.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

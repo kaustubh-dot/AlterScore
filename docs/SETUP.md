@@ -32,8 +32,8 @@ python -m uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 The v2 form and score endpoints require HTTPS. `/api/live` is liveness,
-`/api/health` is a temporary compatibility probe, and `/api/ready` reports
-whether signing and the deterministic serving boundary are ready.
+`/api/health` is a compatibility probe, and `/api/ready` reports semantic
+readiness only when all six frozen checks pass.
 
 ## Frontend
 
@@ -51,14 +51,19 @@ proxy or trusted development certificate.
 
 ```bash
 python -m pip install -r backend/requirements-dev.txt
-python -m pytest tests/unit/backend tests/integration/api/test_phase4_secure_anonymous_api.py tests/integration/api/test_phase7_legacy_retirement.py
+python -m pytest tests/unit/backend tests/integration/api
 cd frontend
 npm run lint
-npm run build
+VITE_RELEASE_SHA=<40-character-reviewed-sha> npm run build
 npm run test:phase5
 npm run test:phase6
 npm run test:phase7
+npm run test:phase8
 ```
+
+The inline `VITE_RELEASE_SHA=...` assignment uses POSIX shell syntax. In
+PowerShell, set `$env:VITE_RELEASE_SHA = '<40-character-reviewed-sha>'` before
+running `npm.cmd run build`.
 
 ## Key files
 

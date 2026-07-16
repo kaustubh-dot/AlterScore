@@ -422,9 +422,23 @@ def validate_transition(
             raise InvalidTransition(
                 "a linked payment transition cannot also change required_payments_due"
             )
-        if after.liquid_resources < before.liquid_resources - paid:
+        liquid_consumed = before.liquid_resources - after.liquid_resources
+        received_inflow = max(0, -delta.confirmed_inflows)
+        funded_by_new_borrowing = max(0, delta.new_borrowing)
+        retained_borrowed_liquidity = max(0, delta.cash_available) + max(
+            0, delta.emergency_buffer
+        )
+        if delta.new_borrowing > paid + retained_borrowed_liquidity:
+            raise InvalidTransition(
+                "new borrowing must be fully reflected in linked payment or retained liquidity"
+            )
+        if liquid_consumed > paid:
             raise InvalidTransition(
                 "liquid resources decreased by more than the required payment"
+            )
+        if liquid_consumed + received_inflow + funded_by_new_borrowing < paid:
+            raise InvalidTransition(
+                "linked payment is not funded by liquid resources or new funds"
             )
         if after.confirmed_inflows < before.confirmed_inflows:
             raise InvalidTransition("a linked payment cannot reduce confirmed inflows")

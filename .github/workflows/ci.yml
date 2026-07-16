@@ -1,99 +1,125 @@
-name: AlterScore CI/CD Pipeline
+name: AlterScore CI
 
 on:
   push:
-    branches:
-      - main
-    tags:
-      - 'v*'
+    branches: [main]
+    tags: ["v*"]
   pull_request:
-    branches:
-      - main
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
-  lint:
-    name: Code Quality & Syntax Auditing
+  python-quality:
+    name: Python lint and Phase 8 formatting
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
+      - name: Checkout exact event commit
         uses: actions/checkout@v4
-
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
-          cache: 'pip'
-
-      - name: Install Python Linting Tools
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements-dev.txt
+      - name: Install Python quality dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install ruff black
+          pip install -r backend/requirements-dev.txt ruff==0.15.16
+      - name: Run Phase 8 Python formatting check
+        run: ruff format --check scripts/ci tests/unit/backend/test_phase8_hardening.py
+      - name: Run Ruff linter
+        run: ruff check backend tests scripts/ci
 
-      - name: Run Black Formatter Check
-        run: black --check backend tests
-
-      - name: Run Ruff Linter
-        run: ruff check backend tests
-
-
-
-  frontend-build:
-    name: Frontend Lint & Production Build
+  frontend:
+    name: Frontend lint, tests, and production build
     runs-on: ubuntu-latest
+    env:
+      VITE_RELEASE_SHA: ${{ github.sha }}
     defaults:
       run:
         working-directory: frontend
     steps:
-      - name: Checkout Code
+      - name: Checkout exact event commit
         uses: actions/checkout@v4
-
-      - name: Set up Node.js 20
+      - name: Set up Node.js 20.19.0
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20.19.0"
+          cache: npm
           cache-dependency-path: frontend/package-lock.json
-
-      - name: Install Dependencies
+      - name: Install dependencies
         run: npm ci
-
-      # Lint runs as a non-blocking report. The production build below is the
-      # hard gate; known react-hooks findings in the assessment/results flow are
-      # tracked separately and must not fail the pipeline.
-      - name: Run ESLint (non-blocking)
+      - name: Run blocking ESLint check
         run: npm run lint
-        continue-on-error: true
-
-      - name: Build Production Bundle
+      - name: Verify exact frontend release SHA
+        run: npm run verify:release
+      - name: Build production bundle
         run: npm run build
-
-
+      - name: Run Phase 5 contract and secrecy tests
+        run: npm run test:phase5
+      - name: Run Phase 6 explainability tests
+        run: npm run test:phase6
+      - name: Run Phase 7 separation tests
+        run: npm run test:phase7
+      - name: Run Phase 8 release tests
+        run: npm run test:phase8
 
   backend-tests:
-    name: Backend API Test Suite
+    name: Complete backend test suite
     runs-on: ubuntu-latest
+    env:
+      ALTERSCORE_ENV: test
+      ALTERSCORE_RELEASE_SHA: ${{ github.sha }}
     steps:
-      - name: Checkout Code
+      - name: Checkout exact event commit
         uses: actions/checkout@v4
-
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
-          cache: 'pip'
-
-      - name: Install Dependencies
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements-dev.txt
+      - name: Install backend dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
           pip install -r backend/requirements-dev.txt
+      - name: Run complete pytest suite
+        run: python -m pytest --tb=short
 
-      - name: Run Complete Pytest Suite
-        env:
-          ALTERSCORE_ENV: test
+  docker-boundary:
+    name: Build serving image boundary
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact event commit
+        uses: actions/checkout@v4
+      - name: Build serving image with exact release SHA
+        run: docker build --pull --tag alterscore:ci --build-arg ALTERSCORE_RELEASE_SHA=$GITHUB_SHA .
+
+  release-contract:
+    name: Release SHA and contract gate
+    needs: [python-quality, frontend, backend-tests, docker-boundary]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact reviewed commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+      - name: Assert exact SHA and frozen release references
         run: |
-          python -m pytest --tb=short
-
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(rg -F -o 'contract_version: 2.0' docs/API_CONTRACTS.md | wc -l | tr -d ' ')" = "1"
+          test "$(rg -F -o 'assessment_version: india-en-3.0.0' docs/API_CONTRACTS.md | wc -l | tr -d ' ')" = "1"
+          test "$(rg -F -o 'scoring_policy_version: readiness-rubric-1.0.0' docs/API_CONTRACTS.md | wc -l | tr -d ' ')" = "1"
+          if rg -n 'verify_reproducibility|backend\.ml\.registry|promotion_gate|spacy|sentence-transformers' .github/workflows --glob '!ci.yml'; then
+            echo "::error::obsolete research or reproducibility workflow references remain"
+            exit 1
+          fi
+          echo "release_sha=$GITHUB_SHA"

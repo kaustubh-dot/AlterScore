@@ -1,0 +1,15 @@
+{
+  "source_sha": "<40-character-reviewed-git-sha>",
+  "frontend_release_sha": "<same-source-sha>",
+  "backend_release_sha": "<same-source-sha>",
+  "contract_version": "2.0",
+  "assessment_version": "india-en-3.0.0",
+  "scoring_policy_version": "readiness-rubric-1.0.0",
+  "backend_package_commit": "<provider-recorded-id>",
+  "frontend_url": "https://<frontend-origin>",
+  "backend_url": "https://<backend-origin>",
+  "signing_key_version": "<non-secret-key-reference>",
+  "smoke_status": "passed",
+  "workflow_run_url": "<workflow-run-url>",
+  "recorded_at": "<UTC-timestamp>"
+}

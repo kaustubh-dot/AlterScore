@@ -327,6 +327,7 @@ class ReadyCheck(V2Model):
         "canonical instrument unavailable",
         "deterministic scorer available",
         "deterministic scorer unavailable",
+        "release metadata unavailable",
         "result signing configured",
         "result signing configuration missing",
         "in-memory attempt store available",

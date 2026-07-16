@@ -51,7 +51,7 @@ scope belongs in `SCORING_V3_LUNA_PLAN.md`.
 | 5 | Frontend assessment migration | Complete | Passed | PASSED |
 | 6 | Result explainability | Complete | Passed | PASSED |
 | 7 | Legacy separation and runtime cleanup | Complete | Passed | PASSED |
-| 8 | CI, deployment, and operational hardening | Not started | Pending | NOT STARTED |
+| 8 | CI, deployment, and operational hardening | Complete | Passed | PASSED |
 | 9 | Final audit and handoff | Not started | Pending | NOT STARTED |
 
 ## Initial planning checkpoint
@@ -2941,3 +2941,240 @@ have not started.
 
 Phase 7 is `PASSED`. The immediate next action is Phase 8 CI, deployment, and
 operational hardening. It is not started by this review.
+
+---
+
+## Phase 8 implementation checkpoint - iteration 1
+
+### Metadata
+
+- Date/time: 2026-07-16 23:12:20 +05:30.
+- Branch: codex/scoring-production-hardening.
+- Starting HEAD: 749835304ae9dc5aadfd9768fb964947ce0bc3a5.
+- Ending HEAD: 749835304ae9dc5aadfd9768fb964947ce0bc3a5; HEAD is unchanged
+  and the Phase 8 work remains uncommitted and unstaged.
+- The worktree was already substantially dirty. Existing tracked changes and
+  untracked paths were preserved, including
+  docs/SCORING_V3_CODEX_REVIEW_PROMPT.md and
+  runtime/shared_session_trained_model_answer_only_v2/. No reset, clean,
+  checkout, branch switch, discard, commit, push, deployment, or model-artifact
+  regeneration was performed.
+- Authority: the user completed the Phase 7 review and explicitly authorized
+  Phase 8 CI, deployment, and operational hardening. This checkpoint authorizes
+  only Phase 8 review; it does not authorize Phase 9 or publication.
+- Luna status: READY FOR REVIEW.
+
+### Scope completed
+
+- Hardened CI as blocking gates for frontend lint, exact frontend release-SHA
+  verification, production build, Phase 5/6/7/8 frontend tests, complete
+  backend tests, serving-image construction, and frozen release-contract scans.
+- Added exact release identity propagation through VITE_RELEASE_SHA,
+  ALTERSCORE_RELEASE_SHA, backend public metadata, and a secret-free release
+  manifest template. Production readiness now fails closed for an invalid or
+  missing release SHA, local signing-key version, or signing secret.
+- Added backend Phase 8 tests for public-boundary secrecy/determinism,
+  independent 54-path branching coverage, unfunded linked-payment rejection,
+  production readiness, and public metadata parity.
+- Added frontend release metadata/parity checks, release-SHA bundle scanning,
+  and user-safe release-mismatch error mapping. Existing client scoring
+  authority, question architecture, and frozen version values remain unchanged.
+- Added semantic Docker readiness health checks, an HTTPS paired release smoke
+  runner, immutable HF packaging, a successful-CI deployment workflow, a
+  semantic readiness monitor, and a manual exact-pair rollback workflow.
+- Added docs/RELEASE_MANIFEST_TEMPLATE.json and updated deployment, rollback,
+  setup, governance, runtime, README, current-state, and checkpoint
+  documentation. The archived reproducibility script now directs operators to
+  CI and release smoke checks.
+- Corrected the CI Python-quality step indentation before handoff; all four
+  workflow YAML files were re-parsed successfully.
+
+### Files
+
+- Added:
+  - .github/workflows/rollback-release.yml
+  - docs/RELEASE_MANIFEST_TEMPLATE.json
+  - frontend/src/lib/releaseMetadata.js
+  - frontend/tests/phase8-release.test.mjs
+  - frontend/verify-release-sha.mjs
+  - scripts/ci/prepare_hf_release.py
+  - scripts/ci/smoke_release.py
+  - tests/unit/backend/test_phase8_hardening.py
+- Modified:
+  - .env.example, Dockerfile, pytest.ini, and the CI/deploy/keepalive
+    workflows
+  - backend v2 models/service, settings, and branching state validation
+  - frontend package metadata, API transport/error handling, and Phase 5
+    contract tests
+  - deployment, rollback, setup, governance, runtime, README, current-state,
+    and checkpoint documentation
+  - the archived reproducibility validation entry point
+- Preserved without modification: the pre-existing review prompt and runtime
+  test-only bundle, all prior dirty tracked work, and checked-in model artifacts.
+
+### Public behavior and contracts
+
+- Frozen values remain exactly contract_version: 2.0,
+  assessment_version: india-en-3.0.0, and
+  scoring_policy_version: readiness-rubric-1.0.0.
+- Public claims remain limited to the Financial Decision Readiness Index and
+  its illustrative 300-to-850 transformation; behavior and narrative remain
+  unscored, and the Research Lab remains synthetic/non-public-model research.
+- Final formulas, eight objective concepts, four static SJTs, two branching
+  simulations, opaque IDs, anonymous single-use attempts, immediate retakes,
+  signed results, and explainability boundaries remain the frozen architecture.
+- Release parity now requires the frontend bundle, backend metadata, exact
+  reviewed commit, signing-key version, and smoke checks to refer to one
+  release identity. No live target was contacted by this implementation pass.
+
+### Subagents used
+
+| Task | Model/tier | Mode | File ownership | Result | Luna verification |
+|---|---|---|---|---|---|
+| Cicero CI and test-gate audit | light explorer | read-only | none | Found nonblocking lint, missing phase gates, bundle-scan and formatter limitations, and stale CI inventory. | CI gates were made blocking; Phase 5-8 tests, post-build bundle checks, and scoped Ruff formatting were added; historical repo-wide Black drift was recorded rather than silently reformatted. |
+| James release/readiness audit | light explorer | read-only | none | Found non-fail-closed production SHA/signing metadata, weak semantic probes, mutable release identity, and missing coordinated rollback. | Added exact SHA checks, signing-key version, semantic readiness, immutable package metadata, paired smoke, and manual paired rollback. |
+| Parfit property/separation audit | light explorer | read-only | none | Found generator/property coverage, branching oracle, anti-cheat, frontend parity, and documentation gaps. | Added deterministic 512-seed secrecy coverage, independent 54-path oracle coverage, unfunded linked-payment rejection, frontend SHA build checks, and current documentation. |
+| Bacon deployment/rollback audit | light explorer | read-only | none | Found missing paired deployment/rollback, token fail-closed behavior, and stale probes. | Added credential fail-closed checks, secret-free HF packaging, successful-CI deployment, semantic keepalive, and exact-pair rollback workflow. |
+
+- All four subagents were read-only, had no file ownership, and performed no
+  Git, deployment, or tracking operations. Their findings were reviewed and
+  incorporated only within Phase 8 scope.
+
+### Tests executed
+
+| Command / check | Result | Notes |
+|---|---|---|
+| npm.cmd run lint from frontend | PASS | ESLint exit 0. |
+| VITE_RELEASE_SHA=0123456789abcdef0123456789abcdef01234567 npm.cmd run verify:release | PASS | Exact 40-character test SHA accepted. |
+| Same test SHA with npm.cmd run build from frontend | PASS | Vite 8.0.16; 1,840 modules transformed; ignored frontend/dist emitted. |
+| npm.cmd run test:phase5 | PASS | 11 passed. |
+| npm.cmd run test:phase6 | PASS | 7 passed. |
+| npm.cmd run test:phase7 | PASS | 3 passed. |
+| npm.cmd run test:phase8 | PASS | 4 passed, including emitted-bundle SHA parity. |
+| Bundled Python -B -m pytest -p no:cacheprovider -o "addopts=" tests\unit\backend tests\integration\api --basetemp C:\tmp\alterscore-phase8-final --tb=short -q | PASS | 227 passed in 4.45 seconds; one expected PytestConfigWarning for cache_dir with the cache plugin disabled. |
+| .venv312\Scripts\ruff.exe check backend tests scripts\ci | PASS | All checks passed. |
+| .venv312\Scripts\ruff.exe format --check scripts\ci\prepare_hf_release.py scripts\ci\smoke_release.py tests\unit\backend\test_phase8_hardening.py | PASS | All three files already formatted. |
+| Bundled Python YAML parse for .github/workflows/*.yml | PASS | ci.yml, deploy-hf.yml, keepalive.yml, and rollback-release.yml parsed. |
+| prepare_hf_release.py package verification with a public test SHA/key version | PASS | Matching source/frontend/backend SHA metadata, patched Docker ARG, and no secret content. |
+| smoke_release.py --help and local objective-prompt answer check | PASS | CLI validated; all eight objective concepts produced bounded answers. No external target contacted. |
+| git diff --check | PASS | No whitespace errors; Git line-ending/global-ignore warnings are environment warnings. |
+
+### Failures and warnings
+
+- npm.cmd run verify:release without VITE_RELEASE_SHA failed as designed with
+  VITE_RELEASE_SHA must be a 40-character lowercase Git SHA. The blocking CI
+  order runs this gate before the production build.
+- The local .venv312/Black executable raised the Windows python.exe
+  application error before formatter execution. A separate clean Python
+  environment reported pre-existing repository-wide Black drift; Phase 8
+  therefore uses blocking Ruff checks and does not silently reformat earlier
+  phase files.
+- The isolated backend command intentionally disables the cache plugin, so
+  Pytest emits the known cache_dir configuration warning. It is not a test
+  failure.
+- Browser visual automation and live deployment/post-deploy smoke were not run;
+  no external service, credential, token, or user data was accessed.
+
+### Diff hygiene
+
+- No files were staged, committed, pushed, deployed, reset, cleaned, checked
+  out, switched, discarded, or regenerated. The HEAD remained unchanged.
+- No secrets, raw tokens, assessment responses, or user data were added.
+- Ignored frontend/dist and test cache output are verification side effects;
+  the pre-existing untracked prompt and runtime bundle remain preserved.
+
+### Known limitations
+
+- The smoke runner, HF deployment, Vercel promotion, keepalive monitor, and
+  rollback workflow still require trusted HTTPS targets and configured
+  credentials; their live operations remain intentionally unexecuted.
+- Vite does not evaluate the runtime production metadata guard during a build;
+  verify:release is the explicit fail-closed pre-build gate in CI.
+- Repository-wide Black remains outside the new Phase 8 gate because historical
+  formatting drift spans earlier phases; scoped Ruff formatting and lint pass.
+
+### Review focus
+
+- Confirm CI release-contract exact-SHA behavior and the deployment workflow's
+  successful-CI/ref matching, credential fail-closed checks, and secret-free
+  package boundary.
+- Confirm backend/frontend release metadata parity, semantic readiness probes,
+  signing-key version handling, and the paired smoke/rollback safety boundary.
+- Confirm the unfunded linked-payment invariant and the generated/public-boundary
+  tests do not alter the frozen score formulas or question architecture.
+- Confirm the preserved unrelated untracked paths remain outside the intended
+  publication scope.
+
+### Stop confirmation
+
+Phase 8 is complete and handed to Codex for review at READY FOR REVIEW.
+Phase 9, live deployment, commit, push, cleanup, and model-artifact
+regeneration have not started.
+
+---
+
+## Phase 8 Codex review checkpoint - PASS
+
+### Metadata
+
+- Date/time: 2026-07-17 00:14:26 +05:30.
+- Branch: `codex/scoring-production-hardening`.
+- Review base HEAD: `749835304ae9dc5aadfd9768fb964947ce0bc3a5`
+  (`feat: complete phase 7 legacy separation`).
+- Decision: **PASS**.
+- Authority: the user explicitly authorized Phase 8 corrections, commit, and
+  push. No deployment or Phase 9 implementation was authorized or performed.
+
+### Review and corrections
+
+Codex read the governing plan/current-state/checkpoint records, including the
+latest Luna Phase 8 checkpoint and all four recorded subagent reports. The
+implementation was checked against every Phase 8 gate: blocking CI, exact
+release identity, production readiness, credential failure, release package
+secrecy, paired smoke, semantic monitoring, and coherent rollback.
+
+| Priority | Resolved finding | Correction verified |
+|---|---|---|
+| P0 | A successful `workflow_run` could originate from an untrusted fork-shaped event. | Deployment now requires a successful same-repository `push` run for `main`, checks out its exact SHA, and rejects a stale main tip. |
+| P1 | A frontend build could succeed without `VITE_RELEASE_SHA`; production-like direct settings could fail open; package copying could include untracked serving files. | Build invokes `verify:release`; environment/key sentinels are normalized and fail closed; package creation requires an exact clean Git root and tracked Python allowlist. |
+| P1 | Forward Vercel publication, rollback selection, CLI execution, and release-script runtime were not sufficiently bound. | Forward/rollback share one queue, pin Vercel CLI `54.21.1`, set up Python before release scripts, require a non-expired post-smoke manifest before rollback, and deploy both targets from one SHA. |
+| P2 | Linked-payment borrowing, smoke contract coverage, manifest terminology, and shell examples had edge-case gaps. | Borrowing is accounted for, smoke checks contract metadata, documentation names the package commit correctly, and build examples set the SHA on the build command. |
+
+### Independent verification
+
+| Command / check | Result |
+|---|---|
+| `C:\Users\Kaustubh\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe -B -m pytest -p no:cacheprovider -o "addopts=" tests\unit\backend tests\integration\api --basetemp .tmp\phase8-codex-full-final-2 --tb=short -q` | PASS: 231 passed in 5.61 s; one expected disabled-cache `PytestConfigWarning` for `cache_dir`. |
+| Focused `tests\unit\backend\test_phase8_hardening.py` with the same isolated options | PASS: 9 passed in 2.64 s. |
+| Frontend `npm.cmd run lint`; valid-SHA `npm.cmd run build`; Phase 5/6/7/8 tests | PASS: lint exit 0; Vite 8.0.16 transformed 1,840 modules; 11/7/3/4 tests passed. |
+| Frontend build with `VITE_RELEASE_SHA` absent | PASS: failed before Vite with the expected 40-character-SHA error. |
+| `.venv312\Scripts\ruff.exe check backend tests scripts\ci` and `ruff format --check scripts\ci tests\unit\backend\test_phase8_hardening.py` | PASS. |
+| Bundled-Python YAML parse for `ci.yml`, `deploy-hf.yml`, `keepalive.yml`, and `rollback-release.yml` | PASS. |
+| `smoke_release.py --help`, `prepare_hf_release.py --help`, invalid non-HTTPS smoke invocation, and package allowlist/adversarial tests | PASS: CLIs parse; non-HTTPS input is rejected before network access; package test excludes dotenv/cache/model/untracked Python content. |
+| `git diff --check` | PASS: no whitespace errors; only local line-ending/global-ignore warnings. |
+
+The local review environment has no Docker executable, so the CI serving-image
+build/healthcheck could not be executed locally. Its Dockerfile, workflow,
+semantic readiness contract, and static regressions were independently
+inspected; CI keeps that image build blocking. No live target, provider token,
+credential, user data, deployment, or rollback was accessed.
+
+### Subagent, ownership, and scope audit
+
+- Luna's Cicero (CI/test gates), James (release/readiness), Parfit
+  (property/separation), and Bacon (deployment/rollback) were read-only, had
+  no file ownership, and performed no Git, tracking, or deployment action.
+  Their accepted/rejected findings and Luna's stated verification were checked
+  against the final files and independent commands above.
+- Codex's three Phase 8 auditors were likewise read-only. No two agents edited
+  a file concurrently. Codex was the sole correction writer; shared contracts,
+  tracker status, Git state, and later-phase code were not changed by an agent.
+- The pre-existing untracked `docs/SCORING_V3_CODEX_REVIEW_PROMPT.md` and
+  `runtime/shared_session_trained_model_answer_only_v2/` bundle remain outside
+  the publication scope and untouched. No Phase 9 implementation path was
+  added; only plan/tracker references mention Phase 9.
+
+### Handoff
+
+Phase 8 is `PASSED`. The immediate next action is Phase 9 final audit and
+handoff only; it is not started by this review.

@@ -49,9 +49,16 @@ Validation:
 
 ```bash
 python -m pip install -r backend/requirements-dev.txt
-python -m pytest tests/unit/backend tests/integration/api/test_phase4_secure_anonymous_api.py tests/integration/api/test_phase7_legacy_retirement.py
-cd frontend && npm run lint && npm run build && npm run test:phase5 && npm run test:phase6 && npm run test:phase7
+python -m pytest tests/unit/backend tests/integration/api
+cd frontend && npm run lint && VITE_RELEASE_SHA=<40-character-reviewed-sha> npm run build && npm run test:phase5 && npm run test:phase6 && npm run test:phase7 && npm run test:phase8
 ```
+
+Production builds must use the exact backend SHA in `VITE_RELEASE_SHA`.
+The inline assignment uses POSIX shell syntax; in PowerShell run
+`$env:VITE_RELEASE_SHA = '<40-character-reviewed-sha>'` before
+`npm.cmd run build`.
+See `docs/DEPLOYMENT.md` and `docs/ROLLBACK_CHECKLIST.md` for CI-gated
+deployment, semantic readiness, smoke, and paired rollback procedures.
 
 ## Repository layout
 

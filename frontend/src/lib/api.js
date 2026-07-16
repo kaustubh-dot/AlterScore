@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { isMatchingReleaseMetadata } from './releaseMetadata.js';
 
 export function normalizeApiBaseUrl(rawValue) {
   if (!rawValue) {
@@ -46,10 +47,25 @@ function getSecureApiTransportError() {
   return null;
 }
 
+function assertMatchingRelease(response) {
+  if (!isMatchingReleaseMetadata(response?.data)) {
+    const error = new Error('The frontend and assessment API releases do not match.');
+    error.code = 'release_mismatch';
+    throw error;
+  }
+  return response;
+}
+
+export function fetchV2Live(config = {}) {
+  const transportError = getSecureApiTransportError();
+  if (transportError) return Promise.reject(transportError);
+  return api.get('/live', config).then(assertMatchingRelease);
+}
+
 export function fetchV2AssessmentForm(config = {}) {
   const transportError = getSecureApiTransportError();
   if (transportError) return Promise.reject(transportError);
-  return api.get('/v2/assessment/form', config);
+  return fetchV2Live(config).then(() => api.get('/v2/assessment/form', config).then(assertMatchingRelease));
 }
 
 export function submitV2Assessment(form, submission, config = {}) {
@@ -59,7 +75,8 @@ export function submitV2Assessment(form, submission, config = {}) {
     ...(config.headers || {}),
     Authorization: `Bearer ${form.attempt_token}`,
   };
-  return api.post('/v2/assessment/score', submission, { ...config, headers });
+  return api.post('/v2/assessment/score', submission, { ...config, headers })
+    .then(assertMatchingRelease);
 }
 
 export function getV2VerificationUrl(resultId) {

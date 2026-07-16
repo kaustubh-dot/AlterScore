@@ -19,6 +19,12 @@ def _split_csv(value: str | None) -> tuple[str, ...]:
     return tuple(item.strip() for item in value.split(",") if item.strip())
 
 
+def _normalize_environment(value: str | None) -> str:
+    """Return the canonical environment spelling used by serving safeguards."""
+
+    return (value or "local").strip().lower() or "local"
+
+
 @dataclass(frozen=True)
 class Settings:
     """Settings consumed by the v2 service and HTTP boundary."""
@@ -29,13 +35,14 @@ class Settings:
     cors_origin_regex: str | None
     release_sha: str = "local"
     signing_secret: str | None = None
+    signing_key_version: str = "local"
 
 
 def load_settings(env: Mapping[str, str] | None = None) -> Settings:
     """Load public API settings without reading model or artifact paths."""
 
     source = environ if env is None else env
-    environment = source.get("ALTERSCORE_ENV", "local")
+    environment = _normalize_environment(source.get("ALTERSCORE_ENV"))
     release_sha = (
         source.get("ALTERSCORE_RELEASE_SHA", "").strip()
         or source.get("GIT_SHA", "").strip()
@@ -49,6 +56,8 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         cors_origin_regex=source.get("ALTERSCORE_CORS_ORIGIN_REGEX") or None,
         release_sha=release_sha,
         signing_secret=source.get("ALTERSCORE_SIGNING_SECRET") or None,
+        signing_key_version=source.get("ALTERSCORE_SIGNING_KEY_VERSION", "local").strip()
+        or "local",
     )
 
 

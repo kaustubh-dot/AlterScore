@@ -1,16 +1,20 @@
-name: HF Space Auto Pinger
+name: HF Space Readiness Monitor
 
 on:
   schedule:
-    # Run every 15 minutes to keep the Hugging Face space awake
+    # Run every 15 minutes and fail when the public scorer is not ready.
     - cron: '*/15 * * * *'
-  workflow_dispatch: # Allow manual trigger
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
-  ping:
+  readiness:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping API Health
+      - name: Probe public readiness
         run: |
-          # We use -f to fail on HTTP errors, -s to silence progress bars, -m 30 to timeout if hung
-          curl -f -s -m 30 https://coolbot22-alterscore-backend.hf.space/api/health || echo "Ping failed, but workflow will continue"
+          set -euo pipefail
+          payload="$(curl --fail --silent --show-error --max-time 30 https://coolbot22-alterscore-backend.hf.space/api/ready)"
+          python -c 'import json, sys; payload=json.loads(sys.argv[1]); checks=payload.get("checks", []); expected=("instrument", "scorer", "signing", "attempt_store", "verification_store", "rate_limits"); sys.exit(0 if payload.get("status") == "ready" and tuple(check.get("name") for check in checks) == expected and all(check.get("status") == "pass" for check in checks) else 1)' "$payload"

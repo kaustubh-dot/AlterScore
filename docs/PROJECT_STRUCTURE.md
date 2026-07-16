@@ -35,7 +35,7 @@ assessments.
 | `.dockerignore` | Build-context defense in depth |
 | `backend/requirements.txt` | Serving-only dependencies |
 | `frontend/.env.production` | Public frontend API base URL |
-| `.github/workflows/deploy-hf.yml` | Backend package delivery; release hardening is tracked separately |
+| `.github/workflows/deploy-hf.yml` | Trusted CI-gated paired-release authority with verified manifest retention |
 
 The production entrypoint is `backend.app.main:app`. It does not load a model
 manifest, serialized artifact, report, or legacy request logger.
