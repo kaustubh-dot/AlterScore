@@ -112,8 +112,8 @@ jobs:
           git config user.name "AlterScore Deployment Bot"
           git add .
           git commit -m "deploy(hf): release ${RELEASE_SHA}"
-          git remote add origin "$HF_SPACE_REPO"
-          git -c http.extraheader="AUTHORIZATION: Bearer $HF_TOKEN" push origin HEAD:refs/heads/main --force
+          git remote add origin "https://user:${HF_TOKEN}@${HF_SPACE_REPO#https://}"
+          git push origin HEAD:refs/heads/main --force
           echo "BACKEND_PACKAGE_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
 
       - name: Publish matching frontend release
