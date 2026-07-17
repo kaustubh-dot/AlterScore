@@ -234,9 +234,7 @@ def _build_submission(form: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def require_signing_preflight(
-    base_url: str, *, allow_legacy_404: bool = False
-) -> None:
+def require_signing_preflight(base_url: str, *, allow_legacy_404: bool = False) -> None:
     """Require an already configured provider to expose signing readiness.
 
     The signing secret stays in the hosting provider's secret store and is
@@ -409,9 +407,7 @@ def main() -> int:
         parser.error("--expected-release-sha must be a 40-character lowercase Git SHA")
     try:
         if args.preflight_signing:
-            require_signing_preflight(
-                base_url, allow_legacy_404=args.allow_legacy_404
-            )
+            require_signing_preflight(base_url, allow_legacy_404=args.allow_legacy_404)
         else:
             run(base_url, args.expected_release_sha, args.frontend_url)
     except SmokeFailure as error:

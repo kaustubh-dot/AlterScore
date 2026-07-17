@@ -405,8 +405,6 @@ def test_phase9_preflight_allows_only_explicit_legacy_bootstrap(monkeypatch) -> 
         "_request",
         lambda *args, **kwargs: smoke.HttpResult(404, {}, {}),
     )
-    smoke.require_signing_preflight(
-        "https://backend.example", allow_legacy_404=True
-    )
+    smoke.require_signing_preflight("https://backend.example", allow_legacy_404=True)
     with pytest.raises(smoke.SmokeFailure, match="expected HTTP 200 or 503"):
         smoke.require_signing_preflight("https://backend.example")
