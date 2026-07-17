@@ -313,6 +313,33 @@ def test_loopback_http_is_usable_only_in_non_production_environments() -> None:
         assert response.json()["error"]["details"] == {"fields": ["transport"]}
 
 
+def test_production_trusted_proxy_scheme_requires_loopback_peer() -> None:
+    with _app_client(
+        base_url="http://backend",
+        client_host=("127.0.0.1", 50_003),
+        environment="production",
+        signing_key_version="key-2026-07",
+    ) as (client, _):
+        proxied = client.get(
+            "/api/v2/assessment/form",
+            headers={"X-Forwarded-Proto": "https"},
+        )
+        assert proxied.status_code == 503
+        assert proxied.json()["error"]["code"] == "form_unavailable"
+
+    with _app_client(
+        base_url="http://backend",
+        client_host=("203.0.113.10", 50_004),
+        environment="production",
+        signing_key_version="key-2026-07",
+    ) as (client, _):
+        spoofed = client.get(
+            "/api/v2/assessment/form",
+            headers={"X-Forwarded-Proto": "https"},
+        )
+        assert spoofed.status_code == 400
+
+
 def test_main_app_adds_hsts_on_https_responses() -> None:
     settings = load_settings(
         {"ALTERSCORE_ENV": "test", "ALTERSCORE_RELEASE_SHA": "a" * 40}

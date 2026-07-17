@@ -74,6 +74,15 @@ def _require_secure_transport(
     if request.url.scheme.lower() == "https":
         return
 
+    # Hugging Face terminates TLS in a local sidecar before forwarding to
+    # Uvicorn. Trust its forwarded scheme only when the immediate peer is
+    # loopback; arbitrary remote clients cannot make plaintext requests look
+    # secure by supplying this header.
+    forwarded_proto = request.headers.get("x-forwarded-proto", "").split(",", 1)[0]
+    peer_host = getattr(request.state, "phase4_network_host", None)
+    if forwarded_proto.strip().lower() == "https" and _is_loopback_host(peer_host):
+        return
+
     # Ordinary local development runs Vite and Uvicorn on the loopback
     # interface. Permit that narrow non-production case so the documented
     # startup commands form a usable end-to-end environment. Remote and every
