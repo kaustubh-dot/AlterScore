@@ -122,7 +122,7 @@
   margin-bottom: var(--space-10);
   overflow: hidden;
   border: 1px solid var(--bg-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-lg);
   background: var(--bg-border);
 }
 
@@ -162,8 +162,9 @@
   margin-bottom: var(--space-8);
   padding: var(--space-8);
   border: 1px solid var(--bg-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-lg);
   background: var(--bg-surface);
+  box-shadow: var(--shadow-card);
 }
 
 .results-section-header {
@@ -218,7 +219,14 @@
 }
 
 .results-empty-card {
+  width: calc(100% - var(--page-gutter) - var(--page-gutter));
   max-width: 460px;
+  margin-inline: auto;
+  padding: var(--space-8);
+  border: 1px solid var(--bg-border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-card);
   text-align: center;
 }
 
@@ -248,6 +256,10 @@
 
   .results-container {
     max-width: none;
+  }
+
+  .results-empty-card {
+    padding: var(--space-6) var(--space-5);
   }
 
   .score-circle-wrapper {
@@ -331,8 +343,9 @@
 .detail-unavailable {
   padding: var(--space-8);
   border: 1px solid var(--bg-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-lg);
   background: var(--bg-surface);
+  box-shadow: var(--shadow-card);
 }
 
 .formula-waterfall {
@@ -350,7 +363,7 @@
   gap: var(--space-3);
   padding: var(--space-5);
   border: 1px solid var(--bg-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   background: var(--bg-void);
 }
 
@@ -476,8 +489,9 @@
   min-width: 0;
   padding: var(--space-7);
   border: 1px solid var(--bg-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-lg);
   background: var(--bg-surface);
+  box-shadow: var(--shadow-card);
 }
 
 .evidence-card[id] {
@@ -674,7 +688,7 @@
   min-width: 0;
   padding: var(--space-5);
   border: 1px solid var(--bg-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   background: var(--bg-void);
 }
 
@@ -777,7 +791,7 @@
 .dimension-card {
   padding: var(--space-5);
   border: 1px solid rgba(16, 185, 129, 0.3);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   background: rgba(16, 185, 129, 0.04);
 }
 
@@ -815,7 +829,7 @@
 .behavior-profile-section {
   padding: var(--space-8);
   border: 1px solid var(--bg-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-lg);
   background: var(--bg-surface);
 }
 

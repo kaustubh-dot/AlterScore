@@ -25,7 +25,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-8) 0;
+  padding: var(--space-8) var(--page-gutter);
 }
 
 .assessment-wrapper {
@@ -58,9 +58,10 @@
 .question-card {
   background: var(--bg-surface);
   border: 1px solid var(--bg-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-lg);
   padding: var(--space-10);
-  transition: all var(--duration-normal) var(--ease-smooth);
+  box-shadow: var(--shadow-card);
+  transition: opacity var(--duration-normal) var(--ease-smooth), transform var(--duration-normal) var(--ease-smooth), border-color var(--duration-normal) var(--ease-smooth);
   position: relative;
   min-height: 320px;
   display: flex;
@@ -68,7 +69,7 @@
 }
 
 .question-card:hover {
-  border-color: var(--text-muted);
+  border-color: var(--bg-border);
 }
 
 .question-card.slide-exit {
@@ -88,11 +89,11 @@
 
 .question-text {
   font-family: var(--font-display);
-  font-size: var(--text-xl);
+  font-size: clamp(var(--text-xl), 3vw, var(--text-2xl));
   font-weight: 300;
   color: var(--text-primary);
   margin-bottom: var(--space-4);
-  line-height: 1.5;
+  line-height: 1.35;
 }
 
 .question-hint {
@@ -151,9 +152,10 @@
 }
 
 .option-pill {
-  background: var(--bg-surface);
+  min-height: 48px;
+  background: var(--bg-elevated);
   border: 1px solid var(--bg-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   padding: var(--space-4) var(--space-5);
   cursor: pointer;
   transition: all var(--duration-fast) var(--ease-smooth);
@@ -185,9 +187,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--bg-surface);
+  background: var(--bg-elevated);
   border: 1px solid var(--bg-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   padding: var(--space-4) var(--space-5);
   transition: all var(--duration-fast) var(--ease-smooth);
   font-family: var(--font-body);
@@ -277,9 +279,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: var(--bg-surface);
+  background: var(--bg-elevated);
   border: 1px solid var(--bg-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   padding: var(--space-4) var(--space-2);
   cursor: pointer;
   transition: all var(--duration-fast) var(--ease-smooth);
@@ -329,9 +331,9 @@
 
 .input-textarea {
   width: 100%;
-  background: var(--bg-surface);
+  background: var(--bg-elevated);
   border: 1px solid var(--bg-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   color: var(--text-primary);
   font-family: var(--font-body);
   font-size: var(--text-base);
@@ -399,9 +401,10 @@
 .consent-card {
   background: var(--bg-surface);
   border: 1px solid var(--bg-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-lg);
   padding: var(--space-10);
   text-align: center;
+  box-shadow: var(--shadow-card);
 }
 
 .consent-icon {
@@ -434,9 +437,9 @@
   flex-direction: column;
   gap: var(--space-3);
   margin: var(--space-6) 0;
-  background: rgba(255, 255, 255, 0.01);
+  background: var(--bg-void);
   border: 1px solid var(--bg-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   padding: var(--space-5);
 }
 
@@ -458,7 +461,7 @@
 /* Exit Button - Ghost Monospace */
 .assessment-exit-btn {
   position: fixed;
-  top: 24px;
+  top: max(24px, env(safe-area-inset-top));
   left: 24px;
   z-index: 1000;
   background: transparent;
@@ -490,7 +493,7 @@
   }
 
   .assessment-exit-btn {
-    top: 14px;
+    top: max(14px, env(safe-area-inset-top));
     left: 20px;
     min-height: 42px;
     padding: 10px 14px;
@@ -500,7 +503,7 @@
 
   .assessment-container {
     align-items: flex-start;
-    padding: var(--space-5) 0 var(--space-8);
+    padding: var(--space-5) var(--page-gutter) var(--space-8);
   }
 
   .assessment-wrapper {
@@ -693,7 +696,7 @@
 
 .choice-option:focus-within {
   border-color: var(--accent-primary);
-  box-shadow: 0 0 0 2px rgba(76, 110, 245, 0.35);
+  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.35);
 }
 
 .validation-message {

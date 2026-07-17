@@ -85,7 +85,7 @@ function AppContent() {
         {!hideGlobalChrome && <Navbar />}
 
         <div className="content-wrap">
-          <Suspense fallback={null}>
+          <Suspense fallback={<div className="route-loading" role="status"><span>Loading interface</span></div>}>
             <Routes>
               <Route path="/" element={<Landing />} />
               <Route path="/assessment" element={<Assessment />} />

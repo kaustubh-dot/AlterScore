@@ -50,8 +50,9 @@
   min-height: 230px;
   padding: clamp(var(--space-5), 4vw, var(--space-8));
   border: 1px solid var(--bg-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-lg);
   background: var(--bg-surface);
+  box-shadow: var(--shadow-card);
 }
 
 .research-lab-card-wide {
