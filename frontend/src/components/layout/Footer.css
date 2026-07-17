@@ -29,10 +29,6 @@
   font-weight: 500;
 }
 
-.brand-separator {
-  opacity: 0.3;
-}
-
 @media (max-width: 767px) {
   .footer {
     padding: var(--space-6) 0;
@@ -46,8 +42,4 @@
     line-height: 1.45;
   }
   
-  .brand-separator {
-    display: none;
-  }
-
 }

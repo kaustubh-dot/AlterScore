@@ -132,21 +132,16 @@ export default function Landing() {
           <header className="landing-hero" id="hero">
             <SignalCanvas />
             <div className="hero-content container">
-              <div style={{ marginBottom: '16px' }}>
-                <TextReveal text="Synthetic Assessment Demo" delay={100} />
-              </div>
-              
               <h1 className="hero-headline">
-                <TextReveal text="Transparent scoring" delay={250} /> <br />
-                <TextReveal text="for product testing." delay={450} />
+                <TextReveal text="Financial readiness," delay={250} /> <br />
+                <TextReveal text="made clear." delay={450} />
               </h1>
 
               <ScrollReveal direction="up" delay={550}>
                 <p className="hero-sub">
-                  AlterScore is a synthetic educational demonstration of a server-issued
-                  readiness assessment. It returns a 0–100 index and an illustrative
-                  300–850 transformation — never a repayment prediction, lending decision,
-                  eligibility result, or bureau score.
+                  Work through practical money decisions and get a clear 0–100 readiness
+                  score, with a familiar 300–850 view. It is an educational snapshot, not
+                  a credit score or lending decision.
                 </p>
               </ScrollReveal>
 
