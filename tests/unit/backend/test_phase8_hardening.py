@@ -399,6 +399,14 @@ def test_phase8_release_automation_requires_trusted_paired_execution() -> None:
         assert "uses: actions/setup-node@v" not in workflow
 
 
+def test_phase8_hf_proxy_trust_is_private_network_scoped() -> None:
+    dockerfile = (REPOSITORY_ROOT / "Dockerfile").read_text(encoding="utf-8")
+
+    assert '"--proxy-headers"' in dockerfile
+    assert '"--forwarded-allow-ips", "127.0.0.1,10.0.0.0/8"' in dockerfile
+    assert '"--forwarded-allow-ips", "*"' not in dockerfile
+
+
 def test_phase8_public_probes_publish_exact_release_metadata() -> None:
     settings = load_settings(
         {

@@ -29,4 +29,4 @@ ENV ALTERSCORE_API_VERSION=0.2.0
 ENV ALTERSCORE_CORS_ORIGINS=https://alterscore.vercel.app
 ENV ALTERSCORE_CORS_ORIGIN_REGEX=https://alterscore-[a-z0-9-]+\.vercel\.app
 
-CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "7860"]
+CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "7860", "--proxy-headers", "--forwarded-allow-ips", "127.0.0.1,10.0.0.0/8"]
