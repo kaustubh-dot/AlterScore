@@ -66,7 +66,17 @@ def _app_client(
             response.headers["Referrer-Policy"] = "no-referrer"
         return response
 
-    client = TestClient(app, base_url=base_url, client=client_host)
+    async def app_with_client_address(scope, receive, send):
+        # Starlette added TestClient(client=...) after the production lock used
+        # by CI. Override the ASGI scope directly so this harness exercises the
+        # same network-host boundary on both supported TestClient signatures.
+        if scope["type"] == "http":
+            scope = {**scope, "client": client_host}
+        await app(scope, receive, send)
+
+    # Preserve the TestClient inspection seam used by the privacy assertion.
+    app_with_client_address.state = app.state
+    client = TestClient(app_with_client_address, base_url=base_url)
     try:
         yield client, service
     finally:
