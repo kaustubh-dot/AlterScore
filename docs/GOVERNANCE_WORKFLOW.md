@@ -1,6 +1,6 @@
 # Governance workflow
 
-AlterScore separates the public deterministic assessment from offline
+AlterScore separates the public deterministic assessment from retired
 synthetic-model research.
 
 ## Public release gates
@@ -14,7 +14,7 @@ Every public release must verify:
 5. session-only detailed evidence with no token or raw submission persistence;
 6. public-boundary language that excludes repayment, lending, approval,
    creditworthiness, pricing, and human-validation claims;
-7. v1 `410 Gone`, unavailable analytics routes, and no archived-research
+7. v1 `410 Gone`, unavailable analytics routes, and no retired-research
    imports in the serving graph;
 8. frontend lint, exact-release build, v2 contract tests, Phase 7 separation,
    and Phase 8 release tests.
@@ -24,15 +24,11 @@ Every public release must verify:
 
 ## Research boundary
 
-Archived synthetic labels, fairness reports, AUC values, explainers, parsers,
-and training scripts are stored under `research/legacy_synthetic_model/`.
-Labels and fairness data are synthetic. AUC measures recovery of generated data,
-not external validation or repayment outcomes. The archived model does not
-score public assessments.
-
-Research work must use its separate requirements file and environment. It may
-not add imports, artifacts, routes, feature authorities, or dependencies to
-the public v2 image without a new reviewed phase and explicit authorization.
+Historical synthetic labels, fairness reports, AUC values, explainers,
+parsers, and training scripts are absent from the production branch. They are
+recoverable from Git history but cannot add imports, artifacts, routes, feature
+authorities, or dependencies to the public v2 image without a new reviewed
+change and explicit authorization.
 
 ## Operational interpretation
 

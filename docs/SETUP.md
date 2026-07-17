@@ -9,9 +9,8 @@
 | npm | `>=9 <12` | Frontend dependencies |
 
 The public backend does not require model artifacts, Git LFS, scientific
-packages, NLP models, or training dependencies. Those remain in the separate
-offline archive environment described by
-`research/legacy_synthetic_model/requirements-research.txt`.
+packages, NLP models, or training dependencies. Retired research dependencies
+are not included in the production branch.
 
 ## Backend
 
@@ -76,6 +75,5 @@ running `npm.cmd run build`.
 | `backend/app/api/v2/service.py` | Anonymous attempt, scoring, signing, and verification service |
 | `backend/requirements.txt` | Serving-only dependency contract |
 | `backend/requirements.lock` | Linux production serving dependencies with package hashes |
-| `frontend/src/pages/ResearchLab.jsx` | Static offline-research boundary |
-| `research/legacy_synthetic_model/` | Preserved synthetic-model archive |
+| `frontend/src/pages/ResearchLab.jsx` | Static historical-research disclosure |
 | `docs/API_CONTRACTS.md` | Public v2 route and payload contract |

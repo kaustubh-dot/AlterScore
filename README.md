@@ -19,8 +19,10 @@ single-use bearer attempts, signed results, bounded in-memory verification, and
 HTTPS-only token transport. Behavior and narrative never affect the score.
 
 The former `POST /api/score` and `/api/debug-score` routes return `410 Gone`.
-Former analytics routes are not public. The public runtime does not import
-model artifacts, SHAP/DiCE, NLP, training scripts, or the archived scorer.
+Former analytics routes are not public. The production repository and runtime
+do not include model artifacts, SHAP/DiCE, NLP, training scripts, or the
+retired scorer. Historical source remains recoverable from Git history and the
+pre-production backup branch.
 
 ## Local development
 
@@ -68,10 +70,9 @@ deployment, semantic readiness, smoke, and paired rollback procedures.
 | --- | --- |
 | `backend/app/` | Public v2 API, canonical instrument, branching engine, and unified scorer |
 | `frontend/` | React assessment, result explainability, dashboard, and static Research Lab |
-| `research/legacy_synthetic_model/` | Offline archive of synthetic XGBoost source, artifacts, and legacy tests |
 | `tests/` | Public v2, instrument, branching, unified-scoring, and retirement coverage |
 | `docs/` | Active contracts, runtime, deployment, rollback, and methodology references |
 
-The archived labels and fairness reports are synthetic. Any archived AUC
-measures recovery of generated data, not external validation. The archived
-model does not score public assessments.
+The removed historical labels and fairness reports were synthetic. Any
+historical AUC measured recovery of generated data, not external validation.
+No historical model scores public assessments.

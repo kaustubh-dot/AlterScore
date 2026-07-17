@@ -101,7 +101,10 @@ def validate_manifest(
     if SIGNING_KEY_VERSION_PATTERN.fullmatch(key_version or "") is None:
         raise ValueError("release manifest signing-key reference is invalid")
     package_commit = manifest.get("backend_package_commit")
-    if not isinstance(package_commit, str) or SHA_PATTERN.fullmatch(package_commit) is None:
+    if (
+        not isinstance(package_commit, str)
+        or SHA_PATTERN.fullmatch(package_commit) is None
+    ):
         raise ValueError("release manifest backend package commit is invalid")
     workflow_url = manifest.get("workflow_run_url")
     _require_https(frontend_url, "frontend URL")

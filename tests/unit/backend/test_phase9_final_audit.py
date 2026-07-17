@@ -358,7 +358,7 @@ def test_phase9_manifest_rejects_wrong_run_url_and_unsafe_zip(tmp_path: Path) ->
     with zipfile.ZipFile(unsafe_path, "w") as package:
         info = zipfile.ZipInfo("release-manifest.json")
         info.create_system = 3
-        info.external_attr = (0o120777 << 16)
+        info.external_attr = 0o120777 << 16
         package.writestr(info, json.dumps(manifest))
     with pytest.raises(ValueError, match="unsafe"):
         validator.validate_manifest(

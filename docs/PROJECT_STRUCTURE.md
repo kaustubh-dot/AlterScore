@@ -1,7 +1,8 @@
 # Project structure
 
-AlterScore is organized around a public deterministic v2 service, a Vercel
-React frontend, and a clearly separated offline research archive.
+AlterScore is organized around a public deterministic v2 service and a Vercel
+React frontend. Retired research payloads are excluded from the production
+repository.
 
 ## Active layout
 
@@ -13,19 +14,14 @@ React frontend, and a clearly separated offline research archive.
 | `backend/app/unified_scoring/` | Frozen score composition and explanation construction |
 | `frontend/` | Assessment, processing, explainable results, dashboard, and static Research Lab |
 | `tests/` | Public v2, instrument, branching, unified-scoring, and Phase 7 coverage |
-| `docs/` | Active contract, architecture, setup, deployment, rollback, and methodology docs |
+| `docs/` | Active contract, architecture, setup, deployment, rollback, and governance docs |
 
-## Research archive
+## Retired research boundary
 
-`research/legacy_synthetic_model/` contains the former ML source tree, model
-artifacts, explainers, parsers, training/validation scripts, client question
-bank, Admin surface, and legacy tests. It is not imported by `backend/app`,
-copied by the production Dockerfile, or reachable through public research
-routes.
-
-The archive's labels and fairness reports are synthetic. Archived AUC values
-measure recovery of generated data. The archived model does not score public
-assessments.
+The former ML source tree, serialized artifacts, explainers, training scripts,
+client question bank, Admin surface, and legacy tests are intentionally absent
+from the production branch. They remain recoverable through Git history and
+the pre-production backup branch, but are never imported, packaged, or served.
 
 ## Deployment-critical files
 

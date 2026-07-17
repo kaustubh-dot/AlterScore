@@ -41,14 +41,14 @@ evidence-linked recommendations. It never exposes answer keys, option IDs,
 private rubric tables, hidden transition constants, raw submission maps, or
 user-indexed history.
 
-## Archived research data
+## Retired research data
 
 Synthetic labels, generated datasets, model artifacts, SHAP/DiCE payloads,
-NLP features, fairness reports, and training metadata are preserved under
-`research/legacy_synthetic_model/`. They are offline reference material only.
-Archived labels and fairness reports are synthetic; archived AUC measures
-recovery of generated data and is not external validation or repayment
-evidence. The archived model does not score public assessments.
+NLP features, fairness reports, and training metadata are excluded from the
+production branch. Historical labels and fairness reports were synthetic;
+historical AUC measured recovery of generated data and was not external
+validation or repayment evidence. No historical model scores public
+assessments.
 
 ## Excluded from the public contract
 

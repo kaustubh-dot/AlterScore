@@ -15,9 +15,9 @@ export default function ResearchLab() {
           </div>
           <h1>Research Lab</h1>
           <p className="research-lab-lede">
-            A static guide to the archived model experiments that informed the
-            project. Nothing on this page calls a research route or scores a
-            public assessment.
+            A static disclosure about historical model experiments that
+            preceded the current assessment. Nothing on this page calls a
+            research route or scores a public assessment.
           </p>
         </header>
 
@@ -26,7 +26,7 @@ export default function ResearchLab() {
             <span className="research-lab-label font-mono">DATA ORIGIN</span>
             <h2>Synthetic labels and fairness reports</h2>
             <p>
-              The archived labels, evaluation reports, and fairness summaries
+              The historical labels, evaluation reports, and fairness summaries
               were generated for research demonstrations. They are not
               measurements of real borrowers, repayment outcomes, or population
               fairness.
@@ -37,7 +37,7 @@ export default function ResearchLab() {
             <span className="research-lab-label font-mono">METRIC MEANING</span>
             <h2>AUC measures generated-data recovery</h2>
             <p>
-              Any AUC or calibration value describes how well an archived model
+              Any AUC or calibration value describes how well a historical model
               recovered its synthetic training signal on generated data. It is not external
               validation, repayment prediction, creditworthiness, or lending
               evidence.
@@ -49,13 +49,13 @@ export default function ResearchLab() {
             <h2>The model does not score public assessments</h2>
             <p>
               Public assessments use the anonymous, deterministic v2 Financial
-              Decision Readiness contract. The archived synthetic model,
+              Decision Readiness contract. The historical synthetic model,
               explainers, parsers, analytics, and training dependencies are
               separated from that serving path.
             </p>
             <div className="research-lab-lockline">
               <LockKeyhole size={16} aria-hidden="true" />
-              <span>Research files are offline reference material only.</span>
+              <span>Historical research does not ship with production.</span>
             </div>
           </article>
         </section>

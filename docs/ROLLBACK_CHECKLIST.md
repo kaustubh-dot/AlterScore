@@ -68,7 +68,7 @@ python scripts/ci/smoke_release.py \
 | Verification is unavailable | Bounded in-memory state was lost or expired | Treat the result as unavailable and issue a fresh attempt. |
 | Smoke replay check fails | Single-use attempt boundary changed | Stop traffic and restore the last reviewed pair. |
 
-Research artifacts under `research/legacy_synthetic_model/` are not a rollback
-authority for public scoring. In-memory attempts and verification records are
-not durable across restart or rollback; open attempts may need to be restarted.
+Historical research artifacts are not a rollback authority for public scoring.
+In-memory attempts and verification records are not durable across restart or
+rollback; open attempts may need to be restarted.
 Do not commit, push, deploy, or execute rollback without separate authorization.

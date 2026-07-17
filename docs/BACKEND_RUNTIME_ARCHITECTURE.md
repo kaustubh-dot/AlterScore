@@ -38,18 +38,16 @@ verification remains a redacted public proof.
 `POST /api/score` and `/api/debug-score` are dependency-free `410 Gone`
 tombstones. Former analytics routes are not registered. The old scorer,
 artifact loader, parsers, explainers, training scripts, serialized models, and
-legacy tests live under `research/legacy_synthetic_model/` and are not
-imported by `backend/app`.
+legacy tests are absent from the production branch and are not imported by
+`backend/app`.
 
 The frontend Research Lab is static and direct-link-only. It describes the
-archive without making network calls, reading result state, or influencing
-public scoring.
+project history without making network calls, reading result state, or
+influencing public scoring.
 
 ## Production image boundary
 
 `Dockerfile` installs only the hash-verified Linux `backend/requirements.lock` and
 copies only `backend/app` plus the serving dependency contract. `.dockerignore`
-excludes source, tests, model artifacts,
-research, scripts, data, and local runtime output as defense in depth. The
-research requirements file is for a separate offline environment and is never
-installed in production.
+excludes source, tests, model artifacts, research, scripts, data, and local
+runtime output as defense in depth.

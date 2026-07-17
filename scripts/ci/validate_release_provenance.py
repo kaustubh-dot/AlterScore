@@ -218,9 +218,7 @@ def main() -> int:
 
     run_parser = subparsers.add_parser("trusted-run")
     run_parser.add_argument("--workflow-json", type=Path, required=True)
-    run_parser.add_argument(
-        "--runs-json", type=Path, action="append", required=True
-    )
+    run_parser.add_argument("--runs-json", type=Path, action="append", required=True)
     run_parser.add_argument("--release-sha", required=True)
     run_parser.add_argument("--repository", required=True)
     run_parser.add_argument("--output", type=Path, required=True)

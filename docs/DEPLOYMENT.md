@@ -80,7 +80,7 @@ version and never contains the signing secret.
 The Docker healthcheck and scheduled monitor call `/api/ready` and require
 HTTP success, `status=ready`, the frozen six check names in order, and every
 check to report `pass`. A degraded or not-ready scorer cannot appear healthy.
-Readiness does not inspect model files or archived research.
+Readiness does not inspect model files or retired research.
 
 ## Post-deploy smoke
 

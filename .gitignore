@@ -66,7 +66,6 @@ logs/
 .logs/
 backend/runtime/logs/*
 runtime/logs/*
-!runtime/logs/.gitkeep
 runtime/pytest-cache/
 runtime/pytest-temp/
 runtime/pytest-workspace/
@@ -74,27 +73,12 @@ runtime/shared_session_trained_model*/
 runtime/governed_reports/
 runtime/research_archive/
 
-# Generated data and validation artifacts
-data/raw/*
-!data/raw/.gitkeep
-data/interim/*
-!data/interim/.gitkeep
-data/processed/*
-!data/processed/.gitkeep
-data/reports/*
-!data/reports/.gitkeep
-data/validation/*
-!data/validation/.gitkeep
-
-# The active production model root is retired. Legacy artifacts are preserved
-# only under research/legacy_synthetic_model/.
+# Retired model/research and generated-data roots must not re-enter the
+# production repository. Historical source remains recoverable from Git.
+/data/
+/experiments/
 /models/
-
-# Experiment outputs
-experiments/runs/*
-!experiments/runs/.gitkeep
-experiments/optuna/*
-!experiments/optuna/.gitkeep
+/research/
 
 # Notebook and editor noise
 .ipynb_checkpoints/

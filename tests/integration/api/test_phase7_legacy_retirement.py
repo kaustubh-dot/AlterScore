@@ -181,8 +181,6 @@ def test_active_docs_do_not_describe_the_retired_model_contract() -> None:
         REPO_ROOT / "docs" / "BACKEND_RUNTIME_ARCHITECTURE.md",
         REPO_ROOT / "docs" / "DATA_SCHEMA.md",
         REPO_ROOT / "docs" / "DEPLOYMENT.md",
-        REPO_ROOT / "docs" / "MODEL_REGISTRY.md",
-        REPO_ROOT / "docs" / "MODEL_SELECTION_DECISIONS.md",
         REPO_ROOT / "docs" / "PROJECT_STRUCTURE.md",
         REPO_ROOT / "docs" / "ROLLBACK_CHECKLIST.md",
         REPO_ROOT / "docs" / "SETUP.md",
@@ -200,3 +198,22 @@ def test_active_docs_do_not_describe_the_retired_model_contract() -> None:
     )
     for phrase in forbidden_phrases:
         assert phrase not in combined, phrase
+
+
+def test_retired_payloads_are_absent_from_production_checkout() -> None:
+    for retired_path in (
+        "research",
+        "docs/assets/readme-illustrations",
+        "docs/SCORING_V3_CHECKPOINTS.md",
+        "docs/SCORING_V3_CODEX_REVIEW_PROMPT.md",
+        "docs/SCORING_V3_CURRENT_STATE.md",
+        "docs/SCORING_V3_EXHAUSTIVE_CERTIFICATION_2026-07-17.md",
+        "docs/SCORING_V3_FINAL_AUDIT.md",
+        "docs/SCORING_V3_LUNA_PLAN.md",
+        "tests/e2e",
+    ):
+        assert not (REPO_ROOT / retired_path).exists(), retired_path
+
+    ignore_rules = (REPO_ROOT / ".gitignore").read_text(encoding="utf-8")
+    for retired_root in ("/data/", "/experiments/", "/models/", "/research/"):
+        assert retired_root in ignore_rules
