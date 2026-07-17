@@ -334,6 +334,9 @@ def test_phase8_release_automation_requires_trusted_paired_execution() -> None:
         encoding="utf-8"
     )
 
+    assert "grep -F -o 'contract_version: 2.0'" in ci_workflow
+    assert "if grep -R -n -E" in ci_workflow
+    assert "if rg -n" not in ci_workflow
     assert "github.event.workflow_run.event == 'push'" in deploy_workflow
     assert (
         "github.event.workflow_run.head_repository.full_name == github.repository"
