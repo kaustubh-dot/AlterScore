@@ -8,7 +8,7 @@
 
 | Field | Value |
 |---|---|
-| Updated | 2026-07-17 10:20:10 +05:30 |
+| Updated | 2026-07-17 12:31:49 +05:30 |
 | Branch | `codex/scoring-production-hardening` |
 | Phase 9 implementation HEAD | `e5e9af7b86de8a8008c08cb51079072313d02c7d` (`feat: harden phase 8 release operations`) |
 | Phase 8 implementation start HEAD | `749835304ae9dc5aadfd9768fb964947ce0bc3a5` (`feat: complete phase 7 legacy separation`) |
@@ -19,10 +19,32 @@
 | Review-start commit | `0c398d6 feat: add deterministic v3 scoring phases` |
 | Review baseline HEAD | `d74e59d5b8577d301646f73e049ca4a3588798f` |
 | Review baseline commit | `d74e59d fix: harden phase 5 client assessment boundary` |
-| Active phase | Complete - Phase 9 final audit and Codex review |
+| Active phase | Scoring policy 1.1 implemented and exhaustively verified |
 | Luna status | Complete (Phase 9 implementation) |
-| Codex review | **PASS** (Phase 9, with corrections) |
-| Overall status | Functional portfolio release candidate; full automated and local browser gates pass. Public deployment is still the retired system and was not changed. |
+| Codex review | **PASS** — approved feasible-range calibration and final hardening are complete |
+| Overall status | Unconditional local release candidate. The strongest feasible signed result is 100/100 under `readiness-rubric-1.1.0`; all automated and browser gates pass. Public deployment was not changed. |
+
+## Approved policy 1.1 completion
+
+- Branching scenarios retain the original exact weighted dimension composite
+  internally and normalize it across the exhaustive feasible path interval.
+- Exact endpoints map to 0 and 100, all 54 paths preserve raw-score ordering,
+  invalid or zero-width ranges fail closed, and recommendations use normalized
+  scenario scores.
+- The public result exposes only `score_basis: feasible_range_normalized`, the
+  calibrated score, safe dimensions, and a same-scenario explanation. Raw
+  composites, attainable endpoints, option ranks, and rubric points remain
+  server-side.
+- The API, frontend, release metadata, manifests, smoke checks, and active
+  contracts use `readiness-rubric-1.1.0`; policy `1.0.0` submissions are
+  rejected without consuming an attempt.
+- Rollback provenance now validates all filtered workflow-run pages up to the
+  documented 1,000-result cap and rejects incomplete, duplicate, or unstable
+  pagination.
+- Final proof: 257 backend tests; frontend phase 5/6/7/8 tests 11/8/3/4;
+  frontend lint; 1,844-module production build; Ruff; workflow YAML; and a
+  complete mobile/desktop signed browser path at knowledge 100.00, judgment
+  100.00, both calibrated simulations 100.00, index 100, and legacy 850.
 
 ## Current branch condition
 
@@ -196,7 +218,7 @@ current v1 runtime yet:
 |---|---|
 | `contract_version` | `2.0` |
 | `assessment_version` | `india-en-3.0.0` |
-| `scoring_policy_version` | `readiness-rubric-1.0.0` |
+| `scoring_policy_version` | `readiness-rubric-1.1.0` |
 
 The v3 public score contract returns `financial_decision_index` (0-100),
 `legacy_demo_score` (illustrative 300-850), `objective_score`,

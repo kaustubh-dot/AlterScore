@@ -118,8 +118,15 @@ def test_perfect_profile_reconciles_and_receives_maintenance_guidance() -> None:
     )
 
     assert result.objective_score == Fraction(100, 1)
-    assert all(component >= 0 for component in result.judgment_components)
-    assert result.financial_decision_index == int(result.financial_decision_index)
+    assert result.judgment_components == (Fraction(100, 1),) * 6
+    assert result.judgment_score == Fraction(100, 1)
+    assert result.financial_decision_index == 100
+    assert result.legacy_demo_score == 850
+    assert all(
+        scenario.score_basis == "feasible_range_normalized"
+        and scenario.scenario_score == 100
+        for scenario in result.explanation.branching_scenarios
+    )
     assert len(result.explanation.recommendations) == 1
     assert result.explanation.recommendations[0].evidence_type == "maintenance"
     assert result.explanation.recommendations[0].evidence_ids == []

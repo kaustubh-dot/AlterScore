@@ -480,6 +480,10 @@
   background: var(--bg-surface);
 }
 
+.evidence-card[id] {
+  scroll-margin-top: 88px;
+}
+
 .evidence-card-header,
 .timeline-header {
   display: flex;
@@ -645,6 +649,21 @@
   flex: 0 0 auto;
   color: var(--accent-emerald);
   font-size: var(--text-lg);
+}
+
+.scenario-score-block {
+  display: flex;
+  align-items: flex-end;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: var(--space-1);
+  text-align: right;
+}
+
+.scenario-score-block small {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  letter-spacing: 0.02em;
 }
 
 .scenario-card > .state-table {
@@ -889,8 +908,14 @@
   }
 
   .result-chip,
-  .scenario-score {
+  .scenario-score,
+  .scenario-score-block {
     align-self: flex-start;
+  }
+
+  .scenario-score-block {
+    align-items: flex-start;
+    text-align: left;
   }
 
   .state-table {

@@ -65,11 +65,7 @@ function formatDelta(value) {
 }
 
 function displayText(value) {
-  return String(value)
-    .replaceAll('Ã—', '×')
-    .replaceAll('Ã·', '÷')
-    .replaceAll('â€“', '–')
-    .replaceAll('â€”', '—');
+  return String(value);
 }
 
 function StateTable({ title, state, delta = false }) {
@@ -364,7 +360,7 @@ export default function Results() {
 
             <section className="results-section" aria-labelledby="simulations-heading">
               <ResultHeader eyebrow="Decision replay" title="Branching simulations" id="simulations-heading">
-                <p className="section-intro">Each replay shows the three issued stages, the selected action label, and the state change it produced. These are educational simulations, not forecasts of real-world outcomes.</p>
+                <p className="section-intro">Each replay shows the three issued stages, the selected action label, and the state change it produced. The calibrated score compares this path with the worst and best paths reachable in the same simulation; it is not a forecast of real-world outcomes.</p>
               </ResultHeader>
               <div className="explanation-stack">
                 {explanation.branching_scenarios.map((scenario, index) => (
@@ -374,7 +370,10 @@ export default function Results() {
                         <span className="section-eyebrow">Simulation {String(index + 1).padStart(2, '0')}</span>
                         <h3>Three-stage decision replay</h3>
                       </div>
-                      <span className="scenario-score font-mono">{formatScore(scenario.scenario_score)} / 100</span>
+                      <div className="scenario-score-block">
+                        <span className="scenario-score font-mono">{formatScore(scenario.scenario_score)} / 100</span>
+                        <small>Calibrated path score</small>
+                      </div>
                     </div>
                     <StateTable title="Starting state" state={scenario.starting_state} />
                     <ol className="timeline-list">

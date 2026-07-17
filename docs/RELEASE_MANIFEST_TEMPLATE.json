@@ -4,7 +4,7 @@
   "backend_release_sha": "<same-source-sha>",
   "contract_version": "2.0",
   "assessment_version": "india-en-3.0.0",
-  "scoring_policy_version": "readiness-rubric-1.0.0",
+  "scoring_policy_version": "readiness-rubric-1.1.0",
   "backend_package_commit": "<provider-recorded-id>",
   "frontend_url": "https://<frontend-origin>",
   "frontend_deployment_url": "https://<provider-deployment-origin>",

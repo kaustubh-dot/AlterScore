@@ -13,12 +13,14 @@ from backend.app.branching import (
     BranchingStage,
     FinancialState,
     InvalidTransition,
+    InvalidState,
     ScenarioDefinition,
     STATE_FIELDS,
     branching_scenario_score,
     build_branching_scenarios,
     enumerate_paths,
     evaluate_all_paths,
+    normalize_branching_scenario_score,
     pay_from_buffer,
     pay_from_cash,
     run_scenario,
@@ -115,7 +117,12 @@ def test_all_terminal_results_reconcile_exactly_to_terminal_state() -> None:
                 cost_budget=scenario.cost_budget,
             )
             assert tuple(result.dimensions.as_dict().values()) == oracle_dimensions
-            assert result.scenario_score == _oracle_score(oracle_dimensions)
+            assert result.raw_scenario_score == _oracle_score(oracle_dimensions)
+            assert result.scenario_score == normalize_branching_scenario_score(
+                result.raw_scenario_score,
+                scenario.attainable_raw_score_min,
+                scenario.attainable_raw_score_max,
+            )
             assert result.option_ids == path
             assert Fraction(0) <= result.scenario_score <= Fraction(100)
             assert all(
@@ -409,6 +416,8 @@ def _synthetic_stage_shift_definition(action_stage: int) -> ScenarioDefinition:
         starting_state=_state(cash_available=20, required_payments_due=20),
         initial_liquidity=20,
         cost_budget=100,
+        attainable_raw_score_min=Fraction(0, 1),
+        attainable_raw_score_max=Fraction(100, 1),
         stages=tuple(stages),
     )
 
@@ -425,6 +434,40 @@ def test_moving_a_transition_between_stages_does_not_change_terminal_score() -> 
     assert first_result.terminal_state == second_result.terminal_state
     assert first_result.dimensions == second_result.dimensions
     assert first_result.scenario_score == second_result.scenario_score
+
+
+def test_feasible_ranges_match_all_paths_and_normalize_exact_endpoints() -> None:
+    for scenario in build_branching_scenarios():
+        results = evaluate_all_paths(scenario)
+        raw_scores = [result.raw_scenario_score for result in results]
+        assert min(raw_scores) == scenario.attainable_raw_score_min
+        assert max(raw_scores) == scenario.attainable_raw_score_max
+        assert {
+            result.scenario_score
+            for result in results
+            if result.raw_scenario_score == min(raw_scores)
+        } == {Fraction(0, 1)}
+        assert {
+            result.scenario_score
+            for result in results
+            if result.raw_scenario_score == max(raw_scores)
+        } == {Fraction(100, 1)}
+        ordered = sorted(results, key=lambda result: result.raw_scenario_score)
+        assert all(
+            left.scenario_score <= right.scenario_score
+            for left, right in zip(ordered, ordered[1:])
+        )
+
+
+def test_feasible_range_normalization_fails_closed() -> None:
+    with pytest.raises(InvalidState):
+        normalize_branching_scenario_score(
+            Fraction(50, 1), Fraction(50, 1), Fraction(50, 1)
+        )
+    with pytest.raises(InvalidState):
+        normalize_branching_scenario_score(
+            Fraction(49, 1), Fraction(50, 1), Fraction(60, 1)
+        )
 
 
 def test_invalid_path_length_and_unknown_option_fail_closed() -> None:

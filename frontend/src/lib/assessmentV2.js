@@ -8,7 +8,7 @@ import {
 export const V2_CONTRACT = Object.freeze({
   contract_version: '2.0',
   assessment_version: 'india-en-3.0.0',
-  scoring_policy_version: 'readiness-rubric-1.0.0',
+  scoring_policy_version: 'readiness-rubric-1.1.0',
 });
 
 export const V2_RESULT_STORAGE_KEY = 'alterscore_v2_signed_result';
@@ -185,10 +185,6 @@ function halfUpRound(fraction) {
   const quotient = fraction.numerator / fraction.denominator;
   const remainder = fraction.numerator % fraction.denominator;
   return Number(quotient + (remainder * 2n >= fraction.denominator ? 1n : 0n));
-}
-
-function absoluteBigInt(value) {
-  return value < 0n ? -value : value;
 }
 
 function hasOptions(item, expectedCount) {
@@ -522,30 +518,16 @@ function isDimensionMap(dimensions) {
     && DIMENSION_FIELDS.every((field) => scoreToHundredths(dimensions[field]) !== null);
 }
 
-function isScenarioScoreDisplayConsistent(dimensions, scenarioScore) {
-  const scenarioHundredths = scoreToHundredths(scenarioScore);
-  if (scenarioHundredths === null) return false;
-  const weightedNumerator = (
-    BigInt(scoreToHundredths(dimensions.obligation_coverage)) * 40n
-    + BigInt(scoreToHundredths(dimensions.liquidity_retention)) * 25n
-    + BigInt(scoreToHundredths(dimensions.cost_efficiency)) * 20n
-    + BigInt(scoreToHundredths(dimensions.plan_feasibility)) * 15n
-  );
-  // Dimensions and scenario score are independently rounded to hundredths by
-  // the scorer. Their public display values can differ by one hundredth after
-  // the weighted recomposition, but not more.
-  return absoluteBigInt(weightedNumerator - BigInt(scenarioHundredths) * 100n) <= 100n;
-}
-
 function isBranchingExplanation(item) {
   if (!hasExactKeys(item, new Set([
-    'scenario_presentation_id', 'starting_state', 'timeline', 'terminal_state', 'dimensions', 'scenario_score',
+    'scenario_presentation_id', 'starting_state', 'timeline', 'terminal_state', 'dimensions', 'score_basis', 'scenario_score',
   ])) || !hasOpaqueId(item.scenario_presentation_id, 'scenario')
     || !hasSafeState(item.starting_state)
     || !Array.isArray(item.timeline) || item.timeline.length !== 3
     || !hasSafeState(item.terminal_state)
     || !isDimensionMap(item.dimensions)
-    || !isScenarioScoreDisplayConsistent(item.dimensions, item.scenario_score)) return false;
+    || item.score_basis !== 'feasible_range_normalized'
+    || scoreToHundredths(item.scenario_score) === null) return false;
 
   if (!item.timeline.every((entry, index) => entry.stage_index === index + 1)) return false;
   const timeline = item.timeline;

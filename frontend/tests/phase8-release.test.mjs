@@ -29,7 +29,7 @@ test('frontend release metadata is frozen and rejects mismatched backend release
   assert.deepEqual(RELEASE_METADATA, {
     contract_version: '2.0',
     assessment_version: 'india-en-3.0.0',
-    scoring_policy_version: 'readiness-rubric-1.0.0',
+    scoring_policy_version: 'readiness-rubric-1.1.0',
   });
   assert.equal(FRONTEND_RELEASE_SHA, 'local');
   assert.equal(isMatchingReleaseMetadata({ ...RELEASE_METADATA, release_sha: 'local' }), true);

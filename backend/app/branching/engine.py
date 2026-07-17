@@ -14,6 +14,7 @@ from backend.app.branching.model import (
     TransitionEvidence,
     UnknownBranchOption,
     branching_scenario_score,
+    normalize_branching_scenario_score,
     terminal_dimensions,
     validate_transition,
 )
@@ -75,6 +76,7 @@ def run_scenario(
         initial_liquidity=definition.initial_liquidity,
         cost_budget=definition.cost_budget,
     )
+    raw_scenario_score = branching_scenario_score(dimensions)
     return ScenarioResult(
         scenario_presentation_id=definition.scenario_presentation_id,
         option_ids=tuple(selected_ids),
@@ -82,7 +84,14 @@ def run_scenario(
         timeline=tuple(timeline),
         terminal_state=state,
         dimensions=dimensions,
-        scenario_score=branching_scenario_score(dimensions),
+        raw_scenario_score=raw_scenario_score,
+        attainable_raw_score_min=definition.attainable_raw_score_min,
+        attainable_raw_score_max=definition.attainable_raw_score_max,
+        scenario_score=normalize_branching_scenario_score(
+            raw_scenario_score,
+            definition.attainable_raw_score_min,
+            definition.attainable_raw_score_max,
+        ),
     )
 
 

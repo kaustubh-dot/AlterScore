@@ -41,6 +41,7 @@ from backend.app.unified_scoring.models import (
 
 LIMITATIONS: tuple[str, ...] = (
     "This educational score measures demonstrated financial knowledge and judgment, not repayment likelihood or creditworthiness.",
+    "Branching scenario scores compare the selected path with the worst and best paths attainable in that same scenario.",
     "Behavior profile and narrative are unscored and do not affect the result.",
     "AlterScore is a portfolio demonstration, not a lending, underwriting, or human-validated psychometric system.",
 )
@@ -285,6 +286,7 @@ def _branching_explanation(
                 for name, value in result.dimensions.as_dict().items()
             }
         ),
+        score_basis="feasible_range_normalized",
         scenario_score=_decimal2(result.scenario_score),
     )
 

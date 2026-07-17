@@ -1,7 +1,7 @@
 export const RELEASE_METADATA = Object.freeze({
   contract_version: '2.0',
   assessment_version: 'india-en-3.0.0',
-  scoring_policy_version: 'readiness-rubric-1.0.0',
+  scoring_policy_version: 'readiness-rubric-1.1.0',
 });
 
 const viteEnv = typeof import.meta.env === "object" && import.meta.env !== null

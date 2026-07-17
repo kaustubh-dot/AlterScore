@@ -100,7 +100,7 @@ def _valid_submission(
     return {
         "contract_version": "2.0",
         "assessment_version": "india-en-3.0.0",
-        "scoring_policy_version": "readiness-rubric-1.0.0",
+        "scoring_policy_version": "readiness-rubric-1.1.0",
         "responses": responses,
         "behavior_profile": behavior,
         "narrative": "A short unscored note.",
@@ -120,7 +120,7 @@ def test_form_is_opaque_strict_and_has_frozen_shape() -> None:
         form = _issue(client)
         assert form["contract_version"] == "2.0"
         assert form["assessment_version"] == "india-en-3.0.0"
-        assert form["scoring_policy_version"] == "readiness-rubric-1.0.0"
+        assert form["scoring_policy_version"] == "readiness-rubric-1.1.0"
         assert form["integrity_status"] == "issued"
         assert len(form["items"]) == 18
         assert len(form["behavior_profile_items"]) == 6
@@ -163,6 +163,14 @@ def test_score_is_signed_explained_and_verification_is_redacted() -> None:
         assert len(score["explanation"]["objective_items"]) == 8
         assert len(score["explanation"]["static_sjt_items"]) == 4
         assert len(score["explanation"]["branching_scenarios"]) == 2
+        assert all(
+            scenario["score_basis"] == "feasible_range_normalized"
+            for scenario in score["explanation"]["branching_scenarios"]
+        )
+        serialized_score = json.dumps(score)
+        assert "raw_scenario_score" not in serialized_score
+        assert "attainable_raw_score_min" not in serialized_score
+        assert "attainable_raw_score_max" not in serialized_score
         issued_ids = {item["presentation_id"] for item in form["items"]}
         explanation_ids = {
             item["presentation_id"] for item in score["explanation"]["objective_items"]
@@ -199,6 +207,24 @@ def test_score_is_signed_explained_and_verification_is_redacted() -> None:
         assert "attempt_token" not in verified
         assert verify_response.headers["cache-control"] == "no-store"
         assert verify_response.headers["referrer-policy"] == "no-referrer"
+
+
+def test_previous_scoring_policy_is_rejected_without_consuming_attempt() -> None:
+    with _app_client() as (client, service):
+        form = _issue(client)
+        old_submission = _valid_submission(form, service)
+        old_submission["scoring_policy_version"] = "readiness-rubric-1.0.0"
+
+        rejected = _post_score(client, form, old_submission)
+        assert rejected.status_code == 422
+        error = rejected.json()["error"]
+        assert error["code"] == "unsupported_version"
+        assert error["details"]["supported_scoring_policy_version"] == (
+            "readiness-rubric-1.1.0"
+        )
+
+        accepted = _post_score(client, form, _valid_submission(form, service))
+        assert accepted.status_code == 200, accepted.text
 
 
 def test_replay_is_atomic_and_cross_attempt_answers_do_not_consume() -> None:
@@ -349,7 +375,7 @@ def test_unknown_option_and_duplicate_json_keys_fail_without_consuming() -> None
         duplicate_body = (
             '{"contract_version":"2.0",'
             '"assessment_version":"india-en-3.0.0",'
-            '"scoring_policy_version":"readiness-rubric-1.0.0",'
+            '"scoring_policy_version":"readiness-rubric-1.1.0",'
             '"responses":{},"responses":{},"behavior_profile":{}}'
         )
         duplicate = client.post(

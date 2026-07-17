@@ -1,5 +1,10 @@
 # AlterScore v3 final audit
 
+> **Superseded status note (2026-07-17):** the later exhaustive certification
+> found and then resolved a policy-level scale-calibration defect after
+> explicit approval. See `SCORING_V3_EXHAUSTIVE_CERTIFICATION_2026-07-17.md`
+> for the final `readiness-rubric-1.1.0` gate and verification evidence.
+
 ## Handoff status
 
 This report records Luna's Phase 9 implementation and Codex's independent

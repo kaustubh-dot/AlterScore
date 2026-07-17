@@ -161,7 +161,7 @@ export default function Landing() {
 
               <ScrollReveal direction="up" delay={800}>
                 <div className="hero-meta">
-                  <span>{questionCount} Questions • ~5 Minutes • Illustrative Result</span>
+                  <span>{questionCount} required items • optional reflection • ~5 minutes</span>
                 </div>
               </ScrollReveal>
             </div>
@@ -247,8 +247,9 @@ export default function Landing() {
                       </div>
                       <h3 className="step-title">Answer the assessment</h3>
                       <p className="step-desc">
-                        Answer {questionCount} server-issued items in about five minutes.
-                        No documents, identity, or credit history are used.
+                        Answer {questionCount} required server-issued items, then
+                        optionally add one short reflection. No documents, identity,
+                        or credit history are used.
                       </p>
                     </GlowCard>
                   </ScrollReveal>

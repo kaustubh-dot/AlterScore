@@ -124,7 +124,7 @@ jobs:
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           test "$(rg -F -o 'contract_version: 2.0' docs/API_CONTRACTS.md | wc -l | tr -d ' ')" = "1"
           test "$(rg -F -o 'assessment_version: india-en-3.0.0' docs/API_CONTRACTS.md | wc -l | tr -d ' ')" = "1"
-          test "$(rg -F -o 'scoring_policy_version: readiness-rubric-1.0.0' docs/API_CONTRACTS.md | wc -l | tr -d ' ')" = "1"
+          test "$(rg -F -o 'scoring_policy_version: readiness-rubric-1.1.0' docs/API_CONTRACTS.md | wc -l | tr -d ' ')" = "1"
           if rg -n 'verify_reproducibility|backend\.ml\.registry|promotion_gate|spacy|sentence-transformers' .github/workflows --glob '!ci.yml'; then
             echo "::error::obsolete research or reproducibility workflow references remain"
             exit 1

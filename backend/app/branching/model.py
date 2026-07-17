@@ -247,6 +247,8 @@ class ScenarioDefinition:
     starting_state: FinancialState
     initial_liquidity: int
     cost_budget: int
+    attainable_raw_score_min: Fraction
+    attainable_raw_score_max: Fraction
     stages: tuple[BranchingStage, ...]
 
     def __post_init__(self) -> None:
@@ -263,6 +265,18 @@ class ScenarioDefinition:
         ):
             if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
                 raise InvalidScenarioDefinition(f"{name} must be a positive integer")
+        for name, value in (
+            ("attainable_raw_score_min", self.attainable_raw_score_min),
+            ("attainable_raw_score_max", self.attainable_raw_score_max),
+        ):
+            if not isinstance(value, Fraction) or not 0 <= value <= 100:
+                raise InvalidScenarioDefinition(
+                    f"{name} must be an exact Fraction in 0..100"
+                )
+        if self.attainable_raw_score_max <= self.attainable_raw_score_min:
+            raise InvalidScenarioDefinition(
+                "attainable raw score maximum must exceed the minimum"
+            )
         if not isinstance(self.stages, tuple):
             raise InvalidScenarioDefinition("scenario stages must be an immutable tuple")
         if len(self.stages) != 3:
@@ -309,13 +323,32 @@ class ScenarioResult:
     timeline: tuple[TransitionEvidence, ...]
     terminal_state: FinancialState
     dimensions: TerminalDimensions
+    raw_scenario_score: Fraction
+    attainable_raw_score_min: Fraction
+    attainable_raw_score_max: Fraction
     scenario_score: Fraction
 
     def __post_init__(self) -> None:
         if len(self.option_ids) != 3 or len(self.timeline) != 3:
             raise InvalidState("scenario results must contain exactly three stages")
-        if not isinstance(self.scenario_score, Fraction):
-            raise InvalidState("scenario_score must be an exact Fraction")
+        for name in (
+            "raw_scenario_score",
+            "attainable_raw_score_min",
+            "attainable_raw_score_max",
+            "scenario_score",
+        ):
+            value = getattr(self, name)
+            if not isinstance(value, Fraction) or not 0 <= value <= 100:
+                raise InvalidState(f"{name} must be an exact Fraction in 0..100")
+        expected = normalize_branching_scenario_score(
+            self.raw_scenario_score,
+            self.attainable_raw_score_min,
+            self.attainable_raw_score_max,
+        )
+        if self.scenario_score != expected:
+            raise InvalidState(
+                "scenario_score must be the exact feasible-range normalization"
+            )
 
 
 def clamp01(value: Fraction | int) -> Fraction:
@@ -375,7 +408,7 @@ def terminal_dimensions(
 
 
 def branching_scenario_score(dimensions: TerminalDimensions) -> Fraction:
-    """Calculate the terminal score with the fixed dimension weights."""
+    """Calculate the raw terminal score with the fixed dimension weights."""
 
     return (
         Fraction(40, 100) * dimensions.obligation_coverage
@@ -383,6 +416,29 @@ def branching_scenario_score(dimensions: TerminalDimensions) -> Fraction:
         + Fraction(20, 100) * dimensions.cost_efficiency
         + Fraction(15, 100) * dimensions.plan_feasibility
     )
+
+
+def normalize_branching_scenario_score(
+    raw_score: Fraction,
+    attainable_min: Fraction,
+    attainable_max: Fraction,
+) -> Fraction:
+    """Map one attainable raw score onto the closed 0-to-100 policy scale."""
+
+    for name, value in (
+        ("raw_score", raw_score),
+        ("attainable_min", attainable_min),
+        ("attainable_max", attainable_max),
+    ):
+        if not isinstance(value, Fraction) or not 0 <= value <= 100:
+            raise InvalidState(f"{name} must be an exact Fraction in 0..100")
+    if attainable_max <= attainable_min:
+        raise InvalidState("attainable_max must exceed attainable_min")
+    if not attainable_min <= raw_score <= attainable_max:
+        raise InvalidState("raw_score must be inside the attainable range")
+    return Fraction(100, 1) * (
+        raw_score - attainable_min
+    ) / (attainable_max - attainable_min)
 
 
 def validate_transition(
@@ -549,6 +605,7 @@ __all__ = [
     "add_late_payment",
     "borrow_cash",
     "branching_scenario_score",
+    "normalize_branching_scenario_score",
     "clamp01",
     "pay_from_buffer",
     "pay_from_cash",

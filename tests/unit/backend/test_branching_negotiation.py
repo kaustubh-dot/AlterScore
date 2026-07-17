@@ -169,7 +169,7 @@ def test_terminal_dimensions_and_scores_stay_within_frozen_bounds() -> None:
         )
         assert isinstance(result.scenario_score, Fraction)
         assert Fraction(0, 1) <= result.scenario_score <= Fraction(100, 1)
-        assert result.scenario_score == branching_scenario_score(result.dimensions)
+        assert result.raw_scenario_score == branching_scenario_score(result.dimensions)
 
 
 def test_collection_actions_and_payment_arrangements_are_accounted() -> None:

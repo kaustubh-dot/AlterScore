@@ -3374,3 +3374,73 @@ state, deployments, credentials, or external targets.
 Docker is not installed locally, so the blocking CI Docker build remains the
 image-execution gate. The implementation is release-ready, but the current
 public site remains stale until an authorized merge and paired deployment.
+
+## 2026-07-17 — exhaustive local re-certification
+
+- Three lightweight independent audits covered scoring/API, frontend/browser,
+  and release/security boundaries; the primary reviewer reproduced findings.
+- Complete gates passed: 252 backend tests, frontend 11/7/3/4 tests, lint,
+  1,844-module production build, Ruff, workflow YAML, dependency audit, active
+  UTF-8 scan, and Git whitespace validation.
+- Browser coverage included desktop/tablet/mobile, a complete strongest-path
+  signed result, session/reflection privacy, dashboard/verification, offline
+  failure and recovery, cleared-result behavior, research, and unknown routes.
+- Fixed the blank wildcard route, ambiguous 24-versus-25 wording, stale result
+  encoding shim, and rollback artifact provenance. Rollback now uses the
+  current `main` control plane and exact trusted workflow/run-scoped artifact.
+- Confirmed a policy defect: the strongest feasible signed profile produces
+  99/100 because both raw branching scenarios have ceilings below 100. Exact
+  feasible-range normalization is recommended but requires explicit approval
+  and a `readiness-rubric-1.1.0` migration; it was not changed implicitly.
+- Detailed evidence: `SCORING_V3_EXHAUSTIVE_CERTIFICATION_2026-07-17.md`.
+
+## 2026-07-17 — approved scoring policy 1.1 completion
+
+### Decision
+
+- The user explicitly approved assessment-relative feasible-range
+  normalization. The active policy is now
+  `readiness-rubric-1.1.0` across the scorer, API, frontend, release scripts,
+  manifests, smoke checks, CI contract scan, and active documentation.
+- Each branch retains its exact weighted terminal-dimension composite
+  internally and computes
+  `100 * (raw - attainable_min) / (attainable_max - attainable_min)` with
+  `Fraction` arithmetic. Invalid, out-of-range, or zero-width inputs fail
+  closed.
+- Exhaustive tests prove that stored intervals match the actual 27-path minima
+  and maxima for both scenarios, normalize to exact 0/100 endpoints, and
+  preserve monotonic ordering over all 54 paths.
+- Raw composites and attainable endpoints remain internal diagnostics. Public
+  explanations expose the calibrated scenario score, safe terminal dimensions,
+  `score_basis: feasible_range_normalized`, and a plain-language comparison
+  with the worst and best reachable paths in the same scenario.
+
+### Final corrections and independent review
+
+- Results now labels each scenario result as a calibrated path score and
+  explains its assessment-relative meaning without exposing per-option scores,
+  ranges, rankings, or hidden rubrics.
+- Evidence-card anchors use a fixed-header scroll offset; the correction was
+  visually verified at 390×844.
+- Rollback workflow-run retrieval now validates up to ten 100-run pages, the
+  documented 1,000-result filtered-search cap. Incomplete pages, duplicate run
+  IDs, changed totals, and over-cap responses fail closed; a trusted page-two
+  run is covered by regression tests.
+- Three lightweight read-only final reviewers independently passed the
+  scoring/API, frontend, and version/release boundaries after the pagination
+  correction. Codex remained the sole writer.
+
+### Verification
+
+| Gate | Result |
+|---|---|
+| Full backend pytest | PASS — 257 tests. |
+| Branching/scoring/API focused pytest | PASS — 203 tests before the final release-only additions. |
+| Rollback provenance focused pytest | PASS — 25 tests. |
+| Frontend phase 5/6/7/8 | PASS — 11/8/3/4. |
+| Frontend lint | PASS. |
+| Exact-SHA production build | PASS — Vite 8.0.16, 1,844 modules. |
+| Ruff | PASS. |
+| Browser strongest path | PASS — knowledge 100.00, judgment 100.00, both calibrated branches 100.00, signed index 100, legacy 850. |
+| Mobile result and anchor | PASS — 390×844. |
+| Public deployment | Not changed; requires separate release authority. |

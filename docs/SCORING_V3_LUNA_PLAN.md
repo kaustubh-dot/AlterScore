@@ -1,5 +1,11 @@
 # AlterScore v3 Luna 5.6 implementation plan
 
+> **Historical plan note (2026-07-17):** the original frozen
+> `readiness-rubric-1.0.0` contract was superseded after exhaustive audit and
+> explicit policy approval. The implemented production candidate uses exact
+> feasible-range branch normalization under `readiness-rubric-1.1.0`; see
+> `SCORING_V3_EXHAUSTIVE_CERTIFICATION_2026-07-17.md`.
+
 ## Purpose
 
 This document is the decision-complete implementation plan for replacing the

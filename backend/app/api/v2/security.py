@@ -16,13 +16,18 @@ from threading import RLock
 import time
 from typing import Any, Mapping
 
-from backend.app.instrument import CanonicalInstrumentForm
+from backend.app.instrument import (
+    ASSESSMENT_VERSION,
+    CONTRACT_VERSION,
+    SCORING_POLICY_VERSION,
+    CanonicalInstrumentForm,
+)
 
 
 SUPPORTED_VERSIONS = {
-    "supported_contract_version": "2.0",
-    "supported_assessment_version": "india-en-3.0.0",
-    "supported_scoring_policy_version": "readiness-rubric-1.0.0",
+    "supported_contract_version": CONTRACT_VERSION,
+    "supported_assessment_version": ASSESSMENT_VERSION,
+    "supported_scoring_policy_version": SCORING_POLICY_VERSION,
 }
 MAX_JSON_NESTING = 64
 

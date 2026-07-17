@@ -8,6 +8,8 @@ hand-authored terminal score.
 
 from __future__ import annotations
 
+from fractions import Fraction
+
 from backend.app.branching.model import (
     BranchingOption,
     BranchingStage,
@@ -147,6 +149,8 @@ def build_forecast_shortfall_negotiation_scenario() -> ScenarioDefinition:
         starting_state=starting_state,
         initial_liquidity=_INITIAL_LIQUIDITY,
         cost_budget=_COST_BUDGET,
+        attainable_raw_score_min=Fraction(1157, 42),
+        attainable_raw_score_max=Fraction(272, 3),
         stages=(
             BranchingStage(
                 stage_index=1,

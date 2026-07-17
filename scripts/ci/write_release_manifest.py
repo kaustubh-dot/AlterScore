@@ -13,7 +13,7 @@ SHA_PATTERN = re.compile(r"[0-9a-f]{40}")
 SIGNING_KEY_VERSION_PATTERN = re.compile(r"[A-Za-z0-9._:-]{1,100}")
 CONTRACT_VERSION = "2.0"
 ASSESSMENT_VERSION = "india-en-3.0.0"
-SCORING_POLICY_VERSION = "readiness-rubric-1.0.0"
+SCORING_POLICY_VERSION = "readiness-rubric-1.1.0"
 MANIFEST_KEYS = {
     "source_sha",
     "frontend_release_sha",
@@ -63,10 +63,10 @@ def write_manifest(
 ) -> None:
     if SHA_PATTERN.fullmatch(source_sha) is None:
         raise ValueError("source SHA must be 40 lowercase hexadecimal characters")
-    if not backend_package_commit or any(
-        char in backend_package_commit for char in "\r\n"
-    ):
-        raise ValueError("backend package commit must be a non-empty single line")
+    if SHA_PATTERN.fullmatch(backend_package_commit) is None:
+        raise ValueError(
+            "backend package commit must be 40 lowercase hexadecimal characters"
+        )
     if SIGNING_KEY_VERSION_PATTERN.fullmatch(signing_key_version or "") is None:
         raise ValueError("signing key version must be a safe non-empty reference")
     workflow_run_url = _require_https(workflow_run_url, "workflow run URL")

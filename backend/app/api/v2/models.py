@@ -12,13 +12,13 @@ from typing import Annotated, Literal, TypeAlias, Union
 
 from pydantic import Field, StrictInt, StrictStr, field_validator, model_validator
 
+from backend.app.instrument import (
+    ASSESSMENT_VERSION,
+    CONTRACT_VERSION,
+    SCORING_POLICY_VERSION,
+)
 from backend.app.schemas.common import SchemaModel
 from backend.app.unified_scoring import Decimal2, Explanation
-
-
-CONTRACT_VERSION = "2.0"
-ASSESSMENT_VERSION = "india-en-3.0.0"
-SCORING_POLICY_VERSION = "readiness-rubric-1.0.0"
 
 Timestamp: TypeAlias = Annotated[StrictStr, Field(min_length=20, max_length=20)]
 NonEmptyString: TypeAlias = Annotated[StrictStr, Field(min_length=1)]

@@ -15,6 +15,7 @@ import './styles/global.css';
 const Results = lazy(() => import('./pages/Results'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const ResearchLab = lazy(() => import('./pages/ResearchLab'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 function AppContent() {
   const [showPreloader, setShowPreloader] = useState(() => {
@@ -91,6 +92,7 @@ function AppContent() {
               <Route path="/results" element={<Results />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/research" element={<ResearchLab />} />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
         </div>

@@ -463,7 +463,7 @@ export default function Assessment() {
         <div className="assessment-wrapper">
           <div className="assessment-header" aria-live="polite">
             <span className="section-indicator">{stepLabel}</span>
-            <span className="question-counter">Item {currentIndex + 1} / {steps.length}</span>
+            <span className="question-counter">Step {currentIndex + 1} of {steps.length}</span>
           </div>
 
           <section className={`question-card slide-${direction}`} aria-labelledby="assessment-question-heading">

@@ -14,7 +14,7 @@ SHA_PATTERN = re.compile(r"[0-9a-f]{40}")
 SIGNING_KEY_VERSION_PATTERN = re.compile(r"[A-Za-z0-9._:-]{1,100}")
 CONTRACT_VERSION = "2.0"
 ASSESSMENT_VERSION = "india-en-3.0.0"
-SCORING_POLICY_VERSION = "readiness-rubric-1.0.0"
+SCORING_POLICY_VERSION = "readiness-rubric-1.1.0"
 
 
 def _validate_sha(value: str) -> str:

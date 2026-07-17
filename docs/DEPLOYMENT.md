@@ -11,7 +11,7 @@ Every release uses one exact 40-character lowercase Git SHA:
 ```text
 contract_version=2.0
 assessment_version=india-en-3.0.0
-scoring_policy_version=readiness-rubric-1.0.0
+scoring_policy_version=readiness-rubric-1.1.0
 source_sha=<exact reviewed commit>
 frontend_release_sha=<same exact reviewed commit>
 backend_release_sha=<same exact reviewed commit>
@@ -103,20 +103,29 @@ printed.
 After a successful paired smoke, the workflow uploads a concrete secret-free
 release-manifest artifact derived from
 `docs/RELEASE_MANIFEST_TEMPLATE.json`. Record its workflow URL with the
-release. Rollback queries for the non-expired `release-manifest-<SHA>` artifact
-before checkout, so it cannot restore a SHA that has not completed a paired
-post-smoke forward release.
+release. Rollback first validates the current `main` control plane, resolves
+the exact active `deploy-hf.yml` workflow ID, selects a completed successful
+same-repository run for the requested `main` SHA, and queries artifacts only
+inside that run. It requires exactly one non-expired, size-bounded
+`release-manifest-<SHA>` artifact and binds the manifest's workflow URL to that
+exact run before checkout. A same-name artifact from another workflow or run
+cannot authorize restoration. The filtered workflow-run search retrieves and
+validates up to ten 100-run pages, matching GitHub's documented 1,000-result
+search cap. Missing pages, duplicate IDs, or totals that change during
+pagination fail closed; a valid run on a later page remains selectable.
 
 ## Rollback
 
 `rollback-release.yml` is manual only. It requires the exact SHA from a
 non-expired verified release-manifest artifact, explicit `ROLLBACK`
 confirmation, HF credentials, Vercel credentials, signing-key version, and
-the bound canonical frontend URL. The validation job checks manifest field parity,
-target URLs, smoke status, workflow provenance, package identity, and exact
-SHA before checkout. It builds the backend package and frontend from the same
-SHA, restores both targets, and runs the paired smoke checks. Use it only
-after recording the release manifest and rollback reason.
+the bound canonical frontend URL. The validation code executes from the
+current protected `main` control-plane commit rather than the target release.
+It checks manifest field parity, target URLs, smoke status, exact workflow/run
+provenance, a 40-character package commit, safe ZIP structure, and exact SHA
+before checkout. It builds the backend package and frontend from the same SHA,
+restores both targets, and runs the paired smoke checks. Use it only after
+recording the release manifest and rollback reason.
 
 Attempts and verification records are bounded in memory. A restart or rollback
 can invalidate in-flight attempt tokens and make prior verification links

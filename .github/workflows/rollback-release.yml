@@ -29,6 +29,8 @@ jobs:
     env:
       RELEASE_SHA: ${{ inputs.release_sha }}
       CONFIRMATION: ${{ inputs.confirmation }}
+      CONTROL_SHA: ${{ github.sha }}
+      CONTROL_REF: ${{ github.ref }}
       GITHUB_TOKEN: ${{ github.token }}
       FRONTEND_URL: https://alterscore.vercel.app
       BACKEND_URL: https://coolbot22-alterscore-backend.hf.space
@@ -39,17 +41,30 @@ jobs:
         run: |
           set -euo pipefail
           test "$CONFIRMATION" = "ROLLBACK"
+          test "$CONTROL_REF" = "refs/heads/main"
           test "${#RELEASE_SHA}" = "40"
+          test "${#CONTROL_SHA}" = "40"
           case "$RELEASE_SHA" in
             (*[!0-9a-f]*) echo "release SHA is not lowercase hexadecimal" >&2; exit 1 ;;
           esac
+          case "$CONTROL_SHA" in
+            (*[!0-9a-f]*) echo "control SHA is not lowercase hexadecimal" >&2; exit 1 ;;
+          esac
           printf 'release_sha=%s\n' "$RELEASE_SHA" >> "$GITHUB_OUTPUT"
 
-      - name: Check out the requested release for manifest validation
+      - name: Check out the trusted rollback control plane
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
-          ref: ${{ inputs.release_sha }}
+          ref: ${{ github.sha }}
           fetch-depth: 1
+
+      - name: Require the current main control plane
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$CONTROL_SHA"
+          git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
+          test "$(git rev-parse origin/main)" = "$CONTROL_SHA"
 
       - name: Set up Python for manifest validation
         uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
@@ -60,39 +75,67 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          artifacts_file="$RUNNER_TEMP/release-artifacts.json"
+          workflow_file="$RUNNER_TEMP/deploy-workflow.json"
+          runs_dir="$RUNNER_TEMP/deploy-run-pages"
+          run_selection="$RUNNER_TEMP/trusted-run.json"
+          artifacts_file="$RUNNER_TEMP/release-run-artifacts.json"
+          artifact_selection="$RUNNER_TEMP/trusted-artifact.json"
+
           curl --fail --silent --show-error --retry 3 \
             -H 'Accept: application/vnd.github+json' \
             -H "Authorization: Bearer $GITHUB_TOKEN" \
             -H 'X-GitHub-Api-Version: 2022-11-28' \
-            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/artifacts?name=release-manifest-$RELEASE_SHA&per_page=100" \
-            > "$artifacts_file"
-          archive_url="$(python - "$artifacts_file" "$RELEASE_SHA" "$GITHUB_REPOSITORY" <<'PY'
-          import json
-          import sys
+            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/workflows/deploy-hf.yml" \
+            > "$workflow_file"
+          workflow_id="$(python -c 'import json,sys; value=json.load(open(sys.argv[1], encoding="utf-8")).get("id"); assert isinstance(value, int) and value > 0; print(value)' "$workflow_file")"
 
-          payload = json.load(open(sys.argv[1], encoding="utf-8"))
-          expected_name = "release-manifest-" + sys.argv[2]
-          repository = sys.argv[3]
-          for artifact in payload.get("artifacts", []):
-              workflow = artifact.get("workflow_run") or {}
-              if (
-                  artifact.get("name") == expected_name
-                  and artifact.get("expired") is False
-                  and isinstance(artifact.get("size_in_bytes"), int)
-                  and artifact["size_in_bytes"] > 0
-                  and workflow.get("head_sha") == sys.argv[2]
-                  and workflow.get("head_branch") == "main"
-                  and workflow.get("event") == "workflow_run"
-                  and artifact.get("archive_download_url")
-                  and repository
-              ):
-                  print(artifact["archive_download_url"])
-                  break
-          else:
-              raise SystemExit("no verified release-manifest artifact found")
-          PY
-          )"
+          mkdir -p "$runs_dir"
+          runs_args=()
+          fetched_runs=0
+          total_runs=-1
+          for page in $(seq 1 10); do
+            runs_file="$runs_dir/page-$page.json"
+            curl --fail --silent --show-error --retry 3 \
+              -H 'Accept: application/vnd.github+json' \
+              -H "Authorization: Bearer $GITHUB_TOKEN" \
+              -H 'X-GitHub-Api-Version: 2022-11-28' \
+              "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/workflows/$workflow_id/runs?branch=main&event=workflow_run&status=completed&head_sha=$RELEASE_SHA&per_page=100&page=$page" \
+              > "$runs_file"
+            page_count="$(python -c 'import json,sys; value=json.load(open(sys.argv[1], encoding="utf-8")); print(len(value.get("workflow_runs", [])))' "$runs_file")"
+            page_total="$(python -c 'import json,sys; value=json.load(open(sys.argv[1], encoding="utf-8")); print(value.get("total_count", -1))' "$runs_file")"
+            if [ "$total_runs" -eq -1 ]; then
+              total_runs="$page_total"
+            fi
+            test "$page_total" -eq "$total_runs"
+            fetched_runs=$((fetched_runs + page_count))
+            runs_args+=(--runs-json "$runs_file")
+            if [ "$fetched_runs" -ge "$total_runs" ]; then
+              break
+            fi
+          done
+          test "$fetched_runs" -eq "$total_runs"
+          python scripts/ci/validate_release_provenance.py trusted-run \
+            --workflow-json "$workflow_file" \
+            "${runs_args[@]}" \
+            --release-sha "$RELEASE_SHA" \
+            --repository "$GITHUB_REPOSITORY" \
+            --output "$run_selection"
+          run_id="$(python -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["run_id"])' "$run_selection")"
+
+          curl --fail --silent --show-error --retry 3 \
+            -H 'Accept: application/vnd.github+json' \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H 'X-GitHub-Api-Version: 2022-11-28' \
+            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/runs/$run_id/artifacts?name=release-manifest-$RELEASE_SHA&per_page=100" \
+            > "$artifacts_file"
+          python scripts/ci/validate_release_provenance.py trusted-artifact \
+            --selection-json "$run_selection" \
+            --artifacts-json "$artifacts_file" \
+            --release-sha "$RELEASE_SHA" \
+            --repository "$GITHUB_REPOSITORY" \
+            --output "$artifact_selection"
+          archive_url="$(python -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["archive_download_url"])' "$artifact_selection")"
+
           curl --fail --silent --show-error --retry 3 -L \
             -H 'Accept: application/vnd.github+json' \
             -H "Authorization: Bearer $GITHUB_TOKEN" \
@@ -103,7 +146,8 @@ jobs:
             --release-sha "$RELEASE_SHA" \
             --repository "$GITHUB_REPOSITORY" \
             --frontend-url "$FRONTEND_URL" \
-            --backend-url "$BACKEND_URL"
+            --backend-url "$BACKEND_URL" \
+            --workflow-run-id "$run_id"
 
   rollback:
     name: Restore matching frontend and backend release

@@ -16,7 +16,7 @@ from urllib.parse import urljoin
 
 CONTRACT_VERSION = "2.0"
 ASSESSMENT_VERSION = "india-en-3.0.0"
-SCORING_POLICY_VERSION = "readiness-rubric-1.0.0"
+SCORING_POLICY_VERSION = "readiness-rubric-1.1.0"
 MONEY_PATTERN = re.compile(r"(?:\u20b9|Rs\.?|INR)\s*([\d,]+)")
 PERCENT_PATTERN = re.compile(r"(\d+)%")
 YEAR_PATTERN = re.compile(r"(\d+)\s+year")

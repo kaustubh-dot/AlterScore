@@ -8,6 +8,8 @@ score.  No option contains a score or a path-specific adjustment.
 
 from __future__ import annotations
 
+from fractions import Fraction
+
 from backend.app.branching.model import (
     BranchingOption,
     BranchingStage,
@@ -133,6 +135,8 @@ def build_emi_supplier_scenario() -> ScenarioDefinition:
         ),
         initial_liquidity=_INITIAL_LIQUIDITY,
         cost_budget=_COST_BUDGET,
+        attainable_raw_score_min=Fraction(3393, 95),
+        attainable_raw_score_max=Fraction(1725, 19),
         stages=(
             BranchingStage(
                 stage_index=1,

@@ -214,6 +214,7 @@ function makeScenario(index, scenarioScore = 80) {
       cost_efficiency: scenarioScore,
       plan_feasibility: scenarioScore,
     },
+    score_basis: 'feasible_range_normalized',
     scenario_score: scenarioScore,
   };
 }
@@ -447,6 +448,8 @@ test('keeps the required accessibility and StrictMode lifecycle seams in the UI'
   const processing = await readFile(join(frontendRoot, 'src/pages/Processing.jsx'), 'utf8');
   const results = await readFile(join(frontendRoot, 'src/pages/Results.jsx'), 'utf8');
   const landing = await readFile(join(frontendRoot, 'src/pages/Landing.jsx'), 'utf8');
+  const app = await readFile(join(frontendRoot, 'src/App.jsx'), 'utf8');
+  const notFound = await readFile(join(frontendRoot, 'src/pages/NotFound.jsx'), 'utf8');
 
   assert.match(assessment, /role="progressbar"/);
   assert.match(assessment, /role="radiogroup"/);
@@ -454,12 +457,19 @@ test('keeps the required accessibility and StrictMode lifecycle seams in the UI'
   assert.match(assessment, /questionHeadingRef/);
   assert.match(assessment, /validateAllResponses/);
   assert.match(assessment, /fetchV2AssessmentForm/);
+  assert.match(assessment, /Step \{currentIndex \+ 1\} of \{steps\.length\}/);
   assert.match(processing, /AbortController/);
   assert.match(processing, /record\.started/);
   assert.match(processing, /isAttemptLifecycleError/);
   assert.match(processing, /onFreshAttempt/);
   assert.match(results, /saveSignedResult/);
   assert.match(results, /clearSignedResult/);
+  assert.match(landing, /required items/);
+  assert.match(landing, /optional reflection/);
+  assert.match(app, /<Route path="\*" element=\{<NotFound \/>\} \/>/);
+  assert.match(notFound, /<main className="not-found-page" aria-labelledby="not-found-title">/);
+  assert.match(notFound, /Return home/);
+  assert.match(notFound, /Start assessment/);
   assert.doesNotMatch(assessment, /data\/questions/);
   assert.doesNotMatch(landing, /data\/questions/);
 });

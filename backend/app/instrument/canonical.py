@@ -25,7 +25,7 @@ from backend.app.schemas.common import SchemaModel
 
 CONTRACT_VERSION = "2.0"
 ASSESSMENT_VERSION = "india-en-3.0.0"
-SCORING_POLICY_VERSION = "readiness-rubric-1.0.0"
+SCORING_POLICY_VERSION = "readiness-rubric-1.1.0"
 
 ObjectiveItemType: TypeAlias = Literal["objective"]
 StaticSjtItemType: TypeAlias = Literal["static_sjt"]

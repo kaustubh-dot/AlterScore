@@ -11,7 +11,7 @@ const frontendRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 const versions = {
   contract_version: '2.0',
   assessment_version: 'india-en-3.0.0',
-  scoring_policy_version: 'readiness-rubric-1.0.0',
+  scoring_policy_version: 'readiness-rubric-1.1.0',
 };
 
 function id(prefix, suffix) {
@@ -80,6 +80,7 @@ function makeScenario(index, score = 80) {
       cost_efficiency: score,
       plan_feasibility: score,
     },
+    score_basis: 'feasible_range_normalized',
     scenario_score: score,
   };
 }
@@ -189,6 +190,19 @@ test('accepts all frozen explainability sections with every canonical objective 
   });
 });
 
+test('accepts a calibrated path score that differs from the raw dimension composite', () => {
+  const result = makeResult();
+  const scenario = result.explanation.branching_scenarios[0];
+  scenario.dimensions = {
+    obligation_coverage: 36,
+    liquidity_retention: 42,
+    cost_efficiency: 55,
+    plan_feasibility: 48,
+  };
+  assert.equal(scenario.score_basis, 'feasible_range_normalized');
+  assert.equal(isV2ScoreResponse(result), true);
+});
+
 test('rejects unreconciled formula fractions, hidden SJT fields, and broken branching continuity', () => {
   const unreduced = structuredClone(makeResult());
   unreduced.explanation.formula.objective_contribution_exact = '330/8';
@@ -212,9 +226,13 @@ test('rejects unreconciled formula fractions, hidden SJT fields, and broken bran
     = [unorderedTimeline.explanation.branching_scenarios[0].timeline[1], unorderedTimeline.explanation.branching_scenarios[0].timeline[0]];
   assert.equal(isV2ScoreResponse(unorderedTimeline), false);
 
-  const mismatchedScenarioScore = structuredClone(makeResult());
-  mismatchedScenarioScore.explanation.branching_scenarios[0].scenario_score = 1;
-  assert.equal(isV2ScoreResponse(mismatchedScenarioScore), false);
+  const invalidScoreBasis = structuredClone(makeResult());
+  invalidScoreBasis.explanation.branching_scenarios[0].score_basis = 'raw_dimension_composite';
+  assert.equal(isV2ScoreResponse(invalidScoreBasis), false);
+
+  const outOfRangeScenarioScore = structuredClone(makeResult());
+  outOfRangeScenarioScore.explanation.branching_scenarios[0].scenario_score = 101;
+  assert.equal(isV2ScoreResponse(outOfRangeScenarioScore), false);
 });
 
 test('uses exact half-up rounding at an index boundary', () => {

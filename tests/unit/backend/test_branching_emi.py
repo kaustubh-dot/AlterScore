@@ -101,7 +101,7 @@ def test_all_27_paths_are_reachable_with_valid_timeline_states_and_scores() -> N
         )
         assert isinstance(result.scenario_score, Fraction)
         assert Fraction(0) <= result.scenario_score <= Fraction(100)
-        assert result.scenario_score == branching_scenario_score(result.dimensions)
+        assert result.raw_scenario_score == branching_scenario_score(result.dimensions)
 
 
 def test_every_complete_path_replays_to_the_same_result() -> None:

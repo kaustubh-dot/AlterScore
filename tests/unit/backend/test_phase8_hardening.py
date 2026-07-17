@@ -364,6 +364,17 @@ def test_phase8_release_automation_requires_trusted_paired_execution() -> None:
     assert 'CONTRACT_VERSION.encode("ascii")' in smoke_runner
     assert "actions: read" in rollback_workflow
     assert "release-manifest-$RELEASE_SHA" in rollback_workflow
+    assert "validate_release_provenance.py trusted-run" in rollback_workflow
+    assert "validate_release_provenance.py trusted-artifact" in rollback_workflow
+    assert "actions/workflows/$workflow_id/runs" in rollback_workflow
+    assert "for page in $(seq 1 10)" in rollback_workflow
+    assert 'runs_args+=(--runs-json "$runs_file")' in rollback_workflow
+    assert 'test "$fetched_runs" -eq "$total_runs"' in rollback_workflow
+    assert "actions/runs/$run_id/artifacts" in rollback_workflow
+    assert '--workflow-run-id "$run_id"' in rollback_workflow
+    assert 'test "$CONTROL_REF" = "refs/heads/main"' in rollback_workflow
+    assert 'test "$(git rev-parse origin/main)" = "$CONTROL_SHA"' in rollback_workflow
+    assert "actions/artifacts?name=" not in rollback_workflow
     assert "needs: validate-release" in rollback_workflow
     assert (
         "VITE_RELEASE_SHA: ${{ needs.validate-release.outputs.release_sha }}"
@@ -401,4 +412,4 @@ def test_phase8_public_probes_publish_exact_release_metadata() -> None:
             assert payload["release_sha"] == "a" * 40
             assert payload["contract_version"] == "2.0"
             assert payload["assessment_version"] == "india-en-3.0.0"
-            assert payload["scoring_policy_version"] == "readiness-rubric-1.0.0"
+            assert payload["scoring_policy_version"] == "readiness-rubric-1.1.0"

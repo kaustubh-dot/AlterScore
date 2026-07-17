@@ -28,7 +28,7 @@ Successful v2 form, score, readiness, liveness, and verification responses use:
 ```text
 contract_version: 2.0
 assessment_version: india-en-3.0.0
-scoring_policy_version: readiness-rubric-1.0.0
+scoring_policy_version: readiness-rubric-1.1.0
 ```
 
 The public contract is defined by the Pydantic models in
@@ -66,6 +66,23 @@ The explanation reconciles the exact objective and judgment contributions,
 worked evidence for all eight objective concepts, principle-level records for
 four static judgment items, two branching replays with state deltas and
 terminal dimensions, and evidence-linked maintenance/recommendation guidance.
+
+Under `readiness-rubric-1.1.0`, each branch engine first derives the original
+exact weighted terminal-dimension composite, then maps that attainable raw
+value onto the closed 0-to-100 scenario scale:
+
+```text
+scenario_score = 100 * (raw - attainable_min) / (attainable_max - attainable_min)
+```
+
+The attainable interval is scenario-specific, exhaustive over all 27 complete
+paths, and retained server-side. A zero-width interval or a raw score outside
+that interval fails closed. The public explanation labels the result with
+`score_basis: feasible_range_normalized` and explains that it compares the
+selected path with the worst and best paths reachable in that same simulation.
+It does not issue endpoint constants, per-path values, option rankings, or the
+hidden rubric. Branch recommendation thresholds are defined on this normalized
+scenario score.
 
 The scorer must not return repayment probability, synthetic percentile, risk
 band, approval, eligibility, pricing, loan amount, SHAP attribution, or a

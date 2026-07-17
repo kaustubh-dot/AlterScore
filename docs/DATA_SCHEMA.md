@@ -27,6 +27,14 @@ financial index is the frozen 55% objective / 45% judgment weighted total,
 rounded half-up to an integer. Behavior selections and narrative text do not
 enter any score, recommendation, or readiness decision.
 
+Each terminal-state branch score is feasible-range normalized with exact
+rational arithmetic before it enters the six-component judgment mean. The
+original weighted terminal-dimension composite and the scenario's exhaustive
+attainable endpoints remain internal diagnostics. Public results expose the
+normalized score, its `feasible_range_normalized` basis, the four safe terminal
+dimensions, and plain-language interpretation without exposing per-option or
+per-path scoring authority.
+
 The signed explanation may expose safe worked values, state-before / delta /
 state-after timelines, terminal dimensions, principle-level guidance, and
 evidence-linked recommendations. It never exposes answer keys, option IDs,

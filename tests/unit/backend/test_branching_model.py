@@ -230,6 +230,8 @@ def test_branching_definition_rejects_mutable_containers_and_boolean_stage_index
             starting_state=definition.starting_state,
             initial_liquidity=definition.initial_liquidity,
             cost_budget=definition.cost_budget,
+            attainable_raw_score_min=definition.attainable_raw_score_min,
+            attainable_raw_score_max=definition.attainable_raw_score_max,
             stages=list(definition.stages),
         )
 
@@ -267,6 +269,8 @@ def test_branching_definition_rejects_malformed_metadata_and_children() -> None:
             starting_state=definition.starting_state,
             initial_liquidity=definition.initial_liquidity,
             cost_budget=definition.cost_budget,
+            attainable_raw_score_min=definition.attainable_raw_score_min,
+            attainable_raw_score_max=definition.attainable_raw_score_max,
             stages=definition.stages,
         )
     with pytest.raises(InvalidScenarioDefinition):
@@ -276,6 +280,8 @@ def test_branching_definition_rejects_malformed_metadata_and_children() -> None:
             starting_state=definition.starting_state,
             initial_liquidity=definition.initial_liquidity,
             cost_budget=definition.cost_budget,
+            attainable_raw_score_min=definition.attainable_raw_score_min,
+            attainable_raw_score_max=definition.attainable_raw_score_max,
             stages=(definition.stages[0], object(), definition.stages[2]),
         )
 

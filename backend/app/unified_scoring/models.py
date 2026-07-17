@@ -221,6 +221,7 @@ class BranchingScenarioExplanation(SchemaModel):
     )
     terminal_state: FinancialStateExplanation
     dimensions: BranchingDimensionsExplanation
+    score_basis: Literal["feasible_range_normalized"] = "feasible_range_normalized"
     scenario_score: Decimal2
 
 
@@ -389,6 +390,25 @@ class UnifiedScoreResult:
             raise ValueError(
                 "explanation weighted total must reconcile with the contributions"
             )
+        for branch_result, branch_explanation in zip(
+            self.branching_results,
+            self.explanation.branching_scenarios,
+            strict=True,
+        ):
+            if (
+                branch_explanation.scenario_presentation_id
+                != branch_result.scenario_presentation_id
+            ):
+                raise ValueError("branching explanation scenario order must reconcile")
+            if branch_explanation.scenario_score != _quantize_fraction_half_up(
+                branch_result.scenario_score
+            ):
+                raise ValueError("branching explanation score must reconcile")
+            for name, value in branch_result.dimensions.as_dict().items():
+                if getattr(branch_explanation.dimensions, name) != (
+                    _quantize_fraction_half_up(value)
+                ):
+                    raise ValueError("branching explanation dimensions must reconcile")
 
 
 __all__ = [
