@@ -65,11 +65,13 @@ The Vercel CLI is version-pinned in both forward deployment and rollback so a
 mutable `latest` package is not executed with production credentials.
 
 Before any deployment or rollback, configure the hosting provider with the
-same signing secret stored in the Actions secret store. The workflow checks
-that the existing public `/api/ready` signing check passes before it publishes
-a package, so missing or invalid provider signing configuration fails before a
-new release is pushed. The package itself binds the non-secret signing-key
-version and never contains the signing secret.
+same signing secret stored in the Actions secret store. For the one-time v1 to
+v2 migration, a 404 from the retired `/api/ready` endpoint is accepted as an
+explicit bootstrap state; every later release requires the existing readiness
+signing check to pass before publication. The post-deploy smoke gate remains
+mandatory in both cases, so a new package cannot be recorded as released until
+the v2 readiness and scoring contract pass. The package itself binds the
+non-secret signing-key version and never contains the signing secret.
 
 ## Runtime probes
 

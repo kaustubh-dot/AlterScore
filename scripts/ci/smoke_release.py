@@ -234,7 +234,9 @@ def _build_submission(form: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def require_signing_preflight(base_url: str) -> None:
+def require_signing_preflight(
+    base_url: str, *, allow_legacy_404: bool = False
+) -> None:
     """Require an already configured provider to expose signing readiness.
 
     The signing secret stays in the hosting provider's secret store and is
@@ -244,6 +246,11 @@ def require_signing_preflight(base_url: str) -> None:
     """
 
     ready_result = _request(base_url, "/api/ready")
+    if ready_result.status == 404 and allow_legacy_404:
+        print(
+            "readiness: legacy provider has no v2 endpoint; allowing bootstrap deployment"
+        )
+        return
     if ready_result.status not in {200, 503}:
         raise SmokeFailure(
             f"readiness: expected HTTP 200 or 503, received {ready_result.status}"
@@ -379,6 +386,11 @@ def main() -> int:
         action="store_true",
         help="require the provider's existing signing readiness before publication",
     )
+    parser.add_argument(
+        "--allow-legacy-404",
+        action="store_true",
+        help="allow a missing v2 readiness endpoint for the first migration deployment",
+    )
     args = parser.parse_args()
     base_url = args.base_url.rstrip("/")
     if not base_url.startswith("https://"):
@@ -389,13 +401,17 @@ def main() -> int:
         parser.error(
             "--preflight-signing cannot be combined with --expected-release-sha"
         )
+    if args.allow_legacy_404 and not args.preflight_signing:
+        parser.error("--allow-legacy-404 requires --preflight-signing")
     if not args.preflight_signing and not re.fullmatch(
         r"[0-9a-f]{40}", args.expected_release_sha or ""
     ):
         parser.error("--expected-release-sha must be a 40-character lowercase Git SHA")
     try:
         if args.preflight_signing:
-            require_signing_preflight(base_url)
+            require_signing_preflight(
+                base_url, allow_legacy_404=args.allow_legacy_404
+            )
         else:
             run(base_url, args.expected_release_sha, args.frontend_url)
     except SmokeFailure as error:

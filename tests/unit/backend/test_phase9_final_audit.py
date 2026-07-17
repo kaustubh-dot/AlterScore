@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 import json
 from pathlib import Path
+import sys
 import zipfile
 from typing import Any
 
@@ -23,6 +24,7 @@ def _load_script(filename: str, module_name: str) -> Any:
     spec = importlib.util.spec_from_file_location(module_name, source_path)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
     spec.loader.exec_module(module)
     return module
 
@@ -394,3 +396,17 @@ def test_phase9_production_dependencies_use_one_hash_locked_release_graph() -> N
     assert lock.count("--hash=sha256:") >= 17
     assert "git+" not in lock
     assert "http://" not in lock
+
+
+def test_phase9_preflight_allows_only_explicit_legacy_bootstrap(monkeypatch) -> None:
+    smoke = _load_script("smoke_release.py", "phase9_smoke_runner")
+    monkeypatch.setattr(
+        smoke,
+        "_request",
+        lambda *args, **kwargs: smoke.HttpResult(404, {}, {}),
+    )
+    smoke.require_signing_preflight(
+        "https://backend.example", allow_legacy_404=True
+    )
+    with pytest.raises(smoke.SmokeFailure, match="expected HTTP 200 or 503"):
+        smoke.require_signing_preflight("https://backend.example")

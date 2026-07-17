@@ -364,6 +364,7 @@ def test_phase8_release_automation_requires_trusted_paired_execution() -> None:
     assert "DEPLOYED_FRONTEND_URL=" in deploy_workflow
     assert "DEPLOYED_FRONTEND_URL=" in rollback_workflow
     assert '--frontend-deployment-url "$DEPLOYED_FRONTEND_URL"' in deploy_workflow
+    assert "--preflight-signing --allow-legacy-404" in deploy_workflow
     assert 'CONTRACT_VERSION.encode("ascii")' in smoke_runner
     assert "actions: read" in rollback_workflow
     assert "release-manifest-$RELEASE_SHA" in rollback_workflow

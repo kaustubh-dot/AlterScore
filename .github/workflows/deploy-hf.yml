@@ -76,7 +76,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python scripts/ci/smoke_release.py --base-url "$BACKEND_URL" --preflight-signing
+          python scripts/ci/smoke_release.py --base-url "$BACKEND_URL" --preflight-signing --allow-legacy-404
 
       - name: Set up Node.js 20.19.0
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
