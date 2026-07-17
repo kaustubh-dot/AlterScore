@@ -352,7 +352,7 @@ def test_phase8_release_automation_requires_trusted_paired_execution() -> None:
     assert (
         "VITE_RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}" in deploy_workflow
     )
-    assert "npx --yes vercel@54.21.1 deploy dist --prod" in deploy_workflow
+    assert "npx --yes vercel@54.21.1 deploy . --prod" in deploy_workflow
     assert (
         "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02"
         in deploy_workflow

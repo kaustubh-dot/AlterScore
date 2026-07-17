@@ -204,8 +204,8 @@ jobs:
           git config user.name "AlterScore Rollback Bot"
           git add .
           git commit -m "rollback(hf): restore ${RELEASE_SHA}"
-          git remote add origin "$HF_SPACE_REPO"
-          git -c http.extraheader="AUTHORIZATION: Bearer $HF_TOKEN" push origin HEAD:refs/heads/main --force
+          git remote add origin "https://user:${HF_TOKEN}@${HF_SPACE_REPO#https://}"
+          git push origin HEAD:refs/heads/main --force
 
       - name: Set up Node.js 20.19.0
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -223,12 +223,11 @@ jobs:
           npm run build
 
       - name: Promote exact frontend release
-        working-directory: frontend
         shell: bash
         run: |
           set -euo pipefail
           npx --yes vercel@54.21.1 link --project "$VERCEL_PROJECT_ID" --scope "$VERCEL_ORG_ID" --token "$VERCEL_TOKEN" --yes
-          DEPLOYED_FRONTEND_URL="$(npx --yes vercel@54.21.1 deploy dist --prod --scope "$VERCEL_ORG_ID" --token "$VERCEL_TOKEN" --yes)"
+          DEPLOYED_FRONTEND_URL="$(npx --yes vercel@54.21.1 deploy . --prod --scope "$VERCEL_ORG_ID" --token "$VERCEL_TOKEN" --yes)"
           case "$DEPLOYED_FRONTEND_URL" in
             (https://*) ;;
             (*) echo "Vercel did not return an HTTPS deployment URL" >&2; exit 1 ;;
