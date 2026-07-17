@@ -121,7 +121,7 @@ jobs:
         run: |
           set -euo pipefail
           npx --yes vercel@54.21.1 link --project "$VERCEL_PROJECT_ID" --scope "$VERCEL_ORG_ID" --token "$VERCEL_TOKEN" --yes
-          DEPLOYED_FRONTEND_URL="$(npx --yes vercel@54.21.1 deploy . --prod --scope "$VERCEL_ORG_ID" --token "$VERCEL_TOKEN" --yes)"
+          DEPLOYED_FRONTEND_URL="$(npx --yes vercel@54.21.1 deploy . --prod --scope "$VERCEL_ORG_ID" --token "$VERCEL_TOKEN" --build-env "VITE_RELEASE_SHA=$RELEASE_SHA" --yes)"
           case "$DEPLOYED_FRONTEND_URL" in
             (https://*) ;;
             (*) echo "Vercel did not return an HTTPS deployment URL" >&2; exit 1 ;;
