@@ -8,6 +8,9 @@ export default function useLenis() {
   const location = useLocation();
 
   useEffect(() => {
+    // Route changes should never inherit the previous screen's scroll position.
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+
     // Disable smooth scroll on the assessment page
     if (location.pathname === '/assessment' || prefersReducedMotion()) {
       if (lenisRef.current) {
@@ -49,5 +52,4 @@ export default function useLenis() {
     };
   }, [location.pathname]);
 }
-
 

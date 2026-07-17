@@ -5,10 +5,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(2, 4, 9, 0.7);
+  background: rgba(0, 0, 0, 0.76);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  padding: 24px;
+  padding: var(--page-gutter);
   animation: modalFadeIn 300ms var(--ease-smooth) forwards;
 }
 
@@ -16,20 +16,27 @@
   width: 100%;
   max-width: 440px;
   border-radius: var(--radius-lg);
-  padding: 32px;
+  padding: var(--space-8);
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  background: rgba(11, 18, 33, 0.85);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), var(--glow-indigo);
+  gap: var(--space-6);
+  background: var(--bg-overlay);
+  border: 1px solid var(--bg-border);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.58);
   transform: translateY(24px) scale(0.96);
   animation: modalSlideUp 400ms var(--ease-spring) forwards;
 }
 
+.modal-card.glass {
+  background: var(--bg-overlay) !important;
+  border-color: var(--bg-border) !important;
+}
+
 .modal-title {
+  font-family: var(--font-display);
   font-size: var(--text-xl);
-  font-weight: 700;
-  margin-bottom: 8px;
+  font-weight: 400;
+  margin-bottom: var(--space-2);
   letter-spacing: 0;
 }
 
@@ -48,14 +55,14 @@
 @media (max-width: 640px) {
   .modal-overlay {
     align-items: flex-end;
-    padding: 16px;
+    padding: var(--space-4);
   }
 
   .modal-card {
     max-width: none;
-    padding: 24px 20px;
-    gap: 20px;
-    border-radius: var(--radius-md);
+    padding: var(--space-6) var(--space-5);
+    gap: var(--space-5);
+    border-radius: var(--radius-lg);
   }
 
   .modal-title {

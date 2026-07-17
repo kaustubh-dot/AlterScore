@@ -9,7 +9,16 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+html {
+  min-width: 320px;
+  background: var(--bg-void);
+  scroll-padding-top: 88px;
+}
+
 body {
+  min-width: 320px;
+  min-height: 100vh;
+  min-height: 100dvh;
   background-color: var(--bg-void);
   color: var(--text-primary);
   font-family: var(--font-body);
@@ -27,7 +36,7 @@ body::after {
   inset: 0;
   z-index: 9999;
   pointer-events: none;
-  opacity: 0.045;
+  opacity: 0.028;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 }
 
@@ -64,9 +73,9 @@ body::after {
 
 .container {
   width: 100%;
-  max-width: 1100px;
+  max-width: 1180px;
   margin: 0 auto;
-  padding: 0 var(--space-6);
+  padding-inline: var(--page-gutter);
 }
 
 @media (max-width: 767px) {
@@ -75,18 +84,17 @@ body::after {
     line-height: 1.65;
   }
 
-  .container {
-    padding: 0 20px;
-  }
+  .container { padding-inline: var(--page-gutter); }
 }
 
 /* Minimalist Card Base */
 .card-base {
   background: var(--bg-surface);
   border: 1px solid var(--bg-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-lg);
   padding: var(--space-8);
-  transition: all var(--duration-normal) var(--ease-smooth);
+  box-shadow: var(--shadow-card);
+  transition: border-color var(--duration-normal) var(--ease-smooth), transform var(--duration-normal) var(--ease-smooth), box-shadow var(--duration-normal) var(--ease-smooth);
 }
 
 .card-base:hover {
@@ -98,8 +106,9 @@ body::after {
   font-family: var(--font-body);
   font-size: var(--text-sm);
   font-weight: 500;
-  border-radius: var(--radius-sm);
-  padding: 14px 28px;
+  min-height: 44px;
+  border-radius: var(--radius-md);
+  padding: 0 var(--space-6);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -108,7 +117,7 @@ body::after {
   text-decoration: none;
   outline: none;
   border: 1px solid transparent;
-  transition: all var(--duration-normal) var(--ease-smooth);
+  transition: color var(--duration-normal) var(--ease-smooth), background-color var(--duration-normal) var(--ease-smooth), border-color var(--duration-normal) var(--ease-smooth), transform var(--duration-normal) var(--ease-smooth);
 }
 
 .btn:disabled {
@@ -336,8 +345,36 @@ body::after {
 }
 
 *:focus-visible {
-  outline: 1px solid rgba(255, 255, 255, 0.4);
-  outline-offset: 4px;
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: 3px;
+}
+
+.route-loading {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-12) var(--page-gutter);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.route-loading::before {
+  content: '';
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--bg-border);
+  border-top-color: var(--accent-cyan);
+  border-radius: 50%;
+  animation: routeLoadingSpin 700ms linear infinite;
+}
+
+@keyframes routeLoadingSpin {
+  to { transform: rotate(360deg); }
 }
 
 /* Glass, Pulse, Shimmer class definitions */
@@ -411,7 +448,7 @@ body::after {
 
   .btn {
     min-height: 48px;
-    padding: 13px 18px;
+    padding: 0 18px;
     font-size: 1rem;
     gap: 8px;
   }
