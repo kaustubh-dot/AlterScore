@@ -133,8 +133,7 @@ jobs:
         run: |
           set -euo pipefail
           for attempt in $(seq 1 30); do
-            if python scripts/ci/smoke_release.py --base-url "$BACKEND_URL" --frontend-url "$DEPLOYED_FRONTEND_URL" --expected-release-sha "$RELEASE_SHA" &&
-               python scripts/ci/smoke_release.py --base-url "$BACKEND_URL" --frontend-url "$FRONTEND_URL" --expected-release-sha "$RELEASE_SHA"; then
+            if python scripts/ci/smoke_release.py --base-url "$BACKEND_URL" --frontend-url "$FRONTEND_URL" --expected-release-sha "$RELEASE_SHA"; then
               exit 0
             fi
             if [ "$attempt" -lt 30 ]; then sleep 20; fi

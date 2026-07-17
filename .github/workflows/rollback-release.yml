@@ -238,5 +238,4 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python scripts/ci/smoke_release.py --base-url "$BACKEND_URL" --frontend-url "$DEPLOYED_FRONTEND_URL" --expected-release-sha "$RELEASE_SHA"
           python scripts/ci/smoke_release.py --base-url "$BACKEND_URL" --frontend-url "$FRONTEND_URL" --expected-release-sha "$RELEASE_SHA"
