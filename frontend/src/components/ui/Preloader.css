@@ -1,175 +1,57 @@
-/* Preloader Overlay Styles (Darknode Layout Copy) */
-
 .preloader-overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(8, 8, 9, 0.85); /* Semi-transparent void background for backdrop blur */
   z-index: 99999;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 10vw;
-  overflow: hidden;
-  user-select: none;
-  transition: opacity 500ms ease;
-  will-change: opacity, backdrop-filter;
+  display: grid;
+  place-items: center;
+  padding: var(--space-6);
+  background: var(--bg-void);
 }
 
-/* Left Brand Block */
-.preloader-icon-container {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: #FFFFFF;
-  font-family: var(--font-mono);
-  font-size: 0.8125rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  width: 150px;
-}
-
-.preloader-icon {
-  color: #FFFFFF;
+.preloader-content {
+  width: min(320px, 100%);
 }
 
 .preloader-brand {
-  font-weight: 700;
-}
-
-/* Center Mechanical Scale Viewport */
-.preloader-scale-viewport {
-  position: relative;
-  width: 44px;
-  height: 320px;
-  overflow: hidden;
   display: flex;
-  justify-content: flex-end;
-}
-
-.preloader-scale-track {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  will-change: transform;
-}
-
-.ruler-segment {
-  height: 800px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: flex-end;
-  width: 100%;
-}
-
-.ruler-tick {
-  background-color: rgba(255, 255, 255, 0.45);
-  height: 1.5px;
-  flex-shrink: 0;
-  transition: background-color 0.3s ease;
-}
-
-.ruler-tick.major {
-  width: 36px;
-}
-
-.ruler-tick.minor {
-  width: 16px;
-}
-
-/* Fade Masks for sliding scale */
-.shadow-top {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 110px;
-  background: linear-gradient(to bottom, #080809 0%, transparent 100%);
-  z-index: 2;
-  pointer-events: none;
-}
-
-.shadow-bot {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 110px;
-  background: linear-gradient(to top, #080809 0%, transparent 100%);
-  z-index: 2;
-  pointer-events: none;
-}
-
-/* Right Percentage Block */
-.preloader-percent-container {
-  display: flex;
-  justify-content: flex-end;
-  width: 150px;
-}
-
-.percent-block {
-  display: flex;
-  align-items: baseline;
-  gap: 2px;
-}
-
-.preloader-percent-num {
-  font-family: var(--font-mono);
-  font-size: 36px;
-  font-weight: 500;
-  color: #FFFFFF;
-  letter-spacing: 0;
-}
-
-.preloader-percent-symbol {
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--text-primary);
   font-family: var(--font-mono);
   font-size: var(--text-sm);
-  color: var(--text-muted);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
-/* Subtle Glow Highlight on 100% Load */
-.preloader-overlay.completed .preloader-icon-container,
-.preloader-overlay.completed .preloader-icon,
-.preloader-overlay.completed .preloader-percent-num {
-  color: var(--accent-cyan) !important;
-  transition: color 450ms cubic-bezier(0.16, 1, 0.3, 1);
-  text-shadow: 0 0 15px rgba(0, 242, 254, 0.5);
+.preloader-content p {
+  margin: var(--space-4) 0 var(--space-5);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
 }
 
-.preloader-overlay.completed .preloader-percent-symbol {
-  color: rgba(0, 242, 254, 0.5) !important;
-  transition: color 450ms cubic-bezier(0.16, 1, 0.3, 1);
+.preloader-progress {
+  height: 1px;
+  overflow: hidden;
+  background: var(--bg-border);
 }
 
-.preloader-overlay.completed .ruler-tick.major {
-  background-color: var(--accent-cyan) !important;
-  box-shadow: 0 0 8px var(--accent-cyan);
-  transition: background-color 450ms, box-shadow 450ms;
+.preloader-progress span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--text-primary);
+  transform: translateX(-100%);
+  animation: preloader-progress 800ms var(--ease-smooth) forwards;
 }
 
-@media (max-width: 640px) {
-  .preloader-overlay {
-    flex-direction: column;
-    justify-content: center;
-    gap: var(--space-8);
-    padding: var(--space-8) 20px;
-  }
+@keyframes preloader-progress {
+  to { transform: translateX(0); }
+}
 
-  .preloader-icon-container,
-  .preloader-percent-container {
-    justify-content: center;
-    width: auto;
-  }
-
-  .preloader-scale-viewport {
-    height: min(260px, 42dvh);
-  }
-
-  .preloader-percent-num {
-    font-size: 3rem;
-  }
-
-  .preloader-percent-symbol {
-    font-size: 1rem;
+@media (prefers-reduced-motion: reduce) {
+  .preloader-progress span {
+    animation: none;
+    transform: none;
   }
 }

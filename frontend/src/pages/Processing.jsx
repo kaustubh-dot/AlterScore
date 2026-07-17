@@ -13,12 +13,9 @@ import useSound from '../hooks/useSound';
 import './Processing.css';
 
 const PROCESSING_STEPS = [
-  'Validating the issued response set',
-  'Checking the frozen contract versions',
-  'Verifying the one-time attempt',
-  'Calculating readiness domains',
-  'Preparing the signed result',
-  'Completing the secure response',
+  'Validating your responses',
+  'Applying the readiness rubric',
+  'Signing your result',
 ];
 
 function shouldRequestFreshAttempt(error) {
@@ -37,7 +34,6 @@ export default function Processing({ form, submission, onComplete, onBack, onFre
       : 0
   ));
   const [error, setError] = useState(null);
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const requestRecordRef = useRef(null);
   const { playStep } = useSound();
 
@@ -55,11 +51,6 @@ export default function Processing({ form, submission, onComplete, onBack, onFre
     }, 420);
     return () => window.clearTimeout(timeout);
   }, [activeStep, playStep]);
-
-  useEffect(() => {
-    const interval = window.setInterval(() => setElapsedSeconds((seconds) => seconds + 1), 1000);
-    return () => window.clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     let record = requestRecordRef.current;
@@ -151,7 +142,8 @@ export default function Processing({ form, submission, onComplete, onBack, onFre
       <div className="processing-container container">
         <div className="processing-card" role="status" aria-live="polite">
           <div className="processing-header">
-            <span className="processing-title">Preparing your verified assessment result</span>
+            <span className="processing-eyebrow">Assessment complete</span>
+            <h1 className="processing-title">Preparing your result</h1>
             <div
               className="processing-meter-container"
               role="progressbar"
@@ -175,8 +167,7 @@ export default function Processing({ form, submission, onComplete, onBack, onFre
                       {isCompleted ? <Check size={10} className="tick-enter" /> : isActive ? <span className="pulse-indicator" /> : '—'}
                     </span>
                     <span className="step-label">{step}</span>
-                    {isCompleted && <span className="step-status">COMPLETED</span>}
-                    {isActive && <span className="step-status scanning">PROCESSING</span>}
+                    {isActive && <span className="step-status scanning">In progress</span>}
                   </div>
                 );
               })}
@@ -184,7 +175,7 @@ export default function Processing({ form, submission, onComplete, onBack, onFre
 
             <div className="processing-footer">
               <span className="processing-eta">
-                {isWaitingForScore ? `Finalizing secure response · ${elapsedSeconds}s elapsed` : 'The one-time attempt is being checked'}
+                {isWaitingForScore ? 'Finishing securely…' : 'This usually takes a few seconds.'}
               </span>
             </div>
           </div>

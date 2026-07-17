@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import usePageTransition from '../hooks/usePageTransition';
 import { ArrowRight, Brain, HeartHandshake, Eye } from 'lucide-react';
 import SignalCanvas from '../components/hero/SignalCanvas';
@@ -7,7 +7,6 @@ import GlowCard from '../components/ui/GlowCard';
 import MagneticButton from '../components/ui/MagneticButton';
 import TextReveal from '../components/animation/TextReveal';
 import { PUBLIC_ASSESSMENT_ITEM_COUNT } from '../lib/assessmentV2';
-import { prefersReducedMotion } from '../lib/motionPreferences';
 import { getSessionStorage, readStorageItem } from '../lib/safeStorage';
 import './Landing.css';
 
@@ -18,55 +17,10 @@ function hasCompletedPreload() {
   );
 }
 
-// Count-up helper hook
-function useCountUp(target, duration = 1500, startCount = false) {
-  const [count, setCount] = useState(0);
-
-  useEffect(() => {
-    if (!startCount) return;
-    if (prefersReducedMotion()) {
-      const frame = requestAnimationFrame(() => setCount(target));
-      return () => cancelAnimationFrame(frame);
-    }
-    
-    const isFloat = target.toString().includes('.');
-    const targetVal = parseFloat(target);
-    if (isNaN(targetVal)) return;
-
-    const startTime = performance.now();
-
-    const updateCount = (timestamp) => {
-      const elapsed = timestamp - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      
-      const easeProgress = progress * (2 - progress);
-      const current = easeProgress * targetVal;
-
-      if (isFloat) {
-        setCount(current.toFixed(2));
-      } else {
-        setCount(Math.floor(current));
-      }
-
-      if (progress < 1) {
-        requestAnimationFrame(updateCount);
-      } else {
-        setCount(target);
-      }
-    };
-
-    requestAnimationFrame(updateCount);
-  }, [target, duration, startCount]);
-
-  return count;
-}
-
 export default function Landing() {
   const { transitionTo } = usePageTransition();
   const [isLoaded, setIsLoaded] = useState(hasCompletedPreload);
   const [hideScroll, setHideScroll] = useState(false);
-  const [triggerStats, setTriggerStats] = useState(false);
-  const statsRef = useRef(null);
 
   useEffect(() => {
     if (isLoaded) return;
@@ -92,32 +46,10 @@ export default function Landing() {
 
     window.addEventListener('scroll', handleScroll);
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setTriggerStats(true);
-          observer.unobserve(entry.target);
-        }
-      },
-      { threshold: 0.2 }
-    );
-
-    if (statsRef.current) {
-      observer.observe(statsRef.current);
-    }
-
-    const currentStatsRef = statsRef.current;
-
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      if (currentStatsRef) observer.disconnect();
     };
   }, [isLoaded]);
-
-  const stat1 = useCountUp(PUBLIC_ASSESSMENT_ITEM_COUNT, 1200, triggerStats);
-  const stat2 = useCountUp(18, 1200, triggerStats);
-  const stat3 = useCountUp(6, 1200, triggerStats);
-  const stat4 = useCountUp(0, 1200, triggerStats);
 
   const startAssessment = () => {
     transitionTo('/assessment');
@@ -181,10 +113,10 @@ export default function Landing() {
                     <div className="feature-icon-wrapper">
                       <Brain size={20} />
                     </div>
-                    <h3 className="feature-title">Cognitive Reflection</h3>
+                    <h3 className="feature-title">Financial fundamentals</h3>
                     <p className="feature-desc">
-                      Objective items test financial knowledge with server-issued
-                      values. The browser receives no answer keys or scoring rules.
+                      Short calculations cover cash flow, borrowing costs, inflation,
+                      due dates, repayment, and emergency buffers.
                     </p>
                   </GlowCard>
                 </ScrollReveal>
@@ -194,10 +126,10 @@ export default function Landing() {
                     <div className="feature-icon-wrapper">
                       <Eye size={20} />
                     </div>
-                    <h3 className="feature-title">Structured Scenarios</h3>
+                    <h3 className="feature-title">Real-world decisions</h3>
                     <p className="feature-desc">
-                      Decision simulations present opaque, randomized options and
-                      evaluate the selected path on the server. Timing and device data are not used.
+                      Choose between plausible options in practical money situations.
+                      Each decision changes what happens next.
                     </p>
                   </GlowCard>
                 </ScrollReveal>
@@ -207,10 +139,10 @@ export default function Landing() {
                     <div className="feature-icon-wrapper">
                       <HeartHandshake size={20} />
                     </div>
-                    <h3 className="feature-title">Resilience & Planning</h3>
+                    <h3 className="feature-title">Planning habits</h3>
                     <p className="feature-desc">
-                      Behavior reflection includes a Not applicable choice, is shown
-                      separately from evidence, and never changes the index.
+                      Optional questions help you reflect on everyday habits. They are
+                      shown separately and never change your score.
                     </p>
                   </GlowCard>
                 </ScrollReveal>
@@ -222,8 +154,8 @@ export default function Landing() {
           <section className="section section-how">
             <div className="container">
               <div className="section-header">
-                <span className="section-eyebrow">System Stepper</span>
-                <h2 className="section-title"><TextReveal text="How It Works" /></h2>
+                <span className="section-eyebrow">Three simple steps</span>
+                <h2 className="section-title"><TextReveal text="How it works" /></h2>
               </div>
 
               <div className="stepper-row-container">
@@ -242,9 +174,9 @@ export default function Landing() {
                       </div>
                       <h3 className="step-title">Answer the assessment</h3>
                       <p className="step-desc">
-                        Answer {questionCount} required server-issued items, then
-                        optionally add one short reflection. No documents, identity,
-                        or credit history are used.
+                        Complete {questionCount} required calculations and scenarios,
+                        then add an optional reflection. No documents, identity, or
+                        credit history are needed.
                       </p>
                     </GlowCard>
                   </ScrollReveal>
@@ -256,8 +188,8 @@ export default function Landing() {
                       </div>
                       <h3 className="step-title">Apply the readiness rubric</h3>
                       <p className="step-desc">
-                        The backend applies the frozen deterministic rubric. Browser
-                        telemetry, device data, and hidden text signals are excluded.
+                        Your answers are scored against one consistent rubric. Device
+                        tracking and browsing data are never part of the result.
                       </p>
                     </GlowCard>
                   </ScrollReveal>
@@ -279,48 +211,13 @@ export default function Landing() {
             </div>
           </section>
 
-          {/* Stats Section */}
-          <section className="section section-stats" ref={statsRef}>
-            <div className="container">
-              <div className="stats-grid">
-                <ScrollReveal direction="up" delay={100}>
-                  <div className="stat-item">
-                    <div className="stat-number">{triggerStats ? stat1 : '0'}</div>
-                    <div className="stat-label">Assessment items</div>
-                  </div>
-                </ScrollReveal>
-                
-                <ScrollReveal direction="up" delay={200}>
-                  <div className="stat-item">
-                    <div className="stat-number">{triggerStats ? stat2 : '0'}</div>
-                    <div className="stat-label">Scored items</div>
-                  </div>
-                </ScrollReveal>
-
-                <ScrollReveal direction="up" delay={300}>
-                  <div className="stat-item">
-                    <div className="stat-number">{triggerStats ? stat3 : '0'}</div>
-                    <div className="stat-label">Unscored reflections</div>
-                  </div>
-                </ScrollReveal>
-
-                <ScrollReveal direction="up" delay={400}>
-                  <div className="stat-item">
-                    <div className="stat-number">{triggerStats ? stat4 : '0'}</div>
-                    <div className="stat-label">Browser/device inputs</div>
-                  </div>
-                </ScrollReveal>
-              </div>
-            </div>
-          </section>
-
           {/* Final CTA Section */}
           <section className="final-cta">
             <SignalCanvas />
             <div className="cta-container container">
               <ScrollReveal direction="scale">
                 <h2 className="cta-title">
-                  <TextReveal text="Ready to test the assessment?" />
+                  <TextReveal text="See where you stand." />
                 </h2>
               </ScrollReveal>
               <ScrollReveal direction="up" delay={200}>

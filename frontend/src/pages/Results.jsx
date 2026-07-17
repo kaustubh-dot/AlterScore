@@ -1,5 +1,5 @@
 import { AlertCircle, ArrowRight, CheckCircle2, ExternalLink, GitBranch, Lightbulb, RefreshCw, ShieldCheck, Trash2 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getV2VerificationUrl } from '../lib/api';
 import {
@@ -127,6 +127,7 @@ export default function Results() {
   const location = useLocation();
   const [result, setResult] = useState(() => getResultFromLocation(location));
   const [behaviorProfile] = useState(() => getBehaviorProfileFromLocation(location));
+  const evidenceDetailsRef = useRef(null);
   const detailed = isV2DetailedResult(result);
   const explanation = detailed ? result.explanation : null;
 
@@ -184,8 +185,8 @@ export default function Results() {
             <span>Verified anonymous attempt · signed result retained for this session</span>
           </div>
           <span className="section-eyebrow">Financial readiness assessment</span>
-          <h1 id="results-page-title">Your decision-readiness result</h1>
-          <p>Read the score as a transparent educational rubric. The evidence below explains the issued questions and simulated decisions; it does not make a lending or repayment claim.</p>
+          <h1 id="results-page-title">Your readiness score</h1>
+          <p>This score summarizes how you handled the financial knowledge questions and decision scenarios in this assessment.</p>
         </header>
 
         <section className="score-reveal-section" aria-labelledby="score-heading">
@@ -205,16 +206,6 @@ export default function Results() {
 
         <section className="summary-grid" aria-label="Assessment summary">
           <article className="summary-card">
-            <span className="card-kicker">Secondary illustration</span>
-            <h2 className="summary-value font-mono">{result.legacy_demo_score}</h2>
-            <p>Illustrative 300–850 transformation of the readiness index.</p>
-          </article>
-          <article className="summary-card">
-            <span className="card-kicker">Integrity status</span>
-            <h2 className="summary-value summary-status">{result.integrity_status}</h2>
-            <p>The server issued, validated, consumed, and signed this anonymous attempt.</p>
-          </article>
-          <article className="summary-card">
             <span className="card-kicker">Financial knowledge</span>
             <h2 className="summary-value font-mono">{formatScore(detailed ? result.objective_score : result.objective_score / 100)}</h2>
             <p>Objective domain display score.</p>
@@ -224,11 +215,26 @@ export default function Results() {
             <h2 className="summary-value font-mono">{formatScore(detailed ? result.judgment_score : result.judgment_score / 100)}</h2>
             <p>Judgement domain display score.</p>
           </article>
+          <article className="summary-card">
+            <span className="card-kicker">300–850 view</span>
+            <h2 className="summary-value font-mono">{result.legacy_demo_score}</h2>
+            <p>Illustrative 300–850 transformation of the readiness index.</p>
+          </article>
+          <article className="summary-card">
+            <span className="card-kicker">Verified result</span>
+            <h2 className="summary-value summary-status">{result.integrity_status}</h2>
+            <p>The server issued, validated, consumed, and signed this anonymous attempt.</p>
+          </article>
         </section>
 
         {detailed && formula && (
-          <section className="results-section formula-section" aria-labelledby="formula-heading">
-            <ResultHeader eyebrow="Reconciliation" title="How the index is composed" id="formula-heading">
+          <details className="results-disclosure">
+            <summary>
+              <span><strong>How your score was calculated</strong><small>See the exact weighted calculation and 300–850 illustration.</small></span>
+              <span className="disclosure-action" aria-hidden="true">View details</span>
+            </summary>
+            <section className="results-section formula-section" aria-labelledby="formula-heading">
+              <ResultHeader eyebrow="Score calculation" title="How your index is composed" id="formula-heading">
               <p className="section-intro">The displayed domain scores are shown alongside the exact contribution fractions returned by the scorer. No rounded display value is fed back into the calculation.</p>
             </ResultHeader>
             <div className="formula-waterfall" role="list" aria-label="Score contribution reconciliation">
@@ -254,14 +260,15 @@ export default function Results() {
               <span>Legacy illustration: <code>300 + floor((11 × {formula.financial_decision_index} + 1) ÷ 2)</code></span>
               <strong>{formula.legacy_demo_score}</strong>
             </div>
-          </section>
+            </section>
+          </details>
         )}
 
         {detailed && explanation && (
           <>
             <section className="results-section recommendations-section" aria-labelledby="recommendations-heading">
-              <ResultHeader eyebrow="Next attention" title="Deterministic recommendations" id="recommendations-heading">
-                <p className="section-intro">Each recommendation is linked to a missed objective concept or a weak terminal simulation dimension. A maintenance note appears when no weakness evidence is present.</p>
+              <ResultHeader eyebrow="Next steps" title="What to focus on next" id="recommendations-heading">
+                <p className="section-intro">These suggestions come directly from the questions or simulation outcomes that most need attention.</p>
               </ResultHeader>
               <ul className="recommendation-list">
                 {explanation.recommendations.map((recommendation) => (
@@ -282,7 +289,12 @@ export default function Results() {
                               ? `Objective ${String(ordinal).padStart(2, '0')} evidence`
                               : `Simulation ${ordinal} evidence`;
                             return anchor ? (
-                              <a key={evidenceId} href={`#${anchor}`} aria-label={`View ${evidenceLabel}`}>
+                              <a
+                                key={evidenceId}
+                                href={`#${anchor}`}
+                                aria-label={`View ${evidenceLabel}`}
+                                onClick={() => { if (evidenceDetailsRef.current) evidenceDetailsRef.current.open = true; }}
+                              >
                                 View {evidenceLabel} <ArrowRight size={13} aria-hidden="true" />
                               </a>
                             ) : null;
@@ -295,7 +307,13 @@ export default function Results() {
               </ul>
             </section>
 
-            <section className="results-section" aria-labelledby="objectives-heading">
+            <details className="results-disclosure evidence-disclosure" ref={evidenceDetailsRef}>
+              <summary>
+                <span><strong>Review your full assessment evidence</strong><small>Open every worked answer, judgement scenario, and simulation replay.</small></span>
+                <span className="disclosure-action" aria-hidden="true">View evidence</span>
+              </summary>
+              <div className="disclosure-content">
+              <section className="results-section" aria-labelledby="objectives-heading">
               <ResultHeader eyebrow="Worked evidence" title="Objective questions" id="objectives-heading">
                 <p className="section-intro">These explanations use only the values issued for this attempt. The calculation text is evidence, not a new scoring rule.</p>
               </ResultHeader>
@@ -415,6 +433,8 @@ export default function Results() {
                 ))}
               </div>
             </section>
+              </div>
+            </details>
           </>
         )}
 
@@ -429,20 +449,26 @@ export default function Results() {
         )}
 
         {detailed && behaviorProfile && (
-          <section className="results-section behavior-profile-section" aria-labelledby="behavior-profile-heading">
-            <ResultHeader eyebrow="Unscored self-report" title="Your reflection profile" id="behavior-profile-heading">
-              <p className="section-intro">These selections are displayed separately from the scored evidence. They are not compared with an answer key, do not affect either domain, and are removed from browser history after this view is opened.</p>
-            </ResultHeader>
-            <ol className="behavior-profile-list">
-              {behaviorProfile.map((item) => (
-                <li key={item.presentation_id}>
-                  <span>{item.prompt}</span>
-                  <strong>{item.selected_value}</strong>
-                </li>
-              ))}
-            </ol>
-            <p className="behavior-profile-note">Self-report can be mistaken or strategically chosen, so it is omitted from the signed verification record and the retained session result.</p>
-          </section>
+          <details className="results-disclosure">
+            <summary>
+              <span><strong>Your reflection profile</strong><small>Optional self-report selections that did not affect your score.</small></span>
+              <span className="disclosure-action" aria-hidden="true">View reflection</span>
+            </summary>
+            <section className="results-section behavior-profile-section" aria-labelledby="behavior-profile-heading">
+              <ResultHeader eyebrow="Unscored self-report" title="Your reflection profile" id="behavior-profile-heading">
+                <p className="section-intro">These selections are displayed separately from the scored evidence. They are not compared with an answer key, do not affect either domain, and are removed from browser history after this view is opened.</p>
+              </ResultHeader>
+              <ol className="behavior-profile-list">
+                {behaviorProfile.map((item) => (
+                  <li key={item.presentation_id}>
+                    <span>{item.prompt}</span>
+                    <strong>{item.selected_value}</strong>
+                  </li>
+                ))}
+              </ol>
+              <p className="behavior-profile-note">Self-report can be mistaken or strategically chosen, so it is omitted from the signed verification record and the retained session result.</p>
+            </section>
+          </details>
         )}
 
         <section className="limitations-card" aria-labelledby="limitations-heading">
