@@ -152,23 +152,21 @@ def build_forecast_shortfall_negotiation_scenario() -> ScenarioDefinition:
                 stage_index=1,
                 presentation_id="payment_forecast",
                 prompt=(
-                    "The counterparty owes ₹24,000. Before the ₹30,000 "
-                    "obligation is due, which collection action do you take to "
-                    "secure cash?"
+                    "You start with ₹12,000 operating cash, a ₹9,000 emergency "
+                    "buffer, ₹9,000 of essential expenses, and ₹6,000 of other "
+                    "unfunded commitments. A counterparty owes ₹24,000 and a "
+                    "₹30,000 obligation is due. Which collection action do you "
+                    "take before the due date?"
                 ),
                 options=(
                     BranchingOption(
                         option_id="collect_routine_amount",
-                        label=(
-                            "Use routine follow-up and collect ₹6,000 now."
-                        ),
+                        label=("Use routine follow-up and collect ₹6,000 now."),
                         apply=_collect_routine_amount,
                     ),
                     BranchingOption(
                         option_id="collect_reconciled_amount",
-                        label=(
-                            "Reconcile the account and collect ₹12,000 now."
-                        ),
+                        label=("Reconcile the account and collect ₹12,000 now."),
                         apply=_collect_reconciled_amount,
                     ),
                     BranchingOption(
@@ -185,8 +183,9 @@ def build_forecast_shortfall_negotiation_scenario() -> ScenarioDefinition:
                 stage_index=2,
                 presentation_id="shortfall_response",
                 prompt=(
-                    "Before the obligation date, how do you cover the "
-                    "forecast shortfall while protecting essential expenses?"
+                    "Using the cash and receivable balance created by your "
+                    "collection decision, how do you reduce the ₹30,000 payment "
+                    "shortfall while protecting the stated essential expenses?"
                 ),
                 options=(
                     BranchingOption(
@@ -202,8 +201,7 @@ def build_forecast_shortfall_negotiation_scenario() -> ScenarioDefinition:
                     BranchingOption(
                         option_id="borrow_bridge",
                         label=(
-                            "Borrow ₹12,000 through a bridge facility costing "
-                            "₹1,800"
+                            "Borrow ₹12,000 through a bridge facility costing ₹1,800"
                         ),
                         apply=_borrow_bridge_amount,
                     ),
@@ -213,8 +211,9 @@ def build_forecast_shortfall_negotiation_scenario() -> ScenarioDefinition:
                 stage_index=3,
                 presentation_id="counterparty_negotiation",
                 prompt=(
-                    "At the due date, which payment arrangement do you put to "
-                    "the counterparty?"
+                    "At the due date, use the obligation and cash state created by "
+                    "your first two decisions. Which payment arrangement do you "
+                    "put to the counterparty?"
                 ),
                 options=(
                     BranchingOption(

@@ -793,6 +793,50 @@
   line-height: 1.7;
 }
 
+.behavior-profile-section {
+  padding: var(--space-8);
+  border: 1px solid var(--bg-border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+}
+
+.behavior-profile-list {
+  display: grid;
+  gap: 1px;
+  margin: 0;
+  padding: 1px;
+  border: 1px solid var(--bg-border);
+  background: var(--bg-border);
+  list-style: none;
+}
+
+.behavior-profile-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-5);
+  padding: var(--space-4) var(--space-5);
+  background: var(--bg-void);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.behavior-profile-list strong {
+  color: var(--accent-cyan);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.behavior-profile-note {
+  margin: var(--space-4) 0 0;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  line-height: 1.6;
+}
+
 @media (max-width: 900px) {
   .formula-waterfall {
     grid-template-columns: 1fr;
@@ -824,6 +868,7 @@
 
   .formula-section,
   .recommendations-section,
+  .behavior-profile-section,
   .detail-unavailable,
   .evidence-card {
     padding: var(--space-5);
@@ -850,6 +895,11 @@
 
   .state-table {
     padding: var(--space-4);
+  }
+
+  .behavior-profile-list li {
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
   }
 }
 

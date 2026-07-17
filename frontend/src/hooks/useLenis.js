@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import Lenis from 'lenis';
+import { prefersReducedMotion } from '../lib/motionPreferences';
 
 export default function useLenis() {
   const lenisRef = useRef(null);
@@ -8,7 +9,7 @@ export default function useLenis() {
 
   useEffect(() => {
     // Disable smooth scroll on the assessment page
-    if (location.pathname === '/assessment') {
+    if (location.pathname === '/assessment' || prefersReducedMotion()) {
       if (lenisRef.current) {
         lenisRef.current.destroy();
         lenisRef.current = null;

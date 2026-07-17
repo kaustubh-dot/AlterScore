@@ -118,7 +118,9 @@ class _ObjectiveItem:
     rationale: str
 
     def public_presentation(self) -> ObjectivePresentation:
-        return ObjectivePresentation(presentation_id=self.presentation_id, prompt=self.prompt)
+        return ObjectivePresentation(
+            presentation_id=self.presentation_id, prompt=self.prompt
+        )
 
 
 @dataclass(frozen=True)
@@ -480,7 +482,9 @@ def generate_objective_item(
     try:
         generator = OBJECTIVE_GENERATORS[generator_name]
     except KeyError as exc:
-        raise UnknownCanonicalId(f"Unknown objective generator '{generator_name}'.") from exc
+        raise UnknownCanonicalId(
+            f"Unknown objective generator '{generator_name}'."
+        ) from exc
     if presentation_id is None:
         presentation_id = generator_name
     return generator(_validate_seed(seed), presentation_id)
@@ -500,10 +504,30 @@ _STATIC_DEFINITIONS: tuple[tuple[str, str, str, tuple[_StaticOption, ...]], ...]
         "A customer owes you ₹18,000 and is 14 days late. Rent of ₹12,000 is due in 5 days, and current cash is ₹15,000. What is the strongest first action?",
         "protect an upcoming required expense while resolving an uncertain receivable",
         (
-            _static_option("sjt01_a", "Reserve the ₹12,000 rent amount before relying on the late receivable.", 3, "Protects a known near-term obligation from an uncertain inflow."),
-            _static_option("sjt01_b", "Spend the ₹15,000 because the customer owes more than the rent.", 0, "Treats an uncertain receivable as available cash."),
-            _static_option("sjt01_c", "Borrow ₹12,000 immediately without confirming the receivable date.", 1, "Creates a new cost before checking the incoming payment."),
-            _static_option("sjt01_d", "Wait 5 days and decide after the rent due date passes.", 2, "Acknowledges the timing but accepts avoidable due-date risk."),
+            _static_option(
+                "sjt01_a",
+                "Reserve the ₹12,000 rent amount before relying on the late receivable.",
+                3,
+                "Protects a known near-term obligation from an uncertain inflow.",
+            ),
+            _static_option(
+                "sjt01_b",
+                "Spend the ₹15,000 because the customer owes more than the rent.",
+                0,
+                "Treats an uncertain receivable as available cash.",
+            ),
+            _static_option(
+                "sjt01_c",
+                "Borrow ₹12,000 immediately without confirming the receivable date.",
+                1,
+                "Creates a new cost before checking the incoming payment.",
+            ),
+            _static_option(
+                "sjt01_d",
+                "Contact the customer today to confirm a collection date, but leave the rent amount unreserved until they reply.",
+                2,
+                "Reduces receivable uncertainty but leaves the known rent obligation exposed in the meantime.",
+            ),
         ),
     ),
     (
@@ -511,10 +535,30 @@ _STATIC_DEFINITIONS: tuple[tuple[str, str, str, tuple[_StaticOption, ...]], ...]
         "You receive a ₹40,000 windfall. A high-cost debt of ₹18,000 is overdue, monthly essentials are ₹20,000, and you have no emergency buffer. What is the strongest action?",
         "reduce an expensive overdue obligation while preserving a minimum buffer",
         (
-            _static_option("sjt02_a", "Pay the ₹18,000 overdue debt and keep ₹22,000 for essentials and a buffer.", 3, "Addresses high cost while retaining roughly one month of essentials."),
-            _static_option("sjt02_b", "Spend all ₹40,000 on a discretionary purchase.", 0, "Leaves the overdue high-cost debt and no buffer."),
-            _static_option("sjt02_c", "Keep all ₹40,000 in cash and make no payment plan.", 1, "Preserves cash but leaves an expensive overdue obligation unresolved."),
-            _static_option("sjt02_d", "Pay ₹10,000 now and review the remaining ₹8,000 next month.", 2, "Reduces the debt but leaves a costly overdue balance despite available funds."),
+            _static_option(
+                "sjt02_a",
+                "Pay the ₹18,000 overdue debt and keep ₹22,000 for essentials and a buffer.",
+                3,
+                "Addresses high cost while retaining roughly one month of essentials.",
+            ),
+            _static_option(
+                "sjt02_b",
+                "Spend all ₹40,000 on a discretionary purchase.",
+                0,
+                "Leaves the overdue high-cost debt and no buffer.",
+            ),
+            _static_option(
+                "sjt02_c",
+                "Keep all ₹40,000 in cash and make no payment plan.",
+                1,
+                "Preserves cash but leaves an expensive overdue obligation unresolved.",
+            ),
+            _static_option(
+                "sjt02_d",
+                "Pay ₹10,000 now and review the remaining ₹8,000 next month.",
+                2,
+                "Reduces the debt but leaves a costly overdue balance despite available funds.",
+            ),
         ),
     ),
     (
@@ -522,10 +566,30 @@ _STATIC_DEFINITIONS: tuple[tuple[str, str, str, tuple[_StaticOption, ...]], ...]
         "A product loses ₹5,000 each month and the business has ₹35,000 cash. The fixed cash runway is 7 months if nothing changes. What is the strongest action?",
         "stop a known loss before the fixed runway is exhausted",
         (
-            _static_option("sjt03_a", "Continue unchanged because ₹35,000 covers seven months.", 0, "Uses up the runway without addressing the loss."),
-            _static_option("sjt03_b", "Set a review for month seven before changing the product.", 1, "Recognises the runway but delays action until cash is exhausted."),
-            _static_option("sjt03_c", "Reduce the ₹5,000 monthly loss before the seven-month runway ends.", 3, "Acts on the known recurring loss while there is still cash to adapt."),
-            _static_option("sjt03_d", "Borrow ₹35,000 to extend the same loss-making plan.", 2, "Adds liquidity but does not correct the recurring loss."),
+            _static_option(
+                "sjt03_a",
+                "Continue unchanged because ₹35,000 covers seven months.",
+                0,
+                "Uses up the runway without addressing the loss.",
+            ),
+            _static_option(
+                "sjt03_b",
+                "Seek a ₹35,000 loan first, then reconsider the monthly loss after the runway doubles.",
+                1,
+                "Adds debt and delays correcting the known recurring loss.",
+            ),
+            _static_option(
+                "sjt03_c",
+                "Start reducing the ₹5,000 monthly loss now and set an early stop-or-change milestone.",
+                3,
+                "Acts on the recurring loss while preserving time and cash to adapt.",
+            ),
+            _static_option(
+                "sjt03_d",
+                "Pause new spending and review the product in 30 days before choosing a loss-reduction change.",
+                2,
+                "Protects some runway and creates a near-term decision point, but delays the corrective change.",
+            ),
         ),
     ),
     (
@@ -533,10 +597,30 @@ _STATIC_DEFINITIONS: tuple[tuple[str, str, str, tuple[_StaticOption, ...]], ...]
         "A ₹60,000 loan has a ₹1,500 fee and a ₹5,500 monthly payment for 12 months. Another has a ₹500 fee and a ₹5,800 payment for 12 months; only ₹5,600 monthly cash flow is available. What is the strongest comparison?",
         "compare total cost with the payment timing that cash flow can support",
         (
-            _static_option("sjt04_a", "Choose the ₹5,800 payment because its fee is ₹1,000 lower.", 0, "Focuses on the fee and exceeds the available monthly cash flow."),
-            _static_option("sjt04_b", "Choose the ₹5,500 payment after confirming the ₹67,500 total repayment fits the budget.", 3, "Uses the lower payment and checks the complete cost."),
-            _static_option("sjt04_c", "Choose either offer because both payments are close to ₹5,600.", 1, "Treats a shortfall as harmless without checking affordability."),
-            _static_option("sjt04_d", "Compare only the two fees before choosing the lower fee.", 2, "Compares a real cost but ignores payment timing and total repayment."),
+            _static_option(
+                "sjt04_a",
+                "Choose the ₹5,800 payment because its fee is ₹1,000 lower.",
+                0,
+                "Focuses on the fee and exceeds the available monthly cash flow.",
+            ),
+            _static_option(
+                "sjt04_b",
+                "Choose the ₹5,500 payment after confirming the ₹67,500 total repayment fits the budget.",
+                3,
+                "Uses the lower payment and checks the complete cost.",
+            ),
+            _static_option(
+                "sjt04_c",
+                "Choose either offer because both payments are close to ₹5,600.",
+                1,
+                "Treats a shortfall as harmless without checking affordability.",
+            ),
+            _static_option(
+                "sjt04_d",
+                "Prefer the ₹5,500 payment because it fits monthly cash flow, but do not compare total repayment.",
+                2,
+                "Checks payment affordability but leaves the complete borrowing cost untested.",
+            ),
         ),
     ),
 )
@@ -632,7 +716,10 @@ def _validate_instrument_integrity(
         value_names = [value.name for value in item.issued_values]
         if len(set(value_names)) != len(value_names):
             raise AssertionError("objective issued value names must be unique")
-        if item.answer_min > item.correct_answer or item.correct_answer > item.answer_max:
+        if (
+            item.answer_min > item.correct_answer
+            or item.correct_answer > item.answer_max
+        ):
             raise AssertionError("objective answer is outside its private bounds")
 
     static_ids = [item.presentation_id for item in static_items]
@@ -645,7 +732,9 @@ def _validate_instrument_integrity(
         if len(option_ids) != 4 or len(set(option_ids)) != 4:
             raise AssertionError("each static SJT must have four unique option IDs")
         if len(set(labels)) != 4 or set(points) != {0, 1, 2, 3}:
-            raise AssertionError("each static SJT must have four distinct rubric levels")
+            raise AssertionError(
+                "each static SJT must have four distinct rubric levels"
+            )
 
     behavior_ids = [item.presentation_id for item in behavior_items]
     if len(set(behavior_ids)) != len(behavior_ids):
@@ -657,11 +746,19 @@ def _validate_instrument_integrity(
     for item in behavior_items:
         labels = [option.label for option in item.options]
         option_ids = [option.option_id for option in item.options]
-        if set(labels) != expected_labels or len(option_ids) != 6 or len(set(option_ids)) != 6:
-            raise AssertionError("each behavior item must expose the six canonical values")
+        if (
+            set(labels) != expected_labels
+            or len(option_ids) != 6
+            or len(set(option_ids)) != 6
+        ):
+            raise AssertionError(
+                "each behavior item must expose the six canonical values"
+            )
 
     if narrative.max_length != 1000 or not narrative.prompt.strip():
-        raise AssertionError("narrative configuration must use the public 1000-character limit")
+        raise AssertionError(
+            "narrative configuration must use the public 1000-character limit"
+        )
 
 
 @dataclass(frozen=True)
@@ -699,7 +796,9 @@ class CanonicalInstrumentForm:
     def objective_answer_key(self) -> dict[str, int]:
         """Return a defensive server-side copy of the exact objective key."""
 
-        return {item.presentation_id: item.correct_answer for item in self.objective_items}
+        return {
+            item.presentation_id: item.correct_answer for item in self.objective_items
+        }
 
     def static_rubric(self) -> dict[str, dict[str, int]]:
         """Return a defensive server-side copy of the static SJT rubric."""
@@ -713,7 +812,8 @@ class CanonicalInstrumentForm:
 
     def canonical_item_ids(self) -> frozenset[str]:
         return frozenset(
-            item.presentation_id for item in (*self.objective_items, *self.static_sjt_items)
+            item.presentation_id
+            for item in (*self.objective_items, *self.static_sjt_items)
         )
 
     def behavior_item_ids(self) -> frozenset[str]:
@@ -824,7 +924,9 @@ class CanonicalInstrumentForm:
 
         mapping = self._require_mapping(responses, "behavior_profile")
         behavior_items = self._behavior_by_id()
-        self._validate_exact_keys(mapping, frozenset(behavior_items), "behavior_profile")
+        self._validate_exact_keys(
+            mapping, frozenset(behavior_items), "behavior_profile"
+        )
         validated: dict[str, str] = {}
         for item_id, raw_option_id in mapping.items():
             if not isinstance(item_id, str) or item_id not in behavior_items:
@@ -850,13 +952,23 @@ class CanonicalInstrumentForm:
         """Validate a Phase 1 submission without scoring profile or narrative."""
 
         response_mapping = self._require_mapping(responses, "responses")
-        self._validate_exact_keys(response_mapping, self.canonical_item_ids(), "responses")
+        self._validate_exact_keys(
+            response_mapping, self.canonical_item_ids(), "responses"
+        )
         objective_ids = frozenset(item.presentation_id for item in self.objective_items)
         objective_values = self.validate_objective_responses(
-            {key: value for key, value in response_mapping.items() if key in objective_ids}
+            {
+                key: value
+                for key, value in response_mapping.items()
+                if key in objective_ids
+            }
         )
         static_values = self.validate_static_sjt_responses(
-            {key: value for key, value in response_mapping.items() if key not in objective_ids}
+            {
+                key: value
+                for key, value in response_mapping.items()
+                if key not in objective_ids
+            }
         )
         behavior_values = self.validate_behavior_profile(behavior_profile)
         if narrative is not None:
@@ -917,7 +1029,9 @@ def generate_form(seed: int) -> CanonicalInstrumentForm:
     objective_items = _build_objective_items(seed)
     static_items = _build_static_items(seed)
     behavior_items = _build_behavior_items(seed)
-    _validate_instrument_integrity(objective_items, static_items, behavior_items, _NARRATIVE)
+    _validate_instrument_integrity(
+        objective_items, static_items, behavior_items, _NARRATIVE
+    )
     return CanonicalInstrumentForm(
         seed=seed,
         objective_items=objective_items,

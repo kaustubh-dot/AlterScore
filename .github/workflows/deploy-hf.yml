@@ -27,14 +27,16 @@ jobs:
       ALTERSCORE_SIGNING_SECRET: ${{ secrets.ALTERSCORE_SIGNING_SECRET }}
       HF_SPACE_REPO: https://huggingface.co/spaces/coolbot22/alterscore-backend
       BACKEND_URL: https://coolbot22-alterscore-backend.hf.space
-      FRONTEND_URL: ${{ vars.ALTERSCORE_FRONTEND_URL }}
+      # The reviewed public target is code-owned. A mutable repository variable
+      # must not redirect smoke verification to an unrelated deployment.
+      FRONTEND_URL: https://alterscore.vercel.app
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
       RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
     steps:
       - name: Checkout the exact CI commit
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 1
@@ -66,7 +68,7 @@ jobs:
           esac
 
       - name: Set up Python 3.12
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.12"
 
@@ -77,7 +79,7 @@ jobs:
           python scripts/ci/smoke_release.py --base-url "$BACKEND_URL" --preflight-signing
 
       - name: Set up Node.js 20.19.0
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "20.19.0"
           cache: npm
@@ -120,14 +122,20 @@ jobs:
         run: |
           set -euo pipefail
           npx --yes vercel@54.21.1 link --project "$VERCEL_PROJECT_ID" --scope "$VERCEL_ORG_ID" --token "$VERCEL_TOKEN" --yes
-          npx --yes vercel@54.21.1 deploy dist --prod --scope "$VERCEL_ORG_ID" --token "$VERCEL_TOKEN" --yes
+          DEPLOYED_FRONTEND_URL="$(npx --yes vercel@54.21.1 deploy dist --prod --scope "$VERCEL_ORG_ID" --token "$VERCEL_TOKEN" --yes)"
+          case "$DEPLOYED_FRONTEND_URL" in
+            (https://*) ;;
+            (*) echo "Vercel did not return an HTTPS deployment URL" >&2; exit 1 ;;
+          esac
+          printf 'DEPLOYED_FRONTEND_URL=%s\n' "$DEPLOYED_FRONTEND_URL" >> "$GITHUB_ENV"
 
       - name: Run post-deploy v2 smoke checks
         shell: bash
         run: |
           set -euo pipefail
           for attempt in $(seq 1 30); do
-            if python scripts/ci/smoke_release.py --base-url "$BACKEND_URL" --frontend-url "$FRONTEND_URL" --expected-release-sha "$RELEASE_SHA"; then
+            if python scripts/ci/smoke_release.py --base-url "$BACKEND_URL" --frontend-url "$DEPLOYED_FRONTEND_URL" --expected-release-sha "$RELEASE_SHA" &&
+               python scripts/ci/smoke_release.py --base-url "$BACKEND_URL" --frontend-url "$FRONTEND_URL" --expected-release-sha "$RELEASE_SHA"; then
               exit 0
             fi
             if [ "$attempt" -lt 30 ]; then sleep 20; fi
@@ -138,38 +146,18 @@ jobs:
       - name: Record verified release manifest
         shell: bash
         run: |
-          python - <<'PY'
-          import json
-          import os
-          from datetime import datetime, timezone
-          from pathlib import Path
-
-          release_sha = os.environ["RELEASE_SHA"]
-          manifest = {
-              "source_sha": release_sha,
-              "frontend_release_sha": release_sha,
-              "backend_release_sha": release_sha,
-              "contract_version": "2.0",
-              "assessment_version": "india-en-3.0.0",
-              "scoring_policy_version": "readiness-rubric-1.0.0",
-              "frontend_url": os.environ["FRONTEND_URL"],
-              "backend_url": os.environ["BACKEND_URL"],
-              "backend_package_commit": os.environ["BACKEND_PACKAGE_COMMIT"],
-              "signing_key_version": os.environ["SIGNING_KEY_VERSION"],
-              "smoke_status": "passed",
-              "workflow_run_url": (
-                  f"{os.environ['GITHUB_SERVER_URL']}/{os.environ['GITHUB_REPOSITORY']}"
-                  f"/actions/runs/{os.environ['GITHUB_RUN_ID']}"
-              ),
-              "recorded_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-          }
-          destination = Path(os.environ["RUNNER_TEMP"]) / "release-manifest.json"
-          destination.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
-          print(destination)
-          PY
+          python scripts/ci/write_release_manifest.py \
+            --output "$RUNNER_TEMP/release-manifest.json" \
+            --source-sha "$RELEASE_SHA" \
+            --frontend-url "$FRONTEND_URL" \
+            --frontend-deployment-url "$DEPLOYED_FRONTEND_URL" \
+            --backend-url "$BACKEND_URL" \
+            --backend-package-commit "$BACKEND_PACKAGE_COMMIT" \
+            --signing-key-version "$SIGNING_KEY_VERSION" \
+            --workflow-run-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
 
       - name: Retain verified release manifest
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: release-manifest-${{ github.event.workflow_run.head_sha }}
           path: ${{ runner.temp }}/release-manifest.json

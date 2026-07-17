@@ -35,13 +35,16 @@ def test_definition_has_three_structured_stages_and_nine_unique_options() -> Non
     assert [stage.stage_index for stage in definition.stages] == [1, 2, 3]
     assert all(stage.prompt for stage in definition.stages)
     assert all(len(stage.options) == 3 for stage in definition.stages)
-    assert len(
-        {
-            option.option_id
-            for stage in definition.stages
-            for option in stage.options
-        }
-    ) == 9
+    assert (
+        len(
+            {
+                option.option_id
+                for stage in definition.stages
+                for option in stage.options
+            }
+        )
+        == 9
+    )
 
     for stage in definition.stages:
         presentation = stage.presentation()
@@ -50,8 +53,7 @@ def test_definition_has_three_structured_stages_and_nine_unique_options() -> Non
         assert presentation["prompt"] == stage.prompt
         assert len(presentation["options"]) == 3
         assert all(
-            set(option) == {"option_id", "label"}
-            for option in presentation["options"]
+            set(option) == {"option_id", "label"} for option in presentation["options"]
         )
 
 
@@ -75,7 +77,9 @@ def test_all_27_paths_are_reachable_with_valid_timeline_states_and_scores() -> N
         previous = result.starting_state
         for expected_stage, evidence in enumerate(result.timeline, start=1):
             stage = definition.stages[expected_stage - 1]
-            assert evidence.scenario_presentation_id == definition.scenario_presentation_id
+            assert (
+                evidence.scenario_presentation_id == definition.scenario_presentation_id
+            )
             assert evidence.stage_index == expected_stage
             assert evidence.presentation_id == stage.presentation_id
             assert evidence.state_before == previous
@@ -92,8 +96,7 @@ def test_all_27_paths_are_reachable_with_valid_timeline_states_and_scores() -> N
 
         assert result.timeline[-1].state_after == result.terminal_state
         assert all(
-            isinstance(value, Fraction)
-            and Fraction(0) <= value <= Fraction(100)
+            isinstance(value, Fraction) and Fraction(0) <= value <= Fraction(100)
             for value in result.dimensions.as_dict().values()
         )
         assert isinstance(result.scenario_score, Fraction)
@@ -123,3 +126,37 @@ def test_option_applications_are_pure_and_repeatable() -> None:
             assert original == definition.starting_state
             assert first == second
             _assert_state_domain(first)
+
+
+def test_partial_essentials_deferral_pays_the_non_deferred_amount() -> None:
+    definition = build_emi_supplier_scenario()
+    result = run_scenario(
+        definition,
+        (
+            "emi_pay_from_cash",
+            "essentials_defer_to_commitment",
+            "supplier_decline",
+        ),
+    )
+    essentials_stage = result.timeline[1]
+
+    assert essentials_stage.state_before.cash_available == 600
+    assert essentials_stage.state_before.essential_expenses == 450
+    assert essentials_stage.state_after.cash_available == 300
+    assert essentials_stage.state_after.essential_expenses == 0
+    assert essentials_stage.state_after.unfunded_commitments == 350
+    assert essentials_stage.state_delta.cash_available == -300
+    assert essentials_stage.state_delta.unfunded_commitments == 150
+
+
+def test_branching_prompts_disclose_the_quantitative_decision_context() -> None:
+    definition = build_emi_supplier_scenario()
+    prompts = " ".join(stage.prompt for stage in definition.stages)
+    labels = " ".join(
+        option.label for stage in definition.stages for option in stage.options
+    )
+
+    for fact in ("1,000", "900", "250", "450", "200"):
+        assert fact in prompts
+    assert "pays 300 units" in prompts
+    assert "carry 150 units" in labels

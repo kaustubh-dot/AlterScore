@@ -33,7 +33,8 @@ assessments.
 | --- | --- |
 | `Dockerfile` | Allow-listed v2 serving image |
 | `.dockerignore` | Build-context defense in depth |
-| `backend/requirements.txt` | Serving-only dependencies |
+| `backend/requirements.txt` | Human-reviewed direct serving dependencies |
+| `backend/requirements.lock` | Hash-locked Linux production serving environment |
 | `frontend/.env.production` | Public frontend API base URL |
 | `.github/workflows/deploy-hf.yml` | Trusted CI-gated paired-release authority with verified manifest retention |
 

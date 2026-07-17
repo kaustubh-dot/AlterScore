@@ -11,6 +11,7 @@ from pathlib import Path
 
 
 SHA_PATTERN = re.compile(r"[0-9a-f]{40}")
+SIGNING_KEY_VERSION_PATTERN = re.compile(r"[A-Za-z0-9._:-]{1,100}")
 CONTRACT_VERSION = "2.0"
 ASSESSMENT_VERSION = "india-en-3.0.0"
 SCORING_POLICY_VERSION = "readiness-rubric-1.0.0"
@@ -32,9 +33,12 @@ def _git(source_root: Path, *arguments: str) -> subprocess.CompletedProcess[str]
             capture_output=True,
             encoding="utf-8",
             text=True,
+            timeout=15,
         )
     except OSError as error:
         raise ValueError("release source must be a Git checkout") from error
+    except subprocess.TimeoutExpired as error:
+        raise ValueError("timed out while inspecting release source") from error
 
 
 def _require_exact_clean_source(
@@ -51,6 +55,10 @@ def _require_exact_clean_source(
     if root.returncode != 0 or Path(root.stdout.strip()).resolve() != source_root:
         raise ValueError("release source must be the root of a Git checkout")
 
+    dockerfile = source_root / "Dockerfile"
+    if dockerfile.is_symlink() or not dockerfile.is_file():
+        raise ValueError("release source must contain a regular Dockerfile")
+
     head = _git(source_root, "rev-parse", "HEAD")
     if head.returncode != 0 or head.stdout.strip() != release_sha:
         raise ValueError("release SHA must match the checked-out Git commit")
@@ -62,6 +70,7 @@ def _require_exact_clean_source(
             "--",
             "Dockerfile",
             "backend/app",
+            "backend/requirements.lock",
             "backend/requirements.txt",
         ),
         (
@@ -71,6 +80,7 @@ def _require_exact_clean_source(
             "--",
             "Dockerfile",
             "backend/app",
+            "backend/requirements.lock",
             "backend/requirements.txt",
         ),
     ):
@@ -86,15 +96,28 @@ def _require_exact_clean_source(
         "-z",
         "--",
         "Dockerfile",
+        "backend/requirements.lock",
         "backend/requirements.txt",
         "backend/app",
     )
     if tracked.returncode != 0:
         raise ValueError("could not enumerate tracked serving inputs")
     tracked_names = tuple(name for name in tracked.stdout.split("\0") if name)
-    required_names = {"Dockerfile", "backend/requirements.txt"}
+    required_names = {
+        "Dockerfile",
+        "backend/requirements.lock",
+        "backend/requirements.txt",
+    }
     if not required_names.issubset(tracked_names):
         raise ValueError("Dockerfile and backend requirements must be Git tracked")
+
+    tracked_dockerfile = _git(source_root, "ls-files", "--stage", "--", "Dockerfile")
+    if tracked_dockerfile.returncode != 0 or any(
+        line.split(maxsplit=1)[0] == "120000"
+        for line in tracked_dockerfile.stdout.splitlines()
+        if line.strip()
+    ):
+        raise ValueError("Dockerfile must be a tracked regular file")
 
     modules: list[Path] = []
     for name in tracked_names:
@@ -123,20 +146,24 @@ def _copy_serving_application(
     source_backend = source_root / "backend"
     source_app = source_backend / "app"
     requirements = source_backend / "requirements.txt"
+    requirements_lock = source_backend / "requirements.lock"
     if (
         not source_app.is_dir()
         or source_app.is_symlink()
         or not requirements.is_file()
         or requirements.is_symlink()
+        or not requirements_lock.is_file()
+        or requirements_lock.is_symlink()
     ):
         raise ValueError(
-            "source root must contain regular backend/app and requirements.txt"
+            "source root must contain regular backend/app and requirement files"
         )
 
     destination_backend = output_dir / "backend"
     destination_app = destination_backend / "app"
     destination_backend.mkdir(parents=True)
     shutil.copy2(requirements, destination_backend / "requirements.txt")
+    shutil.copy2(requirements_lock, destination_backend / "requirements.lock")
 
     for source_path in modules:
         if source_path.is_symlink() or not source_path.is_file():
@@ -155,8 +182,8 @@ def prepare_package(
     source_root: Path, output_dir: Path, release_sha: str, signing_key_version: str
 ) -> None:
     release_sha = _validate_sha(release_sha)
-    if not signing_key_version or any(char in signing_key_version for char in "\r\n"):
-        raise ValueError("signing key version must be a non-empty single line")
+    if SIGNING_KEY_VERSION_PATTERN.fullmatch(signing_key_version or "") is None:
+        raise ValueError("signing key version must be a safe non-empty reference")
     if output_dir.exists():
         raise ValueError(
             f"refusing to overwrite existing output directory: {output_dir}"

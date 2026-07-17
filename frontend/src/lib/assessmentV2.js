@@ -1,3 +1,10 @@
+import { FRONTEND_RELEASE_SHA } from './releaseMetadata.js';
+import {
+  getSessionStorage as getSafeSessionStorage,
+  removeStorageItem,
+  writeStorageItem,
+} from './safeStorage.js';
+
 export const V2_CONTRACT = Object.freeze({
   contract_version: '2.0',
   assessment_version: 'india-en-3.0.0',
@@ -620,7 +627,7 @@ export function isV2Explanation(explanation, result) {
 function hasV2ResultCore(result) {
   return hasExactVersions(result)
     && hasOpaqueId(result.request_id, 'req')
-    && hasRequiredString(result.release_sha)
+    && result.release_sha === FRONTEND_RELEASE_SHA
     && hasOpaqueId(result.result_id, 'result')
     && hasOpaqueId(result.attempt_id, 'attempt')
     && hasTimestampLifecycle(result, V2_RESULT_TTL_MS)
@@ -669,7 +676,7 @@ export function isV2SignedResultSummary(result) {
   return hasExactKeys(result, SIGNED_SUMMARY_KEYS)
     && hasExactVersions(result)
     && hasOpaqueId(result.request_id, 'req')
-    && hasRequiredString(result.release_sha)
+    && result.release_sha === FRONTEND_RELEASE_SHA
     && hasOpaqueId(result.result_id, 'result')
     && hasOpaqueId(result.attempt_id, 'attempt')
     && hasTimestampLifecycle(result, V2_RESULT_TTL_MS)
@@ -750,8 +757,7 @@ export function toSignedResultSummary(result) {
 
 function getSessionStorage(storage) {
   if (storage) return storage;
-  if (typeof window === 'undefined') return null;
-  return window.sessionStorage;
+  return getSafeSessionStorage();
 }
 
 export function saveSignedResult(result, now = Date.now(), storage) {
@@ -764,17 +770,16 @@ export function saveSignedResult(result, now = Date.now(), storage) {
   }
 
   const expiresAt = parseCanonicalTimestamp(result.expires_at);
-  targetStorage.setItem(V2_RESULT_STORAGE_KEY, JSON.stringify({
+  return writeStorageItem(targetStorage, V2_RESULT_STORAGE_KEY, JSON.stringify({
     stored_at: storedAt,
     expires_at: expiresAt,
     result,
   }));
-  return true;
 }
 
 export function clearSignedResult(storage) {
   const targetStorage = getSessionStorage(storage);
-  targetStorage?.removeItem(V2_RESULT_STORAGE_KEY);
+  removeStorageItem(targetStorage, V2_RESULT_STORAGE_KEY);
 }
 
 export function getStoredSignedResult(now = Date.now(), storage) {

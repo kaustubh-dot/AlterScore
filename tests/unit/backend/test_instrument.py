@@ -39,12 +39,18 @@ def _independent_answer(item) -> int:
     if item.concept == "borrowing_cost_comparison":
         total_a = (
             values["principal"]
-            + values["principal"] * values["offer_a_rate_percent"] * values["term_years"] // 100
+            + values["principal"]
+            * values["offer_a_rate_percent"]
+            * values["term_years"]
+            // 100
             + values["offer_a_fee"]
         )
         total_b = (
             values["principal"]
-            + values["principal"] * values["offer_b_rate_percent"] * values["term_years"] // 100
+            + values["principal"]
+            * values["offer_b_rate_percent"]
+            * values["term_years"]
+            // 100
             + values["offer_b_fee"]
         )
         assert total_a == values["offer_a_total_repayment"]
@@ -52,7 +58,10 @@ def _independent_answer(item) -> int:
         assert total_a != total_b
         return total_b - total_a
     if item.concept == "discount_price":
-        return values["marked_price"] - values["marked_price"] * values["discount_rate_percent"] // 100
+        return (
+            values["marked_price"]
+            - values["marked_price"] * values["discount_rate_percent"] // 100
+        )
     if item.concept == "inflation_price":
         return values["current_price"] * (100 + values["inflation_rate_percent"]) // 100
     if item.concept == "due_date_shortfall":
@@ -102,7 +111,9 @@ def test_registry_contains_eight_objective_generators_and_complete_form() -> Non
     assert len(form.objective_items) == 8
     assert len(form.static_sjt_items) == 4
     assert len(form.behavior_profile_items) == 6
-    assert {item.response_kind for item in form.to_public_model().items[:8]} == {"integer"}
+    assert {item.response_kind for item in form.to_public_model().items[:8]} == {
+        "integer"
+    }
     assert tuple(BEHAVIOR_VALUES) == (
         "Never",
         "Rarely",
@@ -120,16 +131,24 @@ def test_thousands_of_seeded_forms_recompute_independently() -> None:
         for item in form.objective_items:
             values = _issued(item)
             assert values
-            assert all(isinstance(value, int) and not isinstance(value, bool) for value in values.values())
+            assert all(
+                isinstance(value, int) and not isinstance(value, bool)
+                for value in values.values()
+            )
             assert item.correct_answer == _independent_answer(item)
             assert item.answer_min <= item.correct_answer <= item.answer_max
             assert item.correct_answer >= 0
 
         borrowing = next(
-            item for item in form.objective_items if item.concept == "borrowing_cost_comparison"
+            item
+            for item in form.objective_items
+            if item.concept == "borrowing_cost_comparison"
         )
         borrowing_values = _issued(borrowing)
-        assert borrowing_values["offer_a_total_repayment"] != borrowing_values["offer_b_total_repayment"]
+        assert (
+            borrowing_values["offer_a_total_repayment"]
+            != borrowing_values["offer_b_total_repayment"]
+        )
 
 
 def test_same_seed_is_deterministic_and_distinct_seeds_vary() -> None:
@@ -142,15 +161,25 @@ def test_same_seed_is_deterministic_and_distinct_seeds_vary() -> None:
     assert first.serialize_public() == second.serialize_public()
 
     objective_variants = {
-        tuple((item.concept, item.prompt, item.correct_answer) for item in generate_form(seed).objective_items)
+        tuple(
+            (item.concept, item.prompt, item.correct_answer)
+            for item in generate_form(seed).objective_items
+        )
         for seed in range(40)
     }
     assert len(objective_variants) > 1
     for index in range(8):
-        assert len({
-            tuple(item.issued_values)
-            for item in (generate_form(seed).objective_items[index] for seed in range(40))
-        }) > 1
+        assert (
+            len(
+                {
+                    tuple(item.issued_values)
+                    for item in (
+                        generate_form(seed).objective_items[index] for seed in range(40)
+                    )
+                }
+            )
+            > 1
+        )
 
 
 def test_objective_boundaries_are_exact_and_no_tolerance_credit_exists() -> None:
@@ -226,10 +255,28 @@ def test_static_sjt_normalization_is_exact() -> None:
             points = normalized[item.presentation_id]
             points_seen.add(points)
             assert points == rubric[item.presentation_id][option.option_id]
-            assert form.static_sjt_score(item.presentation_id, option.option_id) == Fraction(
-                100 * points, 3
-            )
+            assert form.static_sjt_score(
+                item.presentation_id, option.option_id
+            ) == Fraction(100 * points, 3)
         assert points_seen == {0, 1, 2, 3}
+
+
+def test_static_sjt_partial_credit_tracks_increasing_decision_quality() -> None:
+    form = generate_form(314)
+    items = {item.presentation_id: item for item in form.static_sjt_items}
+
+    receivable = {option.option_id: option for option in items["static_sjt_01"].options}
+    assert receivable["sjt01_d"].rubric_points == 2
+    assert "confirm a collection date" in receivable["sjt01_d"].label
+    assert "due date passes" not in receivable["sjt01_d"].label
+
+    runway = {option.option_id: option for option in items["static_sjt_03"].options}
+    assert runway["sjt03_b"].rubric_points == 1
+    assert "loan first" in runway["sjt03_b"].label
+    assert runway["sjt03_d"].rubric_points == 2
+    assert "30 days" in runway["sjt03_d"].label
+    assert runway["sjt03_c"].rubric_points == 3
+    assert "Start reducing" in runway["sjt03_c"].label
 
 
 def test_sanitized_serialization_is_an_exact_public_allowlist() -> None:
@@ -309,7 +356,10 @@ def test_public_models_reject_server_only_fields() -> None:
 
 
 def test_narrative_config_is_frozen_to_the_public_1000_character_limit() -> None:
-    assert NarrativeConfig(enabled=True, prompt="Optional", max_length=1000).max_length == 1000
+    assert (
+        NarrativeConfig(enabled=True, prompt="Optional", max_length=1000).max_length
+        == 1000
+    )
 
     with pytest.raises(ValidationError):
         NarrativeConfig.model_validate(
@@ -338,7 +388,10 @@ def test_catalog_integrity_rejects_cross_category_presentation_id_collisions(
     static_items = form.static_sjt_items
     behavior_items = form.behavior_profile_items
     if collision_target == "static":
-        static_items = (replace(static_items[0], presentation_id=duplicate_id), *static_items[1:])
+        static_items = (
+            replace(static_items[0], presentation_id=duplicate_id),
+            *static_items[1:],
+        )
     else:
         behavior_items = (
             replace(behavior_items[0], presentation_id=duplicate_id),

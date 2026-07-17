@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from ipaddress import ip_address
 
 from fastapi import APIRouter, Header, Request
 from fastapi.responses import JSONResponse
@@ -46,7 +47,23 @@ def _service(request: Request) -> AnonymousAssessmentService:
     return service
 
 
-def _require_secure_transport(request: Request) -> None:
+_LOCAL_ENVIRONMENTS = frozenset({"local", "test", "development"})
+
+
+def _is_loopback_host(value: object) -> bool:
+    if not isinstance(value, str) or not value:
+        return False
+    if value.casefold() == "localhost":
+        return True
+    try:
+        return ip_address(value).is_loopback
+    except ValueError:
+        return False
+
+
+def _require_secure_transport(
+    request: Request, service: AnonymousAssessmentService
+) -> None:
     """Keep issued and submitted bearer tokens off plaintext connections.
 
     The ASGI server or an explicitly configured, trusted TLS proxy must set
@@ -54,11 +71,22 @@ def _require_secure_transport(request: Request) -> None:
     client-supplied forwarded header here.
     """
 
-    if request.url.scheme.lower() != "https":
-        raise V2DomainError("malformed_request", 400, {"fields": ["transport"]})
+    if request.url.scheme.lower() == "https":
+        return
+
+    # Ordinary local development runs Vite and Uvicorn on the loopback
+    # interface. Permit that narrow non-production case so the documented
+    # startup commands form a usable end-to-end environment. Remote and every
+    # production-like plaintext request still fail closed.
+    network_host = getattr(request.state, "phase4_network_host", None)
+    if service.environment in _LOCAL_ENVIRONMENTS and _is_loopback_host(network_host):
+        return
+    raise V2DomainError("malformed_request", 400, {"fields": ["transport"]})
 
 
-def _error_response(error: V2DomainError, request_id: str | None = None) -> JSONResponse:
+def _error_response(
+    error: V2DomainError, request_id: str | None = None
+) -> JSONResponse:
     response = ErrorResponse(
         contract_version=CONTRACT_VERSION,
         assessment_version=ASSESSMENT_VERSION,
@@ -69,9 +97,11 @@ def _error_response(error: V2DomainError, request_id: str | None = None) -> JSON
             "details": error.details,
             "request_id": request_id or _request_id(),
             "timestamp": format_timestamp(datetime.now(timezone.utc)),
-        }
+        },
     )
-    return JSONResponse(status_code=error.status_code, content=response.model_dump(mode="json"))
+    return JSONResponse(
+        status_code=error.status_code, content=response.model_dump(mode="json")
+    )
 
 
 def _validation_fields(error: ValidationError) -> list[str]:
@@ -94,7 +124,9 @@ def _validation_fields(error: ValidationError) -> list[str]:
     return sorted(fields or {"body"})
 
 
-def _rate_limit_response(service: AnonymousAssessmentService, bucket: str, request: Request) -> JSONResponse | None:
+def _rate_limit_response(
+    service: AnonymousAssessmentService, bucket: str, request: Request
+) -> JSONResponse | None:
     host = getattr(request.state, "phase4_network_host", None)
     if not isinstance(host, str):
         host = request.client.host if request.client is not None else None
@@ -122,7 +154,7 @@ def get_form(request: Request) -> JSONResponse:
     request_id = _request_id()
     try:
         service = _service(request)
-        _require_secure_transport(request)
+        _require_secure_transport(request, service)
         limited = _rate_limit_response(service, "form", request)
         if limited is not None:
             return limited
@@ -142,7 +174,7 @@ async def post_score(
     request_id = _request_id()
     try:
         service = _service(request)
-        _require_secure_transport(request)
+        _require_secure_transport(request, service)
         limited = _rate_limit_response(service, "score", request)
         if limited is not None:
             return limited
@@ -168,13 +200,16 @@ async def post_score(
         return _error_response(V2DomainError("internal_error", 500, {}), request_id)
 
 
-@router.get(
-    "/v2/results/verify/{result_id}", response_model=VerificationResponse
-)
+@router.get("/v2/results/verify/{result_id}", response_model=VerificationResponse)
 def verify_result(request: Request, result_id: str) -> JSONResponse:
     request_id = _request_id()
     try:
-        response = _service(request).verify(result_id, request_id)
+        service = _service(request)
+        _require_secure_transport(request, service)
+        limited = _rate_limit_response(service, "verification", request)
+        if limited is not None:
+            return limited
+        response = service.verify(result_id, request_id)
         return JSONResponse(content=response.model_dump(mode="json"))
     except V2DomainError as error:
         return _error_response(error, request_id)

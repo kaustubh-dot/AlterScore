@@ -52,7 +52,7 @@ scope belongs in `SCORING_V3_LUNA_PLAN.md`.
 | 6 | Result explainability | Complete | Passed | PASSED |
 | 7 | Legacy separation and runtime cleanup | Complete | Passed | PASSED |
 | 8 | CI, deployment, and operational hardening | Complete | Passed | PASSED |
-| 9 | Final audit and handoff | Not started | Pending | NOT STARTED |
+| 9 | Final audit and handoff | Complete | Passed | PASSED |
 
 ## Initial planning checkpoint
 
@@ -3178,3 +3178,199 @@ credential, user data, deployment, or rollback was accessed.
 
 Phase 8 is `PASSED`. The immediate next action is Phase 9 final audit and
 handoff only; it is not started by this review.
+
+---
+
+## Phase 9 implementation checkpoint - final audit and handoff
+
+### Metadata
+
+- Date/time: 2026-07-17 01:23:37 +05:30.
+- Branch: `codex/scoring-production-hardening`.
+- Starting and ending HEAD: `e5e9af7b86de8a8008c08cb51079072313d02c7d`
+  (`feat: harden phase 8 release operations`).
+- Worktree status: Phase 9 changes are uncommitted and unstaged. Existing
+  tracked work and the pre-existing untracked review prompt and runtime bundle
+  were preserved.
+- Authority: the user explicitly authorized Phase 9 after the Phase 8 review.
+  This checkpoint authorizes only Codex's Phase 9 review; it does not authorize
+  deployment, rollback, commit, push, cleanup, or model-artifact generation.
+- Luna status: `READY FOR REVIEW`.
+
+### Scope completed
+
+- Added `docs/SCORING_V3_FINAL_AUDIT.md` covering architecture, claims,
+  question inventory, formulas, threat model, limitations, tests,
+  dependencies/artifacts, API migration, release operations, and future-only
+  validation.
+- Closed the audited verification-route transport/rate-limit gap, bound
+  frontend result caches to the current release SHA, made browser storage
+  failures non-fatal, honored reduced-motion preferences in audited runtime
+  paths, removed untrusted upstream error details from UI messages, and added
+  HSTS on HTTPS responses.
+- Hardened release automation with concrete manifest generation, exact manifest
+  validation before rollback, CORS assertions in the smoke runner, safer
+  package inputs, Dockerfile symlink rejection, and bounded Git subprocesses.
+- Added `tests/unit/backend/test_phase9_final_audit.py` and secure API/HSTS
+  regression coverage. Updated the CI formatter gate for the new test.
+- Updated the live current-state handoff and deployment/API documentation.
+
+### Files
+
+- Added:
+  - `docs/SCORING_V3_FINAL_AUDIT.md`
+  - `frontend/src/lib/motionPreferences.js`
+  - `frontend/src/lib/safeStorage.js`
+  - `scripts/ci/validate_release_manifest.py`
+  - `scripts/ci/write_release_manifest.py`
+  - `tests/unit/backend/test_phase9_final_audit.py`
+- Modified:
+  - `.github/workflows/ci.yml`, `.github/workflows/deploy-hf.yml`,
+    `.github/workflows/rollback-release.yml`
+  - `backend/app/api/v2/router.py`, `backend/app/main.py`
+  - audited frontend storage, motion, result-cache, and error-handling files
+    plus Phase 5/6 fixtures
+  - `scripts/ci/prepare_hf_release.py`, `scripts/ci/smoke_release.py`
+  - `tests/conftest.py`, `tests/integration/api/test_phase4_secure_anonymous_api.py`
+  - `docs/DEPLOYMENT.md`, `docs/API_CONTRACTS.md`, and this tracking record
+- Preserved without modification: the pre-existing untracked review prompt,
+  ten-file runtime bundle, prior branch changes, and checked-in research/model
+  archive. No model artifact was generated or promoted.
+
+### Public behavior and contracts
+
+- Frozen versions remain `2.0`, `india-en-3.0.0`, and
+  `readiness-rubric-1.0.0`.
+- Scoring formulas, the eight objective items, four static SJTs, two branching
+  simulations, six behavior items, optional narrative boundary, explanation
+  shape, public claims, and v2 endpoint migration remain unchanged.
+- Verification now has the same trusted HTTPS and rate-limit boundary as form
+  and score issuance. It remains redacted and does not expose raw answers,
+  behavior values, narrative, or hidden rubric data.
+
+### Subagents and ownership
+
+Four Phase 9 subagents were used in parallel as read-only auditors with no file
+ownership, no Git/deployment authority, and no tracking-document authority:
+
+| Audit | Result | Luna verification |
+|---|---|---|
+| Scoring/formula and branch audit | PASS: 4,096 seeded formula checks, 54 paths, explanation and invariance checks | Reproduced through the complete backend suite and focused gates. |
+| Security/API audit | PASS on adversarial payload, replay, signature, privacy, readiness, and metadata checks; identified verification transport/rate-limit gap | Corrected router and added 19-test secure API coverage. |
+| Frontend/public-boundary audit | PASS on lint/build/bundle and v2 separation; identified stale-release cache, reduced-motion, storage, and error-fallback gaps | Corrected audited paths and reran lint/build/Phase 5-8 suites. |
+| Release/dependency audit | PASS on static release checks; identified manifest/rollback/package hardening gaps and external atomicity limitation | Added writer/validator/package/smoke hardening and documented external limitations. |
+
+No subagent edited a file concurrently, changed shared contracts, touched the
+preserved untracked paths, or performed Git, deployment, or cleanup actions.
+
+### Tests executed
+
+| Command / check | Result |
+|---|---|
+| Bundled Python full pytest with `-B -p no:cacheprovider -o "addopts=" --basetemp C:\\tmp\\alterscore-phase9-final-2 --tb=short -q` | PASS: 236 passed in 6.95s; one expected `PytestConfigWarning` for `cache_dir`. |
+| Focused secure API suite | PASS: 19 passed in 1.46s; one expected warning. |
+| Phase 9 manifest tests | PASS: 3 passed in 0.24s; one expected warning. |
+| `npm.cmd run lint` | PASS. |
+| `npm.cmd run test:phase5`, `test:phase6`, `test:phase7`, `test:phase8` | PASS: 11/7/3/4 tests. |
+| Exact-SHA `npm.cmd run build` | PASS: Vite 8.0.16; 1,842 modules transformed. |
+| `npm.cmd ci --dry-run --ignore-scripts` | PASS. |
+| `.venv312\\Scripts\\ruff.exe check backend tests scripts\\ci` | PASS. |
+| Scoped Ruff format check | PASS: 7 files already formatted. |
+| YAML parse for all four workflow files | PASS. |
+| `git diff --check` | PASS; only line-ending and inaccessible global-ignore warnings. |
+
+### Known limitations and warnings
+
+- Docker is unavailable locally; the blocking CI image build remains the
+  authoritative serving-image check.
+- Browser visual automation, live provider smoke, deployment, rollback, and
+  trusted-proxy production verification were not run. No external credential,
+  token, user data, or live target was accessed.
+- Sequential HF/Vercel publication is serialized and has compensating smoke
+  and rollback, but cannot be transactionally atomic across two providers.
+- Provider-managed GitHub Action major tags remain a future commit-pinning
+  hardening item.
+- The disabled pytest cache plugin emits the expected `cache_dir` warning.
+- The inaccessible repository `runtime/pytest-workspace` was not used for
+  scratch output; the test fixture now uses the system temp directory unless
+  `ALTERSCORE_TEST_TMP_ROOT` is explicitly configured.
+
+### Stop confirmation
+
+Phase 9 implementation is complete and handed to Codex at `READY FOR REVIEW`.
+No Phase 10 exists in the governing plan. Codex review is the next action;
+Phase 9 must not be marked `PASSED` until that review records its decision.
+
+---
+
+## Phase 9 Codex final review checkpoint
+
+### Metadata and decision
+
+- Date/time: 2026-07-17 10:20:10 +05:30.
+- Branch: `codex/scoring-production-hardening`.
+- Review base HEAD: `e5e9af7b86de8a8008c08cb51079072313d02c7d`.
+- Decision: **PASS after corrections**.
+- Scope: full Phase 1-9 scoring, API, frontend, release, documentation, and
+  legacy-boundary audit. No deployment, rollback, branch switch, reset, or
+  model-artifact generation occurred.
+
+### Independent audit evidence
+
+Three lightweight read-only subagents ran alongside the primary review:
+
+| Audit | Result | Final disposition |
+|---|---|---|
+| Scoring and anonymous API | No additional blocking defect after exhaustive tests and source review. | Accepted; primary still found and repaired one EMI transition and three SJT ordering defects during manual reasoning. |
+| Frontend and accessibility | No blocking defect; noted sound preference in `localStorage`. | Sound is an explicit non-assessment UX preference, not score/result authority. Manual browser review found and fixed the self-reflection display contract. |
+| Release, dependencies, and legacy boundary | Found mutable target/action/dependency inputs and an untracked runtime bundle. | Canonical/unique deployment origins are both smoked, Actions are SHA-pinned, production Python is hash-locked, vulnerable npm transitive dependency is updated, and the runtime bundle is preserved but ignored. |
+
+Codex was the sole writer. Subagents did not edit files, tracking records, Git
+state, deployments, credentials, or external targets.
+
+### Corrections
+
+- EMI partial deferral now subtracts 300 cash, clears 450 essential expenses,
+  and carries 150 as an unfunded commitment. Regression coverage verifies the
+  conservation result.
+- EMI and negotiation prompts now expose the complete initial and
+  path-dependent financial facts required to reason about each option.
+- Static SJT partial-credit ordering now treats unreserved late rent, borrowing
+  to extend an unchanged loss-making plan, delayed loss review, and fee-only
+  comparisons consistently with their stated principles.
+- Plaintext bearer transport is allowed only for a captured loopback host in a
+  non-production environment. Remote and production-like HTTP still fail
+  closed. HSTS is emitted across public API responses.
+- Release automation binds `https://alterscore.vercel.app` in reviewed code,
+  captures the Vercel deployment URL, smokes both origins, records both in the
+  manifest, and validates them before rollback.
+- GitHub Actions are pinned to immutable SHAs. Docker, CI, and the public HF
+  package install the same `backend/requirements.lock` with package hashes.
+- `form-data` was advanced from vulnerable 4.0.5 to 4.0.6 in the npm lock;
+  production audit is clean.
+- Self-reflection selections are shown once as unscored context, removed from
+  browser history, and excluded from retained session data and signed public
+  verification. The mandatory response copy now explains the `Not applicable`
+  choice instead of calling the profile optional.
+- `runtime/shared_session_trained_model*/` is ignored. Existing local files
+  were not deleted or modified.
+
+### Verification
+
+| Gate | Result |
+|---|---|
+| Full bundled-Python pytest | PASS: 242 tests in 8.38 s. |
+| Focused scoring/branching/API/release/final-audit pytest | PASS: 67 tests in 8.02 s. |
+| Frontend lint and Phase 5/6/7/8 tests | PASS: 11/7/3/4. |
+| Exact-SHA Vite production build | PASS: Vite 8.0.16, 1,842 modules. |
+| Ruff lint and format | PASS: full active graph lint; 15 audited files formatted. |
+| CI/deploy/rollback YAML parse | PASS. |
+| Linux CPython 3.12 hash-lock resolution | PASS with `--require-hashes` and manylinux x86-64 target. |
+| Production npm advisory audit | PASS: 0 vulnerabilities. |
+| Local browser acceptance | PASS: two complete 25-item attempts, new randomized form, repaired branch replay, signed result, behavior privacy after refresh, and 390 px responsive result. |
+| Public deployment inspection | DRIFT: canonical Vercel URL still serves the retired credit-score/model experience. No deployment was authorized. |
+| `git diff --check` | PASS; only local line-ending/global-ignore warnings. |
+
+Docker is not installed locally, so the blocking CI Docker build remains the
+image-execution gate. The implementation is release-ready, but the current
+public site remains stale until an authorized merge and paired deployment.

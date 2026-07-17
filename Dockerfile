@@ -2,9 +2,11 @@ FROM python:3.12-slim@sha256:423ed6ab25b1921a477529254bfeeabf5855151dc2c3141699a
 
 WORKDIR /code
 
-# Install only the public v2 serving runtime.
+# Install only the hash-locked public v2 serving runtime. requirements.txt is
+# retained beside the lock as the human-reviewed direct-dependency source.
 COPY backend/requirements.txt ./requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+COPY backend/requirements.lock ./requirements.lock
+RUN pip install --no-cache-dir --require-hashes -r requirements.lock
 
 # Whitelist the serving application. Research source, training scripts, and
 # model artifacts are deliberately outside the production image context.

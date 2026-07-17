@@ -7,12 +7,14 @@ import GlowCard from '../components/ui/GlowCard';
 import MagneticButton from '../components/ui/MagneticButton';
 import TextReveal from '../components/animation/TextReveal';
 import { PUBLIC_ASSESSMENT_ITEM_COUNT } from '../lib/assessmentV2';
+import { prefersReducedMotion } from '../lib/motionPreferences';
+import { getSessionStorage, readStorageItem } from '../lib/safeStorage';
 import './Landing.css';
 
 function hasCompletedPreload() {
   return (
     document.body.classList.contains('preloader-done')
-    || sessionStorage.getItem('alterscore_preloader_seen') === 'true'
+    || readStorageItem(getSessionStorage(), 'alterscore_preloader_seen') === 'true'
   );
 }
 
@@ -22,6 +24,10 @@ function useCountUp(target, duration = 1500, startCount = false) {
 
   useEffect(() => {
     if (!startCount) return;
+    if (prefersReducedMotion()) {
+      const frame = requestAnimationFrame(() => setCount(target));
+      return () => cancelAnimationFrame(frame);
+    }
     
     const isFloat = target.toString().includes('.');
     const targetVal = parseFloat(target);
@@ -208,8 +214,8 @@ export default function Landing() {
                     </div>
                     <h3 className="feature-title">Resilience & Planning</h3>
                     <p className="feature-desc">
-                      Optional behavior reflection helps you describe your habits,
-                      but it is explicitly unscored and does not change the index.
+                      Behavior reflection includes a Not applicable choice, is shown
+                      separately from evidence, and never changes the index.
                     </p>
                   </GlowCard>
                 </ScrollReveal>

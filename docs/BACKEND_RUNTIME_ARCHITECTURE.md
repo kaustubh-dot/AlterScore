@@ -47,8 +47,9 @@ public scoring.
 
 ## Production image boundary
 
-`Dockerfile` installs only `backend/requirements.txt` and copies only
-`backend/app`. `.dockerignore` excludes source, tests, model artifacts,
+`Dockerfile` installs only the hash-verified Linux `backend/requirements.lock` and
+copies only `backend/app` plus the serving dependency contract. `.dockerignore`
+excludes source, tests, model artifacts,
 research, scripts, data, and local runtime output as defense in depth. The
 research requirements file is for a separate offline environment and is never
 installed in production.

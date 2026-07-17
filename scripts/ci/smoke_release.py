@@ -31,6 +31,7 @@ class SmokeFailure(RuntimeError):
 class HttpResult:
     status: int
     payload: dict[str, Any]
+    headers: dict[str, str]
 
 
 def _json_payload(raw: bytes, label: str) -> dict[str, Any]:
@@ -50,6 +51,7 @@ def _request(
     method: str = "GET",
     payload: dict[str, Any] | None = None,
     token: str | None = None,
+    origin: str | None = None,
 ) -> HttpResult:
     body = None if payload is None else json.dumps(payload).encode("utf-8")
     headers = {"Accept": "application/json"}
@@ -57,6 +59,8 @@ def _request(
         headers["Content-Type"] = "application/json"
     if token is not None:
         headers["Authorization"] = f"Bearer {token}"
+    if origin is not None:
+        headers["Origin"] = origin
     request = Request(
         f"{base_url}{path}",
         data=body,
@@ -69,12 +73,20 @@ def _request(
         ) as response:
             raw = response.read()
             status = response.status
+            response_headers = {
+                key.lower(): value for key, value in response.headers.items()
+            }
     except HTTPError as error:
         raw = error.read()
         status = error.code
+        response_headers = {key.lower(): value for key, value in error.headers.items()}
     except (TimeoutError, URLError, OSError) as error:
         raise SmokeFailure(f"{method} {path}: network request failed") from error
-    return HttpResult(status, _json_payload(raw, f"{method} {path}"))
+    return HttpResult(
+        status,
+        _json_payload(raw, f"{method} {path}"),
+        response_headers,
+    )
 
 
 def _fetch_bytes(url: str, label: str) -> bytes:
@@ -124,6 +136,11 @@ def _require_metadata(payload: dict[str, Any], expected_sha: str, label: str) ->
     for key, value in expected.items():
         if payload.get(key) != value:
             raise SmokeFailure(f"{label}: release metadata mismatch for {key}")
+
+
+def _require_cors(result: HttpResult, origin: str, label: str) -> None:
+    if result.headers.get("access-control-allow-origin") != origin:
+        raise SmokeFailure(f"{label}: configured frontend origin was not allowed")
 
 
 def _require_status(result: HttpResult, expected: int, label: str) -> dict[str, Any]:
@@ -248,12 +265,18 @@ def require_signing_preflight(base_url: str) -> None:
 
 
 def run(base_url: str, expected_sha: str, frontend_url: str | None = None) -> None:
-    live = _require_status(_request(base_url, "/api/live"), 200, "liveness")
+    origin = frontend_url.rstrip("/") if frontend_url is not None else None
+    live_result = _request(base_url, "/api/live", origin=origin)
+    if origin is not None:
+        _require_cors(live_result, origin, "liveness")
+    live = _require_status(live_result, 200, "liveness")
     _require_metadata(live, expected_sha, "liveness")
     if frontend_url is not None:
         _require_frontend_release(frontend_url, expected_sha)
 
-    ready_result = _request(base_url, "/api/ready")
+    ready_result = _request(base_url, "/api/ready", origin=origin)
+    if origin is not None:
+        _require_cors(ready_result, origin, "readiness")
     ready = _require_status(ready_result, 200, "readiness")
     _require_metadata(ready, expected_sha, "readiness")
     checks = ready.get("checks", [])
@@ -272,11 +295,10 @@ def run(base_url: str, expected_sha: str, frontend_url: str | None = None) -> No
     ):
         raise SmokeFailure("readiness: not all serving checks passed")
 
-    form = _require_status(
-        _request(base_url, "/api/v2/assessment/form"),
-        200,
-        "form",
-    )
+    form_result = _request(base_url, "/api/v2/assessment/form", origin=origin)
+    if origin is not None:
+        _require_cors(form_result, origin, "form")
+    form = _require_status(form_result, 200, "form")
     _require_metadata(form, expected_sha, "form")
     if (
         len(form.get("items", [])) != 18
@@ -296,32 +318,36 @@ def run(base_url: str, expected_sha: str, frontend_url: str | None = None) -> No
         method="POST",
         payload=wrong_version,
         token=token,
+        origin=origin,
     )
+    if origin is not None:
+        _require_cors(version_error, origin, "version rejection")
     version_payload = _require_status(version_error, 422, "version rejection")
     if version_payload.get("error", {}).get("code") != "unsupported_version":
         raise SmokeFailure("version rejection: wrong error code")
 
-    score = _require_status(
-        _request(
-            base_url,
-            "/api/v2/assessment/score",
-            method="POST",
-            payload=submission,
-            token=token,
-        ),
-        200,
-        "score",
+    score_result = _request(
+        base_url,
+        "/api/v2/assessment/score",
+        method="POST",
+        payload=submission,
+        token=token,
+        origin=origin,
     )
+    if origin is not None:
+        _require_cors(score_result, origin, "score")
+    score = _require_status(score_result, 200, "score")
     _require_metadata(score, expected_sha, "score")
     result_id = score.get("result_id")
     if not isinstance(result_id, str) or "attempt_token" in score:
         raise SmokeFailure("score: result contract or token boundary failed")
 
-    verification = _require_status(
-        _request(base_url, f"/api/v2/results/verify/{result_id}"),
-        200,
-        "verification",
+    verification_result = _request(
+        base_url, f"/api/v2/results/verify/{result_id}", origin=origin
     )
+    if origin is not None:
+        _require_cors(verification_result, origin, "verification")
+    verification = _require_status(verification_result, 200, "verification")
     _require_metadata(verification, expected_sha, "verification")
     if "explanation" in verification or "behavior_profile" in verification:
         raise SmokeFailure("verification: redacted boundary failed")
@@ -332,7 +358,10 @@ def run(base_url: str, expected_sha: str, frontend_url: str | None = None) -> No
         method="POST",
         payload=submission,
         token=token,
+        origin=origin,
     )
+    if origin is not None:
+        _require_cors(replay, origin, "replay rejection")
     replay_payload = _require_status(replay, 409, "replay rejection")
     if replay_payload.get("error", {}).get("code") != "attempt_consumed":
         raise SmokeFailure("replay rejection: wrong error code")

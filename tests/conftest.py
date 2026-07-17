@@ -3,13 +3,13 @@ from __future__ import annotations
 import shutil
 import sys
 import tempfile
+from os import environ
 from pathlib import Path
 from typing import Iterator
 
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-TEST_TMP_ROOT = REPO_ROOT / "runtime" / "pytest-workspace"
 
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
@@ -17,10 +17,22 @@ if str(REPO_ROOT) not in sys.path:
 
 @pytest.fixture
 def tmp_path() -> Iterator[Path]:
-    """Keep test scratch inside the workspace without model generation."""
+    """Use an explicit scratch root when available without model generation."""
 
-    TEST_TMP_ROOT.mkdir(parents=True, exist_ok=True)
-    path = Path(tempfile.mkdtemp(prefix="pytest-", dir=TEST_TMP_ROOT))
+    configured_root = environ.get("ALTERSCORE_TEST_TMP_ROOT")
+    roots = (
+        [Path(configured_root)] if configured_root else [Path(tempfile.gettempdir())]
+    )
+    path = None
+    for root in roots:
+        try:
+            root.mkdir(parents=True, exist_ok=True)
+            path = Path(tempfile.mkdtemp(prefix="alterscore-pytest-", dir=root))
+            break
+        except OSError:
+            continue
+    if path is None:
+        path = Path(tempfile.mkdtemp(prefix="alterscore-pytest-"))
     try:
         yield path
     finally:

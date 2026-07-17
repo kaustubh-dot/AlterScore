@@ -30,6 +30,8 @@ jobs:
       RELEASE_SHA: ${{ inputs.release_sha }}
       CONFIRMATION: ${{ inputs.confirmation }}
       GITHUB_TOKEN: ${{ github.token }}
+      FRONTEND_URL: https://alterscore.vercel.app
+      BACKEND_URL: https://coolbot22-alterscore-backend.hf.space
     steps:
       - name: Require explicit confirmation and exact release SHA
         id: release
@@ -43,16 +45,65 @@ jobs:
           esac
           printf 'release_sha=%s\n' "$RELEASE_SHA" >> "$GITHUB_OUTPUT"
 
+      - name: Check out the requested release for manifest validation
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: ${{ inputs.release_sha }}
+          fetch-depth: 1
+
+      - name: Set up Python for manifest validation
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+
       - name: Require a verified post-smoke release manifest
         shell: bash
         run: |
           set -euo pipefail
-          artifacts="$(curl --fail --silent --show-error --retry 3 \
+          artifacts_file="$RUNNER_TEMP/release-artifacts.json"
+          curl --fail --silent --show-error --retry 3 \
             -H 'Accept: application/vnd.github+json' \
             -H "Authorization: Bearer $GITHUB_TOKEN" \
             -H 'X-GitHub-Api-Version: 2022-11-28' \
-            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/artifacts?name=release-manifest-$RELEASE_SHA&per_page=100")"
-          python -c 'import json, sys; payload=json.load(sys.stdin); expected="release-manifest-" + sys.argv[1]; artifacts=payload.get("artifacts", []); valid=any(isinstance(item, dict) and item.get("name") == expected and item.get("expired") is False and isinstance(item.get("size_in_bytes"), int) and item["size_in_bytes"] > 0 for item in artifacts); sys.exit(0 if valid else 1)' "$RELEASE_SHA" <<< "$artifacts"
+            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/artifacts?name=release-manifest-$RELEASE_SHA&per_page=100" \
+            > "$artifacts_file"
+          archive_url="$(python - "$artifacts_file" "$RELEASE_SHA" "$GITHUB_REPOSITORY" <<'PY'
+          import json
+          import sys
+
+          payload = json.load(open(sys.argv[1], encoding="utf-8"))
+          expected_name = "release-manifest-" + sys.argv[2]
+          repository = sys.argv[3]
+          for artifact in payload.get("artifacts", []):
+              workflow = artifact.get("workflow_run") or {}
+              if (
+                  artifact.get("name") == expected_name
+                  and artifact.get("expired") is False
+                  and isinstance(artifact.get("size_in_bytes"), int)
+                  and artifact["size_in_bytes"] > 0
+                  and workflow.get("head_sha") == sys.argv[2]
+                  and workflow.get("head_branch") == "main"
+                  and workflow.get("event") == "workflow_run"
+                  and artifact.get("archive_download_url")
+                  and repository
+              ):
+                  print(artifact["archive_download_url"])
+                  break
+          else:
+              raise SystemExit("no verified release-manifest artifact found")
+          PY
+          )"
+          curl --fail --silent --show-error --retry 3 -L \
+            -H 'Accept: application/vnd.github+json' \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H 'X-GitHub-Api-Version: 2022-11-28' \
+            "$archive_url" -o "$RUNNER_TEMP/release-manifest.zip"
+          python scripts/ci/validate_release_manifest.py \
+            --archive "$RUNNER_TEMP/release-manifest.zip" \
+            --release-sha "$RELEASE_SHA" \
+            --repository "$GITHUB_REPOSITORY" \
+            --frontend-url "$FRONTEND_URL" \
+            --backend-url "$BACKEND_URL"
 
   rollback:
     name: Restore matching frontend and backend release
@@ -69,10 +120,10 @@ jobs:
       ALTERSCORE_SIGNING_SECRET: ${{ secrets.ALTERSCORE_SIGNING_SECRET }}
       HF_SPACE_REPO: https://huggingface.co/spaces/coolbot22/alterscore-backend
       BACKEND_URL: https://coolbot22-alterscore-backend.hf.space
-      FRONTEND_URL: ${{ vars.ALTERSCORE_FRONTEND_URL }}
+      FRONTEND_URL: https://alterscore.vercel.app
     steps:
       - name: Checkout the verified release SHA
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           ref: ${{ needs.validate-release.outputs.release_sha }}
           fetch-depth: 1
@@ -89,11 +140,6 @@ jobs:
           test -n "$ALTERSCORE_SIGNING_SECRET"
           test -n "$FRONTEND_URL"
           test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
-
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
 
       - name: Require provider signing readiness before restoration
         shell: bash
@@ -118,7 +164,7 @@ jobs:
           git -c http.extraheader="AUTHORIZATION: Bearer $HF_TOKEN" push origin HEAD:refs/heads/main --force
 
       - name: Set up Node.js 20.19.0
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "20.19.0"
           cache: npm
@@ -138,10 +184,16 @@ jobs:
         run: |
           set -euo pipefail
           npx --yes vercel@54.21.1 link --project "$VERCEL_PROJECT_ID" --scope "$VERCEL_ORG_ID" --token "$VERCEL_TOKEN" --yes
-          npx --yes vercel@54.21.1 deploy dist --prod --scope "$VERCEL_ORG_ID" --token "$VERCEL_TOKEN" --yes
+          DEPLOYED_FRONTEND_URL="$(npx --yes vercel@54.21.1 deploy dist --prod --scope "$VERCEL_ORG_ID" --token "$VERCEL_TOKEN" --yes)"
+          case "$DEPLOYED_FRONTEND_URL" in
+            (https://*) ;;
+            (*) echo "Vercel did not return an HTTPS deployment URL" >&2; exit 1 ;;
+          esac
+          printf 'DEPLOYED_FRONTEND_URL=%s\n' "$DEPLOYED_FRONTEND_URL" >> "$GITHUB_ENV"
 
       - name: Run paired release smoke checks
         shell: bash
         run: |
           set -euo pipefail
+          python scripts/ci/smoke_release.py --base-url "$BACKEND_URL" --frontend-url "$DEPLOYED_FRONTEND_URL" --expected-release-sha "$RELEASE_SHA"
           python scripts/ci/smoke_release.py --base-url "$BACKEND_URL" --frontend-url "$FRONTEND_URL" --expected-release-sha "$RELEASE_SHA"

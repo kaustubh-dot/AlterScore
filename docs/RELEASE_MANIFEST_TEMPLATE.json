@@ -7,6 +7,7 @@
   "scoring_policy_version": "readiness-rubric-1.0.0",
   "backend_package_commit": "<provider-recorded-id>",
   "frontend_url": "https://<frontend-origin>",
+  "frontend_deployment_url": "https://<provider-deployment-origin>",
   "backend_url": "https://<backend-origin>",
   "signing_key_version": "<non-secret-key-reference>",
   "smoke_status": "passed",

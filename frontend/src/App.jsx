@@ -9,6 +9,7 @@ import Preloader from './components/ui/Preloader';
 import useLenis from './hooks/useLenis';
 import useSound from './hooks/useSound';
 import { PageTransitionProvider } from './hooks/PageTransitionContext';
+import { getSessionStorage, readStorageItem, writeStorageItem } from './lib/safeStorage';
 import './styles/global.css';
 
 const Results = lazy(() => import('./pages/Results'));
@@ -17,7 +18,7 @@ const ResearchLab = lazy(() => import('./pages/ResearchLab'));
 
 function AppContent() {
   const [showPreloader, setShowPreloader] = useState(() => {
-    return sessionStorage.getItem('alterscore_preloader_seen') !== 'true';
+    return readStorageItem(getSessionStorage(), 'alterscore_preloader_seen') !== 'true';
   });
   const location = useLocation();
   const { initAudio } = useSound();
@@ -60,7 +61,7 @@ function AppContent() {
   }, [initAudio]);
 
   const handlePreloadComplete = () => {
-    sessionStorage.setItem('alterscore_preloader_seen', 'true');
+    writeStorageItem(getSessionStorage(), 'alterscore_preloader_seen', 'true');
     setShowPreloader(false);
     document.body.style.overflow = '';
     document.body.classList.add('preloader-done');

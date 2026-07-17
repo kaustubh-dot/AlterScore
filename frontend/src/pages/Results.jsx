@@ -47,6 +47,7 @@ const STATE_LABELS = {
 };
 
 const STATE_FIELDS = Object.keys(STATE_LABELS);
+const BEHAVIOR_VALUES = new Set(['Never', 'Rarely', 'Sometimes', 'Often', 'Always', 'Not applicable']);
 
 function formatScore(value) {
   const number = Number(value);
@@ -88,9 +89,30 @@ function StateTable({ title, state, delta = false }) {
 }
 
 function getResultFromLocation(location) {
-  if (isCurrentV2DetailedResult(location.state)) return location.state;
-  if (isCurrentV2SignedResultSummary(location.state)) return location.state;
+  const candidate = location.state?.result || location.state;
+  if (isCurrentV2DetailedResult(candidate)) return candidate;
+  if (isCurrentV2SignedResultSummary(candidate)) return candidate;
   return getStoredSignedResult();
+}
+
+function getBehaviorProfileFromLocation(location) {
+  const candidate = location.state?.result;
+  const profile = location.state?.behaviorProfile;
+  if (!isCurrentV2DetailedResult(candidate) || !Array.isArray(profile) || profile.length !== 6) {
+    return null;
+  }
+  const valid = profile.every((item) => (
+    item !== null
+    && typeof item === 'object'
+    && Object.keys(item).length === 3
+    && typeof item.presentation_id === 'string'
+    && typeof item.prompt === 'string'
+    && item.prompt.trim().length > 0
+    && BEHAVIOR_VALUES.has(item.selected_value)
+  ));
+  return valid && new Set(profile.map((item) => item.presentation_id)).size === 6
+    ? profile
+    : null;
 }
 
 function ResultHeader({ children, eyebrow, title, id }) {
@@ -108,12 +130,21 @@ export default function Results() {
   const { playClick } = useSound();
   const location = useLocation();
   const [result, setResult] = useState(() => getResultFromLocation(location));
+  const [behaviorProfile] = useState(() => getBehaviorProfileFromLocation(location));
   const detailed = isV2DetailedResult(result);
   const explanation = detailed ? result.explanation : null;
 
   useEffect(() => {
     if (isV2DetailedResult(result) || isCurrentV2SignedResultSummary(result)) saveSignedResult(result);
   }, [result]);
+
+  useEffect(() => {
+    if (!behaviorProfile || !result) return;
+    const historyState = window.history.state;
+    if (historyState && typeof historyState === 'object' && Object.hasOwn(historyState, 'usr')) {
+      window.history.replaceState({ ...historyState, usr: result }, document.title);
+    }
+  }, [behaviorProfile, result]);
 
   const objectiveAnchors = useMemo(() => new Map(
     explanation?.objective_items.map((item, index) => [item.presentation_id, `objective-${index + 1}`]) || [],
@@ -395,6 +426,23 @@ export default function Results() {
             <button type="button" className="btn btn-primary" onClick={() => transitionTo('/assessment')}>
               Start a new assessment <ArrowRight size={16} aria-hidden="true" />
             </button>
+          </section>
+        )}
+
+        {detailed && behaviorProfile && (
+          <section className="results-section behavior-profile-section" aria-labelledby="behavior-profile-heading">
+            <ResultHeader eyebrow="Unscored self-report" title="Your reflection profile" id="behavior-profile-heading">
+              <p className="section-intro">These selections are displayed separately from the scored evidence. They are not compared with an answer key, do not affect either domain, and are removed from browser history after this view is opened.</p>
+            </ResultHeader>
+            <ol className="behavior-profile-list">
+              {behaviorProfile.map((item) => (
+                <li key={item.presentation_id}>
+                  <span>{item.prompt}</span>
+                  <strong>{item.selected_value}</strong>
+                </li>
+              ))}
+            </ol>
+            <p className="behavior-profile-note">Self-report can be mistaken or strategically chosen, so it is omitted from the signed verification record and the retained session result.</p>
           </section>
         )}
 

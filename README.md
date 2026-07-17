@@ -34,8 +34,9 @@ python -m uvicorn backend.app.main:app --reload --port 8000
 ```
 
 Set `ALTERSCORE_SIGNING_SECRET` to a generated base64url secret before using
-the assessment. The v2 form and score routes require HTTPS. The process probe
-is `/api/live`; readiness is `/api/ready`.
+the assessment. Remote and production-like v2 form and score requests require
+HTTPS; loopback HTTP is accepted only for local/test/development startup. The
+process probe is `/api/live`; readiness is `/api/ready`.
 
 Frontend (Node 20.19.x or >=22.12.0):
 
@@ -48,6 +49,7 @@ npm run dev
 Validation:
 
 ```bash
+python -m pip install -r backend/requirements.txt
 python -m pip install -r backend/requirements-dev.txt
 python -m pytest tests/unit/backend tests/integration/api
 cd frontend && npm run lint && VITE_RELEASE_SHA=<40-character-reviewed-sha> npm run build && npm run test:phase5 && npm run test:phase6 && npm run test:phase7 && npm run test:phase8

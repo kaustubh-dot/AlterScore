@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
+import { getLocalStorage, readStorageItem, writeStorageItem } from '../lib/safeStorage';
 
 // Singleton state to persist background classical pad loop across components/renders
 let ambientInterval = null;
 let currentPieceIndex = Math.floor(Math.random() * 6);
 let currentMeasureIndex = 0;
-const savedSoundPreference = localStorage.getItem('alterscore_sound_muted');
+const savedSoundPreference = readStorageItem(getLocalStorage(), 'alterscore_sound_muted');
 let soundMuted = savedSoundPreference === null ? true : savedSoundPreference !== 'false';
 
 const notifySoundPreference = () => {
@@ -371,7 +372,7 @@ export default function useSound() {
 
   const toggleMuted = () => {
     soundMuted = !soundMuted;
-    localStorage.setItem('alterscore_sound_muted', String(soundMuted));
+    writeStorageItem(getLocalStorage(), 'alterscore_sound_muted', String(soundMuted));
     if (soundMuted) {
       stopAmbient();
       audioCtxRef.current?.suspend?.();

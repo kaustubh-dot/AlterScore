@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { prefersReducedMotion } from '../../lib/motionPreferences';
 import './CustomCursor.css';
 
 export default function CustomCursor({ variant = 'default' }) {
@@ -33,6 +34,7 @@ export default function CustomCursor({ variant = 'default' }) {
 
     let mouseX = 0, mouseY = 0;
     let ringX = 0, ringY = 0;
+    const reducedMotion = prefersReducedMotion();
 
     // Hide the native cursor only while this component is mounted; the matching
     // `cursor: none` rule is scoped to this class.
@@ -81,7 +83,7 @@ export default function CustomCursor({ variant = 'default' }) {
 
       animationFrameId = requestAnimationFrame(render);
     };
-    render();
+    if (!reducedMotion) render();
 
     return () => {
       window.removeEventListener('mousemove', onMouseMove);
@@ -110,7 +112,7 @@ export default function CustomCursor({ variant = 'default' }) {
         ref={dotRef}
         className={`cursor-dot ${variant} ${hidden ? 'hidden' : ''} ${hovered ? 'hover' : ''} ${clicked ? 'active' : ''}`}
       />
-      {!minimal && (
+      {!minimal && !prefersReducedMotion() && (
         <div
           ref={ringRef}
           className={`cursor-ring ${variant} ${hidden ? 'hidden' : ''} ${hovered ? 'hover' : ''} ${clicked ? 'active' : ''}`}

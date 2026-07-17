@@ -15,7 +15,8 @@ public assessments.
 ## Public runtime rules
 
 - Production imports must not load archived model modules or artifacts.
-- `backend/requirements.txt` contains only public serving dependencies.
+- `backend/requirements.txt` contains only direct public serving dependencies;
+  `backend/requirements.lock` freezes their resolved hashes for release builds.
 - The Dockerfile copies only `backend/app` and never copies model files.
 - Public readiness must not depend on an artifact manifest or report.
 - No model artifact may be regenerated or promoted as part of a public v2

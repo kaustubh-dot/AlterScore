@@ -22,6 +22,7 @@ import {
   validateFormResponse,
   validateStepResponse,
 } from '../src/lib/assessmentV2.js';
+import { FRONTEND_RELEASE_SHA } from '../src/lib/releaseMetadata.js';
 import { normalizeApiBaseUrl } from '../src/lib/api.js';
 import {
   getApiErrorCode,
@@ -109,7 +110,7 @@ function makeForm() {
   return {
     ...V2_CONTRACT,
     request_id: opaqueIdentifier('req', 'test'),
-    release_sha: 'test-release',
+    release_sha: FRONTEND_RELEASE_SHA,
     attempt_id: opaqueIdentifier('attempt', 'test'),
     attempt_token: `at1.${'b'.repeat(40)}.${'c'.repeat(43)}`,
     issued_at: '2026-07-15T10:00:00Z',
@@ -261,7 +262,7 @@ function makeResult(expiresAt = '2026-07-16T10:00:00Z') {
   return {
     ...V2_CONTRACT,
     request_id: opaqueIdentifier('req', 'test'),
-    release_sha: 'test-release',
+    release_sha: FRONTEND_RELEASE_SHA,
     result_id: opaqueIdentifier('result', 'test'),
     attempt_id: opaqueIdentifier('attempt', 'test'),
     issued_at: '2026-07-15T10:00:00Z',
@@ -413,6 +414,14 @@ test('cleans malformed or expired signed-summary cache entries instead of render
   assert.equal(saveSignedResult(expired, now, storage), false);
   assert.equal(storage.getItem(V2_RESULT_STORAGE_KEY), null);
 
+  const staleRelease = toSignedResultSummary({
+    ...makeResult('2026-07-16T10:00:00Z'),
+    release_sha: '0'.repeat(40),
+  });
+  assert.equal(isV2SignedResultSummary(staleRelease), false);
+  assert.equal(saveSignedResult(staleRelease, now, storage), false);
+  assert.equal(storage.getItem(V2_RESULT_STORAGE_KEY), null);
+
   const malformed = toSignedResultSummary(makeResult());
   delete malformed.limitations;
   storage.setItem(V2_RESULT_STORAGE_KEY, JSON.stringify({
@@ -427,6 +436,8 @@ test('cleans malformed or expired signed-summary cache entries instead of render
 test('rejects insecure configured API transport before a bearer token can be attached', () => {
   assert.equal(normalizeApiBaseUrl('https://scoring.example.test'), 'https://scoring.example.test/api');
   assert.equal(normalizeApiBaseUrl('https://scoring.example.test/api'), 'https://scoring.example.test/api');
+  assert.equal(normalizeApiBaseUrl('http://localhost:8000'), 'http://localhost:8000/api');
+  assert.equal(normalizeApiBaseUrl('http://127.0.0.1:8000/api'), 'http://127.0.0.1:8000/api');
   assert.equal(normalizeApiBaseUrl('http://scoring.example.test'), null);
   assert.equal(normalizeApiBaseUrl('not a URL'), null);
 });

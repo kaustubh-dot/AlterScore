@@ -17,7 +17,9 @@ export function normalizeApiBaseUrl(rawValue) {
 
   try {
     const configuredUrl = new URL(trimmed);
-    if (configuredUrl.protocol !== 'https:') return null;
+    const loopbackHttp = configuredUrl.protocol === 'http:'
+      && ['localhost', '127.0.0.1', '[::1]'].includes(configuredUrl.hostname);
+    if (configuredUrl.protocol !== 'https:' && !loopbackHttp) return null;
     return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`;
   } catch {
     return null;
@@ -41,7 +43,8 @@ function getSecureApiTransportError() {
   if (apiConfigurationError) return apiConfigurationError;
   if (API_BASE_URL.startsWith('/')
     && typeof window !== 'undefined'
-    && window.location.protocol !== 'https:') {
+    && window.location.protocol !== 'https:'
+    && !['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname)) {
     return new Error('The assessment API requires HTTPS before an attempt token can be sent.');
   }
   return null;

@@ -5,8 +5,7 @@ export function formatApiError(error, fallbackMessage = 'Request failed.') {
   }
 
   if (error?.response) {
-    const { status, statusText, data } = error.response;
-    const details = data?.detail;
+    const { status, statusText } = error.response;
     const code = getApiErrorCode(error);
 
     if (code === 'unsupported_version') {
@@ -29,23 +28,14 @@ export function formatApiError(error, fallbackMessage = 'Request failed.') {
     }
 
     if (status === 422) {
-      if (Array.isArray(details)) {
-        return `Validation failed: ${details.map((item) => {
-          const path = Array.isArray(item?.loc) ? item.loc.slice(1).join('.') : 'request';
-          return `${path}: ${item?.msg ?? 'invalid value'}`;
-        }).join(', ')}`;
-      }
-      if (typeof details === 'string') {
-        return `Validation failed: ${details}`;
-      }
+      return 'The submitted request was invalid. Please request a fresh form.';
     }
 
-    const apiMessage = data?.error?.message || data?.message;
-    if (typeof apiMessage === 'string' && apiMessage.trim()) {
-      return apiMessage;
+    if (status >= 400 && status < 500) {
+      return `Request could not be completed (Status: ${status}).`;
     }
 
-    return `Server error: ${statusText || fallbackMessage} (Status: ${status})`;
+    return `Server error: ${statusText ? 'The scoring service returned an error' : fallbackMessage} (Status: ${status})`;
   }
 
   if (isTimeoutError(error)) {

@@ -2,7 +2,7 @@
 
 AlterScore releases the public FastAPI v2 service and React SPA as one
 coherent release. Deployment is only invoked by the CI-gated workflow or an
-explicitly authorized manual rollback; this Phase 8 pass does not deploy.
+explicitly authorized manual rollback; this Phase 9 audit did not deploy.
 
 ## Release identity
 
@@ -43,7 +43,7 @@ ALTERSCORE_CORS_ORIGINS=https://alterscore.vercel.app
 ## CI and deployment gates
 
 `AlterScore CI` is blocking for Python quality, frontend lint, the production
-release-SHA gate, the Phase 5–8 frontend tests, the complete backend suite,
+release-SHA gate, the Phase 5–9 frontend tests, the complete backend suite,
 the serving-image build, and the frozen release-contract scan.
 
 `deploy-hf.yml` accepts only a successful trusted `push` run from this
@@ -57,8 +57,9 @@ treated as a successful skip.
 The trusted release workflow builds and promotes the Vercel production bundle
 from the same reviewed SHA with `VITE_RELEASE_SHA` set to that SHA. Disable
 provider-side Git auto-promotion for the production Vercel target; the
-workflow is the deployment authority. Configure `ALTERSCORE_FRONTEND_URL` as a
-repository variable for the paired post-deploy parity check.
+workflow is the deployment authority. The canonical production target is
+bound in the reviewed workflow, while the Vercel CLI's unique deployment URL
+is captured and smoke-tested independently before the canonical alias.
 
 The Vercel CLI is version-pinned in both forward deployment and rollback so a
 mutable `latest` package is not executed with production credentials.
@@ -111,9 +112,11 @@ post-smoke forward release.
 `rollback-release.yml` is manual only. It requires the exact SHA from a
 non-expired verified release-manifest artifact, explicit `ROLLBACK`
 confirmation, HF credentials, Vercel credentials, signing-key version, and
-the configured frontend URL. It builds the backend package and frontend from
-the same SHA, restores both targets, and runs the paired smoke checks. Use it
-only after recording the release manifest and rollback reason.
+the bound canonical frontend URL. The validation job checks manifest field parity,
+target URLs, smoke status, workflow provenance, package identity, and exact
+SHA before checkout. It builds the backend package and frontend from the same
+SHA, restores both targets, and runs the paired smoke checks. Use it only
+after recording the release manifest and rollback reason.
 
 Attempts and verification records are bounded in memory. A restart or rollback
 can invalidate in-flight attempt tokens and make prior verification links

@@ -37,6 +37,20 @@ function makeFormError(message) {
   return error;
 }
 
+function buildBehaviorProfileDisplay(form, scoreData) {
+  const promptById = new Map(
+    form.behavior_profile_items.map((item) => [item.presentation_id, item.prompt]),
+  );
+  const profile = scoreData.behavior_profile.map((selection) => ({
+    presentation_id: selection.presentation_id,
+    prompt: promptById.get(selection.presentation_id),
+    selected_value: selection.selected_value,
+  }));
+  return profile.every((selection) => typeof selection.prompt === 'string')
+    ? profile
+    : null;
+}
+
 export default function Assessment() {
   const { transitionTo } = usePageTransition();
   const { playClick, playSelect, playSuccess } = useSound();
@@ -236,7 +250,10 @@ export default function Assessment() {
 
   const handleScoreResult = (scoreData) => {
     const detailedResult = isV2ScoreResponse(scoreData) ? toV2DetailedResult(scoreData) : null;
-    if (!detailedResult || !saveSignedResult(detailedResult)) {
+    const behaviorProfile = detailedResult
+      ? buildBehaviorProfileDisplay(form, scoreData)
+      : null;
+    if (!detailedResult || !behaviorProfile || !saveSignedResult(detailedResult)) {
       actionLockRef.current = false;
       setSubmissionPayload(null);
       setIsSubmitting(false);
@@ -244,7 +261,7 @@ export default function Assessment() {
       setFormError('The server response could not be verified for this browser session. Request a fresh assessment form.');
       return;
     }
-    transitionTo('/results', { state: detailedResult });
+    transitionTo('/results', { state: { result: detailedResult, behaviorProfile } });
   };
 
   const handleSubmissionBack = () => {
@@ -352,7 +369,7 @@ export default function Assessment() {
                 </p>
                 <div className="telemetry-specs">
                   <div className="spec-item"><ShieldCheck size={16} className="spec-icon" aria-hidden="true" /><span>Server-issued numeric, judgement, and decision-simulation items</span></div>
-                  <div className="spec-item"><ShieldCheck size={16} className="spec-icon" aria-hidden="true" /><span>Optional self-reflection and narrative are never scored</span></div>
+                  <div className="spec-item"><ShieldCheck size={16} className="spec-icon" aria-hidden="true" /><span>Self-reflection and optional narrative are never scored</span></div>
                   <div className="spec-item"><ShieldCheck size={16} className="spec-icon" aria-hidden="true" /><span>No browser, device, identity, or credit-history data is used</span></div>
                 </div>
               </div>
@@ -462,7 +479,7 @@ export default function Assessment() {
               <p className="question-hint">Stage {currentStep.item.stage_index} of 3 · choose one response.</p>
             )}
             {currentStep.kind === 'behavior' && (
-              <p className="question-hint">This self-reflection is shown in your result but does not affect the score.</p>
+              <p className="question-hint">This self-reflection is shown once in your result and does not affect the score. Choose Not applicable if you prefer not to self-report.</p>
             )}
 
             <div className="answer-control" aria-describedby={currentErrorId}>

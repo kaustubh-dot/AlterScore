@@ -21,9 +21,11 @@ from backend.app.api.v2.security import (
     utc_now,
 )
 from backend.app.api.v2.service import AnonymousAssessmentService
+from backend.app.core.settings import load_settings
+from backend.app.main import create_app
 
-TEST_SIGNING_SECRET = base64.urlsafe_b64encode(bytes(range(32))).rstrip(b"=").decode(
-    "ascii"
+TEST_SIGNING_SECRET = (
+    base64.urlsafe_b64encode(bytes(range(32))).rstrip(b"=").decode("ascii")
 )
 
 
@@ -32,6 +34,7 @@ def _app_client(
     *,
     signing_secret: str | None = TEST_SIGNING_SECRET,
     base_url: str = "https://testserver",
+    client_host: tuple[str, int] = ("testclient", 50_000),
     **service_kwargs: Any,
 ) -> tuple[TestClient, AnonymousAssessmentService]:
     app = FastAPI()
@@ -45,7 +48,9 @@ def _app_client(
 
     @app.middleware("http")
     async def privacy_headers(request, call_next):
-        is_phase4_route = request.url.path.startswith("/api/v2/") or request.url.path in {
+        is_phase4_route = request.url.path.startswith(
+            "/api/v2/"
+        ) or request.url.path in {
             "/api/live",
             "/api/ready",
         }
@@ -61,7 +66,7 @@ def _app_client(
             response.headers["Referrer-Policy"] = "no-referrer"
         return response
 
-    client = TestClient(app, base_url=base_url)
+    client = TestClient(app, base_url=base_url, client=client_host)
     try:
         yield client, service
     finally:
@@ -83,7 +88,9 @@ def _valid_submission(
     for item in form["items"]:
         public_id = item["presentation_id"]
         if item["item_type"] == "objective":
-            responses[public_id] = objective_key[record.public_item_to_internal[public_id]]
+            responses[public_id] = objective_key[
+                record.public_item_to_internal[public_id]
+            ]
         else:
             responses[public_id] = item["options"][0]["option_id"]
     behavior = {
@@ -100,9 +107,7 @@ def _valid_submission(
     }
 
 
-def _post_score(
-    client: TestClient, form: dict[str, Any], submission: dict[str, Any]
-):
+def _post_score(client: TestClient, form: dict[str, Any], submission: dict[str, Any]):
     return client.post(
         "/api/v2/assessment/score",
         headers={"Authorization": f"Bearer {form['attempt_token']}"},
@@ -137,9 +142,10 @@ def test_form_is_opaque_strict_and_has_frozen_shape() -> None:
         assert form["attempt_token"] not in json.dumps(
             service.verification_store._records
         )
-        assert client.get("/api/v2/assessment/form").json()["attempt_id"] != form[
-            "attempt_id"
-        ]
+        assert (
+            client.get("/api/v2/assessment/form").json()["attempt_id"]
+            != form["attempt_id"]
+        )
 
 
 def test_score_is_signed_explained_and_verification_is_redacted() -> None:
@@ -157,19 +163,14 @@ def test_score_is_signed_explained_and_verification_is_redacted() -> None:
         assert len(score["explanation"]["objective_items"]) == 8
         assert len(score["explanation"]["static_sjt_items"]) == 4
         assert len(score["explanation"]["branching_scenarios"]) == 2
-        issued_ids = {
-            item["presentation_id"] for item in form["items"]
-        }
+        issued_ids = {item["presentation_id"] for item in form["items"]}
         explanation_ids = {
-            item["presentation_id"]
-            for item in score["explanation"]["objective_items"]
+            item["presentation_id"] for item in score["explanation"]["objective_items"]
         }
         assert explanation_ids <= issued_ids
         assert "objective_01" not in json.dumps(score["explanation"])
 
-        verify_response = client.get(
-            f"/api/v2/results/verify/{score['result_id']}"
-        )
+        verify_response = client.get(f"/api/v2/results/verify/{score['result_id']}")
         assert verify_response.status_code == 200, verify_response.text
         verified = verify_response.json()
         assert set(verified) == {
@@ -255,14 +256,77 @@ def test_bearer_form_and_score_transport_require_https() -> None:
         assert "secret-that-must-not-be-processed" not in score.text
 
 
+def test_loopback_http_is_usable_only_in_non_production_environments() -> None:
+    with _app_client(
+        base_url="http://127.0.0.1",
+        client_host=("127.0.0.1", 50_001),
+        environment="local",
+    ) as (client, service):
+        form = _issue(client)
+        score = _post_score(client, form, _valid_submission(form, service))
+        assert score.status_code == 200, score.text
+
+    with _app_client(
+        base_url="http://127.0.0.1",
+        client_host=("127.0.0.1", 50_002),
+        environment="production",
+        signing_key_version="key-2026-07",
+    ) as (client, _):
+        response = client.get("/api/v2/assessment/form")
+        assert response.status_code == 400
+        assert response.json()["error"]["details"] == {"fields": ["transport"]}
+
+
+def test_main_app_adds_hsts_on_https_responses() -> None:
+    settings = load_settings(
+        {"ALTERSCORE_ENV": "test", "ALTERSCORE_RELEASE_SHA": "a" * 40}
+    )
+    with TestClient(create_app(settings), base_url="https://testserver") as client:
+        response = client.get("/api/live")
+    assert response.headers["strict-transport-security"] == (
+        "max-age=31536000; includeSubDomains"
+    )
+
+    # The header is set at the public application boundary even if an upstream
+    # TLS proxy does not rewrite the ASGI request scheme. Browsers ignore HSTS
+    # received over plaintext loopback HTTP.
+    with TestClient(create_app(settings), base_url="http://testserver") as client:
+        proxied_response = client.get("/api/live")
+    assert proxied_response.headers["strict-transport-security"] == (
+        "max-age=31536000; includeSubDomains"
+    )
+
+
+def test_verification_transport_and_rate_limit_are_fail_closed() -> None:
+    with _app_client(base_url="http://testserver") as (client, _):
+        response = client.get("/api/v2/results/verify/result_does_not_exist")
+        assert response.status_code == 400
+        assert response.json()["error"]["details"] == {"fields": ["transport"]}
+
+    with _app_client() as (client, _):
+        responses = [
+            client.get("/api/v2/results/verify/result_does_not_exist")
+            for _ in range(11)
+        ]
+        assert [response.status_code for response in responses[:10]] == [404] * 10
+        assert responses[-1].status_code == 429
+        assert responses[-1].json()["error"]["code"] == "rate_limited"
+
+
 def test_phase4_access_scope_is_redacted_after_rate_limit_capture() -> None:
     with _app_client() as (client, service):
         form = _issue(client)
         record = service.attempt_store._records[token_digest(form["attempt_token"])]
         assert record is not None
         assert client.app.state.phase4_last_access_scope_client == ("redacted", 0)
-        assert service.rate_limiter._network_hash("testclient") in service.rate_limiter._events
-        assert service.rate_limiter._network_hash("redacted") not in service.rate_limiter._events
+        assert (
+            service.rate_limiter._network_hash("testclient")
+            in service.rate_limiter._events
+        )
+        assert (
+            service.rate_limiter._network_hash("redacted")
+            not in service.rate_limiter._events
+        )
 
 
 def test_unknown_option_and_duplicate_json_keys_fail_without_consuming() -> None:
@@ -345,9 +409,7 @@ def test_tampered_result_signature_or_digest_never_returns_summary() -> None:
         score = _post_score(client, form, _valid_submission(form, service)).json()
         record = service.verification_store._records[score["result_id"]]
         record.result_signature = "hmac-sha256-v1:" + "A" * 43
-        tampered_signature = client.get(
-            f"/api/v2/results/verify/{score['result_id']}"
-        )
+        tampered_signature = client.get(f"/api/v2/results/verify/{score['result_id']}")
         assert tampered_signature.status_code == 500
         assert tampered_signature.json()["error"]["code"] == "integrity_failed"
 
@@ -355,9 +417,7 @@ def test_tampered_result_signature_or_digest_never_returns_summary() -> None:
         score2 = _post_score(client, form2, _valid_submission(form2, service)).json()
         record2 = service.verification_store._records[score2["result_id"]]
         record2.projection["explanation_digest"] = "sha256:" + "0" * 64
-        tampered_digest = client.get(
-            f"/api/v2/results/verify/{score2['result_id']}"
-        )
+        tampered_digest = client.get(f"/api/v2/results/verify/{score2['result_id']}")
         assert tampered_digest.status_code == 500
         assert tampered_digest.json()["error"]["code"] == "integrity_failed"
 
@@ -376,9 +436,14 @@ def test_rate_limit_readiness_and_liveness_boundaries() -> None:
             assert ready.status_code == 503
             ready_payload = ready.json()
             assert ready_payload["status"] == "not_ready"
-            assert next(
-                check for check in ready_payload["checks"] if check["name"] == "signing"
-            )["status"] == "fail"
+            assert (
+                next(
+                    check
+                    for check in ready_payload["checks"]
+                    if check["name"] == "signing"
+                )["status"]
+                == "fail"
+            )
             unavailable = client.get("/api/v2/assessment/form")
             assert unavailable.status_code == 503
             assert unavailable.json()["error"]["code"] == "form_unavailable"
@@ -388,15 +453,23 @@ def test_rate_limit_readiness_and_liveness_boundaries() -> None:
 def test_store_eviction_and_canonical_signing_are_deterministic() -> None:
     with _app_client(result_store_max_entries=1) as (client, service):
         first = _issue(client)
-        first_score = _post_score(client, first, _valid_submission(first, service)).json()
+        first_score = _post_score(
+            client, first, _valid_submission(first, service)
+        ).json()
         second = _issue(client)
-        second_score = _post_score(client, second, _valid_submission(second, service)).json()
-        assert client.get(
-            f"/api/v2/results/verify/{first_score['result_id']}"
-        ).status_code == 404
-        assert client.get(
-            f"/api/v2/results/verify/{second_score['result_id']}"
-        ).status_code == 200
+        second_score = _post_score(
+            client, second, _valid_submission(second, service)
+        ).json()
+        assert (
+            client.get(f"/api/v2/results/verify/{first_score['result_id']}").status_code
+            == 404
+        )
+        assert (
+            client.get(
+                f"/api/v2/results/verify/{second_score['result_id']}"
+            ).status_code
+            == 200
+        )
 
         assert canonical_json_bytes({"b": 1, "a": 2}) == b'{"a":2,"b":1}'
         assert canonical_json_bytes({"x": 1e-6}) == b'{"x":0.000001}'

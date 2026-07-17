@@ -56,8 +56,14 @@ def _pay_essential_expenses_from_buffer(state: FinancialState) -> FinancialState
 
 def _defer_essential_expenses(state: FinancialState) -> FinancialState:
     deferred = min(_DEFERRED_ESSENTIALS, state.essential_expenses)
+    paid_now = state.essential_expenses - deferred
+    if paid_now > state.cash_available:
+        raise InvalidTransition(
+            "non-deferred essential expenses exceed available operating cash"
+        )
     return state.replace(
-        essential_expenses=state.essential_expenses - deferred,
+        cash_available=state.cash_available - paid_now,
+        essential_expenses=0,
         unfunded_commitments=state.unfunded_commitments + deferred,
     )
 
@@ -132,8 +138,11 @@ def build_emi_supplier_scenario() -> ScenarioDefinition:
                 stage_index=1,
                 presentation_id="branching_emi_stage",
                 prompt=(
-                    "A 400-unit EMI is due now. Choose how to handle the payment "
-                    "before planning the rest of the horizon."
+                    "You start with 1,000 units of operating cash, a 900-unit "
+                    "emergency buffer, a confirmed 250-unit inflow, 450 units "
+                    "of essential expenses, and 200 units of other unfunded "
+                    "commitments. A 400-unit EMI is due now. Choose how to "
+                    "handle it before planning the rest of the horizon."
                 ),
                 options=(
                     BranchingOption(
@@ -157,8 +166,10 @@ def build_emi_supplier_scenario() -> ScenarioDefinition:
                 stage_index=2,
                 presentation_id="branching_essential_expenses_stage",
                 prompt=(
-                    "450 units of essential expenses remain. Choose how to fund "
-                    "them or carry part of the need forward."
+                    "Using the state created by your EMI decision, 450 units of "
+                    "essential expenses remain. Paying from cash or the buffer "
+                    "uses all 450 units; the deferral option pays 300 units from "
+                    "operating cash now and carries 150 units forward."
                 ),
                 options=(
                     BranchingOption(
@@ -173,7 +184,10 @@ def build_emi_supplier_scenario() -> ScenarioDefinition:
                     ),
                     BranchingOption(
                         option_id="essentials_defer_to_commitment",
-                        label="Defer 150 units and carry them as an unfunded commitment.",
+                        label=(
+                            "Pay 300 units from operating cash and carry 150 units "
+                            "as an unfunded commitment."
+                        ),
                         apply=_defer_essential_expenses,
                     ),
                 ),
@@ -182,8 +196,9 @@ def build_emi_supplier_scenario() -> ScenarioDefinition:
                 stage_index=3,
                 presentation_id="branching_supplier_opportunity_stage",
                 prompt=(
-                    "A supplier opportunity needs a 100-unit deposit and is expected "
-                    "to create a confirmed 500-unit inflow next period."
+                    "Using the state created by your first two decisions, a supplier "
+                    "opportunity needs a 100-unit deposit and contractually confirms "
+                    "a 500-unit inflow next period."
                 ),
                 options=(
                     BranchingOption(

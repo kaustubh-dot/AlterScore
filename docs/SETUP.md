@@ -31,7 +31,9 @@ $env:ALTERSCORE_SIGNING_SECRET = '<local-generated-secret>'
 python -m uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-The v2 form and score endpoints require HTTPS. `/api/live` is liveness,
+Remote and production-like v2 form and score requests require HTTPS. Loopback
+HTTP is accepted only in local/test/development environments, so the commands
+above work without a development certificate. `/api/live` is liveness,
 `/api/health` is a compatibility probe, and `/api/ready` reports semantic
 readiness only when all six frozen checks pass.
 
@@ -44,12 +46,13 @@ npm run dev
 ```
 
 The frontend reads `VITE_API_BASE_URL`. The deployed value is committed in
-`frontend/.env.production`; local development should use an HTTPS reverse
-proxy or trusted development certificate.
+`frontend/.env.production`; the default relative `/api` proxy works over
+loopback HTTP in local development. Non-loopback API origins must use HTTPS.
 
 ## Validation
 
 ```bash
+python -m pip install -r backend/requirements.txt
 python -m pip install -r backend/requirements-dev.txt
 python -m pytest tests/unit/backend tests/integration/api
 cd frontend
@@ -72,6 +75,7 @@ running `npm.cmd run build`.
 | `backend/app/main.py` | Artifact-free public app entrypoint |
 | `backend/app/api/v2/service.py` | Anonymous attempt, scoring, signing, and verification service |
 | `backend/requirements.txt` | Serving-only dependency contract |
+| `backend/requirements.lock` | Linux production serving dependencies with package hashes |
 | `frontend/src/pages/ResearchLab.jsx` | Static offline-research boundary |
 | `research/legacy_synthetic_model/` | Preserved synthetic-model archive |
 | `docs/API_CONTRACTS.md` | Public v2 route and payload contract |

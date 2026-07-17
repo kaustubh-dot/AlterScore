@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { isV2Explanation, isV2ScoreResponse } from '../src/lib/assessmentV2.js';
+import { FRONTEND_RELEASE_SHA } from '../src/lib/releaseMetadata.js';
 
 const frontendRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 const versions = {
@@ -128,7 +129,7 @@ function makeResult({ perfect = false, weakScenario = false } = {}) {
   return {
     ...versions,
     request_id: id('req', 'result'),
-    release_sha: 'phase6-test-release',
+    release_sha: FRONTEND_RELEASE_SHA,
     result_id: id('result', 'explainability'),
     attempt_id: id('attempt', 'explainability'),
     issued_at: '2026-07-15T10:00:00Z',
@@ -301,9 +302,11 @@ test('result presentation exposes all explanation sections without hidden scorin
     'formula.weighted_total_exact', 'objective_items', 'issued_values', 'worked_calculation',
     'static_sjt_items', 'selected_option_label', 'branching_scenarios', 'state_delta',
     'terminal_state', 'dimensions', 'recommendations', 'evidence-links',
+    'behaviorProfile', 'Your reflection profile', 'removed from browser history',
   ]) assert.match(results, new RegExp(required.replaceAll('.', '\\.'), 'i'));
   assert.match(assessment, /toV2DetailedResult/);
-  assert.match(assessment, /transitionTo\('\/results', \{ state: detailedResult \}\)/);
+  assert.match(assessment, /state: \{ result: detailedResult, behaviorProfile \}/);
+  assert.match(assessment, /Choose Not applicable if you prefer not to self-report/);
   assert.match(css, /prefers-reduced-motion/);
   assert.match(css, /max-width: 640px/);
 

@@ -37,16 +37,10 @@ def test_definition_exposes_three_structured_stages_and_nine_unique_options() ->
     assert tuple(stage.stage_index for stage in definition.stages) == (1, 2, 3)
     assert all(stage.prompt for stage in definition.stages)
     assert all(len(stage.options) == 3 for stage in definition.stages)
-    assert all(
-        option.label
-        for stage in definition.stages
-        for option in stage.options
-    )
+    assert all(option.label for stage in definition.stages for option in stage.options)
 
     option_ids = [
-        option.option_id
-        for stage in definition.stages
-        for option in stage.options
+        option.option_id for stage in definition.stages for option in stage.options
     ]
     assert len(option_ids) == len(set(option_ids)) == 9
     for stage in definition.stages:
@@ -56,9 +50,18 @@ def test_definition_exposes_three_structured_stages_and_nine_unique_options() ->
         assert presentation["prompt"] == stage.prompt
         assert len(presentation["options"]) == 3
         assert all(
-            set(option) == {"option_id", "label"}
-            for option in presentation["options"]
+            set(option) == {"option_id", "label"} for option in presentation["options"]
         )
+
+
+def test_prompts_disclose_starting_facts_and_link_later_decisions() -> None:
+    definition = build_forecast_shortfall_negotiation_scenario()
+    prompts = tuple(stage.prompt for stage in definition.stages)
+
+    for fact in ("₹12,000", "₹9,000", "₹6,000", "₹24,000", "₹30,000"):
+        assert fact in prompts[0]
+    assert "created by your collection decision" in prompts[1]
+    assert "created by your first two decisions" in prompts[2]
 
 
 def test_all_27_paths_are_reachable_and_have_valid_state_domains() -> None:
@@ -146,9 +149,7 @@ def test_timeline_has_three_linked_transition_evidence_records() -> None:
                     and value >= 0
                     for value in state.as_dict().values()
                 )
-                assert (
-                    state.required_payments_met <= state.required_payments_due
-                )
+                assert state.required_payments_met <= state.required_payments_due
             assert evidence.state_after.as_dict() == {
                 field_name: getattr(evidence.state_before, field_name)
                 + getattr(evidence.state_delta, field_name)
@@ -180,10 +181,12 @@ def test_collection_actions_and_payment_arrangements_are_accounted() -> None:
         "collect_accelerated_amount": (18_000, 1_000),
     }
 
-    assert {
-        option.option_id for option in definition.stages[0].options
-    } == set(collection_effects)
-    assert all("forecast" not in option.option_id for option in definition.stages[0].options)
+    assert {option.option_id for option in definition.stages[0].options} == set(
+        collection_effects
+    )
+    assert all(
+        "forecast" not in option.option_id for option in definition.stages[0].options
+    )
 
     for result in results:
         collection = result.timeline[0]

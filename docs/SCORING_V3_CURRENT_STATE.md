@@ -8,8 +8,9 @@
 
 | Field | Value |
 |---|---|
-| Updated | 2026-07-17 00:14:26 +05:30 |
+| Updated | 2026-07-17 10:20:10 +05:30 |
 | Branch | `codex/scoring-production-hardening` |
+| Phase 9 implementation HEAD | `e5e9af7b86de8a8008c08cb51079072313d02c7d` (`feat: harden phase 8 release operations`) |
 | Phase 8 implementation start HEAD | `749835304ae9dc5aadfd9768fb964947ce0bc3a5` (`feat: complete phase 7 legacy separation`) |
 | Phase 8 review base HEAD | `749835304ae9dc5aadfd9768fb964947ce0bc3a5` |
 | Phase 7 implementation/review base HEAD | `7d856efd5507eb4bacf387d23968a67f82ddbd97` (`feat: add phase 6 result explainability`) |
@@ -18,16 +19,16 @@
 | Review-start commit | `0c398d6 feat: add deterministic v3 scoring phases` |
 | Review baseline HEAD | `d74e59d5b8577d301646f73e049ca4a3588798f` |
 | Review baseline commit | `d74e59d fix: harden phase 5 client assessment boundary` |
-| Active phase | Phase 9 - final audit and handoff (not started) |
-| Luna status | Complete (Phase 8 implementation) |
-| Codex review | Passed (Phase 8) |
-| Overall status | Phase 8 operational hardening passed Codex review after scoped corrections; Phase 9 is the immediate next action and has not started |
+| Active phase | Complete - Phase 9 final audit and Codex review |
+| Luna status | Complete (Phase 9 implementation) |
+| Codex review | **PASS** (Phase 9, with corrections) |
+| Overall status | Functional portfolio release candidate; full automated and local browser gates pass. Public deployment is still the retired system and was not changed. |
 
 ## Current branch condition
 
-- The reviewed Phase 7 tracked change set and archive are the intended
-  publication scope. The unrelated untracked review prompt and runtime bundle
-  remain outside that scope and must be preserved.
+- The complete Phase 9 worktree plus Codex's final corrections are the intended
+  publication scope. The review prompt is included as documentation. The local
+  runtime-model bundle remains preserved and ignored outside publication.
 - No reset, clean, checkout, branch switch, or overwrite was used during the
   review or correction pass.
 - At baseline capture, `git diff --stat` reported 76 tracked files, 4,389
@@ -79,8 +80,9 @@
   removed from the active frontend.
 - Phase 6 now retains a detailed, signed score projection in `sessionStorage`
   for the active browser session, while preserving the older redacted-summary
-  fallback. The detailed projection intentionally omits `behavior_profile`;
-  the result page presents the frozen formula reconciliation, all
+  fallback. The retained projection intentionally omits `behavior_profile`;
+  the current immediate result displays the unscored profile once and removes
+  it from browser history. The result page also presents the frozen formula reconciliation, all
   eight worked objective explanations, four principle-level static-SJT
   explanations, two three-stage branching replays, evidence-linked
   recommendations, limitations, and the redacted verification link.
@@ -901,8 +903,9 @@ quality step is syntactically valid.
 
 The existing untracked `docs/SCORING_V3_CODEX_REVIEW_PROMPT.md` and
 `runtime/shared_session_trained_model_answer_only_v2/` remain preserved.
-Phase 8 changes are uncommitted. No Phase 9 work, deployment, commit, push, or
-model-artifact regeneration was started.
+Phase 8 is committed at `e5e9af7b86de8a8008c08cb51079072313d02c7d`; the Phase 9
+changes are uncommitted. No deployment, commit, push, cleanup, or
+model-artifact regeneration was performed.
 
 ### Phase 8 limitations
 
@@ -941,19 +944,73 @@ did not begin Phase 9.
   independently checked. No subagent edited a file, shared contract, tracker,
   Git state, or Phase 9 code; Codex was the sole correction writer.
 
+## Phase 9 implementation and handoff
+
+Phase 9 implementation is complete and stopped at `READY FOR REVIEW`. The
+active scoring formulas, public question architecture, API versions, and
+deployment targets remain unchanged by a live operation.
+
+- Added the final audit report at `docs/SCORING_V3_FINAL_AUDIT.md`.
+- Closed scoped audit findings for HTTPS verification transport and rate
+  limiting, exact frontend release-bound result caching, safe browser storage,
+  reduced-motion runtime paths, generic upstream error handling, HSTS on HTTPS
+  responses, release-manifest provenance/identity validation, package
+  symlink/timeout/key-reference checks, and CORS assertions in the smoke
+  runner.
+- Added regression coverage for release-manifest round trips and invalid
+  archives/references. The backend suite now passes 236 tests.
+- Preserved the unrelated untracked review prompt and ten-file runtime bundle;
+  new Phase 9 source/test files remain untracked and no files were staged.
+
+Verification completed: frontend lint, production build, Phase 5/6/7/8 tests,
+complete backend suite, focused secure API and manifest tests, Ruff checks,
+workflow YAML parsing, npm lockfile dry-run, and `git diff --check` passed.
+Docker, live deployment, and post-deploy smoke were not run because they
+require unavailable local tooling or external authority.
+
+## Phase 9 Codex final review
+
+Decision: **PASS** after corrections.
+
+- Corrected the EMI partial-deferral state transition, completed the financial
+  facts shown in both branching simulations, and repaired three logically
+  inverted SJT partial-credit rankings.
+- Added a loopback-only non-production HTTP exception so the documented local
+  startup works end to end; remote and production-like bearer transport remains
+  HTTPS-only. Public API responses now emit HSTS independent of proxy scheme
+  rewriting.
+- Bound release smoke to both the code-owned canonical frontend target and the
+  Vercel deployment URL, pinned GitHub Actions by immutable SHA, and added a
+  hash-locked Linux serving environment to CI, Docker, and HF packaging.
+- Updated the vulnerable `form-data` lock entry to 4.0.6; the production npm
+  audit reports zero vulnerabilities.
+- Added an immediate unscored reflection profile to the result. It is removed
+  from browser history and remains excluded from session retention and signed
+  verification.
+- Preserved and ignored the local runtime-model bundle rather than deleting it.
+
+Final independent verification: 242 backend tests; frontend lint and Phase
+5/6/7/8 tests (11/7/3/4); exact-SHA Vite production build (1,842 modules);
+Ruff lint/format; workflow YAML parsing; Linux hash-lock resolution; zero-high
+production npm audit; two full 25-item browser attempts; signed explanation and
+refresh privacy checks; and a 390 px mobile result check all passed.
+
+The deployed `https://alterscore.vercel.app` was manually inspected and still
+shows the retired model-backed credit-score experience. No deployment was
+authorized or performed, so the new system is release-ready on this branch but
+not yet live at the canonical public URL.
+
 ## Immediate next action
 
-Luna may begin Phase 9 final audit and handoff only, then stop for Codex
-review. Do not deploy, rewrite release history, or make unrelated changes as
-part of that next phase.
+Merge the reviewed branch to `main`, then separately authorize the paired
+deployment workflow when the production credentials and target are ready.
 
 ## Blockers
 
-None for the Phase 8 handoff. Production readiness remains fail-closed until
-an authorized deployment supplies the exact release SHA, non-local
-signing-key version, secure signing secret, and trusted HTTPS ASGI scheme.
-The unrelated untracked review-prompt and runtime-bundle paths remain
-preserved and unstaged.
+No implementation blocker. Docker is unavailable locally, and the canonical
+public deployment remains stale until a separately authorized release supplies
+the exact SHA, non-local signing-key version, secure signing secret, and trusted
+HTTPS boundary.
 
 ## Historical verification evidence before Phase 4
 

@@ -19,13 +19,13 @@ The app reads `VITE_API_BASE_URL` for backend calls. For local development,
 create `frontend/.env.local` if you need to override the default:
 
 ```text
-VITE_API_BASE_URL=https://127.0.0.1:8000/api
+VITE_API_BASE_URL=http://127.0.0.1:8000/api
 ```
 
-The v2 assessment form and score routes require HTTPS because the bearer
-attempt token is accepted only over secure transport. Use a local HTTPS
-reverse proxy or trusted development certificate; do not bypass that backend
-requirement with a client-supplied forwarded-protocol header.
+The v2 assessment form and score routes require HTTPS for every remote and
+production-like request. Loopback HTTP is accepted only when the backend is in
+local/test/development mode; a client-supplied forwarded-protocol header does
+not bypass the remote transport boundary.
 
 ## Production
 

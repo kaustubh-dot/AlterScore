@@ -45,7 +45,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.middleware("http")
     async def add_public_privacy_headers(request, call_next):
-        is_public_route = request.url.path.startswith("/api/v2/") or request.url.path in {
+        is_public_route = request.url.path.startswith(
+            "/api/v2/"
+        ) or request.url.path in {
             "/api/live",
             "/api/ready",
             "/api/score",
@@ -62,6 +64,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         if is_public_route:
             response.headers["Cache-Control"] = "no-store"
             response.headers["Referrer-Policy"] = "no-referrer"
+            response.headers["Strict-Transport-Security"] = (
+                "max-age=31536000; includeSubDomains"
+            )
         return response
 
     return app

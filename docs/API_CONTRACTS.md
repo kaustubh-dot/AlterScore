@@ -45,9 +45,11 @@ server TTL. The score response is signed and kept in a bounded in-memory
 verification store for the frozen 24-hour result lifetime.
 
 The frontend may retain a bounded detailed display projection in
-`sessionStorage` for that result lifetime. It never stores the bearer token,
-raw submission map, or narrative in persistent storage. Verification returns
-only the redacted signed projection, never worked evidence or behavior values.
+`sessionStorage` for that result lifetime, bound to the exact frontend release
+SHA. It never stores the bearer token, raw submission map, or narrative in
+persistent storage. Verification also requires the trusted HTTPS ASGI scheme,
+is rate-limited, and returns only the redacted signed projection, never worked
+evidence or behavior values.
 
 ## Public score
 

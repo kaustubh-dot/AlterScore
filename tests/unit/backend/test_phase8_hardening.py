@@ -248,6 +248,10 @@ def test_phase8_hf_package_uses_a_serving_allowlist(tmp_path: Path) -> None:
     (source_root / "backend" / "requirements.txt").write_text(
         "fastapi==0.115.6\n", encoding="utf-8"
     )
+    (source_root / "backend" / "requirements.lock").write_text(
+        "fastapi==0.115.6 --hash=sha256:" + "a" * 64 + "\n",
+        encoding="utf-8",
+    )
     (app / "__init__.py").write_text("", encoding="utf-8")
     (app / "main.py").write_text("app = object()\n", encoding="utf-8")
     (app / ".env").write_text("SENTINEL_APP_SECRET\n", encoding="utf-8")
@@ -268,6 +272,7 @@ def test_phase8_hf_package_uses_a_serving_allowlist(tmp_path: Path) -> None:
         source_root,
         "add",
         "Dockerfile",
+        "backend/requirements.lock",
         "backend/requirements.txt",
         "backend/app/__init__.py",
         "backend/app/main.py",
@@ -292,6 +297,7 @@ def test_phase8_hf_package_uses_a_serving_allowlist(tmp_path: Path) -> None:
         "Dockerfile",
         "README.md",
         "release-metadata.json",
+        "backend/requirements.lock",
         "backend/requirements.txt",
         "backend/app/__init__.py",
         "backend/app/main.py",
@@ -315,6 +321,9 @@ def test_phase8_hf_package_uses_a_serving_allowlist(tmp_path: Path) -> None:
 
 
 def test_phase8_release_automation_requires_trusted_paired_execution() -> None:
+    ci_workflow = (REPOSITORY_ROOT / ".github" / "workflows" / "ci.yml").read_text(
+        encoding="utf-8"
+    )
     deploy_workflow = (
         REPOSITORY_ROOT / ".github" / "workflows" / "deploy-hf.yml"
     ).read_text(encoding="utf-8")
@@ -341,7 +350,17 @@ def test_phase8_release_automation_requires_trusted_paired_execution() -> None:
         "VITE_RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}" in deploy_workflow
     )
     assert "npx --yes vercel@54.21.1 deploy dist --prod" in deploy_workflow
-    assert "actions/upload-artifact@v4" in deploy_workflow
+    assert (
+        "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02"
+        in deploy_workflow
+    )
+    assert "FRONTEND_URL: https://alterscore.vercel.app" in deploy_workflow
+    assert "FRONTEND_URL: https://alterscore.vercel.app" in rollback_workflow
+    assert "vars.ALTERSCORE_FRONTEND_URL" not in deploy_workflow
+    assert "vars.ALTERSCORE_FRONTEND_URL" not in rollback_workflow
+    assert "DEPLOYED_FRONTEND_URL=" in deploy_workflow
+    assert "DEPLOYED_FRONTEND_URL=" in rollback_workflow
+    assert '--frontend-deployment-url "$DEPLOYED_FRONTEND_URL"' in deploy_workflow
     assert 'CONTRACT_VERSION.encode("ascii")' in smoke_runner
     assert "actions: read" in rollback_workflow
     assert "release-manifest-$RELEASE_SHA" in rollback_workflow
@@ -352,12 +371,17 @@ def test_phase8_release_automation_requires_trusted_paired_execution() -> None:
     )
     assert "vercel@latest" not in deploy_workflow
     assert "vercel@latest" not in rollback_workflow
-    assert deploy_workflow.index("actions/setup-python@v5") < deploy_workflow.index(
+    setup_python = "actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065"
+    assert deploy_workflow.index(setup_python) < deploy_workflow.index(
         "--preflight-signing"
     )
-    assert rollback_workflow.index("actions/setup-python@v5") < rollback_workflow.index(
+    assert rollback_workflow.index(setup_python) < rollback_workflow.index(
         "--preflight-signing"
     )
+    for workflow in (ci_workflow, deploy_workflow, rollback_workflow):
+        assert "uses: actions/checkout@v" not in workflow
+        assert "uses: actions/setup-python@v" not in workflow
+        assert "uses: actions/setup-node@v" not in workflow
 
 
 def test_phase8_public_probes_publish_exact_release_metadata() -> None:
