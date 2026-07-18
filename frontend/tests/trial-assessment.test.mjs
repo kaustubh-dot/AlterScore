@@ -8,44 +8,65 @@ import {
   TRIAL_QUESTIONS,
 } from '../src/lib/trialAssessment.js';
 
-test('uses weighted response quality instead of equal twenty-point questions', () => {
-  const answers = {
-    'cash-flow': 1,
-    'borrowing-cost': 3,
-    'emergency-buffer': 2,
-    'due-date': 3,
-    'branch-outcome': 1,
-  };
-  const result = scoreTrialAssessment(answers);
+const representativePath = {
+  'collection-action': 'reconcile',
+  'shortfall-response': 'cash-payment',
+  'payment-arrangement': 'good-faith',
+  'essential-shock': 'fund-essential',
+  'supplier-opportunity': 'supplier-cash',
+};
 
-  assert.equal(result.version, 2);
-  assert.equal(result.domainScores.length, 3);
+test('uses the main branching dimensions and feasible-range normalization', () => {
+  const result = scoreTrialAssessment(representativePath);
+
+  assert.equal(result.version, 3);
+  assert.equal(result.scoreBasis, 'Feasible-range normalized');
+  assert.deepEqual(result.domainScores.map((item) => item.name), [
+    'Obligation coverage',
+    'Liquidity retention',
+    'Cost efficiency',
+    'Plan feasibility',
+  ]);
   assert.equal(result.feedback.length, TRIAL_QUESTIONS.length);
-  assert.notEqual(result.score % 20, 0);
   assert.equal(Object.hasOwn(result, 'correctCount'), false);
   assert.equal(isTrialResult(result), true);
 });
 
-test('branches the final scenario from the earlier due-date decision', () => {
-  const managed = getTrialQuestion(4, { 'due-date': 2 });
-  const recovery = getTrialQuestion(4, { 'due-date': 1 });
+test('every decision changes the state inherited by the next stage', () => {
+  const collectionA = getTrialQuestion(1, { 'collection-action': 'routine' });
+  const collectionB = getTrialQuestion(1, { 'collection-action': 'accelerate' });
+  assert.notEqual(collectionA.state.cashAvailable, collectionB.state.cashAvailable);
 
-  assert.equal(managed.branch, 'managed');
-  assert.equal(recovery.branch, 'recovery');
-  assert.notEqual(managed.prompt, recovery.prompt);
+  const fundingA = getTrialQuestion(2, { 'collection-action': 'reconcile', 'shortfall-response': 'cash-payment' });
+  const fundingB = getTrialQuestion(2, { 'collection-action': 'reconcile', 'shortfall-response': 'bridge' });
+  assert.notEqual(fundingA.state.paymentRemaining, fundingB.state.paymentRemaining);
+  assert.notEqual(fundingA.state.costToDate, fundingB.state.costToDate);
+
+  const arrangementA = getTrialQuestion(3, { ...representativePath, 'payment-arrangement': 'all-cash' });
+  const arrangementB = getTrialQuestion(3, { ...representativePath, 'payment-arrangement': 'extension' });
+  assert.notEqual(arrangementA.state.cashAvailable, arrangementB.state.cashAvailable);
+
+  const resilienceA = getTrialQuestion(4, { ...representativePath, 'essential-shock': 'fund-essential' });
+  const resilienceB = getTrialQuestion(4, { ...representativePath, 'essential-shock': 'finance-essential' });
+  assert.notEqual(resilienceA.state.cashAvailable, resilienceB.state.cashAvailable);
+  assert.notEqual(resilienceA.state.costToDate, resilienceB.state.costToDate);
 });
 
-test('retains a meaningful perfect benchmark while rejecting old quiz results', () => {
-  const result = scoreTrialAssessment({
-    'cash-flow': 1,
-    'borrowing-cost': 1,
-    'emergency-buffer': 1,
-    'due-date': 2,
-    'branch-outcome': 0,
-  });
+test('calibrates all 243 reachable paths and rejects legacy trial results', () => {
+  const results = [];
+  const visit = (index, answers) => {
+    if (index === TRIAL_QUESTIONS.length) {
+      results.push(scoreTrialAssessment(answers));
+      return;
+    }
+    const question = getTrialQuestion(index, answers);
+    question.options.forEach((option) => visit(index + 1, { ...answers, [question.id]: option.id }));
+  };
+  visit(0, {});
 
-  assert.equal(result.score, 100);
-  assert.equal(result.band, 'Strong foundation');
-  assert.equal(result.feedback.every((item) => item.rating === 'Strong evidence'), true);
-  assert.equal(isTrialResult({ ...result, version: 1 }), false);
+  assert.equal(results.length, 243);
+  assert.equal(Math.min(...results.map((result) => result.score)), 0);
+  assert.equal(Math.max(...results.map((result) => result.score)), 100);
+  assert.ok(results.filter((result) => result.score === 100).length < 10);
+  assert.equal(isTrialResult({ ...results[0], version: 2 }), false);
 });

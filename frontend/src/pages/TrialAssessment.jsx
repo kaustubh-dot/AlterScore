@@ -5,6 +5,8 @@ import usePageTransition from '../hooks/usePageTransition';
 import useSound from '../hooks/useSound';
 import { getTrialQuestion, saveTrialResult, scoreTrialAssessment, TRIAL_QUESTIONS } from '../lib/trialAssessment';
 
+const formatMoney = (value) => `₹${value.toLocaleString('en-IN')}`;
+
 export default function TrialAssessment() {
   const { transitionTo } = usePageTransition();
   const { playClick, playSelect, playSuccess } = useSound();
@@ -22,7 +24,7 @@ export default function TrialAssessment() {
   }, [currentIndex, hasStarted]);
 
   const goForward = () => {
-    if (!Number.isInteger(answers[question.id])) {
+    if (!question.options.some((option) => option.id === answers[question.id])) {
       setValidationMessage('Choose one response to continue.');
       return;
     }
@@ -37,10 +39,10 @@ export default function TrialAssessment() {
     transitionTo('/results?mode=trial', { state: { trialResult: result } });
   };
 
-  const selectAnswer = (index) => {
+  const selectAnswer = (optionId) => {
     setAnswers((previous) => {
-      const next = { ...previous, [question.id]: index };
-      if (question.id === 'due-date') delete next['branch-outcome'];
+      const next = { ...previous, [question.id]: optionId };
+      TRIAL_QUESTIONS.slice(currentIndex + 1).forEach((item) => delete next[item.id]);
       return next;
     });
     setValidationMessage('');
@@ -65,10 +67,10 @@ export default function TrialAssessment() {
               <div className="consent-icon"><ShieldCheck size={32} aria-hidden="true" /></div>
               <h1 className="consent-title">Financial Readiness Quick Trial</h1>
               <div className="consent-text">
-                <p>A five-decision preview using weighted evidence and a branching scenario. Responses are evaluated by strength and trade-offs, not equal marks per question.</p>
+                <p>A five-stage financial simulation. Every choice changes the cash, obligation, reserve, cost, and commitment state used by every stage that follows.</p>
                 <div className="telemetry-specs">
                   <div className="spec-item"><ShieldCheck size={16} className="spec-icon" aria-hidden="true" /><span>About three minutes to complete</span></div>
-                  <div className="spec-item"><ShieldCheck size={16} className="spec-icon" aria-hidden="true" /><span>The final scenario changes based on an earlier decision</span></div>
+                  <div className="spec-item"><ShieldCheck size={16} className="spec-icon" aria-hidden="true" /><span>All 243 reachable decision paths are calibrated, not marked question by question</span></div>
                   <div className="spec-item"><ShieldCheck size={16} className="spec-icon" aria-hidden="true" /><span>No identity, device, or credit-history data is used</span></div>
                   <div className="spec-item"><ShieldCheck size={16} className="spec-icon" aria-hidden="true" /><span>Preview result only; server-signed scoring is reserved for the full assessment</span></div>
                 </div>
@@ -92,26 +94,32 @@ export default function TrialAssessment() {
       <div className="assessment-container container">
         <div className="assessment-wrapper">
           <div className="assessment-header" aria-live="polite">
-            <span className="section-indicator">{question.pathLabel || `Quick trial · ${question.domain}`}</span>
+            <span className="section-indicator">Quick trial · {question.label}</span>
             <span className="question-counter">Question {currentIndex + 1} of {TRIAL_QUESTIONS.length}</span>
           </div>
           <section className="question-card slide-active" aria-labelledby="trial-question-heading">
             <h1 id="trial-question-heading" ref={headingRef} className="question-text" tabIndex="-1">{question.prompt}</h1>
+            <dl className="trial-state-grid" aria-label="Financial state entering this decision">
+              <div><dt>Cash</dt><dd>{formatMoney(question.state.cashAvailable)}</dd></div>
+              <div><dt>Payment left</dt><dd>{formatMoney(question.state.paymentRemaining)}</dd></div>
+              <div><dt>Reserve</dt><dd>{formatMoney(question.state.emergencyBuffer)}</dd></div>
+              <div><dt>Cost to date</dt><dd>{formatMoney(question.state.costToDate)}</dd></div>
+            </dl>
             <fieldset className="choice-fieldset" aria-invalid={Boolean(validationMessage)} aria-describedby={validationMessage ? 'trial-validation' : 'trial-hint'}>
               <legend className="sr-only">{question.prompt}</legend>
               <div className="options-list" role="radiogroup" aria-label={question.prompt}>
-                {question.options.map((option, index) => {
-                  const selected = answers[question.id] === index;
+                {question.options.map((option) => {
+                  const selected = answers[question.id] === option.id;
                   return (
-                    <label key={option.label} className={`choice-option option-pill ${selected ? 'selected' : ''}`}>
-                      <input className="choice-input" type="radio" name={question.id} checked={selected} onChange={() => selectAnswer(index)} />
+                    <label key={option.id} className={`choice-option option-pill ${selected ? 'selected' : ''}`}>
+                      <input className="choice-input" type="radio" name={question.id} checked={selected} onChange={() => selectAnswer(option.id)} />
                       <span>{option.label}</span>
                     </label>
                   );
                 })}
               </div>
             </fieldset>
-            <p id="trial-hint" className="question-hint">Choose what you would actually do. Responses can show partial, mixed, or strong evidence.</p>
+            <p id="trial-hint" className="question-hint">There is no isolated mark for this choice. Its state transition changes every remaining decision and the terminal profile.</p>
             {validationMessage && <p id="trial-validation" className="question-hint validation-message" role="alert">{validationMessage}</p>}
           </section>
           <div className="controls-row">

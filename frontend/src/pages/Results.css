@@ -41,11 +41,74 @@
 }
 
 .trial-results-layout .summary-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .trial-results-layout .summary-card {
   background: rgba(20, 22, 27, 0.92);
+}
+
+.trial-terminal-state,
+.trial-impact-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--bg-border);
+  border-radius: var(--radius-md);
+  background: var(--bg-border);
+}
+
+.trial-terminal-state {
+  margin: calc(var(--space-10) * -0.35) 0 var(--space-10);
+}
+
+.trial-terminal-state > div,
+.trial-impact-list > div {
+  min-width: 0;
+  padding: var(--space-4);
+  background: rgba(20, 22, 27, 0.92);
+}
+
+.trial-terminal-state span,
+.trial-impact-list dt,
+.trial-potential span {
+  display: block;
+  margin-bottom: var(--space-2);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.trial-terminal-state strong,
+.trial-impact-list dd,
+.trial-potential strong {
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.trial-potential {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin: var(--space-5) 0;
+  padding: var(--space-3) var(--space-4);
+  border-left: 2px solid var(--accent-emerald);
+  background: rgba(16, 185, 129, 0.06);
+}
+
+.trial-potential span {
+  margin: 0;
+}
+
+.trial-impact-list {
+  margin: 0 0 var(--space-5);
 }
 
 .score-reveal-section {
@@ -982,7 +1045,12 @@
 
 @media (max-width: 900px) {
   .trial-results-layout .summary-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .trial-terminal-state,
+  .trial-impact-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .formula-waterfall {
@@ -996,6 +1064,14 @@
 
   .transition-grid,
   .scenario-footer-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .trial-results-layout .summary-grid,
+  .trial-terminal-state,
+  .trial-impact-list {
     grid-template-columns: 1fr;
   }
 }
