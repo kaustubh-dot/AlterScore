@@ -9,6 +9,7 @@
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   padding: var(--page-gutter);
+  overflow-y: auto;
   animation: modalFadeIn 300ms var(--ease-smooth) forwards;
 }
 
@@ -25,6 +26,8 @@
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.58);
   transform: translateY(24px) scale(0.96);
   animation: modalSlideUp 400ms var(--ease-spring) forwards;
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
 }
 
 .modal-card.glass {
@@ -49,6 +52,7 @@
 .modal-actions {
   display: flex;
   justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 12px;
 }
 

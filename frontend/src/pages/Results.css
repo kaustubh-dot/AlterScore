@@ -25,6 +25,10 @@
   text-transform: uppercase;
 }
 
+.trial-provenance {
+  color: var(--accent-amber);
+}
+
 .score-reveal-section {
   display: flex;
   flex-direction: column;

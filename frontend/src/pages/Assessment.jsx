@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, RefreshCw, ShieldCheck } from 'lucide-react';
 import Modal from '../components/ui/Modal';
 import TextReveal from '../components/animation/TextReveal';
@@ -22,6 +23,7 @@ import {
 import Processing from './Processing';
 import usePageTransition from '../hooks/usePageTransition';
 import useSound from '../hooks/useSound';
+import TrialAssessment from './TrialAssessment';
 import './Assessment.css';
 
 function getFormErrorMessage(error) {
@@ -51,7 +53,7 @@ function buildBehaviorProfileDisplay(form, scoreData) {
     : null;
 }
 
-export default function Assessment() {
+function FullAssessment() {
   const { transitionTo } = usePageTransition();
   const { playClick, playSelect, playSuccess } = useSound();
   const [hasStarted, setHasStarted] = useState(false);
@@ -348,7 +350,7 @@ export default function Assessment() {
 
   if (!hasStarted) {
     return (
-      <div className="assessment-layout">
+      <main className="assessment-layout">
         <button type="button" onClick={handleExit} className="assessment-exit-btn">
           <ArrowLeft size={12} aria-hidden="true" />
           <span>Exit</span>
@@ -390,14 +392,18 @@ export default function Assessment() {
           onConfirm={confirmExit}
           onCancel={() => { playClick(); setExitModalOpen(false); }}
         />
-      </div>
+      </main>
     );
   }
 
   if (formStatus === 'loading' || formStatus === 'error' || !form) {
     const isLoading = formStatus === 'loading';
     return (
-      <div className="processing-layout">
+      <main className="processing-layout">
+        <button type="button" onClick={handleExit} className="assessment-exit-btn">
+          <ArrowLeft size={12} aria-hidden="true" />
+          <span>Exit</span>
+        </button>
         <SignalCanvas />
         <div className="processing-container container">
           <div className="processing-card" role={isLoading ? 'status' : 'alert'} aria-live="polite">
@@ -422,7 +428,16 @@ export default function Assessment() {
             </div>
           </div>
         </div>
-      </div>
+        <Modal
+          isOpen={exitModalOpen}
+          title="Exit Assessment?"
+          message="This anonymous attempt will not be saved. Are you sure you want to exit?"
+          confirmText="Exit"
+          cancelText="Stay"
+          onConfirm={confirmExit}
+          onCancel={() => { playClick(); setExitModalOpen(false); }}
+        />
+      </main>
     );
   }
 
@@ -443,7 +458,7 @@ export default function Assessment() {
   const currentErrorId = validationMessage ? 'assessment-validation-message' : 'answer-hint';
 
   return (
-    <div className="assessment-layout">
+    <main className="assessment-layout">
       <div
         className="progress-rail"
         style={{ width: `${progressPercent}%` }}
@@ -528,6 +543,13 @@ export default function Assessment() {
         onConfirm={confirmExit}
         onCancel={() => { playClick(); setExitModalOpen(false); }}
       />
-    </div>
+    </main>
   );
+}
+
+export default function Assessment() {
+  const location = useLocation();
+  return new URLSearchParams(location.search).get('mode') === 'trial'
+    ? <TrialAssessment />
+    : <FullAssessment />;
 }

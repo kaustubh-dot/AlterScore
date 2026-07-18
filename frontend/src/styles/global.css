@@ -141,6 +141,22 @@ body::after {
   transform: translateY(0);
 }
 
+.btn-secondary {
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+  border-color: var(--bg-border);
+}
+
+.btn-secondary:not(:disabled):hover {
+  background: var(--bg-muted);
+  border-color: var(--text-secondary);
+  transform: translateY(-2px);
+}
+
+.btn-secondary:not(:disabled):active {
+  transform: translateY(0);
+}
+
 .btn-ghost {
   color: var(--text-secondary);
   background: transparent;

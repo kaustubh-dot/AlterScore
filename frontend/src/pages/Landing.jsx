@@ -13,6 +13,7 @@ import SignalCanvas from '../components/hero/SignalCanvas';
 import ScrollReveal from '../components/animation/ScrollReveal';
 import GlowCard from '../components/ui/GlowCard';
 import MagneticButton from '../components/ui/MagneticButton';
+import Modal from '../components/ui/Modal';
 import TextReveal from '../components/animation/TextReveal';
 import { PUBLIC_ASSESSMENT_ITEM_COUNT } from '../lib/assessmentV2';
 import { getSessionStorage, readStorageItem } from '../lib/safeStorage';
@@ -29,6 +30,7 @@ export default function Landing() {
   const { transitionTo } = usePageTransition();
   const [isLoaded, setIsLoaded] = useState(hasCompletedPreload);
   const [hideScroll, setHideScroll] = useState(false);
+  const [assessmentChooserOpen, setAssessmentChooserOpen] = useState(false);
 
   useEffect(() => {
     if (isLoaded) return;
@@ -60,12 +62,16 @@ export default function Landing() {
   }, [isLoaded]);
 
   const startAssessment = () => {
-    transitionTo('/assessment');
+    setAssessmentChooserOpen(true);
+  };
+  const chooseAssessment = (mode) => {
+    setAssessmentChooserOpen(false);
+    transitionTo(mode === 'trial' ? '/assessment?mode=trial' : '/assessment');
   };
   const questionCount = PUBLIC_ASSESSMENT_ITEM_COUNT;
 
   return (
-    <div className={`landing-page ${isLoaded ? 'loaded' : ''}`} style={!isLoaded ? { opacity: 0, pointerEvents: 'none' } : undefined}>
+    <main className={`landing-page ${isLoaded ? 'loaded' : ''}`} style={!isLoaded ? { opacity: 0, pointerEvents: 'none' } : undefined}>
       {isLoaded && (
         <>
           {/* Hero Section */}
@@ -88,7 +94,7 @@ export default function Landing() {
               <ScrollReveal direction="up" delay={650}>
                 <div className="hero-cta">
                   <MagneticButton onClick={startAssessment} className="btn-large" variant="primary">
-                    <span>Take the full assessment</span>
+                    <span>Start assessment</span>
                     <ArrowRight size={14} />
                   </MagneticButton>
                   <a className="btn btn-ghost btn-large hero-preview-link" href="#sample-result">
@@ -99,7 +105,7 @@ export default function Landing() {
 
               <ScrollReveal direction="up" delay={800}>
                 <div className="hero-meta">
-                  <span>{questionCount} required items • optional reflection • ~5 minutes</span>
+                  <span>Quick trial: 5 questions • Full: {questionCount} required items + optional reflection</span>
                 </div>
               </ScrollReveal>
             </div>
@@ -304,8 +310,21 @@ export default function Landing() {
               </ScrollReveal>
             </div>
           </section>
+          <Modal
+            isOpen={assessmentChooserOpen}
+            title="Choose your assessment"
+            message="Preview the experience in about two minutes, or complete the full assessment for calibrated, server-signed analysis."
+            onCancel={() => setAssessmentChooserOpen(false)}
+            actions={(
+              <>
+                <button type="button" className="btn btn-ghost" onClick={() => setAssessmentChooserOpen(false)}>Cancel</button>
+                <button type="button" className="btn btn-secondary" onClick={() => chooseAssessment('trial')}>Quick trial · 5 questions</button>
+                <button type="button" className="btn btn-primary" onClick={() => chooseAssessment('full')}>Full assessment</button>
+              </>
+            )}
+          />
         </>
       )}
-    </div>
+    </main>
   );
 }

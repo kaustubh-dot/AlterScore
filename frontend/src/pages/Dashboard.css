@@ -58,6 +58,16 @@
   min-height: 44px;
 }
 
+.btn-sidebar-action {
+  appearance: none;
+  width: 100%;
+  background: transparent;
+  border: 0;
+  border-left: 3px solid transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
 .sidebar-item:hover, .sidebar-item.active {
   color: var(--text-primary);
   background: rgba(255, 255, 255, 0.02);
@@ -84,18 +94,18 @@
   padding: var(--space-12) clamp(var(--space-6), 4vw, var(--space-12));
 }
 
-@media (max-width: 991px) {
+@media (max-width: 1100px) {
   .dashboard-sidebar {
     position: fixed;
     bottom: 0;
     left: 0;
     top: auto;
     width: 100%;
-    height: 64px;
+    height: calc(64px + env(safe-area-inset-bottom));
     flex-direction: row;
     justify-content: space-around;
     align-items: center;
-    padding: var(--space-2);
+    padding: var(--space-2) var(--space-2) max(var(--space-2), env(safe-area-inset-bottom));
     border-right: none;
     border-top: 1px solid rgba(255, 255, 255, 0.06);
   }
@@ -136,7 +146,7 @@
   }
   .dashboard-content {
     margin-left: 0;
-    padding-bottom: 84px;
+    padding-bottom: calc(84px + env(safe-area-inset-bottom));
   }
 }
 
@@ -474,11 +484,11 @@
     left: 0;
     top: auto;
     width: 100%;
-    height: 52px;
+    height: calc(62px + env(safe-area-inset-bottom));
     flex-direction: row;
     justify-content: space-around;
     align-items: center;
-    padding: var(--space-2);
+    padding: var(--space-2) var(--space-2) max(var(--space-2), env(safe-area-inset-bottom));
     border-right: none;
     border-top: 1px solid rgba(255, 255, 255, 0.06);
     z-index: 100;
@@ -526,7 +536,7 @@
 
   .dashboard-content {
     margin-left: 0;
-    padding: var(--space-6) 20px 76px;
+    padding: var(--space-6) 20px calc(82px + env(safe-area-inset-bottom));
   }
 
   .kpi-row {
@@ -554,7 +564,7 @@
 @media (max-width: 360px) {
   .dashboard-content {
     padding: var(--space-3);
-    padding-bottom: 64px;
+    padding-bottom: calc(82px + env(safe-area-inset-bottom));
   }
 
   .kpi-card {
@@ -734,6 +744,13 @@
   border-radius: var(--radius-lg);
   text-align: center;
   box-shadow: 0 12px 48px rgba(0,0,0,0.8);
+}
+
+.blank-state-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
 }
 
 .blank-state-card h1,
