@@ -1,68 +1,146 @@
 # AlterScore
 
-> Financial decisions are hard to improve when the feedback is only a number. AlterScore shows the score, the evidence behind it, and the next useful step.
+> A financial-readiness assessment that explains the score, shows the evidence, and suggests the next useful step.
 
-[![CI](https://github.com/kaustubh-dot/AlterScore/actions/workflows/ci.yml/badge.svg)](https://github.com/kaustubh-dot/AlterScore/actions/workflows/ci.yml)
+[![Hackathon build](https://img.shields.io/badge/Hackathon-Built%20with%20Codex-111111?style=for-the-badge)](https://openai.com/codex/)
+[![CI](https://img.shields.io/github/actions/workflow/status/kaustubh-dot/AlterScore/ci.yml?branch=main&style=for-the-badge&label=CI)](https://github.com/kaustubh-dot/AlterScore/actions/workflows/ci.yml)
+[![Live](https://img.shields.io/badge/Live-Try%20AlterScore-00C2A8?style=for-the-badge)](https://alterscore.vercel.app/)
 
-**[Try the live demo](https://alterscore.vercel.app/)** · **[Preview a sample result](https://alterscore.vercel.app/#sample-result)** · **[Read the API contract](docs/API_CONTRACTS.md)**
+**[Open the live app](https://alterscore.vercel.app/)** · **[Take the 2-minute quick trial](https://alterscore.vercel.app/assessment?mode=trial)** · **[Preview a sample result](https://alterscore.vercel.app/#sample-result)**
 
-AlterScore is an anonymous educational assessment for students, first-time earners, and anyone building confidence with money. It combines short financial calculations with branching real-world decisions, then returns a transparent 0–100 readiness index, worked evidence, and practical recommendations.
+AlterScore helps students, first-time earners, and people building confidence with money understand how they handle practical financial decisions. Instead of returning an unexplained number, it connects the result to calculations, decision paths, evidence, and concrete areas to improve.
 
-## Why it is different
+## Judge it in two minutes
 
-- **Decisions have consequences.** Three-stage simulations carry financial state from one choice into the next.
-- **The score explains itself.** Every domain, contribution, recommendation, and simulation replay can be inspected.
-- **Trust is part of the product.** The server owns the rubric, consumes one-time attempts, and signs a redacted result that can be verified publicly.
-- **The boundary is explicit.** AlterScore teaches; it never predicts repayment or makes a lending decision.
+1. Open the **[quick trial](https://alterscore.vercel.app/assessment?mode=trial)**.
+2. Answer five practical financial questions.
+3. Inspect the instant readiness snapshot, domain breakdown, and response-by-response guidance.
+4. From the result, open the full assessment to see the server-issued, signed experience.
+
+No login, documents, identity data, device fingerprint, or credit history is required.
+
+## The problem
+
+Financial-literacy quizzes often stop at right or wrong. Credit products often produce high-impact outputs that users cannot inspect. Neither is a good way to help someone practise making better decisions.
+
+AlterScore takes a narrower, safer approach:
+
+- test financial knowledge with practical calculations;
+- carry financial state through branching decisions;
+- explain every displayed contribution and recommendation;
+- keep identity and credit history outside the scoring boundary;
+- clearly avoid lending, approval, and creditworthiness decisions.
 
 <p align="center">
-  <img src="docs/assets/readme-xiaohei/01-evidence-not-identity.png" alt="Xiaohei turns financial knowledge and decisions into a readiness score while identity stays outside the scoring boundary" width="880">
+  <img src="docs/assets/readme-xiaohei/01-evidence-not-identity.png" alt="Financial knowledge and decisions enter a fixed scoring rubric while identity remains outside" width="880">
   <br>
-  <em>AlterScore scores financial knowledge and decisions—not identity or credit history.</em>
+  <em>Knowledge and decisions go in. Identity stays out.</em>
 </p>
 
-## Important boundaries
+## What we built
 
-AlterScore is a demonstration, not a lender, credit bureau, underwriting tool, approval system, repayment predictor, financial product, or source of credit offers. It must not be used to make lending, creditworthiness, approval, denial, or other high-impact financial decisions.
+### Quick trial
 
-The application does not use behavioral answers or the optional narrative to calculate a score. Historical labels, fairness reports, and model evaluation materials were synthetic; they are not external validation.
+A five-question, client-side preview for judges and first-time visitors. It produces immediate domain feedback and answer guidance in roughly two minutes. The result is deliberately labelled **illustrative and unsigned**.
 
-## What is included
+### Full assessment
 
-- An anonymous v2 assessment with objective items, static judgment items, financial-state simulations, and unscored reflection prompts.
-- A deterministic 0–100 Financial Decision Index with an illustrative 300–850 transform.
-- A React frontend with explainable results and a session-only dashboard.
-- A FastAPI backend with signed results, one-time bearer attempts, bounded in-memory verification, and HTTPS-only remote token transport.
-- CI checks covering linting, contracts, release boundaries, backend tests, and the serving image.
+A server-issued assessment combining:
+
+- financial calculations;
+- static decision-judgement items;
+- three-stage branching simulations;
+- optional, explicitly unscored reflection prompts.
+
+The backend validates opaque response IDs, consumes the attempt once, applies a deterministic rubric, and returns an explainable 0–100 Financial Decision Index. A redacted projection is signed with HMAC-SHA256 and can be verified through the public API.
+
+<p align="center">
+  <img src="docs/assets/readme-xiaohei/02-branching-decisions.png" alt="A branching choice changes the financial state inherited by the next decision" width="880">
+  <br>
+  <em>A choice changes the state inherited by the next choice.</em>
+</p>
+
+## Why it stands out
+
+| Capability | What the user gets |
+| --- | --- |
+| Stateful scenarios | Decisions have visible downstream consequences instead of isolated multiple-choice scoring. |
+| Inspectable evidence | Domain scores, calculation contributions, simulation replay, and recommendations can be opened and checked. |
+| Verifiable result | The full assessment returns a signed, redacted summary with a public verification route. |
+| Privacy-first flow | No account, identity, device profile, documents, or credit history enters the score. |
+| Accessible experience | Keyboard focus management, reduced-motion support, responsive layouts, safe-area handling, and usable touch targets. |
+| Honest product boundary | The UI repeatedly states that AlterScore is educational—not a lender or approval system. |
+
+<p align="center">
+  <img src="docs/assets/readme-xiaohei/03-explainable-results.png" alt="An explainable score includes its calculation, evidence, and next step" width="880">
+  <br>
+  <em>The score is only the start: calculation, evidence, and next step travel with it.</em>
+</p>
 
 ## Built with Codex
 
-AlterScore was built and hardened with Codex as an engineering collaborator. Codex helped inspect the repository, implement scoped frontend and backend changes, trace API contracts, review security boundaries, write focused tests, run end-to-end verification, and simplify patches before they shipped. The public score itself remains deterministic and auditable; Codex is part of the development workflow, not a hidden scoring dependency.
+Codex was the engineering collaborator behind this hackathon build. It was used to:
 
-<p align="center">
-  <img src="docs/assets/readme-xiaohei/02-branching-decisions.png" alt="Xiaohei makes a branching choice that changes the financial state inherited by the next decision" width="880">
-  <br>
-  <em>Each branching choice changes the financial state that the next decision inherits.</em>
-</p>
+- audit the existing repository and trace frontend/backend contracts;
+- implement the quick-trial and judge-friendly product path;
+- improve responsive behavior across mobile, tablet, and desktop;
+- find UI failures through browser-based visual inspection;
+- harden accessibility, reduced-motion behavior, and destructive-action flows;
+- write and run focused contract, explainability, separation, and release tests;
+- inspect diffs and keep changes scoped before deployment.
+
+There is intentionally **no runtime AI dependency** in the assessment. Codex helped build and verify the product; it does not secretly generate questions, judge users, or calculate their score. The scoring path remains deterministic and auditable.
 
 ## Architecture
 
 ```text
-React assessment → FastAPI v2 API → deterministic scorer → signed, explainable result
+                     ┌─────────────────────────────┐
+Quick trial ────────▶│ React + Vite               │──▶ Illustrative result
+                     │ responsive assessment UI    │
+                     └──────────────┬──────────────┘
+                                    │ HTTPS
+                                    ▼
+                     ┌─────────────────────────────┐
+Full assessment ───▶ │ FastAPI v2                 │
+                     │ one-time attempt lifecycle │
+                     └──────────────┬──────────────┘
+                                    ▼
+                     ┌─────────────────────────────┐
+                     │ Deterministic rubric       │
+                     │ + explainability pipeline  │
+                     └──────────────┬──────────────┘
+                                    ▼
+                       Signed, verifiable result
 ```
 
-| Area | Location |
-| --- | --- |
-| Public API, assessment instrument, and scorer | [`backend/app/`](backend/app/) |
-| React assessment and results experience | [`frontend/`](frontend/) |
-| Tests | [`tests/`](tests/) |
-| API, deployment, rollback, and methodology docs | [`docs/`](docs/) |
+| Layer | Technology | Location |
+| --- | --- | --- |
+| Interface | React 19, Vite 8, CSS, Lucide | [`frontend/`](frontend/) |
+| API | Python 3.12, FastAPI, Pydantic | [`backend/app/`](backend/app/) |
+| Scoring | Deterministic objective and branching rubric | [`backend/app/unified_scoring/`](backend/app/unified_scoring/) |
+| Integrity | One-time bearer attempts, HMAC-SHA256 result signing | [`backend/app/api/v2/`](backend/app/api/v2/) |
+| Quality | Pytest, Node contract tests, ESLint, GitHub Actions | [`tests/`](tests/) and [`frontend/tests/`](frontend/tests/) |
+| Deployment | Vercel frontend, containerized backend | [`deploy/`](deploy/) and [`Dockerfile`](Dockerfile) |
 
-<p align="center">
-  <img src="docs/assets/readme-xiaohei/03-explainable-results.png" alt="Xiaohei pulls an explanation showing a score calculation, supporting evidence, and next step" width="880">
-  <br>
-  <em>A score arrives with its calculation, supporting evidence, and a practical next step.</em>
-</p>
+The detailed transport contract is documented in [`docs/API_CONTRACTS.md`](docs/API_CONTRACTS.md).
+
+## Hardest engineering challenges
+
+### Explainability without leaking authority
+
+The browser needs enough evidence to explain a result, but it must not receive hidden answer keys or the scoring rubric. The API therefore returns a bounded explanation projection after a one-time submission rather than shipping scoring authority to the client.
+
+### Stateful decisions that reconcile
+
+Each branching scenario carries a financial state from one stage to the next. The displayed replay, domain contribution, and final index must reconcile with the same deterministic path.
+
+### Secure one-time attempts in a modern React lifecycle
+
+Attempt issuance, cancellation, retries, and submission had to remain safe under React Strict Mode, slow networks, route transitions, and expired attempts without accidentally consuming a form twice.
+
+### A polished interface across real viewports
+
+The final pass covered 320, 390, 768, 1024, 1280, and 1440 pixel widths. It fixed overlapping controls, undersized touch targets, short-screen modals, safe areas, route focus, reduced motion, and confirmation before destructive actions.
 
 ## Run locally
 
@@ -81,15 +159,17 @@ npm install
 npm run dev
 ```
 
-Set `ALTERSCORE_SIGNING_SECRET` to a generated base64url secret before using the assessment. The frontend uses `VITE_API_BASE_URL` to find the API; see the [frontend README](frontend/README.md) for the local override and production-build requirements.
+Set `ALTERSCORE_SIGNING_SECRET` to a generated base64url secret. Set `VITE_API_BASE_URL` when the API is not available at the frontend's default local address. Production builds additionally require `VITE_RELEASE_SHA`; see [`frontend/README.md`](frontend/README.md).
 
-## Verify changes
+## Verify the build
 
 ```bash
+# Backend
 python -m pip install -r backend/requirements.txt
 python -m pip install -r backend/requirements-dev.txt
 python -m pytest tests/unit/backend tests/integration/api
 
+# Frontend
 cd frontend
 npm run lint
 npm run test:phase5
@@ -98,18 +178,19 @@ npm run test:phase7
 npm run test:phase8
 ```
 
-For a production build, set `VITE_RELEASE_SHA` to the reviewed backend commit SHA before running `npm run build`. The [deployment guide](docs/DEPLOYMENT.md) and [rollback checklist](docs/ROLLBACK_CHECKLIST.md) describe the release process.
+CI also checks the serving image, API contract, explainability invariants, release boundaries, and frontend production build.
 
-## Contributing
+## What comes next
 
-<p align="center">
-  <img src="docs/assets/readme-xiaohei/04-open-source-contributions.png" alt="Xiaohei fits code, tests, documentation, and review into one open-source toolbox" width="880">
-  <br>
-  <em>Reliable contributions fit code, tests, documentation, and review into one working whole.</em>
-</p>
+- More scenario packs covering budgeting, borrowing, savings, and irregular income.
+- Localized financial language and currency-aware examples.
+- Longitudinal progress that preserves the current privacy boundary.
+- User testing with students and first-time earners before any claim of educational effectiveness.
 
-Contributions that improve clarity, accessibility, security, tests, documentation, and the assessment experience are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
+## Safety boundary
+
+AlterScore is an educational demonstration. It is not a lender, credit bureau, underwriting system, repayment predictor, financial adviser, approval tool, or source of credit offers. It must not be used for lending, eligibility, pricing, approval, denial, or any other high-impact financial decision.
 
 ## License
 
-AlterScore is available under the [MIT License](LICENSE).
+Released under the [MIT License](LICENSE). The community-oriented project history remains available on the [`oss-main`](https://github.com/kaustubh-dot/AlterScore/tree/oss-main) branch.
