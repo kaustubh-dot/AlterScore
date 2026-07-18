@@ -3,7 +3,7 @@ import { ArrowLeft, ArrowRight, ShieldCheck } from 'lucide-react';
 import Modal from '../components/ui/Modal';
 import usePageTransition from '../hooks/usePageTransition';
 import useSound from '../hooks/useSound';
-import { scoreTrialAssessment, TRIAL_QUESTIONS } from '../lib/trialAssessment';
+import { saveTrialResult, scoreTrialAssessment, TRIAL_QUESTIONS } from '../lib/trialAssessment';
 
 export default function TrialAssessment() {
   const { transitionTo } = usePageTransition();
@@ -32,7 +32,9 @@ export default function TrialAssessment() {
       return;
     }
     playSuccess();
-    transitionTo('/results?mode=trial', { state: { trialResult: scoreTrialAssessment(answers) } });
+    const result = scoreTrialAssessment(answers);
+    saveTrialResult(result);
+    transitionTo('/results?mode=trial', { state: { trialResult: result } });
   };
 
   const exit = () => {

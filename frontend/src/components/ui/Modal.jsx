@@ -11,26 +11,29 @@ export default function Modal({
   onConfirm,
   onCancel,
   actions,
+  actionsClassName = '',
 }) {
   const titleId = useId();
   const messageId = useId();
   const modalRef = useRef(null);
   const previouslyFocusedRef = useRef(null);
+  const previousOverflowRef = useRef('');
 
   useEffect(() => {
-    if (isOpen) {
-      previouslyFocusedRef.current = document.activeElement;
-      document.body.style.overflow = 'hidden';
-      requestAnimationFrame(() => {
-        const firstButton = modalRef.current?.querySelector('button');
-        firstButton?.focus({ preventScroll: true });
-      });
-    } else {
-      document.body.style.overflow = '';
-    }
+    if (!isOpen) return undefined;
+
+    previouslyFocusedRef.current = document.activeElement;
+    previousOverflowRef.current = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    requestAnimationFrame(() => {
+      const firstButton = modalRef.current?.querySelector('button');
+      firstButton?.focus({ preventScroll: true });
+    });
+
     return () => {
-      document.body.style.overflow = '';
-      previouslyFocusedRef.current?.focus?.({ preventScroll: true });
+      document.body.style.overflow = previousOverflowRef.current;
+      const previouslyFocused = previouslyFocusedRef.current;
+      if (previouslyFocused?.isConnected) previouslyFocused.focus({ preventScroll: true });
     };
   }, [isOpen]);
 
@@ -83,7 +86,7 @@ export default function Modal({
           <h3 id={titleId} className="modal-title gradient-text-accent">{title}</h3>
           <p id={messageId} className="modal-message">{message}</p>
         </div>
-        <div className="modal-actions">
+        <div className={`modal-actions ${actionsClassName}`.trim()}>
           {actions || (
             <>
               <button type="button" className="btn btn-ghost" onClick={onCancel}>

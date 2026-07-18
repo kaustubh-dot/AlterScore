@@ -36,10 +36,6 @@ export default function Navbar() {
         >
           <Activity className="logo-icon" size={16} />
           <span className="logo-text">AlterScore</span>
-          <span className="logo-tag">
-            <span className="pulse-dot" />
-            <span>v2.0</span>
-          </span>
         </button>
         <div className="navbar-links">
           <button

@@ -1,3 +1,7 @@
+import { getSessionStorage, readStorageItem, removeStorageItem, writeStorageItem } from './safeStorage';
+
+export const TRIAL_RESULT_STORAGE_KEY = 'alterscore_trial_result';
+
 export const TRIAL_QUESTIONS = Object.freeze([
   {
     id: 'cash-flow',
@@ -91,4 +95,24 @@ export function isTrialResult(value) {
     && Array.isArray(value.feedback)
     && value.feedback.length === TRIAL_QUESTIONS.length
     && Array.isArray(value.recommendations);
+}
+
+export function saveTrialResult(result) {
+  if (!isTrialResult(result)) return false;
+  return writeStorageItem(getSessionStorage(), TRIAL_RESULT_STORAGE_KEY, JSON.stringify(result));
+}
+
+export function getStoredTrialResult() {
+  const raw = readStorageItem(getSessionStorage(), TRIAL_RESULT_STORAGE_KEY);
+  if (!raw) return null;
+  try {
+    const result = JSON.parse(raw);
+    return isTrialResult(result) ? result : null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearStoredTrialResult() {
+  removeStorageItem(getSessionStorage(), TRIAL_RESULT_STORAGE_KEY);
 }

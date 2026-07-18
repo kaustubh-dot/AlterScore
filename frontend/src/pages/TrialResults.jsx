@@ -1,6 +1,7 @@
 import { AlertCircle, ArrowRight, CheckCircle2, Lightbulb, RefreshCw } from 'lucide-react';
 import usePageTransition from '../hooks/usePageTransition';
 import useSound from '../hooks/useSound';
+import { clearStoredTrialResult } from '../lib/trialAssessment';
 
 export default function TrialResults({ result }) {
   const { transitionTo } = usePageTransition();
@@ -8,7 +9,7 @@ export default function TrialResults({ result }) {
   const ringOffset = 440 - (440 * result.score) / 100;
 
   return (
-    <div className="results-layout">
+    <div className="results-layout trial-results-layout">
       <main className="results-container container" aria-labelledby="trial-results-title">
         <header className="results-page-header">
           <div className="result-provenance trial-provenance" role="status"><AlertCircle size={14} aria-hidden="true" /><span>Quick trial · illustrative, unsigned result</span></div>
@@ -22,7 +23,7 @@ export default function TrialResults({ result }) {
             <svg width="200" height="200" viewBox="0 0 200 200" className="score-svg" aria-hidden="true"><circle cx="100" cy="100" r="70" className="score-track" /><circle cx="100" cy="100" r="70" className="score-progress" style={{ strokeDashoffset: ringOffset }} /></svg>
             <div className="score-text-box"><span className="score-sub" id="trial-score-heading">Trial score</span><span className="score-num font-mono">{result.score}</span><span className="score-band">{result.band}</span></div>
           </div>
-          <p className="score-disclaimer">An educational preview based on five fixed questions—not a credit score, lending decision, or verified full-assessment result.</p>
+          <p className="score-disclaimer">A five-question snapshot across cash flow, borrowing cost, buffers, and due-date decisions.</p>
         </section>
 
         <section className="summary-grid" aria-label="Trial assessment summary">
@@ -48,7 +49,7 @@ export default function TrialResults({ result }) {
 
         <div className="actions-row visible">
           <button type="button" className="btn btn-secondary" onClick={() => { playClick(); transitionTo('/assessment?mode=trial'); }}><RefreshCw size={16} aria-hidden="true" /> Retry quick trial</button>
-          <button type="button" className="btn btn-primary" onClick={() => { playClick(); transitionTo('/assessment'); }}>Take full assessment <ArrowRight size={16} aria-hidden="true" /></button>
+          <button type="button" className="btn btn-primary" onClick={() => { playClick(); clearStoredTrialResult(); transitionTo('/assessment'); }}>Take full assessment <ArrowRight size={16} aria-hidden="true" /></button>
         </div>
       </main>
     </div>

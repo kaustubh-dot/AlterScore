@@ -143,7 +143,7 @@ export default function Landing() {
                       <strong>72</strong>
                       <small>0–100</small>
                     </div>
-                    <p>A learning snapshot, never a credit score or lending decision.</p>
+                    <p>A learning snapshot of financial knowledge and decision readiness.</p>
                   </div>
 
                   <div className="sample-insight-panel">
@@ -281,7 +281,7 @@ export default function Landing() {
                       <h3 className="step-title">View the signed summary</h3>
                       <p className="step-desc">
                         Get the readiness index, domain summaries, limitations, and
-                        a verification link — not a financial verdict.
+                        a verification link and evidence you can inspect.
                       </p>
                     </GlowCard>
                   </ScrollReveal>
@@ -315,6 +315,7 @@ export default function Landing() {
             title="Choose your assessment"
             message="Preview the experience in about two minutes, or complete the full assessment for calibrated, server-signed analysis."
             onCancel={() => setAssessmentChooserOpen(false)}
+            actionsClassName="assessment-chooser-actions"
             actions={(
               <>
                 <button type="button" className="btn btn-ghost" onClick={() => setAssessmentChooserOpen(false)}>Cancel</button>

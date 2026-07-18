@@ -56,6 +56,16 @@
   gap: 12px;
 }
 
+.assessment-chooser-actions {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.assessment-chooser-actions .btn {
+  width: 100%;
+  min-height: 48px;
+}
+
 @media (max-width: 640px) {
   .modal-overlay {
     align-items: flex-end;
@@ -82,6 +92,10 @@
   .modal-actions {
     flex-direction: column-reverse;
     gap: 10px;
+  }
+
+  .assessment-chooser-actions {
+    flex-direction: column;
   }
 
   .modal-actions .btn {

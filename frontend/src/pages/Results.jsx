@@ -2,6 +2,7 @@ import { AlertCircle, ArrowRight, CheckCircle2, ExternalLink, GitBranch, Lightbu
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getV2VerificationUrl } from '../lib/api';
+import { getStoredTrialResult, isTrialResult } from '../lib/trialAssessment';
 import {
   clearSignedResult,
   getStoredSignedResult,
@@ -14,7 +15,6 @@ import usePageTransition from '../hooks/usePageTransition';
 import useSound from '../hooks/useSound';
 import Modal from '../components/ui/Modal';
 import TrialResults from './TrialResults';
-import { isTrialResult } from '../lib/trialAssessment';
 import './Results.css';
 
 const CONCEPT_LABELS = {
@@ -132,7 +132,10 @@ export default function Results() {
   const [behaviorProfile] = useState(() => getBehaviorProfileFromLocation(location));
   const [clearModalOpen, setClearModalOpen] = useState(false);
   const evidenceDetailsRef = useRef(null);
-  const trialResult = isTrialResult(location.state?.trialResult) ? location.state.trialResult : null;
+  const trialMode = new URLSearchParams(location.search).get('mode') === 'trial';
+  const trialResult = trialMode
+    ? (isTrialResult(location.state?.trialResult) ? location.state.trialResult : getStoredTrialResult())
+    : null;
   const detailed = isV2DetailedResult(result);
   const explanation = detailed ? result.explanation : null;
 
@@ -147,6 +150,14 @@ export default function Results() {
       window.history.replaceState({ ...historyState, usr: result }, document.title);
     }
   }, [behaviorProfile, result]);
+
+  useEffect(() => {
+    if (!trialResult) return;
+    const historyState = window.history.state;
+    if (historyState && typeof historyState === 'object' && Object.hasOwn(historyState, 'usr')) {
+      window.history.replaceState({ ...historyState, usr: { trialResult } }, document.title);
+    }
+  }, [trialResult]);
 
   const objectiveAnchors = useMemo(() => new Map(
     explanation?.objective_items.map((item, index) => [item.presentation_id, `objective-${index + 1}`]) || [],
@@ -208,7 +219,7 @@ export default function Results() {
               <span className="score-band">0–100</span>
             </div>
           </div>
-          <p className="score-disclaimer">An educational readiness rubric, not repayment probability, creditworthiness, approval, eligibility, pricing, or a loan offer.</p>
+          <p className="score-disclaimer">A deterministic readiness index built from the knowledge and decision evidence above.</p>
         </section>
 
         <section className="summary-grid" aria-label="Assessment summary">
@@ -488,7 +499,7 @@ export default function Results() {
         <section className="verification-card" aria-labelledby="verification-heading">
           <ResultHeader eyebrow="Public proof" title="Verify the signed summary" id="verification-heading" />
           <p>The verification response contains only the redacted signed projection. It does not expose answers, behavior values, narrative text, or explanation detail.</p>
-          <a className="verification-link" href={verificationUrl} target="_blank" rel="noreferrer">
+          <a className="verification-link" href={verificationUrl} target="_blank" rel="noreferrer" aria-label="Open verification response (opens in a new tab)">
             Open verification response <ExternalLink size={14} aria-hidden="true" />
           </a>
         </section>

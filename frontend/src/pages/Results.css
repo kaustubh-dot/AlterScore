@@ -29,6 +29,25 @@
   color: var(--accent-amber);
 }
 
+.trial-results-layout {
+  background:
+    radial-gradient(circle at 50% 8%, rgba(16, 185, 129, 0.1), transparent 30%),
+    linear-gradient(180deg, #111318 0%, var(--bg-void) 58%, #0b0c0f 100%);
+}
+
+.trial-results-layout .score-circle-wrapper {
+  background: rgba(20, 24, 27, 0.94);
+  box-shadow: 0 0 42px rgba(16, 185, 129, 0.2);
+}
+
+.trial-results-layout .summary-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.trial-results-layout .summary-card {
+  background: rgba(20, 22, 27, 0.92);
+}
+
 .score-reveal-section {
   display: flex;
   flex-direction: column;
@@ -80,6 +99,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 1px;
+  transform: translateY(-6px);
 }
 
 .score-sub,
@@ -107,8 +128,18 @@
 }
 
 .score-band {
-  margin-top: var(--space-2);
+  margin-top: 0;
   color: var(--accent-emerald);
+  padding: 1px 4px;
+  border-radius: 2px;
+  background: var(--bg-surface);
+  font-size: 0.625rem;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.trial-results-layout .score-band {
+  background: rgba(20, 24, 27, 0.94);
 }
 
 .score-disclaimer {
@@ -942,6 +973,10 @@
 }
 
 @media (max-width: 900px) {
+  .trial-results-layout .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
   .formula-waterfall {
     grid-template-columns: 1fr;
   }

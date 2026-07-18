@@ -53,16 +53,6 @@
   transform: scale(1.05);
 }
 
-.logo-tag {
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-  background: var(--bg-border);
-  padding: 1px 6px;
-  border-radius: var(--radius-sm);
-  font-weight: 500;
-  letter-spacing: 0;
-}
-
 .navbar-links {
   display: flex;
   align-items: center;
@@ -129,26 +119,6 @@
   min-height: 44px;
 }
 
-.logo-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.pulse-dot {
-  width: 4px;
-  height: 4px;
-  background-color: var(--accent-emerald);
-  border-radius: 50%;
-  display: inline-block;
-  box-shadow: 0 0 6px var(--accent-emerald);
-  animation: pulseGreen 1.5s infinite;
-}
-
-@keyframes pulseGreen {
-  0%, 100% { transform: scale(1); opacity: 0.6; }
-  50% { transform: scale(1.4); opacity: 1; }
-}
 
 @media (max-width: 640px) {
   .navbar {
