@@ -1,4 +1,4 @@
-import { AlertCircle, ArrowRight, CheckCircle2, Lightbulb, RefreshCw } from 'lucide-react';
+import { AlertCircle, ArrowRight, Lightbulb, RefreshCw, ShieldCheck } from 'lucide-react';
 import usePageTransition from '../hooks/usePageTransition';
 import useSound from '../hooks/useSound';
 import { clearStoredTrialResult } from '../lib/trialAssessment';
@@ -13,36 +13,36 @@ export default function TrialResults({ result }) {
       <main className="results-container container" aria-labelledby="trial-results-title">
         <header className="results-page-header">
           <div className="result-provenance trial-provenance" role="status"><AlertCircle size={14} aria-hidden="true" /><span>Quick trial · illustrative, unsigned result</span></div>
-          <span className="section-eyebrow">Five-question product preview</span>
-          <h1 id="trial-results-title">Your trial readiness snapshot</h1>
-          <p>This short result highlights immediate strengths and review areas. Complete the full assessment for broader evidence and a server-signed score.</p>
+          <span className="section-eyebrow">Weighted branching preview</span>
+          <h1 id="trial-results-title">Your trial readiness profile</h1>
+          <p>This profile combines graded knowledge, resilience, and decision evidence. Complete the full assessment for longer simulations and a server-signed result.</p>
         </header>
 
         <section className="score-reveal-section" aria-labelledby="trial-score-heading">
           <div className="score-circle-wrapper" role="img" aria-label={`Quick trial score ${result.score} out of 100`}>
             <svg width="200" height="200" viewBox="0 0 200 200" className="score-svg" aria-hidden="true"><circle cx="100" cy="100" r="70" className="score-track" /><circle cx="100" cy="100" r="70" className="score-progress" style={{ strokeDashoffset: ringOffset }} /></svg>
-            <div className="score-text-box"><span className="score-sub" id="trial-score-heading">Trial score</span><span className="score-num font-mono">{result.score}</span><span className="score-band">{result.band}</span></div>
+            <div className="score-text-box"><span className="score-sub" id="trial-score-heading">Readiness index</span><span className="score-num font-mono">{result.score}</span><span className="score-band">{result.band}</span></div>
           </div>
-          <p className="score-disclaimer">A five-question snapshot across cash flow, borrowing cost, buffers, and due-date decisions.</p>
+          <p className="score-disclaimer">A weighted educational preview based on response quality and the path through a two-stage decision scenario—not five equal marks.</p>
         </section>
 
         <section className="summary-grid" aria-label="Trial assessment summary">
-          <article className="summary-card"><span className="card-kicker">Questions correct</span><h2 className="summary-value font-mono">{result.correctCount} / {result.total}</h2><p>Your overall performance in this quick trial.</p></article>
-          {result.domainScores.map((domain) => <article className="summary-card" key={domain.name}><span className="card-kicker">{domain.name}</span><h2 className="summary-value font-mono">{domain.score}%</h2><p>Performance within the trial questions for this domain.</p></article>)}
+          {result.domainScores.map((domain) => <article className="summary-card" key={domain.name}><span className="card-kicker">{domain.name}</span><h2 className="summary-value font-mono">{domain.score}</h2><p>Weighted evidence on a 0–100 domain scale.</p></article>)}
         </section>
 
         <section className="results-section recommendations-section" aria-labelledby="trial-focus-heading">
-          <div className="results-section-header"><span className="section-eyebrow">Next steps</span><h2 id="trial-focus-heading" className="results-section-title">What to focus on next</h2><p className="section-intro">Guidance is linked to the trial responses that most need attention.</p></div>
+          <div className="results-section-header"><span className="section-eyebrow">Next steps</span><h2 id="trial-focus-heading" className="results-section-title">What to focus on next</h2><p className="section-intro">Guidance is prioritised by the weakest high-impact evidence, not by a simple wrong-answer count.</p></div>
           <ul className="recommendation-list">{result.recommendations.map((item) => <li key={item} className="recommendation-item"><Lightbulb size={18} aria-hidden="true" /><p>{item}</p></li>)}</ul>
         </section>
 
         <details className="results-disclosure">
-          <summary><span><strong>Review all five responses</strong><small>See your answer, the stronger response, and why it matters.</small></span><span className="disclosure-action" aria-hidden="true">View analysis</span></summary>
+          <summary><span><strong>Review the decision evidence</strong><small>See the principle, trade-off, benchmark response, and your branching path.</small></span><span className="disclosure-action" aria-hidden="true">View analysis</span></summary>
           <div className="disclosure-content explanation-stack">
             {result.feedback.map((item) => <article className="evidence-card objective-card" key={item.id}>
-              <div className="evidence-card-header"><div><span className="section-eyebrow">Question {String(item.number).padStart(2, '0')} · {item.domain}</span><h3>{item.prompt}</h3></div><span className={`result-chip ${item.isCorrect ? 'result-chip-success' : 'result-chip-warning'}`}>{item.isCorrect ? <CheckCircle2 size={14} aria-hidden="true" /> : <AlertCircle size={14} aria-hidden="true" />}{item.isCorrect ? 'Correct' : 'Review'}</span></div>
-              <div className="answer-pair"><div><span>Your response</span><strong>{item.selected}</strong></div><div><span>Stronger response</span><strong>{item.correct}</strong></div></div>
-              <p className="evidence-explanation">{item.explanation}</p>
+              <div className="evidence-card-header"><div><span className="section-eyebrow">Decision {String(item.number).padStart(2, '0')} · {item.pathLabel || item.domain}</span><h3>{item.prompt}</h3></div><span className={`result-chip ${item.quality >= 3 ? 'result-chip-success' : 'result-chip-warning'}`}>{item.quality >= 3 ? <ShieldCheck size={14} aria-hidden="true" /> : <AlertCircle size={14} aria-hidden="true" />}{item.rating}</span></div>
+              <div className="answer-pair"><div><span>Your decision</span><strong>{item.selected}</strong></div><div><span>Benchmark response</span><strong>{item.benchmark}</strong></div></div>
+              <dl className="principle-list"><div><dt>Principle</dt><dd>{item.principle}</dd></div><div><dt>Protects</dt><dd>{item.protects}</dd></div><div><dt>Trade-off or risk</dt><dd>{item.risks}</dd></div></dl>
+              <p className="evidence-explanation">{item.analysis}</p>
             </article>)}
           </div>
         </details>

@@ -3,7 +3,7 @@ import { ArrowLeft, ArrowRight, ShieldCheck } from 'lucide-react';
 import Modal from '../components/ui/Modal';
 import usePageTransition from '../hooks/usePageTransition';
 import useSound from '../hooks/useSound';
-import { saveTrialResult, scoreTrialAssessment, TRIAL_QUESTIONS } from '../lib/trialAssessment';
+import { getTrialQuestion, saveTrialResult, scoreTrialAssessment, TRIAL_QUESTIONS } from '../lib/trialAssessment';
 
 export default function TrialAssessment() {
   const { transitionTo } = usePageTransition();
@@ -14,7 +14,7 @@ export default function TrialAssessment() {
   const [validationMessage, setValidationMessage] = useState('');
   const [exitModalOpen, setExitModalOpen] = useState(false);
   const headingRef = useRef(null);
-  const question = TRIAL_QUESTIONS[currentIndex];
+  const question = getTrialQuestion(currentIndex, answers);
   const isLast = currentIndex === TRIAL_QUESTIONS.length - 1;
 
   useEffect(() => {
@@ -37,6 +37,16 @@ export default function TrialAssessment() {
     transitionTo('/results?mode=trial', { state: { trialResult: result } });
   };
 
+  const selectAnswer = (index) => {
+    setAnswers((previous) => {
+      const next = { ...previous, [question.id]: index };
+      if (question.id === 'due-date') delete next['branch-outcome'];
+      return next;
+    });
+    setValidationMessage('');
+    playSelect();
+  };
+
   const exit = () => {
     playClick();
     setExitModalOpen(false);
@@ -55,9 +65,10 @@ export default function TrialAssessment() {
               <div className="consent-icon"><ShieldCheck size={32} aria-hidden="true" /></div>
               <h1 className="consent-title">Financial Readiness Quick Trial</h1>
               <div className="consent-text">
-                <p>A five-question preview designed for a quick product evaluation. You will receive an immediate score, domain analysis, and answer guidance.</p>
+                <p>A five-decision preview using weighted evidence and a branching scenario. Responses are evaluated by strength and trade-offs, not equal marks per question.</p>
                 <div className="telemetry-specs">
-                  <div className="spec-item"><ShieldCheck size={16} className="spec-icon" aria-hidden="true" /><span>About two minutes to complete</span></div>
+                  <div className="spec-item"><ShieldCheck size={16} className="spec-icon" aria-hidden="true" /><span>About three minutes to complete</span></div>
+                  <div className="spec-item"><ShieldCheck size={16} className="spec-icon" aria-hidden="true" /><span>The final scenario changes based on an earlier decision</span></div>
                   <div className="spec-item"><ShieldCheck size={16} className="spec-icon" aria-hidden="true" /><span>No identity, device, or credit-history data is used</span></div>
                   <div className="spec-item"><ShieldCheck size={16} className="spec-icon" aria-hidden="true" /><span>Preview result only; server-signed scoring is reserved for the full assessment</span></div>
                 </div>
@@ -81,7 +92,7 @@ export default function TrialAssessment() {
       <div className="assessment-container container">
         <div className="assessment-wrapper">
           <div className="assessment-header" aria-live="polite">
-            <span className="section-indicator">Quick trial · {question.domain}</span>
+            <span className="section-indicator">{question.pathLabel || `Quick trial · ${question.domain}`}</span>
             <span className="question-counter">Question {currentIndex + 1} of {TRIAL_QUESTIONS.length}</span>
           </div>
           <section className="question-card slide-active" aria-labelledby="trial-question-heading">
@@ -89,23 +100,23 @@ export default function TrialAssessment() {
             <fieldset className="choice-fieldset" aria-invalid={Boolean(validationMessage)} aria-describedby={validationMessage ? 'trial-validation' : 'trial-hint'}>
               <legend className="sr-only">{question.prompt}</legend>
               <div className="options-list" role="radiogroup" aria-label={question.prompt}>
-                {question.choices.map((choice, index) => {
+                {question.options.map((option, index) => {
                   const selected = answers[question.id] === index;
                   return (
-                    <label key={choice} className={`choice-option option-pill ${selected ? 'selected' : ''}`}>
-                      <input className="choice-input" type="radio" name={question.id} checked={selected} onChange={() => { setAnswers((previous) => ({ ...previous, [question.id]: index })); setValidationMessage(''); playSelect(); }} />
-                      <span>{choice}</span>
+                    <label key={option.label} className={`choice-option option-pill ${selected ? 'selected' : ''}`}>
+                      <input className="choice-input" type="radio" name={question.id} checked={selected} onChange={() => selectAnswer(index)} />
+                      <span>{option.label}</span>
                     </label>
                   );
                 })}
               </div>
             </fieldset>
-            <p id="trial-hint" className="question-hint">Choose the strongest response.</p>
+            <p id="trial-hint" className="question-hint">Choose what you would actually do. Responses can show partial, mixed, or strong evidence.</p>
             {validationMessage && <p id="trial-validation" className="question-hint validation-message" role="alert">{validationMessage}</p>}
           </section>
           <div className="controls-row">
             <button type="button" onClick={() => { playClick(); setCurrentIndex((index) => index - 1); }} disabled={currentIndex === 0} className="btn btn-ghost"><ArrowLeft size={14} aria-hidden="true" /> Back</button>
-            <button type="button" onClick={goForward} className="btn btn-primary"><span>{isLast ? 'View trial result' : 'Continue'}</span><ArrowRight size={14} aria-hidden="true" /></button>
+            <button type="button" onClick={goForward} className="btn btn-primary"><span>{isLast ? 'Calculate profile' : 'Continue'}</span><ArrowRight size={14} aria-hidden="true" /></button>
           </div>
         </div>
       </div>
