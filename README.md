@@ -9,7 +9,7 @@
 AlterScore is a public project for exploring financial decision readiness through an explainable, answer-based assessment. It is designed to make the assessment experience understandable: scoring is deterministic, server-owned, and accompanied by a reconciliation of the result.
 
 <p align="center">
-  <img src="docs/assets/readme-illustrations/01-evidence-not-identity.png" alt="Xiaohei turns financial knowledge and decisions into a readiness score while identity stays outside the scoring boundary" width="880">
+  <img src="docs/assets/readme-xiaohei/01-evidence-not-identity.png" alt="Xiaohei turns financial knowledge and decisions into a readiness score while identity stays outside the scoring boundary" width="880">
   <br>
   <em>AlterScore scores financial knowledge and decisions—not identity or credit history.</em>
 </p>
@@ -29,7 +29,7 @@ The application does not use behavioral answers or the optional narrative to cal
 - CI checks covering linting, contracts, release boundaries, backend tests, and the serving image.
 
 <p align="center">
-  <img src="docs/assets/readme-illustrations/02-branching-decisions.png" alt="Xiaohei makes a branching choice that changes the financial state inherited by the next decision" width="880">
+  <img src="docs/assets/readme-xiaohei/02-branching-decisions.png" alt="Xiaohei makes a branching choice that changes the financial state inherited by the next decision" width="880">
   <br>
   <em>Each branching choice changes the financial state that the next decision inherits.</em>
 </p>
@@ -48,7 +48,7 @@ React assessment → FastAPI v2 API → deterministic scorer → signed, explain
 | API, deployment, rollback, and methodology docs | [`docs/`](docs/) |
 
 <p align="center">
-  <img src="docs/assets/readme-illustrations/03-explainable-results.png" alt="Xiaohei pulls an explanation showing a score calculation, supporting evidence, and next step" width="880">
+  <img src="docs/assets/readme-xiaohei/03-explainable-results.png" alt="Xiaohei pulls an explanation showing a score calculation, supporting evidence, and next step" width="880">
   <br>
   <em>A score arrives with its calculation, supporting evidence, and a practical next step.</em>
 </p>
@@ -92,7 +92,7 @@ For a production build, set `VITE_RELEASE_SHA` to the reviewed backend commit SH
 ## Contributing
 
 <p align="center">
-  <img src="docs/assets/readme-illustrations/04-open-source-contributions.png" alt="Xiaohei fits code, tests, documentation, and review into one open-source toolbox" width="880">
+  <img src="docs/assets/readme-xiaohei/04-open-source-contributions.png" alt="Xiaohei fits code, tests, documentation, and review into one open-source toolbox" width="880">
   <br>
   <em>Reliable contributions fit code, tests, documentation, and review into one working whole.</em>
 </p>
