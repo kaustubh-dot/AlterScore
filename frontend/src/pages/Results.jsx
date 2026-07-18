@@ -483,7 +483,7 @@ export default function Results() {
         <section className="verification-card" aria-labelledby="verification-heading">
           <ResultHeader eyebrow="Public proof" title="Verify the signed summary" id="verification-heading" />
           <p>The verification response contains only the redacted signed projection. It does not expose answers, behavior values, narrative text, or explanation detail.</p>
-          <a className="verification-link" href={verificationUrl} target="_blank" rel="noreferrer">
+          <a className="verification-link" href={verificationUrl} target="_blank" rel="noreferrer" aria-label="Open verification response (opens in a new tab)">
             Open verification response <ExternalLink size={14} aria-hidden="true" />
           </a>
         </section>

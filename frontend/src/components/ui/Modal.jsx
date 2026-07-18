@@ -15,21 +15,25 @@ export default function Modal({
   const messageId = useId();
   const modalRef = useRef(null);
   const previouslyFocusedRef = useRef(null);
+  const previousOverflowRef = useRef('');
 
   useEffect(() => {
-    if (isOpen) {
-      previouslyFocusedRef.current = document.activeElement;
-      document.body.style.overflow = 'hidden';
-      requestAnimationFrame(() => {
-        const firstButton = modalRef.current?.querySelector('button');
-        firstButton?.focus({ preventScroll: true });
-      });
-    } else {
-      document.body.style.overflow = '';
-    }
+    if (!isOpen) return undefined;
+
+    previouslyFocusedRef.current = document.activeElement;
+    previousOverflowRef.current = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    requestAnimationFrame(() => {
+      const firstButton = modalRef.current?.querySelector('button');
+      firstButton?.focus({ preventScroll: true });
+    });
+
     return () => {
-      document.body.style.overflow = '';
-      previouslyFocusedRef.current?.focus?.({ preventScroll: true });
+      document.body.style.overflow = previousOverflowRef.current;
+      const previouslyFocused = previouslyFocusedRef.current;
+      if (previouslyFocused?.isConnected) {
+        previouslyFocused.focus?.({ preventScroll: true });
+      }
     };
   }, [isOpen]);
 

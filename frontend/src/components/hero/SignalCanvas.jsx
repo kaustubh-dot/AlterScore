@@ -4,7 +4,8 @@ export default function SignalCanvas({ scrollY = 0 }) {
   const canvasRef = useRef(null);
   const mouseRef = useRef({ x: 0, y: 0, targetX: 0, targetY: 0, active: false });
   const scrollYRef = useRef(0);
-  const shouldDisableCanvas = window.matchMedia('(prefers-reduced-motion: reduce), (pointer: coarse)').matches;
+  const shouldDisableCanvas = typeof window === 'undefined'
+    || window.matchMedia('(prefers-reduced-motion: reduce), (pointer: coarse)').matches;
 
   // Keep scrollY in a ref to avoid recreating the draw loop context on scroll events
   useEffect(() => {
@@ -197,6 +198,7 @@ export default function SignalCanvas({ scrollY = 0 }) {
   return shouldDisableCanvas ? null : (
     <canvas
       ref={canvasRef}
+      aria-hidden="true"
       style={{
         position: 'absolute',
         top: 0,

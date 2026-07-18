@@ -86,7 +86,7 @@ export default function Dashboard() {
             <section className="dashboard-panel-card glass" aria-labelledby="dashboard-integrity-heading">
               <div className="panel-header"><h2 id="dashboard-integrity-heading" className="panel-title">Integrity</h2><span className="panel-badge">{result.integrity_status}</span></div>
               <p className="dashboard-panel-copy">The server issued this form, validated the response IDs, consumed the attempt once, and signed the result.</p>
-              <a className="dashboard-verification-link" href={verificationUrl} target="_blank" rel="noreferrer">Verify signed summary <ExternalLink size={14} aria-hidden="true" /></a>
+              <a className="dashboard-verification-link" href={verificationUrl} target="_blank" rel="noreferrer" aria-label="Verify signed summary (opens in a new tab)">Verify signed summary <ExternalLink size={14} aria-hidden="true" /></a>
             </section>
           </div>
 
