@@ -8,6 +8,7 @@ import {
 } from '../lib/assessmentV2';
 import usePageTransition from '../hooks/usePageTransition';
 import useSound from '../hooks/useSound';
+import Modal from '../components/ui/Modal';
 import './Dashboard.css';
 
 function displayScore(value, detailed) {
@@ -19,23 +20,27 @@ export default function Dashboard() {
   const { transitionTo } = usePageTransition();
   const { playClick } = useSound();
   const [result, setResult] = useState(getStoredSignedResult);
+  const [clearModalOpen, setClearModalOpen] = useState(false);
 
   if (!result) {
     return (
-      <div className="dashboard-blank-state">
+      <main className="dashboard-blank-state">
         <div className="blank-state-card glass font-mono" role="status">
           <AlertCircle size={48} style={{ color: 'var(--accent-cyan)', marginBottom: '16px' }} aria-hidden="true" />
           <h1>No current session result</h1>
           <p className="dashboard-empty-copy">The anonymous signed summary is kept only in this browser session for up to 24 hours.</p>
-          <button type="button" onClick={() => transitionTo('/assessment')} className="btn btn-primary">Start assessment</button>
+          <div className="blank-state-actions">
+            <button type="button" onClick={() => transitionTo('/')} className="btn btn-secondary">Return home</button>
+            <button type="button" onClick={() => transitionTo('/assessment')} className="btn btn-primary">Start assessment</button>
+          </div>
         </div>
-      </div>
+      </main>
     );
   }
 
   const detailed = isV2DetailedResult(result);
   const verificationUrl = getV2VerificationUrl(result.result_id);
-  const clearResult = () => {
+  const confirmClearResult = () => {
     playClick();
     clearSignedResult();
     setResult(null);
@@ -92,10 +97,19 @@ export default function Dashboard() {
         </div>
 
         <div className="dashboard-actions">
-          <button type="button" className="btn btn-secondary" onClick={clearResult}><Trash2 size={16} aria-hidden="true" /> Clear session result</button>
+          <button type="button" className="btn btn-secondary" onClick={() => { playClick(); setClearModalOpen(true); }}><Trash2 size={16} aria-hidden="true" /> Clear session result</button>
           <button type="button" className="btn btn-primary" onClick={() => { playClick(); transitionTo('/assessment'); }}>Take another assessment</button>
         </div>
       </main>
+      <Modal
+        isOpen={clearModalOpen}
+        title="Clear session result?"
+        message="This removes the signed result from this browser. You will need to complete a new assessment to restore it."
+        confirmText="Clear result"
+        cancelText="Keep result"
+        onConfirm={confirmClearResult}
+        onCancel={() => { playClick(); setClearModalOpen(false); }}
+      />
     </div>
   );
 }

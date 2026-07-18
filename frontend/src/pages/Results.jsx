@@ -12,6 +12,7 @@ import {
 } from '../lib/assessmentV2';
 import usePageTransition from '../hooks/usePageTransition';
 import useSound from '../hooks/useSound';
+import Modal from '../components/ui/Modal';
 import './Results.css';
 
 const CONCEPT_LABELS = {
@@ -127,6 +128,7 @@ export default function Results() {
   const location = useLocation();
   const [result, setResult] = useState(() => getResultFromLocation(location));
   const [behaviorProfile] = useState(() => getBehaviorProfileFromLocation(location));
+  const [clearModalOpen, setClearModalOpen] = useState(false);
   const evidenceDetailsRef = useRef(null);
   const detailed = isV2DetailedResult(result);
   const explanation = detailed ? result.explanation : null;
@@ -150,7 +152,7 @@ export default function Results() {
     explanation?.branching_scenarios.map((scenario, index) => [scenario.scenario_presentation_id, `scenario-${index + 1}`]) || [],
   ), [explanation]);
 
-  const clearResult = () => {
+  const confirmClearResult = () => {
     playClick();
     clearSignedResult();
     setResult(null);
@@ -158,7 +160,7 @@ export default function Results() {
 
   if (!result) {
     return (
-      <div className="results-layout results-empty-state">
+      <main className="results-layout results-empty-state">
         <div className="container results-empty-card" role="status" aria-live="polite">
           <AlertCircle size={48} aria-hidden="true" />
           <h1>No current assessment result</h1>
@@ -167,7 +169,7 @@ export default function Results() {
             Start assessment
           </button>
         </div>
-      </div>
+      </main>
     );
   }
 
@@ -487,7 +489,7 @@ export default function Results() {
         </section>
 
         <div className="actions-row visible">
-          <button type="button" className="btn btn-secondary" onClick={clearResult}>
+          <button type="button" className="btn btn-secondary" onClick={() => { playClick(); setClearModalOpen(true); }}>
             <Trash2 size={16} aria-hidden="true" /> Clear session result
           </button>
           <button type="button" className="btn btn-primary" onClick={() => { playClick(); transitionTo('/assessment'); }}>
@@ -495,6 +497,15 @@ export default function Results() {
           </button>
         </div>
       </main>
+      <Modal
+        isOpen={clearModalOpen}
+        title="Clear session result?"
+        message="This removes the signed result from this browser. You will need to complete a new assessment to restore it."
+        confirmText="Clear result"
+        cancelText="Keep result"
+        onConfirm={confirmClearResult}
+        onCancel={() => { playClick(); setClearModalOpen(false); }}
+      />
     </div>
   );
 }

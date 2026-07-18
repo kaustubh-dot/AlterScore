@@ -444,11 +444,10 @@
 
 @media (max-width: 640px) {
   .landing-hero {
-    min-height: 92vh;
-    min-height: 92dvh;
-    align-items: flex-end;
-    padding-top: 96px;
-    padding-bottom: var(--space-10);
+    min-height: auto;
+    align-items: flex-start;
+    padding-top: calc(96px + env(safe-area-inset-top));
+    padding-bottom: var(--space-12);
   }
 
   .hero-content {
@@ -574,5 +573,11 @@
   .cta-btn-wrapper,
   .cta-btn-wrapper button {
     width: 100%;
+  }
+}
+
+@media (min-width: 641px) and (max-height: 780px) {
+  .scroll-indicator {
+    display: none;
   }
 }

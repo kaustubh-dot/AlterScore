@@ -109,7 +109,7 @@ export default function Processing({ form, submission, onComplete, onBack, onFre
   if (error) {
     const freshAttempt = shouldRequestFreshAttempt(error);
     return (
-      <div className="processing-layout">
+      <main className="processing-layout">
         <SignalCanvas />
         <div className="processing-container container">
           <div className="processing-card processing-error-card" role="alert" aria-live="assertive">
@@ -132,12 +132,12 @@ export default function Processing({ form, submission, onComplete, onBack, onFre
             </div>
           </div>
         </div>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className="processing-layout">
+    <main className="processing-layout">
       <SignalCanvas />
       <div className="processing-container container">
         <div className="processing-card" role="status" aria-live="polite">
@@ -181,6 +181,6 @@ export default function Processing({ form, submission, onComplete, onBack, onFre
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

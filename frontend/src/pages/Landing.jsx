@@ -57,7 +57,7 @@ export default function Landing() {
   const questionCount = PUBLIC_ASSESSMENT_ITEM_COUNT;
 
   return (
-    <div className={`landing-page ${isLoaded ? 'loaded' : ''}`} style={!isLoaded ? { opacity: 0, pointerEvents: 'none' } : undefined}>
+    <main className={`landing-page ${isLoaded ? 'loaded' : ''}`} style={!isLoaded ? { opacity: 0, pointerEvents: 'none' } : undefined}>
       {isLoaded && (
         <>
           {/* Hero Section */}
@@ -232,6 +232,6 @@ export default function Landing() {
           </section>
         </>
       )}
-    </div>
+    </main>
   );
 }

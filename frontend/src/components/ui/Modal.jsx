@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import './Modal.css';
 
 export default function Modal({
@@ -21,14 +22,14 @@ export default function Modal({
       document.body.style.overflow = 'hidden';
       requestAnimationFrame(() => {
         const firstButton = modalRef.current?.querySelector('button');
-        firstButton?.focus();
+        firstButton?.focus({ preventScroll: true });
       });
     } else {
       document.body.style.overflow = '';
     }
     return () => {
       document.body.style.overflow = '';
-      previouslyFocusedRef.current?.focus?.();
+      previouslyFocusedRef.current?.focus?.({ preventScroll: true });
     };
   }, [isOpen]);
 
@@ -66,7 +67,7 @@ export default function Modal({
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div className="modal-overlay" onClick={onCancel}>
       <div
         ref={modalRef}
@@ -90,6 +91,7 @@ export default function Modal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

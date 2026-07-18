@@ -27,6 +27,22 @@ function AppContent() {
   // Initialize Lenis smooth scroll
   useLenis();
 
+  useEffect(() => {
+    if (showPreloader) return undefined;
+    const focusHeading = () => {
+      const heading = document.querySelector('h1');
+      if (!heading) return false;
+      heading.setAttribute('tabindex', '-1');
+      heading.focus({ preventScroll: true });
+      return true;
+    };
+    const observer = new MutationObserver(() => {
+      if (focusHeading()) observer.disconnect();
+    });
+    if (!focusHeading()) observer.observe(document.querySelector('.content-wrap'), { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [location.pathname, showPreloader]);
+
   // Block scroll on page load during preloader
   useEffect(() => {
     if (showPreloader) {

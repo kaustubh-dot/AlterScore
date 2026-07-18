@@ -348,7 +348,7 @@ export default function Assessment() {
 
   if (!hasStarted) {
     return (
-      <div className="assessment-layout">
+      <main className="assessment-layout">
         <button type="button" onClick={handleExit} className="assessment-exit-btn">
           <ArrowLeft size={12} aria-hidden="true" />
           <span>Exit</span>
@@ -390,14 +390,18 @@ export default function Assessment() {
           onConfirm={confirmExit}
           onCancel={() => { playClick(); setExitModalOpen(false); }}
         />
-      </div>
+      </main>
     );
   }
 
   if (formStatus === 'loading' || formStatus === 'error' || !form) {
     const isLoading = formStatus === 'loading';
     return (
-      <div className="processing-layout">
+      <main className="processing-layout">
+        <button type="button" onClick={handleExit} className="assessment-exit-btn">
+          <ArrowLeft size={12} aria-hidden="true" />
+          <span>Exit</span>
+        </button>
         <SignalCanvas />
         <div className="processing-container container">
           <div className="processing-card" role={isLoading ? 'status' : 'alert'} aria-live="polite">
@@ -422,7 +426,16 @@ export default function Assessment() {
             </div>
           </div>
         </div>
-      </div>
+        <Modal
+          isOpen={exitModalOpen}
+          title="Exit Assessment?"
+          message="This anonymous attempt will not be saved. Are you sure you want to exit?"
+          confirmText="Exit"
+          cancelText="Stay"
+          onConfirm={confirmExit}
+          onCancel={() => { playClick(); setExitModalOpen(false); }}
+        />
+      </main>
     );
   }
 
@@ -443,7 +456,7 @@ export default function Assessment() {
   const currentErrorId = validationMessage ? 'assessment-validation-message' : 'answer-hint';
 
   return (
-    <div className="assessment-layout">
+    <main className="assessment-layout">
       <div
         className="progress-rail"
         style={{ width: `${progressPercent}%` }}
@@ -528,6 +541,6 @@ export default function Assessment() {
         onConfirm={confirmExit}
         onCancel={() => { playClick(); setExitModalOpen(false); }}
       />
-    </div>
+    </main>
   );
 }

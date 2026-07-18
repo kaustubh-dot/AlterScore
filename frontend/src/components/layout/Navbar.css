@@ -6,7 +6,8 @@
   left: 0;
   width: 100%;
   z-index: 1000;
-  height: 64px;
+  height: calc(64px + env(safe-area-inset-top));
+  padding-top: env(safe-area-inset-top);
   display: flex;
   align-items: center;
   transition: all var(--duration-normal) var(--ease-smooth);
@@ -26,6 +27,8 @@
   justify-content: space-between;
   align-items: center;
   width: 100%;
+  padding-left: max(var(--page-gutter), env(safe-area-inset-left));
+  padding-right: max(var(--page-gutter), env(safe-area-inset-right));
 }
 
 .navbar-logo {
@@ -81,12 +84,14 @@
   border-radius: var(--radius-sm);
   border: 1px solid var(--bg-border);
   background: transparent;
+  min-height: 44px;
+  min-width: 44px;
   transition: all var(--duration-fast) var(--ease-smooth);
 }
 
 .navbar-icon-button {
-  width: 34px;
-  height: 34px;
+  width: 44px;
+  height: 44px;
   justify-content: center;
   padding: 0;
   cursor: pointer;
@@ -121,6 +126,7 @@
   text-transform: uppercase;
   cursor: pointer;
   outline: none;
+  min-height: 44px;
 }
 
 .logo-tag {
@@ -146,7 +152,7 @@
 
 @media (max-width: 640px) {
   .navbar {
-    height: 68px;
+    height: calc(68px + env(safe-area-inset-top));
     background: rgba(8, 8, 9, 0.86);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
@@ -185,7 +191,7 @@
   }
 
   .navbar-link {
-    min-height: 42px;
+    min-height: 44px;
     padding: 10px 12px;
     font-size: 0.75rem;
     letter-spacing: 0.02em;
@@ -203,7 +209,7 @@
   }
 
   .navbar-icon-button {
-    width: 42px;
-    height: 42px;
+    width: 44px;
+    height: 44px;
   }
 }

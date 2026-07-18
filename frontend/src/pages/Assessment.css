@@ -141,7 +141,7 @@
 }
 
 .input-number::placeholder {
-  color: var(--text-ghost);
+  color: var(--text-muted);
 }
 
 /* MCQ Options - Sharp Solid Borders */
@@ -462,7 +462,7 @@
 .assessment-exit-btn {
   position: fixed;
   top: max(24px, env(safe-area-inset-top));
-  left: 24px;
+  left: max(24px, env(safe-area-inset-left));
   z-index: 1000;
   background: transparent;
   border: 1px solid var(--bg-border);
@@ -478,6 +478,7 @@
   align-items: center;
   gap: 6px;
   transition: all var(--duration-fast) var(--ease-smooth);
+  min-height: 44px;
 }
 
 .assessment-exit-btn:hover {
@@ -494,8 +495,8 @@
 
   .assessment-exit-btn {
     top: max(14px, env(safe-area-inset-top));
-    left: 20px;
-    min-height: 42px;
+    left: max(20px, env(safe-area-inset-left));
+    min-height: 44px;
     padding: 10px 14px;
     font-size: 0.8125rem;
     letter-spacing: 0.04em;

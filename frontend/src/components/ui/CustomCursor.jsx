@@ -60,7 +60,7 @@ export default function CustomCursor({ variant = 'default' }) {
     };
 
     const onMouseOver = (e) => {
-      const target = e.target.closest('a, button, [role="button"], input, select, textarea, .option-pill, .scenario-pill, .likert-option, .badge-tag, .btn, .option-pill-btn');
+      const target = e.target.closest('a, button, [role="button"], select, .option-pill, .scenario-pill, .likert-option, .badge-tag, .btn, .option-pill-btn');
       setHovered(!!target);
     };
 
