@@ -95,12 +95,14 @@
 }
 
 .score-text-box {
+  width: calc(100% - 28px);
   z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1px;
+  gap: 6px;
   transform: translateY(-6px);
+  text-align: center;
 }
 
 .score-sub,
@@ -119,12 +121,18 @@
   color: var(--text-muted);
 }
 
+.score-sub {
+  max-width: 100%;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
 .score-num {
   color: var(--text-primary);
   font-family: var(--font-display);
   font-size: var(--text-5xl);
   font-weight: 300;
-  line-height: 1;
+  line-height: 0.9;
 }
 
 .score-band {

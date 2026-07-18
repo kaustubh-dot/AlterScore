@@ -152,7 +152,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 0;
   margin-bottom: var(--space-6);
   border: 1px solid rgba(16, 185, 129, 0.45);
   border-radius: 50%;
@@ -169,6 +169,12 @@
   text-transform: uppercase;
 }
 
+.sample-score-ring span {
+  max-width: 100%;
+  line-height: 1.2;
+  text-align: center;
+}
+
 .sample-score-ring span,
 .sample-domain-grid span {
   color: var(--text-muted);
@@ -179,7 +185,8 @@
   font-family: var(--font-display);
   font-size: 4.25rem;
   font-weight: 300;
-  line-height: 1;
+  margin: 6px 0 2px;
+  line-height: 0.9;
 }
 
 .sample-score-ring small {
