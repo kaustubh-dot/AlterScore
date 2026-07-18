@@ -1,12 +1,19 @@
 # AlterScore
 
-> A transparent, deterministic financial decision-readiness demonstration.
+> Financial decisions are hard to improve when the feedback is only a number. AlterScore shows the score, the evidence behind it, and the next useful step.
 
 [![CI](https://github.com/kaustubh-dot/AlterScore/actions/workflows/ci.yml/badge.svg)](https://github.com/kaustubh-dot/AlterScore/actions/workflows/ci.yml)
 
-**[Try the live demo](https://alterscore.vercel.app/)** · **[Read the API contract](docs/API_CONTRACTS.md)** · **[Contribute](CONTRIBUTING.md)**
+**[Try the live demo](https://alterscore.vercel.app/)** · **[Preview a sample result](https://alterscore.vercel.app/#sample-result)** · **[Read the API contract](docs/API_CONTRACTS.md)**
 
-AlterScore is a public project for exploring financial decision readiness through an explainable, answer-based assessment. It is designed to make the assessment experience understandable: scoring is deterministic, server-owned, and accompanied by a reconciliation of the result.
+AlterScore is an anonymous educational assessment for students, first-time earners, and anyone building confidence with money. It combines short financial calculations with branching real-world decisions, then returns a transparent 0–100 readiness index, worked evidence, and practical recommendations.
+
+## Why it is different
+
+- **Decisions have consequences.** Three-stage simulations carry financial state from one choice into the next.
+- **The score explains itself.** Every domain, contribution, recommendation, and simulation replay can be inspected.
+- **Trust is part of the product.** The server owns the rubric, consumes one-time attempts, and signs a redacted result that can be verified publicly.
+- **The boundary is explicit.** AlterScore teaches; it never predicts repayment or makes a lending decision.
 
 <p align="center">
   <img src="docs/assets/readme-xiaohei/01-evidence-not-identity.png" alt="Xiaohei turns financial knowledge and decisions into a readiness score while identity stays outside the scoring boundary" width="880">
@@ -27,6 +34,10 @@ The application does not use behavioral answers or the optional narrative to cal
 - A React frontend with explainable results and a session-only dashboard.
 - A FastAPI backend with signed results, one-time bearer attempts, bounded in-memory verification, and HTTPS-only remote token transport.
 - CI checks covering linting, contracts, release boundaries, backend tests, and the serving image.
+
+## Built with Codex
+
+AlterScore was built and hardened with Codex as an engineering collaborator. Codex helped inspect the repository, implement scoped frontend and backend changes, trace API contracts, review security boundaries, write focused tests, run end-to-end verification, and simplify patches before they shipped. The public score itself remains deterministic and auditable; Codex is part of the development workflow, not a hidden scoring dependency.
 
 <p align="center">
   <img src="docs/assets/readme-xiaohei/02-branching-decisions.png" alt="Xiaohei makes a branching choice that changes the financial state inherited by the next decision" width="880">

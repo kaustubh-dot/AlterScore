@@ -1,6 +1,14 @@
 import { useEffect, useState } from 'react';
 import usePageTransition from '../hooks/usePageTransition';
-import { ArrowRight, Brain, HeartHandshake, Eye } from 'lucide-react';
+import {
+  ArrowRight,
+  Brain,
+  CheckCircle2,
+  Eye,
+  GitBranch,
+  HeartHandshake,
+  ShieldCheck,
+} from 'lucide-react';
 import SignalCanvas from '../components/hero/SignalCanvas';
 import ScrollReveal from '../components/animation/ScrollReveal';
 import GlowCard from '../components/ui/GlowCard';
@@ -71,18 +79,21 @@ export default function Landing() {
 
               <ScrollReveal direction="up" delay={550}>
                 <p className="hero-sub">
-                  Work through practical money decisions and get a clear 0–100 readiness
-                  score, with a familiar 300–850 view. It is an educational snapshot, not
-                  a credit score or lending decision.
+                  For students, first-time earners, and anyone building confidence with
+                  money: work through practical decisions, then see what you understand,
+                  what needs attention, and why.
                 </p>
               </ScrollReveal>
 
               <ScrollReveal direction="up" delay={650}>
                 <div className="hero-cta">
                   <MagneticButton onClick={startAssessment} className="btn-large" variant="primary">
-                    <span>Start Assessment</span>
+                    <span>Take the full assessment</span>
                     <ArrowRight size={14} />
                   </MagneticButton>
+                  <a className="btn btn-ghost btn-large hero-preview-link" href="#sample-result">
+                    Preview a sample result
+                  </a>
                 </div>
               </ScrollReveal>
 
@@ -98,6 +109,68 @@ export default function Landing() {
               <div className="scroll-arrow">↓</div>
             </div>
           </header>
+
+          <section className="section sample-section" id="sample-result" aria-labelledby="sample-result-title">
+            <div className="container">
+              <div className="section-header sample-section-header">
+                <div>
+                  <span className="section-eyebrow">60-second product preview</span>
+                  <h2 className="section-title" id="sample-result-title">
+                    <TextReveal text="See the outcome first" />
+                  </h2>
+                </div>
+                <p>
+                  This illustrative result shows the experience waiting after the full
+                  assessment. Real results are calculated and signed by the server.
+                </p>
+              </div>
+
+              <ScrollReveal direction="up">
+                <div className="sample-result-shell">
+                  <div className="sample-score-panel">
+                    <div className="sample-proof">
+                      <ShieldCheck size={15} aria-hidden="true" />
+                      <span>Illustrative preview</span>
+                    </div>
+                    <div className="sample-score-ring" role="img" aria-label="Sample Financial Decision Index 72 out of 100">
+                      <span>Financial Decision Index</span>
+                      <strong>72</strong>
+                      <small>0–100</small>
+                    </div>
+                    <p>A learning snapshot, never a credit score or lending decision.</p>
+                  </div>
+
+                  <div className="sample-insight-panel">
+                    <span className="section-eyebrow">What the learner receives</span>
+                    <h3>A score that explains itself.</h3>
+                    <div className="sample-domain-grid" aria-label="Sample domain scores">
+                      <div>
+                        <span>Financial knowledge</span>
+                        <strong>78.00</strong>
+                      </div>
+                      <div>
+                        <span>Decision judgement</span>
+                        <strong>66.40</strong>
+                      </div>
+                    </div>
+                    <div className="sample-insight-list">
+                      <div>
+                        <CheckCircle2 size={18} aria-hidden="true" />
+                        <p><strong>Next focus</strong> Compare total borrowing cost before choosing a lower monthly payment.</p>
+                      </div>
+                      <div>
+                        <GitBranch size={18} aria-hidden="true" />
+                        <p><strong>Decision replay</strong> See how each choice changed cash, obligations, and the next scenario.</p>
+                      </div>
+                    </div>
+                    <button type="button" className="btn btn-primary sample-start-button" onClick={startAssessment}>
+                      Get my own result <ArrowRight size={15} aria-hidden="true" />
+                    </button>
+                  </div>
+                </div>
+              </ScrollReveal>
+            </div>
+          </section>
 
           {/* What We Measure Section */}
           <section className="section section-features">
@@ -217,8 +290,9 @@ export default function Landing() {
             <div className="cta-container container">
               <ScrollReveal direction="scale">
                 <h2 className="cta-title">
-                  <TextReveal text="See where you stand." />
+                  <TextReveal text="Turn decisions into direction." />
                 </h2>
+                <p className="cta-subtitle">Five minutes. No account, documents, or credit history.</p>
               </ScrollReveal>
               <ScrollReveal direction="up" delay={200}>
                 <div className="cta-btn-wrapper">

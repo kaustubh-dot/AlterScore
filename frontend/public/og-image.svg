@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">AlterScore — Financial readiness, made clear</title>
+  <desc id="desc">A dark editorial preview card with an illustrative score of 72 out of 100.</desc>
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#10b981" stop-opacity=".2"/>
+      <stop offset="1" stop-color="#10b981" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="line" x1="0" x2="1">
+      <stop stop-color="#fff" stop-opacity="0"/>
+      <stop offset=".5" stop-color="#fff" stop-opacity=".12"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="#080809"/>
+  <path d="M0 110h1200M0 520h1200M170 0v630M1030 0v630" stroke="#fff" stroke-opacity=".05"/>
+  <path d="M0 315h1200" stroke="url(#line)"/>
+  <circle cx="920" cy="315" r="230" fill="url(#glow)"/>
+  <g fill="none" stroke="#fff" stroke-width="3">
+    <path d="M72 84h18l8-14 13 28 9-14h22"/>
+  </g>
+  <text x="160" y="89" fill="#fff" font-family="Arial, sans-serif" font-size="25" font-weight="700" letter-spacing="5">ALTERSCORE</text>
+  <text x="72" y="236" fill="#fff" font-family="Georgia, serif" font-size="70">Financial readiness,</text>
+  <text x="72" y="318" fill="#fff" font-family="Georgia, serif" font-size="70">made clear.</text>
+  <text x="76" y="382" fill="#a4a4aa" font-family="Arial, sans-serif" font-size="24">Practical decisions. Explainable evidence. A signed result.</text>
+  <text x="76" y="496" fill="#10b981" font-family="Arial, sans-serif" font-size="18" font-weight="700" letter-spacing="3">ANONYMOUS · EDUCATIONAL · VERIFIABLE</text>
+  <circle cx="920" cy="315" r="132" fill="#0d0d0f" stroke="#10b981" stroke-opacity=".65" stroke-width="2"/>
+  <circle cx="920" cy="315" r="106" fill="none" stroke="#fff" stroke-opacity=".12" stroke-width="2"/>
+  <text x="920" y="262" fill="#a4a4aa" font-family="Arial, sans-serif" font-size="13" text-anchor="middle" letter-spacing="2">SAMPLE INDEX</text>
+  <text x="920" y="352" fill="#fff" font-family="Georgia, serif" font-size="92" text-anchor="middle">72</text>
+  <text x="920" y="389" fill="#10b981" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" letter-spacing="2">0–100</text>
+</svg>

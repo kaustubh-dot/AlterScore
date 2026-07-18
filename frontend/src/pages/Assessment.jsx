@@ -374,7 +374,7 @@ export default function Assessment() {
                 </div>
               </div>
               <button type="button" onClick={handleBegin} className="btn btn-primary" style={{ width: '100%' }}>
-                <span>Request assessment form</span>
+                <span>Begin assessment</span>
                 <ArrowRight size={16} aria-hidden="true" />
               </button>
             </div>

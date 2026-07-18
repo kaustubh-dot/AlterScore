@@ -466,6 +466,8 @@ test('keeps the required accessibility and StrictMode lifecycle seams in the UI'
   assert.match(results, /clearSignedResult/);
   assert.match(landing, /required items/);
   assert.match(landing, /optional reflection/);
+  assert.match(landing, /id="sample-result"/);
+  assert.match(landing, /Illustrative preview/);
   assert.match(app, /<Route path="\*" element=\{<NotFound \/>\} \/>/);
   assert.match(notFound, /<main className="not-found-page" aria-labelledby="not-found-title">/);
   assert.match(notFound, /Return home/);
