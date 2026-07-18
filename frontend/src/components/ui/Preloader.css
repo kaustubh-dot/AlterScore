@@ -3,70 +3,46 @@
   inset: 0;
   z-index: 99999;
   display: flex;
-  flex-direction: column;
+  align-items: center;
   justify-content: space-between;
-  padding: var(--space-12) var(--space-8);
+  padding: 0 10vw;
   overflow: hidden;
-  background: #080809;
-  transition: transform 800ms cubic-bezier(0.76, 0, 0.24, 1);
-  will-change: transform;
+  background: rgba(8, 8, 9, 0.94);
+  user-select: none;
+  transition: opacity 500ms ease;
+  will-change: opacity;
 }
 
-.preloader-overlay.exit-slide { transform: translateY(-100%); }
+.preloader-icon-container,
+.preloader-percent-container { display: flex; align-items: center; width: 150px; }
+.preloader-icon-container { gap: 10px; color: #fff; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; }
+.preloader-icon { color: var(--accent); }
+.preloader-brand { font-weight: 700; }
+.preloader-percent-container { justify-content: flex-end; }
+.percent-block { display: flex; align-items: baseline; gap: 2px; }
+.preloader-percent-num { color: #fff; font-family: var(--font-mono); font-size: 36px; font-weight: 500; line-height: 1; }
+.preloader-percent-symbol { color: var(--text-muted); font-family: var(--font-mono); font-size: 14px; }
 
-.preloader-grid-lines {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image: linear-gradient(to right, rgba(255, 255, 255, 0.01) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.01) 1px, transparent 1px);
-  background-size: 100px 100px;
-  background-position: center;
-}
-
-.preloader-content {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  width: 100%;
-  max-width: 1100px;
-  height: 100%;
-  margin: 0 auto;
-}
-
-.preloader-header,
-.preloader-footer { display: flex; justify-content: flex-start; }
-
-.preloader-kicker,
-.preloader-status {
-  color: var(--text-muted);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.preloader-center { display: flex; flex: 1; align-items: center; justify-content: center; }
-.preloader-counter-wrapper { display: flex; align-items: baseline; justify-content: center; }
-
-.preloader-number {
-  color: #fff;
-  font-family: var(--font-display);
-  font-size: clamp(6rem, 15vw, 12rem);
-  font-weight: 300;
-  letter-spacing: -0.04em;
-  line-height: 0.95;
-}
-
-.preloader-percent { margin-left: var(--space-2); color: var(--text-muted); font-family: var(--font-mono); font-size: var(--text-sm); }
-.preloader-footer { padding-top: var(--space-4); border-top: 1px solid var(--bg-border); }
-.preloader-status { color: var(--text-secondary); font-size: 10px; letter-spacing: 0.08em; }
+.preloader-scale-viewport { position: relative; width: 44px; height: 320px; overflow: hidden; display: flex; justify-content: flex-end; }
+.preloader-scale-track { display: flex; flex-direction: column; width: 100%; will-change: transform; }
+.ruler-segment { display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; width: 100%; height: 800px; }
+.ruler-tick { flex-shrink: 0; height: 1.5px; background: rgba(255, 255, 255, 0.45); }
+.ruler-tick.major { width: 36px; }
+.ruler-tick.minor { width: 16px; }
+.shadow-top,
+.shadow-bot { position: absolute; right: 0; left: 0; z-index: 2; height: 110px; pointer-events: none; }
+.shadow-top { top: 0; background: linear-gradient(to bottom, #080809, transparent); }
+.shadow-bot { bottom: 0; background: linear-gradient(to top, #080809, transparent); }
 
 @media (max-width: 640px) {
-  .preloader-overlay { padding: var(--space-8) var(--page-gutter); }
-  .preloader-number { font-size: clamp(5rem, 25vw, 8rem); }
-  .preloader-status { font-size: 9px; }
+  .preloader-overlay { padding: 0 var(--page-gutter); }
+  .preloader-icon-container,
+  .preloader-percent-container { width: 110px; }
+  .preloader-scale-viewport { width: 36px; height: 260px; }
+  .ruler-segment { height: 650px; }
+  .ruler-tick.major { width: 30px; }
+  .preloader-percent-num { font-size: 30px; }
+  .preloader-brand { font-size: 10px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
