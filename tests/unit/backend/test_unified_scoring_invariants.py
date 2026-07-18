@@ -8,6 +8,7 @@ from collections.abc import Mapping
 from dataclasses import replace
 from decimal import Decimal
 from fractions import Fraction
+from itertools import product
 from pathlib import Path
 
 import pytest
@@ -149,6 +150,23 @@ def test_all_54_branching_paths_score_through_the_unified_service() -> None:
             seen.add((scenario.scenario_presentation_id, path))
 
     assert len(seen) == 54
+
+
+def test_all_729_paired_branching_paths_score_through_the_unified_service() -> None:
+    form = generate_form(316)
+    scenarios = build_branching_scenarios()
+    paired_paths = product(*(enumerate_paths(scenario) for scenario in scenarios))
+    seen: set[tuple[tuple[str, ...], ...]] = set()
+
+    for paths in paired_paths:
+        responses, behavior = _submission(form, paths)
+        result = score_unified_assessment(form, responses, behavior)
+        assert tuple(branch.option_ids for branch in result.branching_results) == paths
+        assert 0 <= result.financial_decision_index <= 100
+        assert len(result.judgment_components) == 6
+        seen.add(paths)
+
+    assert len(seen) == 729
 
 
 def test_all_six_judgment_components_have_equal_weight() -> None:

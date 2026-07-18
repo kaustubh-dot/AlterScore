@@ -1,7 +1,7 @@
 import { getSessionStorage, readStorageItem, removeStorageItem, writeStorageItem } from './safeStorage.js';
 
 export const TRIAL_RESULT_STORAGE_KEY = 'alterscore_trial_result';
-export const TRIAL_RESULT_VERSION = 3;
+export const TRIAL_RESULT_VERSION = 4;
 
 const INITIAL_LIQUIDITY = 21_000;
 const COST_BUDGET = 6_000;
@@ -39,10 +39,18 @@ const borrow = (state, amount, cost) => update(state, {
   borrowingCost: state.borrowingCost + cost,
 });
 const spendLiquidity = (state, amount) => {
-  const fromCash = Math.min(state.cashAvailable, amount);
+  const funded = Math.min(amount, state.cashAvailable + state.emergencyBuffer);
+  const fromCash = Math.min(state.cashAvailable, funded);
   return update(state, {
     cashAvailable: state.cashAvailable - fromCash,
-    emergencyBuffer: state.emergencyBuffer - (amount - fromCash),
+    emergencyBuffer: state.emergencyBuffer - (funded - fromCash),
+  });
+};
+const fundEssential = (state, amount, plannedDeferral = 0) => {
+  const shortfall = Math.max(0, amount - state.cashAvailable - state.emergencyBuffer);
+  return update(spendLiquidity(state, amount), {
+    essentialExpenses: 0,
+    unfundedCommitments: state.unfundedCommitments + plannedDeferral + shortfall,
   });
 };
 
@@ -79,7 +87,7 @@ const TRIAL_STAGES = Object.freeze([
       options: [
         { id: 'cash-payment', label: 'Apply ₹10,000 of operating cash to the payment.', analysis: 'Reduces the obligation directly, but also removes cash needed for essential operations.', protects: 'Immediate obligation coverage', risks: 'Lower operating liquidity', apply: (current) => payRequiredFromCash(current, 10_000) },
         { id: 'buffer-payment', label: 'Apply ₹8,000 from the emergency reserve.', analysis: 'Keeps operating cash available, but weakens protection against the next shock.', protects: 'Operating continuity', risks: 'Lower emergency resilience', apply: (current) => payRequiredFromBuffer(current, 8_000) },
-        { id: 'bridge', label: 'Draw a ₹12,000 bridge facility costing ₹1,800.', analysis: 'Adds liquidity but does not itself settle the required payment, and introduces a certain financing cost.', protects: 'Immediate cash capacity', risks: 'New debt and ₹1,800 cost', apply: (current) => borrow(current, 12_000, 1_800) },
+        { id: 'bridge', label: 'Draw a ₹10,000 bridge facility costing ₹3,000.', analysis: 'Adds liquidity but does not itself settle the required payment, and consumes half of the scenario’s cost budget.', protects: 'Immediate cash capacity', risks: 'New debt and ₹3,000 cost', apply: (current) => borrow(current, 10_000, 3_000) },
       ],
     }),
   },
@@ -90,9 +98,9 @@ const TRIAL_STAGES = Object.freeze([
     build: (state) => ({
       prompt: `At the due date, the path you created has ${money(state.cashAvailable)} cash, a ${money(state.emergencyBuffer)} reserve, and ${money(metrics(state).unmetRequiredPayments)} unpaid. What arrangement do you put to the counterparty?`,
       options: [
-        { id: 'all-cash', label: `Apply ${money(Math.min(state.cashAvailable, metrics(state).unmetRequiredPayments))} — all available operating cash up to the unpaid amount.`, analysis: 'Maximises payment progress now, but can leave essential operating costs dependent on the reserve.', protects: 'Obligation coverage', risks: 'A concentrated liquidity draw', apply: (current) => payRequiredFromCash(current, Math.min(current.cashAvailable, metrics(current).unmetRequiredPayments)) },
-        { id: 'good-faith', label: 'Make a documented ₹6,000 good-faith payment and retain the balance.', analysis: 'Preserves more liquidity, while leaving a larger balance exposed to later collection risk.', protects: 'Plan flexibility', risks: 'Lower immediate obligation coverage', apply: (current) => payRequiredFromCash(current, Math.min(6_000, metrics(current).unmetRequiredPayments)) },
-        { id: 'extension', label: 'Take a seven-day extension with a ₹500 follow-up cost.', analysis: 'Preserves cash today but records a late event and a certain avoidable cost.', protects: 'Short-term liquidity', risks: 'Delay penalty and weaker plan feasibility', apply: (current) => update(current, { latePayments: current.latePayments + 1, avoidableCost: current.avoidableCost + 500 }) },
+        { id: 'accelerated-payment', label: `Apply ${money(Math.min(Math.round(state.cashAvailable * 0.75), metrics(state).unmetRequiredPayments))} now and retain one-quarter of operating cash.`, analysis: 'Makes the strongest immediate payment while retaining a defined operating balance for the next essential shock.', protects: 'Obligation coverage', risks: 'A substantial liquidity draw', apply: (current) => payRequiredFromCash(current, Math.min(Math.round(current.cashAvailable * 0.75), metrics(current).unmetRequiredPayments)) },
+        { id: 'balanced-payment', label: `Apply ${money(Math.min(Math.round(state.cashAvailable * 0.45), metrics(state).unmetRequiredPayments))} now and document the remaining schedule.`, analysis: 'Balances measurable payment progress with liquidity for the known essential-cost exposure.', protects: 'Payment progress and plan flexibility', risks: 'A larger unpaid balance than the accelerated option', apply: (current) => payRequiredFromCash(current, Math.min(Math.round(current.cashAvailable * 0.45), metrics(current).unmetRequiredPayments)) },
+        { id: 'extension-payment', label: `Apply ${money(Math.min(Math.round(state.cashAvailable * 0.2), metrics(state).unmetRequiredPayments))} and take a seven-day extension costing ₹500.`, analysis: 'Retains most cash today, but records a late event and a certain avoidable cost while making only limited payment progress.', protects: 'Short-term operating liquidity', risks: 'Delay penalty and weaker obligation coverage', apply: (current) => update(payRequiredFromCash(current, Math.min(Math.round(current.cashAvailable * 0.2), metrics(current).unmetRequiredPayments)), { latePayments: current.latePayments + 1, avoidableCost: current.avoidableCost + 500 }) },
       ],
     }),
   },
@@ -103,9 +111,9 @@ const TRIAL_STAGES = Object.freeze([
     build: (state) => ({
       prompt: `A critical operating repair makes the full ${money(state.essentialExpenses)} essential-cost provision payable now. Your path leaves ${money(state.cashAvailable)} cash and a ${money(state.emergencyBuffer)} reserve. How do you fund it?`,
       options: [
-        { id: 'fund-essential', label: `Pay the full ${money(state.essentialExpenses)} from available cash, then the reserve if needed.`, analysis: 'Closes the essential need without new debt, but draws directly on remaining liquidity.', protects: 'Plan completion and cost efficiency', risks: 'Less cash and reserve after the repair', apply: (current) => update(spendLiquidity(current, current.essentialExpenses), { essentialExpenses: 0 }) },
-        { id: 'defer-essential', label: 'Pay ₹6,000 now and carry ₹3,000 as an unfunded commitment.', analysis: 'Retains some liquidity today, but the deferred amount remains inside the plan need.', protects: 'Near-term liquidity', risks: 'A new unfunded commitment', apply: (current) => update(spendLiquidity(current, 6_000), { essentialExpenses: 0, unfundedCommitments: current.unfundedCommitments + 3_000 }) },
-        { id: 'finance-essential', label: 'Finance the ₹9,000 repair at a ₹1,350 cost and preserve current liquidity.', analysis: 'Completes the repair without drawing current cash, in exchange for material borrowing cost.', protects: 'Visible cash and reserve', risks: 'New borrowing and reduced cost efficiency', apply: (current) => update(current, { essentialExpenses: 0, newBorrowing: current.newBorrowing + 9_000, borrowingCost: current.borrowingCost + 1_350 }) },
+        { id: 'fund-essential', label: `Apply up to ${money(state.essentialExpenses)} from available cash, then the reserve; carry any uncovered amount explicitly.`, analysis: 'Uses available liquidity without inventing funds. Any shortfall remains visible as an unfunded commitment.', protects: 'State integrity and cost efficiency', risks: 'Less liquidity and a possible residual commitment', apply: (current) => fundEssential(current, current.essentialExpenses) },
+        { id: 'defer-essential', label: 'Apply up to ₹6,000 now and carry at least ₹3,000 with a ₹600 delay cost.', analysis: 'Retains some liquidity today while keeping both the planned deferral and any additional cash shortfall inside the plan need.', protects: 'Near-term liquidity', risks: 'An unfunded commitment, late event, and avoidable cost', apply: (current) => update(fundEssential(current, 6_000, 3_000), { latePayments: current.latePayments + 1, avoidableCost: current.avoidableCost + 600 }) },
+        { id: 'finance-essential', label: 'Finance the ₹9,000 repair at a ₹2,700 cost and preserve current liquidity.', analysis: 'Completes the repair without drawing current cash, but the emergency financing charge consumes almost half of the scenario’s cost budget.', protects: 'Visible cash and reserve', risks: 'New borrowing and materially reduced cost efficiency', apply: (current) => update(current, { essentialExpenses: 0, newBorrowing: current.newBorrowing + 9_000, borrowingCost: current.borrowingCost + 2_700 }) },
       ],
     }),
   },
@@ -255,7 +263,8 @@ export function scoreTrialAssessment(answers) {
     };
   });
   const terminal = terminalScore(state);
-  const score = Math.round(100 * clamp01((terminal.raw - ATTAINABLE_MIN) / (ATTAINABLE_MAX - ATTAINABLE_MIN)));
+  const scenarioScore = Math.round(100 * clamp01((terminal.raw - ATTAINABLE_MIN) / (ATTAINABLE_MAX - ATTAINABLE_MIN)));
+  const score = Math.round((0.7 * scenarioScore) + 15);
   const domainScores = Object.entries(terminal.dimensions).map(([key, value]) => ({ name: DIMENSION_LABELS[key], score: Math.round(value) }));
   const recommendations = Object.entries(terminal.dimensions)
     .sort((a, b) => a[1] - b[1])
@@ -267,8 +276,10 @@ export function scoreTrialAssessment(answers) {
     version: TRIAL_RESULT_VERSION,
     score,
     band: score >= 85 ? 'Strong path' : score >= 70 ? 'Sound path' : score >= 50 ? 'Developing path' : 'High-pressure path',
-    scoreBasis: 'Feasible-range normalized',
+    scoreBasis: 'Limited-evidence preview',
     formula: '40% obligation coverage + 25% liquidity retention + 20% cost efficiency + 15% plan feasibility',
+    calibration: '70% feasible-range path score + 30% neutral evidence anchor',
+    scenarioScore,
     domainScores,
     feedback: timeline,
     terminalState: stateSummary(state),
@@ -280,8 +291,11 @@ export function isTrialResult(value) {
   return value?.kind === 'trial'
     && value.version === TRIAL_RESULT_VERSION
     && Number.isInteger(value.score)
-    && value.score >= 0
-    && value.score <= 100
+    && value.score >= 15
+    && value.score <= 85
+    && Number.isInteger(value.scenarioScore)
+    && value.scenarioScore >= 0
+    && value.scenarioScore <= 100
     && Array.isArray(value.domainScores)
     && value.domainScores.length === 4
     && Array.isArray(value.feedback)

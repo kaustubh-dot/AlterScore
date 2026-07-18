@@ -91,6 +91,8 @@ The trial replays every selected transition from a fixed initial state. At the t
 
 The raw composite is normalized between the weakest and strongest reachable trial paths. There are five stages with three options each, producing 243 reachable paths. A decision therefore affects the terminal profile through the state it creates; it does not carry an isolated mark.
 
+Because one short scenario cannot provide the same evidence depth as the full assessment, the displayed preview index applies a limited-evidence adjustment: 70% of the feasible-range path score plus a 30% neutral anchor. This keeps the trial useful for comparison without presenting a lucky five-choice path as a high-confidence 90+ readiness result. The result shows both the underlying path score and the adjusted preview index.
+
 ### Full assessment formula
 
 The full assessment keeps the same explainable branching model and adds objective and static judgement evidence. The canonical scorer combines the objective component and judgement component using the server-owned weighting, preserves exact fractions until display rounding, and returns a signed explanation. The frontend never becomes an authority for hidden full-assessment answers or server-signed results.
@@ -159,7 +161,7 @@ A third challenge was presenting dense evidence without making the UI feel like 
 2. **Solution:** Calculations + judgement + connected branching choices + explainable readiness result.
 3. **Live product:** Show the assessment chooser, a trial state strip, and the terminal result.
 4. **Judge walkthrough:** Show the exact four-step path: choose Quick trial → make a state-changing decision → observe the next inherited state → expand the state replay. Add a small before/after example such as “₹24,000 cash before funding decision → ₹14,000 after a ₹10,000 payment choice.”
-5. **Scoring and architecture:** React → FastAPI → immutable state transitions → deterministic scorer → signed explanation. Include the trial’s 40/25/20/15 branching weights and 243-path feasible-range normalization.
+5. **Scoring and architecture:** React → FastAPI → immutable state transitions → deterministic scorer → signed explanation. Include the trial’s 40/25/20/15 branching weights, 243-path feasible-range normalization, and the transparent limited-evidence preview adjustment.
 6. **Trust and differentiation:** Anonymous attempts, unscored reflection, public verification, no lending use, unsigned illustrative trial, and server-owned full assessment authority.
 7. **Impact and roadmap:** Financial-literacy programs, learner progress over time, classroom feedback loops, and externally validated assessment research.
 

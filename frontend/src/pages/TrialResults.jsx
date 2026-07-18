@@ -21,11 +21,11 @@ export default function TrialResults({ result }) {
         </header>
 
         <section className="score-reveal-section" aria-labelledby="trial-score-heading">
-          <div className="score-circle-wrapper" role="img" aria-label={`Quick trial score ${result.score} out of 100`}>
+          <div className="score-circle-wrapper" role="img" aria-label={`Quick trial preview index ${result.score} out of 100`}>
             <svg width="200" height="200" viewBox="0 0 200 200" className="score-svg" aria-hidden="true"><circle cx="100" cy="100" r="70" className="score-track" /><circle cx="100" cy="100" r="70" className="score-progress" style={{ strokeDashoffset: ringOffset }} /></svg>
-            <div className="score-text-box"><span className="score-sub" id="trial-score-heading">Readiness index</span><span className="score-num font-mono">{result.score}</span><span className="score-band">{result.band}</span></div>
+            <div className="score-text-box"><span className="score-sub" id="trial-score-heading">Preview index</span><span className="score-num font-mono">{result.score}</span><span className="score-band">{result.band}</span></div>
           </div>
-          <p className="score-disclaimer">{result.formula}. The terminal score is normalized between the weakest and strongest reachable paths; no decision carries a fixed mark.</p>
+          <p className="score-disclaimer">{result.formula}. This produced a feasible-range path score of {result.scenarioScore}; the preview index applies a transparent limited-evidence adjustment ({result.calibration.toLowerCase()}). No decision carries a fixed mark.</p>
         </section>
 
         <section className="summary-grid" aria-label="Trial assessment summary">

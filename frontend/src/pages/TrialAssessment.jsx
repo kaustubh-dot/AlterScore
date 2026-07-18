@@ -3,7 +3,7 @@ import { ArrowLeft, ArrowRight, ShieldCheck } from 'lucide-react';
 import Modal from '../components/ui/Modal';
 import usePageTransition from '../hooks/usePageTransition';
 import useSound from '../hooks/useSound';
-import { getTrialQuestion, saveTrialResult, scoreTrialAssessment, TRIAL_QUESTIONS } from '../lib/trialAssessment';
+import { clearStoredTrialResult, getTrialQuestion, saveTrialResult, scoreTrialAssessment, TRIAL_QUESTIONS } from '../lib/trialAssessment';
 
 const formatMoney = (value) => `₹${value.toLocaleString('en-IN')}`;
 
@@ -18,6 +18,10 @@ export default function TrialAssessment() {
   const headingRef = useRef(null);
   const question = getTrialQuestion(currentIndex, answers);
   const isLast = currentIndex === TRIAL_QUESTIONS.length - 1;
+
+  useEffect(() => {
+    clearStoredTrialResult();
+  }, []);
 
   useEffect(() => {
     if (hasStarted) requestAnimationFrame(() => headingRef.current?.focus());

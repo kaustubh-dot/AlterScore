@@ -174,6 +174,21 @@ export default function Results() {
 
   if (trialResult) return <TrialResults result={trialResult} />;
 
+  if (trialMode) {
+    return (
+      <main className="results-layout results-empty-state">
+        <div className="container results-empty-card" role="status" aria-live="polite">
+          <AlertCircle size={48} aria-hidden="true" />
+          <h1>No current trial result</h1>
+          <p>Complete the five-stage quick trial to create a new illustrative preview.</p>
+          <button type="button" className="btn btn-primary" onClick={() => transitionTo('/assessment?mode=trial')}>
+            Start quick trial
+          </button>
+        </div>
+      </main>
+    );
+  }
+
   if (!result) {
     return (
       <main className="results-layout results-empty-state">

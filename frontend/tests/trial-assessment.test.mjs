@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 import {
   getTrialQuestion,
@@ -11,7 +12,7 @@ import {
 const representativePath = {
   'collection-action': 'reconcile',
   'shortfall-response': 'cash-payment',
-  'payment-arrangement': 'good-faith',
+  'payment-arrangement': 'balanced-payment',
   'essential-shock': 'fund-essential',
   'supplier-opportunity': 'supplier-cash',
 };
@@ -19,8 +20,9 @@ const representativePath = {
 test('uses the main branching dimensions and feasible-range normalization', () => {
   const result = scoreTrialAssessment(representativePath);
 
-  assert.equal(result.version, 3);
-  assert.equal(result.scoreBasis, 'Feasible-range normalized');
+  assert.equal(result.version, 4);
+  assert.equal(result.scoreBasis, 'Limited-evidence preview');
+  assert.equal(result.calibration, '70% feasible-range path score + 30% neutral evidence anchor');
   assert.deepEqual(result.domainScores.map((item) => item.name), [
     'Obligation coverage',
     'Liquidity retention',
@@ -42,8 +44,8 @@ test('every decision changes the state inherited by the next stage', () => {
   assert.notEqual(fundingA.state.paymentRemaining, fundingB.state.paymentRemaining);
   assert.notEqual(fundingA.state.costToDate, fundingB.state.costToDate);
 
-  const arrangementA = getTrialQuestion(3, { ...representativePath, 'payment-arrangement': 'all-cash' });
-  const arrangementB = getTrialQuestion(3, { ...representativePath, 'payment-arrangement': 'extension' });
+  const arrangementA = getTrialQuestion(3, { ...representativePath, 'payment-arrangement': 'accelerated-payment' });
+  const arrangementB = getTrialQuestion(3, { ...representativePath, 'payment-arrangement': 'extension-payment' });
   assert.notEqual(arrangementA.state.cashAvailable, arrangementB.state.cashAvailable);
 
   const resilienceA = getTrialQuestion(4, { ...representativePath, 'essential-shock': 'fund-essential' });
@@ -60,13 +62,24 @@ test('calibrates all 243 reachable paths and rejects legacy trial results', () =
       return;
     }
     const question = getTrialQuestion(index, answers);
+    assert.equal(Object.values(question.state).every((value) => Number.isFinite(value) && value >= 0), true);
     question.options.forEach((option) => visit(index + 1, { ...answers, [question.id]: option.id }));
   };
   visit(0, {});
 
   assert.equal(results.length, 243);
-  assert.equal(Math.min(...results.map((result) => result.score)), 0);
-  assert.equal(Math.max(...results.map((result) => result.score)), 100);
-  assert.ok(results.filter((result) => result.score === 100).length < 10);
-  assert.equal(isTrialResult({ ...results[0], version: 2 }), false);
+  assert.equal(Math.min(...results.map((result) => result.score)), 15);
+  assert.equal(Math.max(...results.map((result) => result.score)), 85);
+  assert.equal(results.filter((result) => result.score >= 85).length, 2);
+  assert.equal(results.every((result) => Object.values(result.terminalState).every((value) => Number.isFinite(value) && value >= 0)), true);
+  assert.equal(isTrialResult({ ...results[0], version: 3 }), false);
+});
+
+test('clears stale trial results and keeps missing trial state out of the full-result path', () => {
+  const trialPage = readFileSync(new URL('../src/pages/TrialAssessment.jsx', import.meta.url), 'utf8');
+  const resultsPage = readFileSync(new URL('../src/pages/Results.jsx', import.meta.url), 'utf8');
+
+  assert.match(trialPage, /useEffect\(\(\) => \{\s*clearStoredTrialResult\(\);\s*\}, \[\]\);/);
+  assert.ok(resultsPage.indexOf('if (trialMode)') < resultsPage.indexOf('if (!result)'));
+  assert.match(resultsPage, /No current trial result/);
 });
