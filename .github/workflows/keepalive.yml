@@ -16,5 +16,33 @@ jobs:
       - name: Probe public readiness
         run: |
           set -euo pipefail
-          payload="$(curl --fail --silent --show-error --max-time 30 https://coolbot22-alterscore-backend.hf.space/api/ready)"
-          python -c 'import json, sys; payload=json.loads(sys.argv[1]); checks=payload.get("checks", []); expected=("instrument", "scorer", "signing", "attempt_store", "verification_store", "rate_limits"); sys.exit(0 if payload.get("status") == "ready" and tuple(check.get("name") for check in checks) == expected and all(check.get("status") == "pass" for check in checks) else 1)' "$payload"
+          payload="$(curl \
+            --fail --silent --show-error \
+            --connect-timeout 10 --max-time 30 \
+            --retry 8 --retry-delay 15 --retry-max-time 240 \
+            --retry-all-errors \
+            https://coolbot22-alterscore-backend.hf.space/api/ready)"
+          python - "$payload" <<'PY'
+          import json
+          import sys
+
+          payload = json.loads(sys.argv[1])
+          checks = payload.get("checks", [])
+          expected = (
+              "instrument",
+              "scorer",
+              "signing",
+              "attempt_store",
+              "verification_store",
+              "rate_limits",
+          )
+          ready = (
+              payload.get("status") == "ready"
+              and tuple(check.get("name") for check in checks) == expected
+              and all(check.get("status") == "pass" for check in checks)
+          )
+          if not ready:
+              print("Public readiness contract failed:")
+              print(json.dumps(payload, indent=2, sort_keys=True))
+              raise SystemExit(1)
+          PY
