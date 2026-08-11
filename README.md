@@ -42,15 +42,7 @@ The layout also adapts to narrow screens. This is the same landing page at a mob
   <img src="docs/assets/readme/landing-mobile.png" alt="AlterScore landing page on a mobile viewport" width="420">
 </p>
 
-## Architecture
-
-The browser owns presentation and the quick preview. The server owns attempt state, scoring authority, and the signed result projection.
-
-<p align="center">
-  <img src="docs/assets/readme/alterscore-architecture.svg" alt="AlterScore runtime architecture from React and Vite through FastAPI to deterministic scoring and signed results" width="960">
-</p>
-
-<p align="center"><a href="docs/diagrams/alterscore-architecture.html">Open the architecture diagram source</a></p>
+## Assessment lifecycle
 
 The assessment lifecycle is intentionally short and explicit:
 
