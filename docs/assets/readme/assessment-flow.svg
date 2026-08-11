@@ -1,0 +1,107 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 1120 900" role="img" aria-labelledby="diagram-title diagram-description">
+      <title id="diagram-title">AlterScore assessment flow</title>
+      <desc id="diagram-description">A visitor chooses between a quick trial and a full assessment. The quick trial ends in an illustrative preview. The full path issues a server-owned form, accepts opaque responses, scores the stateful rubric, and returns a signed result.</desc>
+      <defs>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap');
+
+    :root {
+      --paper: #070708;
+      --paper-2: #0e0e10;
+      --ink: #f4f1eb;
+      --muted: #aeb0ba;
+      --soft: #6f7480;
+      --rule: rgba(244, 241, 235, 0.14);
+      --accent: #06b6d4;
+      --accent-tint: rgba(6, 182, 212, 0.1);
+    }
+    * { box-sizing: border-box; }
+    html { background: var(--paper); }
+    body { margin: 0; min-width: 960px; color: var(--ink); background: var(--paper); font-family: Inter, sans-serif; -webkit-font-smoothing: antialiased; }
+    .page { width: 1200px; margin: 0 auto; padding: 56px 40px 40px; }
+    .eyebrow, .footer, .node-meta, .arrow-label, .legend-label, .legend-item { font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.12em; }
+    .eyebrow { margin: 0 0 12px; color: var(--accent); font-size: 12px; font-weight: 600; }
+    h1 { margin: 0; font-family: Fraunces, Georgia, serif; font-size: 40px; font-weight: 400; line-height: 1.08; }
+    .subtitle { max-width: 680px; margin: 16px 0 32px; color: var(--muted); font-size: 16px; line-height: 1.55; }
+    svg { display: block; width: 1120px; height: 900px; overflow: visible; }
+    .footer { margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--rule); color: var(--soft); font-size: 10px; }
+    .connector { fill: none; stroke: var(--muted); stroke-width: 2; marker-end: url(#arrow); }
+    .connector-accent { stroke: var(--accent); marker-end: url(#arrow-accent); }
+    .node { fill: var(--paper-2); stroke: var(--rule); stroke-width: 1; }
+    .node-accent { fill: var(--accent-tint); stroke: var(--accent); stroke-width: 1.5; }
+    .node-start { fill: var(--paper-2); stroke: var(--muted); stroke-width: 1; }
+    .node-name { fill: var(--ink); font-family: Inter, sans-serif; font-size: 16px; font-weight: 600; }
+    .node-meta { fill: var(--muted); font-size: 10px; }
+    .node-note { fill: var(--soft); font-family: Inter, sans-serif; font-size: 12px; }
+    .arrow-label { fill: var(--muted); font-size: 10px; text-anchor: middle; }
+    .label-mask { fill: var(--paper); }
+    .legend-label { fill: var(--soft); font-size: 10px; font-weight: 600; }
+    .legend-item { fill: var(--muted); font-size: 10px; }
+
+</style>
+        <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><polygon points="0 0, 10 4, 0 8" fill="#aeb0ba" /></marker>
+        <marker id="arrow-accent" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><polygon points="0 0, 10 4, 0 8" fill="#06b6d4" /></marker>
+      </defs>
+
+      <!-- Connectors first -->
+      <path class="connector" d="M560 96 V156" />
+      <path class="connector" d="M440 216 H364 Q356 216 356 224 V328 Q356 336 348 336 H300" />
+      <rect class="label-mask" x="348" y="256" width="68" height="20" rx="2" />
+      <text class="arrow-label" x="382" y="270">TRIAL</text>
+      <path class="connector" d="M680 216 H892 Q900 216 900 224 V336" />
+      <rect class="label-mask" x="736" y="196" width="96" height="20" rx="2" />
+      <text class="arrow-label" x="784" y="210">FULL PATH</text>
+      <path class="connector" d="M300 424 V496" />
+      <path class="connector" d="M900 424 V496" />
+      <path class="connector connector-accent" d="M900 584 V648" />
+      <path class="connector connector-accent" d="M900 736 V792" />
+      <rect class="label-mask" x="912" y="606" width="72" height="20" rx="2" />
+      <text class="arrow-label" x="948" y="620">RECONCILE</text>
+
+      <!-- Nodes -->
+      <ellipse class="node-start" cx="560" cy="68" rx="120" ry="28" />
+      <text class="node-name" x="560" y="74" text-anchor="middle">Visitor opens AlterScore</text>
+
+      <polygon class="node" points="560,156 680,216 560,276 440,216" />
+      <text class="node-name" x="560" y="211" text-anchor="middle">Choose a path?</text>
+      <text class="node-meta" x="560" y="231" text-anchor="middle">QUICK OR FULL</text>
+
+      <rect class="node" x="160" y="336" width="280" height="88" rx="8" />
+      <text class="node-name" x="300" y="372" text-anchor="middle">Quick trial</text>
+      <text class="node-meta" x="300" y="396" text-anchor="middle">FIVE LOCAL DECISIONS</text>
+      <text class="node-note" x="300" y="414" text-anchor="middle">fast, illustrative, unsigned</text>
+
+      <ellipse class="node-start" cx="300" cy="524" rx="140" ry="28" />
+      <text class="node-name" x="300" y="530" text-anchor="middle">Illustrative preview</text>
+
+      <rect class="node" x="760" y="336" width="280" height="88" rx="8" />
+      <text class="node-name" x="900" y="372" text-anchor="middle">Full assessment</text>
+      <text class="node-meta" x="900" y="396" text-anchor="middle">SERVER-ISSUED FORM</text>
+      <text class="node-note" x="900" y="414" text-anchor="middle">opaque IDs, one attempt</text>
+
+      <rect class="node" x="760" y="496" width="280" height="88" rx="8" />
+      <text class="node-name" x="900" y="532" text-anchor="middle">Submit responses</text>
+      <text class="node-meta" x="900" y="556" text-anchor="middle">VALIDATE + CONSUME</text>
+      <text class="node-note" x="900" y="574" text-anchor="middle">no answer key in the browser</text>
+
+      <rect class="node-accent" x="760" y="648" width="280" height="88" rx="8" />
+      <text class="node-name" x="900" y="684" text-anchor="middle">Score and explain</text>
+      <text class="node-meta" x="900" y="708" text-anchor="middle">STATEFUL DETERMINISTIC RUBRIC</text>
+      <text class="node-note" x="900" y="726" text-anchor="middle">same path, same answer, same score</text>
+
+      <ellipse class="node-accent" cx="900" cy="820" rx="140" ry="28" />
+      <text class="node-name" x="900" y="826" text-anchor="middle">Signed result + verification</text>
+
+      <!-- Legend -->
+      <line x1="32" y1="868" x2="1088" y2="868" stroke="var(--rule)" stroke-width="1" />
+      <text class="legend-label" x="32" y="896">LEGEND</text>
+      <ellipse class="node-start" cx="152" cy="892" rx="32" ry="12" />
+      <text class="legend-item" x="200" y="896">start / end</text>
+      <rect class="node" x="320" y="880" width="64" height="24" rx="6" />
+      <text class="legend-item" x="404" y="896">action</text>
+      <polygon class="node" points="520,880 544,892 520,904 496,892" />
+      <text class="legend-item" x="564" y="896">decision</text>
+      <rect class="node-accent" x="700" y="880" width="64" height="24" rx="6" />
+      <text class="legend-item" x="784" y="896">scoring boundary</text>
+    </svg>

@@ -29,10 +29,11 @@ export default function Navbar() {
   return (
     <nav className={`navbar ${scrolled ? 'navbar-scrolled' : ''}`}>
       <div className="navbar-container container">
-        <button 
+        <button
+          type="button"
           onClick={() => { playClick(); transitionTo('/'); }}
           className="navbar-logo font-mono btn-logo-action"
-          style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
+          aria-label="Go to AlterScore home"
         >
           <Activity className="logo-icon" size={16} />
           <span className="logo-text">AlterScore</span>
@@ -55,9 +56,8 @@ export default function Navbar() {
               onClick={() => { playClick(); transitionTo('/'); }}
               className="navbar-link"
               aria-label="Go to home"
-              style={{ cursor: 'pointer' }}
             >
-              <Home size={14} style={{ color: '#ffffff' }} />
+              <Home size={14} />
               <span>Home</span>
             </button>
           ) : (
@@ -65,9 +65,8 @@ export default function Navbar() {
               onClick={() => { playClick(); transitionTo('/dashboard'); }}
               className="navbar-link"
               aria-label="Open my dashboard"
-              style={{ cursor: 'pointer' }}
             >
-              <ShieldCheck size={14} style={{ color: '#ffffff' }} />
+              <ShieldCheck size={14} />
               <span>My Dashboard</span>
             </button>
           )}

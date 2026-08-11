@@ -1,16 +1,18 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 2000;
+  z-index: var(--z-modal);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.76);
+  background: var(--overlay-scrim);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  padding: var(--page-gutter);
+  padding-block: max(var(--page-gutter), env(safe-area-inset-top)) max(var(--page-gutter), env(safe-area-inset-bottom));
+  padding-inline: max(var(--page-gutter), env(safe-area-inset-left)) max(var(--page-gutter), env(safe-area-inset-right));
   overflow-y: auto;
-  animation: modalFadeIn 300ms var(--ease-smooth) forwards;
+  overscroll-behavior: contain;
+  animation: modalFadeIn 240ms var(--ease-out) forwards;
 }
 
 .modal-card {
@@ -23,11 +25,12 @@
   gap: var(--space-6);
   background: var(--bg-overlay);
   border: 1px solid var(--bg-border);
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.58);
-  transform: translateY(24px) scale(0.96);
-  animation: modalSlideUp 400ms var(--ease-spring) forwards;
-  max-height: calc(100dvh - 2rem);
+  box-shadow: var(--shadow-modal);
+  transform: translateY(12px) scale(0.98);
+  animation: modalSlideUp 280ms var(--ease-out) forwards;
+  max-height: calc(100dvh - max(2rem, env(safe-area-inset-top)) - max(2rem, env(safe-area-inset-bottom)));
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .modal-card.glass {
@@ -69,7 +72,8 @@
 @media (max-width: 640px) {
   .modal-overlay {
     align-items: flex-end;
-    padding: var(--space-4);
+    padding-block: var(--space-4) max(var(--space-4), env(safe-area-inset-bottom));
+    padding-inline: max(var(--space-4), env(safe-area-inset-left)) max(var(--space-4), env(safe-area-inset-right));
   }
 
   .modal-card {

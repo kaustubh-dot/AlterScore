@@ -23,13 +23,16 @@ export default function Preloader({ onComplete }) {
       return undefined;
     }
 
-    const duration = 2500;
-    const countDuration = 1900;
+    const duration = 1050;
+    const countDuration = 760;
+    const fadeDuration = 240;
     const animate = (timestamp) => {
       if (startRef.current === null) startRef.current = timestamp;
       const elapsed = timestamp - startRef.current;
       setPercent(Math.min(Math.round((elapsed / countDuration) * 100), 100));
-      setOpacity(elapsed > duration - 500 ? Math.max(0, 1 - (elapsed - (duration - 500)) / 500) : 1);
+      setOpacity(elapsed > duration - fadeDuration
+        ? Math.max(0, 1 - (elapsed - (duration - fadeDuration)) / fadeDuration)
+        : 1);
       if (elapsed < duration) frameRef.current = requestAnimationFrame(animate);
       else onComplete();
     };
@@ -42,7 +45,7 @@ export default function Preloader({ onComplete }) {
   const translationPercent = -75 * (percent / 100);
 
   return (
-    <div className="preloader-overlay" style={{ opacity }} role="status" aria-live="polite" aria-label={`Loading AlterScore ${percent}%`}>
+    <div className="preloader-overlay" style={{ opacity }} role="status" aria-live="polite" aria-label="Opening AlterScore">
       <div className="preloader-icon-container" aria-hidden="true"><Activity size={16} strokeWidth={1.5} className="preloader-icon" /><span className="preloader-brand">AlterScore</span></div>
       <div className="preloader-scale-viewport" aria-hidden="true">
         <div className="shadow-top" />

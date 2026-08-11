@@ -1,19 +1,20 @@
 .page-curtain {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 99998;
+  inset: 0;
+  width: 100%;
+  height: 100dvh;
+  z-index: calc(var(--z-tooltip) + 1);
   pointer-events: none;
+  --curtain-in: 260ms;
+  --curtain-out: 300ms;
 }
 
 .curtain-panel {
   position: fixed;
   left: 0;
-  width: 100vw;
-  height: 50vh;
-  background-color: var(--bg-void, #080809);
+  width: 100%;
+  height: 50dvh;
+  background-color: var(--bg-void);
   pointer-events: all;
   will-change: transform;
 }
@@ -35,7 +36,7 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 99999;
+  z-index: var(--z-raised);
   opacity: 0;
   pointer-events: none;
   text-align: center;
@@ -44,44 +45,43 @@
 
 .curtain-brand-text {
   font-family: var(--font-display);
-  font-size: var(--text-2xl, 32px);
-  font-weight: 700;
-  color: #ffffff;
-  letter-spacing: 0.1em;
+  font-size: var(--text-2xl);
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
 }
 
 /* Animations when curtain is closing IN */
 .page-curtain.in .top-panel {
   transform: scaleY(1);
-  transition: transform 500ms cubic-bezier(0.76, 0, 0.24, 1);
+  transition: transform var(--curtain-in) var(--ease-in-out);
 }
 
 .page-curtain.in .bottom-panel {
   transform: scaleY(1);
-  transition: transform 500ms cubic-bezier(0.76, 0, 0.24, 1);
+  transition: transform var(--curtain-in) var(--ease-in-out);
 }
 
 .page-curtain.in .curtain-brand {
   opacity: 1;
-  transform: translate(-50%, -50%) scale(1.05);
-  transition: opacity 300ms ease 150ms, transform 500ms cubic-bezier(0.16, 1, 0.3, 1) 150ms;
+  transform: translate(-50%, -50%) scale(1);
+  transition: opacity 160ms var(--ease-out) 80ms, transform var(--curtain-in) var(--ease-out) 40ms;
 }
 
 /* Animations when curtain is opening OUT */
 .page-curtain.out .top-panel {
   transform: scaleY(0);
-  transition: transform 500ms cubic-bezier(0.76, 0, 0.24, 1);
+  transition: transform var(--curtain-out) var(--ease-in-out);
 }
 
 .page-curtain.out .bottom-panel {
   transform: scaleY(0);
-  transition: transform 500ms cubic-bezier(0.76, 0, 0.24, 1);
+  transition: transform var(--curtain-out) var(--ease-in-out);
 }
 
 .page-curtain.out .curtain-brand {
   opacity: 0;
-  transform: translate(-50%, -50%) scale(0.95);
-  transition: opacity 250ms ease, transform 500ms cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translate(-50%, -50%) scale(0.98);
+  transition: opacity 160ms var(--ease-in), transform var(--curtain-out) var(--ease-in);
 }

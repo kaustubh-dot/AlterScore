@@ -4,7 +4,7 @@ export default function PageCurtain({ state }) {
   if (state === 'idle') return null;
 
   return (
-    <div className={`page-curtain ${state}`}>
+    <div className={`page-curtain ${state}`} aria-hidden="true">
       <div className="curtain-panel top-panel" />
       <div className="curtain-brand">
         <span className="curtain-brand-text">AlterScore</span>

@@ -14,10 +14,12 @@
   position: fixed;
   top: 0;
   left: 0;
+  width: 100%;
   height: 2px;
-  background: #FFFFFF; /* Pure white progress line */
-  transition: width 400ms var(--ease-smooth);
-  z-index: 1100;
+  background: var(--accent-primary);
+  transform-origin: left center;
+  transition: transform var(--dur-long) var(--ease-out);
+  z-index: calc(var(--z-sticky) + 2);
 }
 
 .assessment-container {
@@ -63,6 +65,7 @@
   box-shadow: var(--shadow-card);
   transition: opacity var(--duration-normal) var(--ease-smooth), transform var(--duration-normal) var(--ease-smooth), border-color var(--duration-normal) var(--ease-smooth);
   position: relative;
+  min-width: 0;
   min-height: 320px;
   display: flex;
   flex-direction: column;
@@ -153,7 +156,7 @@
 }
 
 .number-input-wrapper:focus-within {
-  border-bottom-color: #FFFFFF;
+  border-bottom-color: var(--accent-primary);
 }
 
 .number-prefix, .number-suffix {
@@ -171,6 +174,12 @@
   outline: none;
   width: 100%;
   padding: 4px 0;
+}
+
+.input-number:focus-visible {
+  outline: 2px solid var(--accent-focus);
+  outline-offset: 4px;
+  border-radius: var(--radius-sm);
 }
 
 .input-number::placeholder {
@@ -191,7 +200,7 @@
   border-radius: var(--radius-md);
   padding: var(--space-4) var(--space-5);
   cursor: pointer;
-  transition: all var(--duration-fast) var(--ease-smooth);
+  transition: color var(--dur-micro) var(--ease-out), background-color var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out);
   font-family: var(--font-body);
   font-size: var(--text-base);
   color: var(--text-secondary);
@@ -206,13 +215,13 @@
 }
 
 .option-pill.selected {
-  border-color: #FFFFFF;
+  border-color: var(--accent-primary);
   background: var(--bg-muted);
   color: var(--text-primary);
 }
 
 .option-pill:focus-visible {
-  border-color: #FFFFFF;
+  border-color: var(--accent-focus);
 }
 
 /* Scenario Dilemma Card */
@@ -224,7 +233,7 @@
   border: 1px solid var(--bg-border);
   border-radius: var(--radius-md);
   padding: var(--space-4) var(--space-5);
-  transition: all var(--duration-fast) var(--ease-smooth);
+  transition: color var(--dur-micro) var(--ease-out), background-color var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out);
   font-family: var(--font-body);
   font-size: var(--text-base);
   color: var(--text-secondary);
@@ -248,14 +257,14 @@
 }
 
 .scenario-pill.primary-selected {
-  border-color: #FFFFFF;
+  border-color: var(--accent-primary);
   background: var(--bg-muted);
   color: var(--text-primary);
 }
 
 .scenario-pill.least-selected {
   border-color: var(--accent-rose);
-  background: rgba(244, 63, 94, 0.04);
+  background: var(--accent-rose-soft);
   color: var(--text-primary);
 }
 
@@ -270,7 +279,7 @@
   font-size: var(--text-xs);
   text-transform: uppercase;
   cursor: pointer;
-  transition: all var(--duration-fast) var(--ease-smooth);
+  transition: color var(--dur-micro) var(--ease-out), background-color var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out);
 }
 
 .option-pill-btn:hover {
@@ -289,14 +298,14 @@
 }
 
 .badge-tag.primary {
-  background: #FFFFFF;
+  background: var(--accent-primary);
   color: var(--bg-void);
-  border: 1px solid #FFFFFF;
+  border: 1px solid var(--accent-primary);
 }
 
 .badge-tag.least {
   background: var(--accent-rose);
-  color: #FFFFFF;
+  color: var(--text-primary);
   border: 1px solid var(--accent-rose);
 }
 
@@ -317,7 +326,7 @@
   border-radius: var(--radius-md);
   padding: var(--space-4) var(--space-2);
   cursor: pointer;
-  transition: all var(--duration-fast) var(--ease-smooth);
+  transition: background-color var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out);
   outline: none;
 }
 
@@ -327,7 +336,7 @@
 }
 
 .likert-option.selected {
-  border-color: #FFFFFF;
+  border-color: var(--accent-primary);
   background: var(--bg-muted);
 }
 
@@ -339,7 +348,7 @@
 }
 
 .likert-option.selected .likert-number {
-  color: #FFFFFF;
+  color: var(--text-primary);
 }
 
 .likert-label {
@@ -379,7 +388,12 @@
 }
 
 .input-textarea:focus {
-  border-color: #FFFFFF;
+  border-color: var(--accent-primary);
+}
+
+.input-textarea:focus-visible {
+  outline: 2px solid var(--accent-focus);
+  outline-offset: 3px;
 }
 
 .textarea-metadata {
@@ -414,7 +428,7 @@
 
 .textarea-progress-fill {
   height: 100%;
-  transition: width 200ms ease, background-color 200ms ease;
+  transition: transform var(--dur-short) var(--ease-out), background-color var(--dur-short) var(--ease-out);
 }
 
 /* Navigation Controls */
@@ -446,7 +460,7 @@
   display: inline-flex;
   padding: var(--space-3);
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--surface-subtle);
   border: 1px solid var(--bg-border);
 }
 
@@ -463,6 +477,17 @@
   font-size: var(--text-base);
   line-height: 1.6;
   margin-bottom: var(--space-8);
+}
+
+.consent-intro {
+  max-width: 62ch;
+  margin: 0 auto var(--space-6);
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.assessment-begin-button {
+  width: 100%;
 }
 
 .telemetry-specs {
@@ -496,7 +521,7 @@
   position: fixed;
   top: max(24px, env(safe-area-inset-top));
   left: max(24px, env(safe-area-inset-left));
-  z-index: 1000;
+  z-index: calc(var(--z-sticky) + 1);
   background: transparent;
   border: 1px solid var(--bg-border);
   color: var(--text-muted);
@@ -510,12 +535,12 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  transition: all var(--duration-fast) var(--ease-smooth);
+  transition: color var(--dur-micro) var(--ease-out), background-color var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out), transform var(--dur-micro) var(--ease-out);
   min-height: 44px;
 }
 
 .assessment-exit-btn:hover {
-  color: #FFFFFF;
+  color: var(--text-primary);
   border-color: var(--text-secondary);
   background: var(--bg-muted);
 }
@@ -725,12 +750,13 @@
   height: 1.15rem;
   flex: 0 0 auto;
   margin: 0.15rem 0 0;
-  accent-color: var(--accent-primary);
+  accent-color: var(--accent-cyan);
 }
 
 .choice-option:focus-within {
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.35);
+  border-color: var(--accent-focus);
+  outline: 2px solid var(--accent-focus);
+  outline-offset: 2px;
 }
 
 .validation-message {
@@ -738,8 +764,16 @@
 }
 
 .reset-button {
-  border-color: rgba(244, 63, 94, 0.15) !important;
+  border-color: color-mix(in oklch, var(--accent-rose) 28%, transparent) !important;
   color: var(--accent-rose) !important;
+}
+
+.assessment-control-button {
+  padding-inline: var(--space-5);
+}
+
+.assessment-next-button {
+  min-width: 120px;
 }
 
 @media (max-width: 640px) {

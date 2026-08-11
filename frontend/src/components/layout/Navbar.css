@@ -5,18 +5,18 @@
   top: 0;
   left: 0;
   width: 100%;
-  z-index: 1000;
+  z-index: calc(var(--z-sticky) + 1);
   height: calc(64px + env(safe-area-inset-top));
   padding-top: env(safe-area-inset-top);
   display: flex;
   align-items: center;
-  transition: all var(--duration-normal) var(--ease-smooth);
+  transition: background-color var(--dur-short) var(--ease-out), border-color var(--dur-short) var(--ease-out);
   background: transparent;
   border-bottom: 1px solid transparent;
 }
 
 .navbar-scrolled {
-  background: rgba(8, 8, 9, 0.82);
+  background: color-mix(in oklch, var(--bg-void) 86%, transparent);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--bg-border);
@@ -45,7 +45,7 @@
 }
 
 .logo-icon {
-  color: #FFFFFF;
+  color: var(--text-primary);
   transition: transform var(--duration-normal) var(--ease-spring);
 }
 
@@ -76,7 +76,9 @@
   background: transparent;
   min-height: 44px;
   min-width: 44px;
-  transition: all var(--duration-fast) var(--ease-smooth);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color var(--dur-micro) var(--ease-out), background-color var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out), transform var(--dur-micro) var(--ease-out);
 }
 
 .navbar-icon-button {
@@ -87,17 +89,31 @@
   cursor: pointer;
 }
 
-.navbar-link:hover,
-.navbar-icon-button:hover {
+.navbar-link:focus-visible,
+.navbar-icon-button:focus-visible {
   color: var(--text-primary);
-  border-color: #FFFFFF;
-  background: rgba(255, 255, 255, 0.02);
-  transform: translateY(-1px);
+  border-color: var(--border-strong);
+  background: var(--surface-subtle);
 }
 
 .navbar-link svg,
 .navbar-icon-button svg {
-  color: #FFFFFF;
+  color: var(--text-primary);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .navbar-link:hover,
+  .navbar-icon-button:hover {
+    color: var(--text-primary);
+    border-color: var(--border-strong);
+    background: var(--surface-subtle);
+    transform: translateY(-1px);
+  }
+}
+
+.navbar-link:active,
+.navbar-icon-button:active {
+  transform: translateY(0);
 }
 
 /* Logo Button resets */
@@ -123,10 +139,10 @@
 @media (max-width: 640px) {
   .navbar {
     height: calc(68px + env(safe-area-inset-top));
-    background: rgba(8, 8, 9, 0.86);
+    background: color-mix(in oklch, var(--bg-void) 90%, transparent);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
-    border-bottom-color: rgba(255, 255, 255, 0.06);
+    border-bottom-color: var(--border-soft);
   }
 
   .navbar-container {
@@ -149,6 +165,7 @@
     max-width: 8.5rem;
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .logo-tag {

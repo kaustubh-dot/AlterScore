@@ -10,8 +10,6 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import SignalCanvas from '../components/hero/SignalCanvas';
-import ScrollReveal from '../components/animation/ScrollReveal';
-import GlowCard from '../components/ui/GlowCard';
 import MagneticButton from '../components/ui/MagneticButton';
 import Modal from '../components/ui/Modal';
 import TextReveal from '../components/animation/TextReveal';
@@ -83,31 +81,25 @@ export default function Landing() {
                 <TextReveal text="made clear." delay={450} />
               </h1>
 
-              <ScrollReveal direction="up" delay={550}>
-                <p className="hero-sub">
-                  For students, first-time earners, and anyone building confidence with
-                  money: work through practical decisions, then see what you understand,
-                  what needs attention, and why.
-                </p>
-              </ScrollReveal>
+              <p className="hero-sub">
+                For students, first-time earners, and anyone building confidence with
+                money: work through practical decisions, then see what you understand,
+                what needs attention, and why.
+              </p>
 
-              <ScrollReveal direction="up" delay={650}>
-                <div className="hero-cta">
-                  <MagneticButton onClick={startAssessment} className="btn-large" variant="primary">
-                    <span>Start assessment</span>
-                    <ArrowRight size={14} />
-                  </MagneticButton>
-                  <a className="btn btn-ghost btn-large hero-preview-link" href="#sample-result">
-                    Preview a sample result
-                  </a>
-                </div>
-              </ScrollReveal>
+              <div className="hero-cta">
+                <MagneticButton onClick={startAssessment} className="btn-large" variant="primary">
+                  <span>Start assessment</span>
+                  <ArrowRight size={14} aria-hidden="true" />
+                </MagneticButton>
+                <a className="btn btn-ghost btn-large hero-preview-link" href="#sample-result">
+                  Preview a sample result
+                </a>
+              </div>
 
-              <ScrollReveal direction="up" delay={800}>
-                <div className="hero-meta">
-                  <span>Quick trial: 5 questions • Full: {questionCount} required items + optional reflection</span>
-                </div>
-              </ScrollReveal>
+              <div className="hero-meta">
+                <span>Quick trial: 5 questions • Full: {questionCount} required items + optional reflection</span>
+              </div>
             </div>
 
             <div className={`scroll-indicator ${hideScroll ? 'hidden' : ''}`}>
@@ -120,9 +112,8 @@ export default function Landing() {
             <div className="container">
               <div className="section-header sample-section-header">
                 <div>
-                  <span className="section-eyebrow">60-second product preview</span>
                   <h2 className="section-title" id="sample-result-title">
-                    <TextReveal text="See the outcome first" />
+                    See the outcome first
                   </h2>
                 </div>
                 <p>
@@ -131,8 +122,7 @@ export default function Landing() {
                 </p>
               </div>
 
-              <ScrollReveal direction="up">
-                <div className="sample-result-shell">
+              <div className="sample-result-shell">
                   <div className="sample-score-panel">
                     <div className="sample-proof">
                       <ShieldCheck size={15} aria-hidden="true" />
@@ -147,7 +137,6 @@ export default function Landing() {
                   </div>
 
                   <div className="sample-insight-panel">
-                    <span className="section-eyebrow">What the learner receives</span>
                     <h3>A score that explains itself.</h3>
                     <div className="sample-domain-grid" aria-label="Sample domain scores">
                       <div>
@@ -174,7 +163,6 @@ export default function Landing() {
                     </button>
                   </div>
                 </div>
-              </ScrollReveal>
             </div>
           </section>
 
@@ -182,49 +170,42 @@ export default function Landing() {
           <section className="section section-features">
             <div className="container">
               <div className="section-header">
-                <span className="section-eyebrow">Assessment evidence</span>
-                <h2 className="section-title"><TextReveal text="What the assessment covers" /></h2>
+                <h2 className="section-title">What the assessment covers</h2>
               </div>
 
               <div className="features-grid">
-                <ScrollReveal direction="scale" delay={100} className="feature-reveal">
-                  <GlowCard className="feature-card">
+                <article className="feature-card feature-card-primary">
                     <div className="feature-icon-wrapper">
-                      <Brain size={20} />
+                      <Brain size={20} aria-hidden="true" />
                     </div>
                     <h3 className="feature-title">Financial fundamentals</h3>
                     <p className="feature-desc">
                       Short calculations cover cash flow, borrowing costs, inflation,
                       due dates, repayment, and emergency buffers.
                     </p>
-                  </GlowCard>
-                </ScrollReveal>
+                </article>
 
-                <ScrollReveal direction="scale" delay={200} className="feature-reveal">
-                  <GlowCard className="feature-card">
+                <article className="feature-card">
                     <div className="feature-icon-wrapper">
-                      <Eye size={20} />
+                      <Eye size={20} aria-hidden="true" />
                     </div>
                     <h3 className="feature-title">Real-world decisions</h3>
                     <p className="feature-desc">
                       Choose between plausible options in practical money situations.
                       Each decision changes what happens next.
                     </p>
-                  </GlowCard>
-                </ScrollReveal>
+                </article>
 
-                <ScrollReveal direction="scale" delay={300} className="feature-reveal">
-                  <GlowCard className="feature-card">
+                <article className="feature-card">
                     <div className="feature-icon-wrapper">
-                      <HeartHandshake size={20} />
+                      <HeartHandshake size={20} aria-hidden="true" />
                     </div>
                     <h3 className="feature-title">Planning habits</h3>
                     <p className="feature-desc">
                       Optional questions help you reflect on everyday habits. They are
                       shown separately and never change your score.
                     </p>
-                  </GlowCard>
-                </ScrollReveal>
+                </article>
               </div>
             </div>
           </section>
@@ -233,21 +214,12 @@ export default function Landing() {
           <section className="section section-how">
             <div className="container">
               <div className="section-header">
-                <span className="section-eyebrow">Three simple steps</span>
-                <h2 className="section-title"><TextReveal text="How it works" /></h2>
+                <h2 className="section-title">How it works</h2>
               </div>
 
               <div className="stepper-row-container">
-                <div className="timeline-svg-wrapper">
-                  <svg className="timeline-svg" width="100%" height="2" viewBox="0 0 100 2" preserveAspectRatio="none">
-                    <line x1="0" y1="1" x2="100" y2="1" className="timeline-line-bg" />
-                    <line x1="0" y1="1" x2="100" y2="1" className="timeline-line-active" />
-                  </svg>
-                </div>
-                
                 <div className="stepper-row">
-                  <ScrollReveal direction="up" delay={100} className="step-reveal">
-                    <GlowCard className="step-node">
+                  <article className="step-node">
                       <div className="step-number-wrapper">
                         <span className="step-number">01</span>
                       </div>
@@ -257,11 +229,9 @@ export default function Landing() {
                         then add an optional reflection. No documents, identity, or
                         credit history are needed.
                       </p>
-                    </GlowCard>
-                  </ScrollReveal>
+                  </article>
 
-                  <ScrollReveal direction="up" delay={250} className="step-reveal">
-                    <GlowCard className="step-node">
+                  <article className="step-node">
                       <div className="step-number-wrapper">
                         <span className="step-number">02</span>
                       </div>
@@ -270,11 +240,9 @@ export default function Landing() {
                         Your answers are scored against one consistent rubric. Device
                         tracking and browsing data are never part of the result.
                       </p>
-                    </GlowCard>
-                  </ScrollReveal>
+                  </article>
 
-                  <ScrollReveal direction="up" delay={400} className="step-reveal">
-                    <GlowCard className="step-node">
+                  <article className="step-node">
                       <div className="step-number-wrapper">
                         <span className="step-number">03</span>
                       </div>
@@ -283,8 +251,7 @@ export default function Landing() {
                         Get the readiness index, domain summaries, limitations, and
                         a verification link and evidence you can inspect.
                       </p>
-                    </GlowCard>
-                  </ScrollReveal>
+                  </article>
                 </div>
               </div>
             </div>
@@ -294,20 +261,14 @@ export default function Landing() {
           <section className="final-cta">
             <SignalCanvas />
             <div className="cta-container container">
-              <ScrollReveal direction="scale">
-                <h2 className="cta-title">
-                  <TextReveal text="Turn decisions into direction." />
-                </h2>
-                <p className="cta-subtitle">Five minutes. No account, documents, or credit history.</p>
-              </ScrollReveal>
-              <ScrollReveal direction="up" delay={200}>
-                <div className="cta-btn-wrapper">
-                  <MagneticButton onClick={startAssessment} variant="primary">
-                    <span>Begin Assessment</span>
-                    <ArrowRight size={14} />
-                  </MagneticButton>
-                </div>
-              </ScrollReveal>
+              <h2 className="cta-title">Turn decisions into direction.</h2>
+              <p className="cta-subtitle">Five minutes. No account, documents, or credit history.</p>
+              <div className="cta-btn-wrapper">
+                <MagneticButton onClick={startAssessment} variant="primary">
+                  <span>Start assessment</span>
+                  <ArrowRight size={14} aria-hidden="true" />
+                </MagneticButton>
+              </div>
             </div>
           </section>
           <Modal

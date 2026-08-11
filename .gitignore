@@ -53,6 +53,9 @@ npm-debug.log*
 yarn-debug.log*
 pnpm-debug.log*
 
+# Generated presentation and report output
+/output/
+
 # Licensed Unity/WebGL landing export. This is intentionally deployable
 # frontend runtime content, not a generated application build directory.
 !frontend/public/Build/

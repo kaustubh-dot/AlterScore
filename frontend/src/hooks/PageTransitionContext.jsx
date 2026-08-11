@@ -5,6 +5,10 @@ import PageCurtain from '../components/animation/PageCurtain';
 import { PageTransitionContext } from './transitionContext';
 import { prefersReducedMotion } from '../lib/motionPreferences';
 
+const CURTAIN_IN_MS = 260;
+const CURTAIN_HOLD_MS = 60;
+const CURTAIN_OUT_MS = 300;
+
 export function PageTransitionProvider({ children }) {
   const navigate = useNavigate();
   const { playTransition } = useSound();
@@ -27,21 +31,19 @@ export function PageTransitionProvider({ children }) {
     playTransition();
     setCurtainState('in');
 
-    // Wait for curtain to cover screen (500ms duration)
+    // Keep route changes legible without making navigation feel blocked.
     timersRef.current.push(window.setTimeout(() => {
       navigate(path, stateOptions);
       
-      // Hold closed for 150ms to let the new page fully mount
       timersRef.current.push(window.setTimeout(() => {
         setCurtainState('out');
 
-        // Wait for curtain to clear (500ms duration)
         timersRef.current.push(window.setTimeout(() => {
           setCurtainState('idle');
           timersRef.current = [];
-        }, 500));
-      }, 150));
-    }, 500));
+        }, CURTAIN_OUT_MS));
+      }, CURTAIN_HOLD_MS));
+    }, CURTAIN_IN_MS));
   };
 
   return (

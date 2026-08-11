@@ -339,7 +339,6 @@ function FullAssessment() {
             placeholder="Enter a whole number"
             aria-describedby={currentErrorId}
             aria-invalid={Boolean(validationMessage)}
-            autoFocus
           />
         </div>
       );
@@ -366,7 +365,7 @@ function FullAssessment() {
                 <TextReveal text="Financial Decision Readiness" />
               </h1>
               <div className="consent-text">
-                <p style={{ textAlign: 'center', marginBottom: '24px', color: 'var(--text-secondary)' }}>
+                <p className="consent-intro">
                   An anonymous educational assessment of financial knowledge and decision judgement. It does not predict repayment, establish creditworthiness, or make a lending decision.
                 </p>
                 <div className="telemetry-specs">
@@ -375,7 +374,7 @@ function FullAssessment() {
                   <div className="spec-item"><ShieldCheck size={16} className="spec-icon" aria-hidden="true" /><span>No browser, device, identity, or credit-history data is used</span></div>
                 </div>
               </div>
-              <button type="button" onClick={handleBegin} className="btn btn-primary" style={{ width: '100%' }}>
+              <button type="button" onClick={handleBegin} className="btn btn-primary assessment-begin-button">
                 <span>Begin assessment</span>
                 <ArrowRight size={16} aria-hidden="true" />
               </button>
@@ -385,7 +384,7 @@ function FullAssessment() {
 
         <Modal
           isOpen={exitModalOpen}
-          title="Exit Assessment?"
+          title="Exit assessment?"
           message="This anonymous attempt will not be saved. Are you sure you want to exit?"
           confirmText="Exit"
           cancelText="Stay"
@@ -430,7 +429,7 @@ function FullAssessment() {
         </div>
         <Modal
           isOpen={exitModalOpen}
-          title="Exit Assessment?"
+          title="Exit assessment?"
           message="This anonymous attempt will not be saved. Are you sure you want to exit?"
           confirmText="Exit"
           cancelText="Stay"
@@ -461,7 +460,7 @@ function FullAssessment() {
     <main className="assessment-layout">
       <div
         className="progress-rail"
-        style={{ width: `${progressPercent}%` }}
+        style={{ transform: `scaleX(${progressPercent / 100})` }}
         role="progressbar"
         aria-valuenow={currentIndex + 1}
         aria-valuemin="1"
@@ -506,17 +505,17 @@ function FullAssessment() {
 
           <div className="controls-row">
             <div className="controls-group">
-              <button type="button" onClick={goBackward} disabled={isFirst} className="btn btn-ghost" style={{ padding: '10px 18px' }}>
+              <button type="button" onClick={goBackward} disabled={isFirst} className="btn btn-ghost assessment-control-button">
                 <ArrowLeft size={14} aria-hidden="true" />
                 <span>Back</span>
               </button>
-              <button type="button" onClick={handleReset} className="btn btn-ghost reset-button" style={{ padding: '10px 18px' }}>
+              <button type="button" onClick={handleReset} className="btn btn-ghost reset-button assessment-control-button">
                 <RefreshCw size={12} aria-hidden="true" />
                 <span>Reset</span>
               </button>
             </div>
 
-            <button type="button" onClick={goForward} className="btn btn-primary" style={{ minWidth: '120px' }} disabled={isSubmitting}>
+            <button type="button" onClick={goForward} className="btn btn-primary assessment-next-button" disabled={isSubmitting}>
               <span>{isLast ? 'Submit securely' : 'Continue'}</span>
               <ArrowRight size={14} aria-hidden="true" />
             </button>
@@ -526,7 +525,7 @@ function FullAssessment() {
 
       <Modal
         isOpen={resetModalOpen}
-        title="Reset Assessment"
+        title="Reset assessment"
         message="Clear the responses in this server-issued form?"
         confirmText="Reset"
         cancelText="Cancel"
@@ -536,7 +535,7 @@ function FullAssessment() {
 
       <Modal
         isOpen={exitModalOpen}
-        title="Exit Assessment?"
+        title="Exit assessment?"
         message="This anonymous attempt will not be saved. Are you sure you want to exit?"
         confirmText="Exit"
         cancelText="Stay"

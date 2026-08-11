@@ -1,37 +1,52 @@
-/* CSS Design Tokens for AlterScore (Awwwards Editorial Theme) */
+/* AlterScore design tokens — dark editorial, refined in place. */
 
 :root {
-  /* Background Palette - Refined Organic Off-Blacks */
-  --bg-void:      #070708;    /* Matte charcoal void */
-  --bg-surface:   #0E0E10;    /* Deep zinc surface */
-  --bg-elevated:  #151519;    /* Lighter zinc panel */
-  --bg-overlay:   #1B1B20;    /* Modals, pop-ups */
-  --bg-border:    #29292F;    /* Structural dividing lines */
-  --bg-muted:     #313138;    /* Hover highlights */
+  /* Background palette — cool, organic off-blacks. */
+  --bg-void:      oklch(13% 0.008 285);
+  --bg-surface:   oklch(17% 0.009 285);
+  --bg-elevated:  oklch(21% 0.010 285);
+  --bg-overlay:   oklch(24% 0.011 285);
+  --bg-border:    oklch(31% 0.012 285);
+  --bg-muted:     oklch(37% 0.012 285);
 
-  /* Pure Minimal Accents (Color used sparingly for data indicators only) */
-  --accent-primary:       #FFFFFF;    /* Editorial White - primary button backdrop */
-  --accent-primary-glow:  rgba(255, 255, 255, 0.05);
-  --accent-secondary:     #E4E4E7;    /* Light zinc */
-  --accent-cyan:          #06B6D4;    /* Clinical cyan for data indicators */
-  --accent-emerald:       #10B981;    /* Success indicators */
-  --accent-amber:         #F59E0B;    /* Warning */
-  --accent-rose:          #F43F5E;    /* Danger / flags */
+  /* Minimal accents — colour remains reserved for status and evidence. */
+  --accent-primary:       oklch(96% 0.006 285);
+  --accent-primary-ink:   oklch(13% 0.008 285);
+  --accent-primary-glow:  oklch(96% 0.006 285 / 0.05);
+  --accent-secondary:     oklch(90% 0.008 285);
+  --accent-cyan:          oklch(75% 0.135 215);
+  --accent-emerald:       oklch(72% 0.155 160);
+  --accent-amber:         oklch(78% 0.155 75);
+  --accent-rose:          oklch(67% 0.205 20);
+  --accent-focus:         oklch(82% 0.125 215);
 
-  /* Score Band Colors (Credit Score Visualization) */
-  --score-excellent:  #10B981;
-  --score-good:       #34D399;
-  --score-fair:       #FBBF24;
-  --score-poor:       #F97316;
-  --score-very-poor:  #F43F5E;
+  /* Score-band colours. Labels and icons always accompany these signals. */
+  --score-excellent:  oklch(72% 0.155 160);
+  --score-good:       oklch(79% 0.135 155);
+  --score-fair:       oklch(84% 0.145 88);
+  --score-poor:       oklch(73% 0.18 52);
+  --score-very-poor:  oklch(67% 0.205 20);
 
-  /* Typography Hierarchy - High Contrast Mono & Sans */
-  --text-primary:    #FFFFFF;    /* Pure editorial white */
-  --text-secondary:  #AEAEB7;    /* Zinc 300 - clean copy */
-  --text-muted:      #787884;    /* Readable metadata and labels */
-  --text-ghost:      #3A3A42;    /* Structural placeholders */
-  --text-accent:     #FFFFFF;    /* Focus elements */
-  --text-number:     #FFFFFF;    /* Numbers keep editorial style */
+  /* Typography hierarchy — tinted whites retain depth on dark surfaces. */
+  --text-primary:    oklch(96% 0.006 285);
+  --text-secondary:  oklch(78% 0.010 285);
+  --text-muted:      oklch(61% 0.012 285);
+  --text-ghost:      oklch(38% 0.012 285);
+  --text-accent:     oklch(96% 0.006 285);
+  --text-number:     oklch(96% 0.006 285);
+
+  /* Transparent modifiers are named by role rather than improvised per view. */
+  --surface-subtle:       oklch(96% 0.006 285 / 0.02);
+  --surface-hover:        oklch(96% 0.006 285 / 0.045);
+  --surface-selected:     oklch(96% 0.006 285 / 0.075);
+  --border-soft:          oklch(96% 0.006 285 / 0.08);
+  --border-strong:        oklch(96% 0.006 285 / 0.22);
+  --selection-bg:         oklch(75% 0.135 215 / 0.28);
+  --overlay-scrim:        oklch(8% 0.010 285 / 0.78);
+  --accent-cyan-soft:     oklch(75% 0.135 215 / 0.10);
+  --accent-emerald-soft:  oklch(72% 0.155 160 / 0.10);
+  --accent-amber-soft:    oklch(78% 0.155 75 / 0.10);
+  --accent-rose-soft:     oklch(67% 0.205 20 / 0.10);
 
   /* Fonts */
   --font-display:  'Fraunces', Georgia, serif;
@@ -39,18 +54,18 @@
   --font-mono:     'JetBrains Mono', 'Fira Code', monospace;
 
   /* Typography Scale */
-  --text-xs:    0.6875rem; /* 11px */
-  --text-sm:    0.8125rem; /* 13px */
-  --text-base:  0.9375rem; /* 15px */
-  --text-md:    1.0625rem; /* 17px */
+  --text-xs:    0.75rem;   /* 12px */
+  --text-sm:    0.875rem;  /* 14px */
+  --text-base:  1rem;      /* 16px */
+  --text-md:    1.125rem;  /* 18px */
   --text-lg:    1.25rem;   /* 20px */
   --text-xl:    1.5rem;    /* 24px */
   --text-2xl:   2rem;      /* 32px */
   --text-3xl:   2.5rem;    /* 40px */
   --text-4xl:   3.5rem;    /* 56px */
   --text-5xl:   4.5rem;    /* 72px */
-  --text-6xl:   6rem;      /* 96px */
-  --text-7xl:   8rem;      /* 128px */
+  --text-6xl:   5.5rem;    /* 88px */
+  --text-7xl:   6rem;      /* 96px */
 
   /* Spacing Scale */
   --space-1:   4px;
@@ -79,23 +94,39 @@
   --radius-2xl:  24px;
   --radius-full: 9999px;
 
-  /* Elevation Shadows & Glows (Subtle, no cheap neon rings) */
-  --shadow-card:  0 1px 2px rgba(0, 0, 0, 0.45), 0 18px 60px rgba(0, 0, 0, 0.16);
-  --shadow-hover: 0 16px 44px rgba(0, 0, 0, 0.45);
+  /* Elevation is dark and directional; status colours never become halos. */
+  --shadow-card:  0 1px 2px oklch(6% 0.008 285 / 0.48), 0 20px 52px oklch(6% 0.008 285 / 0.18);
+  --shadow-hover: 0 18px 42px oklch(6% 0.008 285 / 0.34);
+  --shadow-modal: 0 28px 84px oklch(6% 0.008 285 / 0.58);
 
-  --shadow-score-excellent: 0 0 32px rgba(16, 185, 129, 0.08);
-  --shadow-score-good:      0 0 32px rgba(52, 211, 153, 0.08);
-  --shadow-score-fair:      0 0 32px rgba(251, 191, 36, 0.08);
-  --shadow-score-poor:      0 0 32px rgba(249, 115, 22, 0.08);
-  --shadow-score-very-poor: 0 0 32px rgba(244, 63, 94, 0.08);
+  --shadow-score-excellent: var(--shadow-card);
+  --shadow-score-good:      var(--shadow-card);
+  --shadow-score-fair:      var(--shadow-card);
+  --shadow-score-poor:      var(--shadow-card);
+  --shadow-score-very-poor: var(--shadow-card);
 
-  /* Animation Timings & Easings (Ultra smooth exponential slide out) */
-  --ease-spring: cubic-bezier(0.25, 1, 0.5, 1);
-  --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-in-out-smooth: cubic-bezier(0.76, 0, 0.24, 1);
-  
-  --duration-fast: 150ms;
-  --duration-normal: 350ms;
-  --duration-slow: 700ms;
-  --duration-cinematic: 1000ms;
+  /* Motion language. Legacy aliases remain so existing views stay coherent. */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: var(--ease-out);
+  --ease-smooth: var(--ease-out);
+  --ease-in-out-smooth: var(--ease-in-out);
+
+  --dur-micro: 110ms;
+  --dur-short: 200ms;
+  --dur-long: 420ms;
+  --duration-fast: var(--dur-micro);
+  --duration-normal: var(--dur-short);
+  --duration-slow: var(--dur-long);
+  --duration-cinematic: 520ms;
+
+  /* Shared layering scale. */
+  --z-base: 1;
+  --z-raised: 10;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-modal: 400;
+  --z-toast: 500;
+  --z-tooltip: 600;
 }

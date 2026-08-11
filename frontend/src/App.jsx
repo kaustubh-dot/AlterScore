@@ -4,7 +4,6 @@ import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import Landing from './pages/Landing';
 import Assessment from './pages/Assessment';
-import CustomCursor from './components/ui/CustomCursor';
 import Preloader from './components/ui/Preloader';
 import useLenis from './hooks/useLenis';
 import useSound from './hooks/useSound';
@@ -95,12 +94,12 @@ function AppContent() {
         {showPreloader && (
           <Preloader onComplete={handlePreloadComplete} />
         )}
-        <CustomCursor variant={isAssessment ? 'assessment' : 'default'} />
+        <a className="skip-link" href="#main-content">Skip to main content</a>
         
         {/* Dashboard and assessment render their own focused navigation. */}
         {!hideGlobalChrome && <Navbar />}
 
-        <div className="content-wrap">
+        <div id="main-content" className="content-wrap" tabIndex={-1}>
           <Suspense fallback={<div className="route-loading" role="status"><span>Loading interface</span></div>}>
             <Routes>
               <Route path="/" element={<Landing />} />
