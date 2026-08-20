@@ -39,10 +39,12 @@ Useful checks:
 ```bash
 npm run lint
 VITE_RELEASE_SHA=<40-character-reviewed-sha> npm run build
+npm run test:trial
 npm run test:phase5
 npm run test:phase6
 npm run test:phase7
 npm run test:phase8
+npm run test:all
 ```
 
 The inline assignment uses POSIX shell syntax. For PowerShell, set

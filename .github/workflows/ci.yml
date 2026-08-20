@@ -74,6 +74,8 @@ jobs:
         run: npm run test:phase7
       - name: Run Phase 8 release tests
         run: npm run test:phase8
+      - name: Run quick-trial state and scoring tests
+        run: npm run test:trial
 
   backend-tests:
     name: Complete backend test suite

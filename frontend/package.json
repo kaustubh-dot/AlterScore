@@ -15,6 +15,8 @@
     "test:phase6": "node --test tests/phase6-explainability.test.mjs",
     "test:phase7": "node --test tests/phase7-separation.test.mjs",
     "test:phase8": "node --test tests/phase8-release.test.mjs",
+    "test:trial": "node --test tests/trial-assessment.test.mjs",
+    "test:all": "npm run test:trial && npm run test:phase5 && npm run test:phase6 && npm run test:phase7 && npm run test:phase8",
     "preview": "vite preview"
   },
   "dependencies": {

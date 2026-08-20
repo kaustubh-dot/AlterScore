@@ -103,10 +103,13 @@ python -m pytest
 cd frontend
 npm run lint
 npm run build
+npm run test:trial
 npm run test:phase5
 npm run test:phase6
 npm run test:phase7
 npm run test:phase8
+# Run every frontend test suite above
+npm run test:all
 ```
 
 Production frontend builds require `VITE_RELEASE_SHA` to contain the exact reviewed 40-character Git SHA. CI also checks the API contract, explainability invariants, release boundaries, serving image, and paired deployment metadata.

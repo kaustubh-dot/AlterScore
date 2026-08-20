@@ -57,10 +57,12 @@ python -m pytest tests/unit/backend tests/integration/api
 cd frontend
 npm run lint
 VITE_RELEASE_SHA=<40-character-reviewed-sha> npm run build
+npm run test:trial
 npm run test:phase5
 npm run test:phase6
 npm run test:phase7
 npm run test:phase8
+npm run test:all
 ```
 
 The inline `VITE_RELEASE_SHA=...` assignment uses POSIX shell syntax. In
